@@ -1,0 +1,7 @@
+{
+  "files": [],
+  "references": [
+      { "path": "modules/material-management" },
+      { "path": "modules/serialize" }
+  ]
+}
