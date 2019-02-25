@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "declaration": true,
+    "declarationMap": true,
+    "inlineSourceMap": true,
+    "esModuleInterop": true,
+
+    "strict": true,
+
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "traceResolution": false,
+    "listEmittedFiles": false,
+    "listFiles": false,
+    "pretty": true,
+
+    "lib": ["es2017", "dom"],
+
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "composite": true
+  }
+}
