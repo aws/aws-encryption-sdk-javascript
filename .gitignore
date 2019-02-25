@@ -1,0 +1,8 @@
+/node_modules/
+/build/
+.vscode
+.DS_Store
+/lerna-debug.log
+package-lock.json
+/.nyc_output
+/coverage
