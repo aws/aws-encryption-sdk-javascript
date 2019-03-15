@@ -229,7 +229,7 @@ export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>
   })
   const zeroUnencryptedDataKey = () => {
     /* Precondition: The unencryptedDataKey must be set to be zeroed. */
-    if (!unencryptedDataKey) throw new Error('')
+    needs(unencryptedDataKey, 'No unencryptedDataKey to zero.')
     unencryptedDataKey.fill(0)
     udkForVerification.fill(0)
     unencryptedDataKeyZeroed = true

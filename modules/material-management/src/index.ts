@@ -33,7 +33,7 @@ export { isEncryptionMaterial, isDecryptionMaterial } from './cryptographic_mate
 export { SignatureKey, VerificationKey } from './signature_key'
 export { EncryptedDataKey, IEncryptedDataKey } from './encrypted_data_key'
 
-export { immutableBaseClass, immutableClass, frozenClass } from './immutable_class'
+export { immutableBaseClass, immutableClass, frozenClass, readOnlyProperty } from './immutable_class'
 
 export { needs } from './needs'
 

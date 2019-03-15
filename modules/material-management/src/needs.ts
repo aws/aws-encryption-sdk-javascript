@@ -15,7 +15,7 @@
 
 /* Preconditions, postconditions, and loop invariants are very
   * useful for safe programing.  They also document the specifications.
-  * This function is to help simplify the symantec burden of parsing
+  * This function is to help simplify the semantic burden of parsing
   * these constructions.
   *
   * Instead of constructions like
