@@ -8,8 +8,8 @@
     "bootstrap": "lerna bootstrap",
     "clean": "npm run clear-build-cache && lerna clean",
     "clear-build-cache": "rimraf ./modules/*/build/*",
+    "lint": "standard modules/**/src/*.ts modules/**/test/**/*.ts",
     "build": "tsc -b",
-    "pretest": "npm build",
     "test": "mocha --require ts-node/register modules/**/test/*test.ts"
   },
   "repository": {
@@ -19,15 +19,24 @@
   "author": "aws-crypto-tools-team@amazon.com",
   "license": "UNLICENSED",
   "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^1.4.2",
+    "@typescript-eslint/parser": "^1.4.2",
     "chai": "^4.1.2",
     "lerna": "^2.11.0",
     "mocha": "^5.2.0",
     "rimraf": "^2.6.2",
+    "standard": "^12.0.1",
     "ts-node": "^7.0.1",
     "tslib": "^1.9.3",
     "typescript": "^3.2.0"
   },
   "workspaces": [
     "modules/*"
-  ]
+  ],
+  "standard": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ]
+  }
 }

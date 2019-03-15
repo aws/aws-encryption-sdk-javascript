@@ -1,7 +1,9 @@
 
-const compilerOptions = Object.assign(
-  {"esModuleInterop": true}
-)
+const compilerOptions = Object.assign({
+    "esModuleInterop": true,
+    "target": "esnext",
+    "module": "commonjs",
+  })
 
 module.exports = function (wallaby) {
   return {

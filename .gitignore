@@ -6,3 +6,5 @@
 package-lock.json
 /.nyc_output
 /coverage
+modules/**/node_modules
+modules/**/build

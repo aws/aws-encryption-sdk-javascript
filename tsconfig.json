@@ -1,6 +1,19 @@
 {
+  "extends": "./modules/tsconfig.settings.json",
   "files": [],
   "references": [
+
+
+
+
+
+
+
+
+
+
+
+
 
   ]
 }
