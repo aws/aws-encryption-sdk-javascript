@@ -138,7 +138,7 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
    */
   function deserializeEncryptedDataKeys (buffer: Uint8Array, startPos: number) {
     /* Precondition: startPos must be within the byte length of the buffer given. */
-    if (startPos < 0 || startPos > buffer.byteLength) throw new Error('')
+    needs(buffer.byteLength >= startPos && startPos >= 0, 'startPos out of bounds.')
 
     /* Precondition: Need to have at least Uint16 (2) bytes of data. */
     if (startPos + 2 > buffer.byteLength) return false
@@ -157,7 +157,7 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
     const encryptedDataKeysCount = dataView.getUint16(startPos)
 
     /* Precondition: There must be at least 1 EncryptedDataKey element. */
-    if (encryptedDataKeysCount === 0) throw new Error('')
+    needs(encryptedDataKeysCount, 'No EncryptedDataKey found.')
 
     const elementInfo = readElements(encryptedDataKeysCount * 3, buffer, startPos + 2)
     /* Precondition: readElement will return false if there is not enough data.
@@ -209,7 +209,7 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
     const { elements, readPos } = elementInfo
 
     /* Postcondition: The byte length of the encodedEncryptionContext must match the readPos. */
-    if (encodedEncryptionContext.byteLength !== readPos) throw new Error('')
+    needs(encodedEncryptionContext.byteLength === readPos, 'Overflow, too much data.')
 
     let count = pairsCount
     while (count--) {
@@ -219,7 +219,7 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
     /* Postcondition: The number of keys in the encryptionContext must match the pairsCount.
      * If the same Key value is serialized...
      */
-    if (Object.keys(encryptionContext).length !== pairsCount) throw new Error('')
+    needs(Object.keys(encryptionContext).length === pairsCount, 'Duplicate encryption context key value.')
     return encryptionContext
   }
 }

@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
+import { needs } from '@aws-crypto/material-management'
+
 export function uInt8 (number:number) {
   /* Precondition: Number must be 0-(2^8 - 1). */
-  if (number < 0 || number > 255) throw new Error('')
+  needs(number < 256 && number >= 0, 'number out of bounds.')
 
   const buff = new Uint8Array(1)
   const view = new DataView(buff.buffer, buff.byteOffset, buff.byteLength)
@@ -25,7 +27,7 @@ export function uInt8 (number:number) {
 
 export function uInt16BE (number: number) {
   /* Precondition: Number must be 0-(2^16 - 1). */
-  if (number < 0 || number > 65535) throw new Error('')
+  needs(number < 65535 && number >= 0, 'number out of bounds.')
 
   const buff = new Uint8Array(2)
   const view = new DataView(buff.buffer, buff.byteOffset, buff.byteLength)
@@ -35,7 +37,7 @@ export function uInt16BE (number: number) {
 
 export function uInt32BE (number: number) {
   /* Precondition: Number must be 0-(2^32 - 1). */
-  if (number < 0 || number > 4294967295) throw new Error('')
+  needs(number < 4294967296 && number >= 0, 'number out of bounds.')
 
   const buff = new Uint8Array(4)
   const view = new DataView(buff.buffer, buff.byteOffset, buff.byteLength)

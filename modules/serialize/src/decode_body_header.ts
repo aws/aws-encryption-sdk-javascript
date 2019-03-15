@@ -81,7 +81,7 @@ export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInf
   )
 
   /* Precondition: readPos must be within the byte length of the buffer given. */
-  if (readPos < 0 || readPos > dataView.byteLength) throw new Error('')
+  needs(dataView.byteLength >= readPos && readPos >= 0, 'readPos out of bounds.')
 
   /* Precondition: There must be enough data to parse.
    * The format expressed here is
@@ -159,7 +159,7 @@ export function decodeNonFrameBodyHeader (buffer: Uint8Array, headerInfo: Header
   )
 
   /* Precondition: readPos must be within the byte length of the buffer given. */
-  if (readPos < 0 || readPos > dataView.byteLength) throw new Error('')
+  needs(dataView.byteLength >= readPos && readPos >= 0, 'readPos out of bounds.')
 
   /* Precondition: There must be enough data to parse.
     * The format expressed here is

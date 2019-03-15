@@ -26,6 +26,7 @@
  * https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-data-keys
  */
 
+import { needs } from '@aws-crypto/material-management'
 /**
  *
  * The encryption SDK stores elements in the form of length data.
@@ -59,10 +60,10 @@ export function readElements (
   const elements = []
 
   /* Precondition: readPos must be within the byte length of the buffer given. */
-  if (readPos > dataView.byteLength) throw new Error('')
+  needs(dataView.byteLength >= readPos && readPos >= 0, 'readPos out of bounds.')
 
   /* Precondition: elementCount must not be negative. */
-  if (elementCount < 0) throw new Error('')
+  needs(elementCount >= 0, 'elementCount must be positive.')
 
   while (elementCount--) {
     /* Precondition: Enough data must exist to read the Uin16 length value. */

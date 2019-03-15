@@ -22,7 +22,7 @@ import { uInt8, uInt16BE, uInt32BE } from '../src/uint_util'
 describe('uInt8', () => {
   it('Precondition: Number must be 0-(2^8 - 1).', () => {
     expect(() => uInt8(-1)).to.throw()
-    expect(() => uInt8(256)).to.throw()
+    expect(() => uInt8(2 ** 8)).to.throw()
   })
 })
 
