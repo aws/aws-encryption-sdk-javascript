@@ -39,6 +39,10 @@ import { needs } from './needs'
  * it is no longer needed.
  */
 
+export interface FunctionalCryptographicMaterial {
+  hasValidKey: () => boolean
+}
+
 export interface CryptographicMaterial<T extends CryptographicMaterial<T>> {
   suite: SupportedAlgorithmSuites
   setUnencryptedDataKey: (dataKey: Uint8Array, trace: KeyringTrace) => T
@@ -54,7 +58,6 @@ export interface EncryptionMaterial<T extends CryptographicMaterial<T>> extends 
   addEncryptedDataKey: (edk: EncryptedDataKey, flags: KeyringTraceFlag) => T
   setSignatureKey: (key: SignatureKey) => T
   signatureKey?: SignatureKey
-  // new (suite: SupportedAlgorithmSuites): T
 }
 
 export interface DecryptionMaterial<T extends CryptographicMaterial<T>> extends CryptographicMaterial<T> {
@@ -68,7 +71,9 @@ export interface WebCryptoMaterial<T extends CryptographicMaterial<T>> extends C
   hasCryptoKey: boolean
 }
 
-export class NodeEncryptionMaterial implements Readonly<EncryptionMaterial<NodeEncryptionMaterial>> {
+export class NodeEncryptionMaterial implements
+  Readonly<EncryptionMaterial<NodeEncryptionMaterial>>,
+  FunctionalCryptographicMaterial {
   suite: NodeAlgorithmSuite
   setUnencryptedDataKey!: (dataKey: Uint8Array, trace: KeyringTrace) => NodeEncryptionMaterial
   getUnencryptedDataKey!: () => Uint8Array
@@ -90,10 +95,15 @@ export class NodeEncryptionMaterial implements Readonly<EncryptionMaterial<NodeE
     Object.setPrototypeOf(this, NodeEncryptionMaterial.prototype)
     Object.freeze(this)
   }
+  hasValidKey () {
+    return this.hasUnencryptedDataKey
+  }
 }
 frozenClass(NodeEncryptionMaterial)
 
-export class NodeDecryptionMaterial implements Readonly<DecryptionMaterial<NodeDecryptionMaterial>> {
+export class NodeDecryptionMaterial implements
+  Readonly<DecryptionMaterial<NodeDecryptionMaterial>>,
+  FunctionalCryptographicMaterial {
   suite: NodeAlgorithmSuite
   setUnencryptedDataKey!: (dataKey: Uint8Array, trace: KeyringTrace) => NodeDecryptionMaterial
   getUnencryptedDataKey!: () => Uint8Array
@@ -113,10 +123,16 @@ export class NodeDecryptionMaterial implements Readonly<DecryptionMaterial<NodeD
     Object.setPrototypeOf(this, NodeDecryptionMaterial.prototype)
     Object.freeze(this)
   }
+  hasValidKey () {
+    return this.hasUnencryptedDataKey
+  }
 }
 frozenClass(NodeDecryptionMaterial)
 
-export class WebCryptoEncryptionMaterial implements Readonly<EncryptionMaterial<WebCryptoEncryptionMaterial>>, Readonly<WebCryptoMaterial<WebCryptoEncryptionMaterial>> {
+export class WebCryptoEncryptionMaterial implements
+  Readonly<EncryptionMaterial<WebCryptoEncryptionMaterial>>,
+  Readonly<WebCryptoMaterial<WebCryptoEncryptionMaterial>>,
+  FunctionalCryptographicMaterial {
   suite: WebCryptoAlgorithmSuite
   setUnencryptedDataKey!: (dataKey: Uint8Array, trace: KeyringTrace) => WebCryptoEncryptionMaterial
   getUnencryptedDataKey!: () => Uint8Array
@@ -142,10 +158,16 @@ export class WebCryptoEncryptionMaterial implements Readonly<EncryptionMaterial<
     Object.setPrototypeOf(this, WebCryptoEncryptionMaterial.prototype)
     Object.freeze(this)
   }
+  hasValidKey () {
+    return this.hasUnencryptedDataKey && this.hasCryptoKey
+  }
 }
 frozenClass(WebCryptoEncryptionMaterial)
 
-export class WebCryptoDecryptionMaterial implements Readonly<DecryptionMaterial<WebCryptoDecryptionMaterial>>, Readonly<WebCryptoMaterial<WebCryptoDecryptionMaterial>> {
+export class WebCryptoDecryptionMaterial implements
+  Readonly<DecryptionMaterial<WebCryptoDecryptionMaterial>>,
+  Readonly<WebCryptoMaterial<WebCryptoDecryptionMaterial>>,
+  FunctionalCryptographicMaterial {
   suite: WebCryptoAlgorithmSuite
   setUnencryptedDataKey!: (dataKey: Uint8Array, trace: KeyringTrace) => WebCryptoDecryptionMaterial
   getUnencryptedDataKey!: () => Uint8Array
@@ -168,6 +190,9 @@ export class WebCryptoDecryptionMaterial implements Readonly<DecryptionMaterial<
     decorateWebCryptoMaterial<WebCryptoDecryptionMaterial>(this)
     Object.setPrototypeOf(this, WebCryptoDecryptionMaterial.prototype)
     Object.freeze(this)
+  }
+  hasValidKey () {
+    return this.hasCryptoKey
   }
 }
 frozenClass(WebCryptoDecryptionMaterial)
@@ -251,9 +276,9 @@ export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>
     enumerable: true
   })
 
-  material.setUnencryptedDataKey = setUnencryptedDataKey
-  material.getUnencryptedDataKey = getUnencryptedDataKey
-  material.zeroUnencryptedDataKey = zeroUnencryptedDataKey
+  readOnlyProperty<T, 'setUnencryptedDataKey'>(material, 'setUnencryptedDataKey', setUnencryptedDataKey)
+  readOnlyProperty<T, 'getUnencryptedDataKey'>(material, 'getUnencryptedDataKey', getUnencryptedDataKey)
+  readOnlyProperty<T, 'zeroUnencryptedDataKey'>(material, 'zeroUnencryptedDataKey', zeroUnencryptedDataKey)
 
   return material
 }
@@ -370,17 +395,26 @@ export function decorateDecryptionMaterial<T extends DecryptionMaterial<T>> (mat
 export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>> (material: T) {
   let cryptoKey: Readonly<CryptoKey|MixedBackendCryptoKey>|undefined
 
+  type PluckStructure = [false|CryptoKey['usages'], false|WebCryptoAlgorithmSuite]
+  /* To validate the CryptoKey I need the algorithm suite specification
+   * and a list of valid usages, either `encrypt`|`decrypt` depending on material and
+   * `deriveKey`, in the case of a KDF.
+   */
+  const [ validUsages, suite ]: PluckStructure = material instanceof WebCryptoEncryptionMaterial
+    ? [['encrypt', 'deriveKey'], material.suite]
+    : material instanceof WebCryptoDecryptionMaterial
+      ? [['decrypt', 'deriveKey'], material.suite]
+      : [false, false]
+
+  if (!validUsages || !suite) throw new Error('')
+
   const setCryptoKey = (dataKey: CryptoKey|MixedBackendCryptoKey) => {
     /* Precondition: cryptoKey must not be set.  Modifying the cryptoKey is denied */
     needs(!cryptoKey, 'cryptoKey is already set.')
     /* Precondition: dataKey must be a supported type. */
     needs(isCryptoKey(dataKey) || isMixedBackendCryptoKey(dataKey), 'Unsupported dataKey type.')
-    /* Precondition: The CryptoKey must not be extractable.
-     * It is expected that the unencryptedDataKey is how we are handling the
-     * the data key.  If we zero out the unencryptedDataKey, the cryptoKey
-     * should not be a vector to learn the unencryptedDataKey.
-     */
-    needs(!isCryptoKeyExtractable(dataKey), 'Crypto Key can not be extractable.')
+    /* Precondition: The CryptoKey must match the algorithm suite specification. */
+    needs(isValidCryptoKey(validUsages, dataKey, suite), 'CryptoKey settings not acceptable.')
 
     if (isCryptoKey(dataKey)) {
       cryptoKey = dataKey
@@ -411,14 +445,40 @@ export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>> (mater
   return material
 }
 
-function isCryptoKeyExtractable (dataKey: CryptoKey|MixedBackendCryptoKey): boolean {
-  if (isCryptoKey(dataKey)) return dataKey.extractable
-  const { zeroByteCryptoKey, nonZeroByteCryptoKey } = dataKey
-  return zeroByteCryptoKey.extractable || nonZeroByteCryptoKey.extractable
-}
-
 function isCryptoKey (dataKey: any): dataKey is CryptoKey {
   return dataKey && !!dataKey.algorithm
+}
+
+function isValidCryptoKey (
+  validUsages: CryptoKey['usages'],
+  dataKey: CryptoKey|MixedBackendCryptoKey,
+  suite: WebCryptoAlgorithmSuite
+) : boolean {
+  if (!isCryptoKey(dataKey)) {
+    const { zeroByteCryptoKey, nonZeroByteCryptoKey } = dataKey
+    return isValidCryptoKey(validUsages, zeroByteCryptoKey, suite) &&
+      isValidCryptoKey(validUsages, nonZeroByteCryptoKey, suite)
+  }
+
+  const { encryption, keyLength } = suite
+
+  /* See:
+   * https://developer.mozilla.org/en-US/docs/Web/API/CryptoKey
+   * https://developer.mozilla.org/en-US/docs/Web/API/AesKeyGenParams
+   */
+
+  // Only symmetric algorithms
+  return dataKey.type === 'secret' &&
+    // Must match the suite
+    dataKey.algorithm.name === encryption &&
+    // @ts-ignore Must match the length
+    dataKey.algorithm.length === keyLength &&
+    // I do the work to make only 1 usage work, least privilege
+    dataKey.usages.length === 1 &&
+    // The only usage must be valid: encrypt|decrypt|deriveKey
+    validUsages.includes(dataKey.usages[0]) &&
+    // Since CryptoKey can not be zeroized, not extractable is the next best thing
+    !dataKey.extractable
 }
 
 function isMixedBackendCryptoKey (dataKey: any): dataKey is MixedBackendCryptoKey {

@@ -74,7 +74,7 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
     needs(isDecryptionMaterial(material), 'Unsupported material type.')
 
     /* Precondition: Attempt to decrypt iif material does not have an unencrypted data key. */
-    if (material.hasUnencryptedDataKey) return material
+    if (material.hasValidKey()) return material
 
     /* Precondition: encryptedDataKeys must all be EncryptedDataKey. */
     needs(encryptedDataKeys.every(edk => edk instanceof EncryptedDataKey), 'Unsupported EncryptedDataKey type')

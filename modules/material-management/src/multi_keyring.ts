@@ -83,7 +83,7 @@ export class MultiKeyring<S extends SupportedAlgorithmSuites> extends Keyring<S>
       }
 
       // Once I have an unencrypted data key do not attempt any more decrypts
-      if (material.hasUnencryptedDataKey) return material
+      if (material.hasValidKey()) return material
     }
     return material
   }
