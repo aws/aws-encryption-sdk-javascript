@@ -40,12 +40,26 @@ export const decodeNamedCurves: Readonly<decodeNamedCurves> = Object.freeze({
   'P-384': secp384r1
 })
 
+/*
+ * 1. This only works for prime curves
+ * 2. This will not handle the point at infinity
+ */
 function eccDecodeCompressedPoint (p: BN, a: BN, b: BN/*, order: BN */) {
   const zero = new BN(0)
   const one = new BN(1)
   const two = new BN(2)
   const three = new BN(3)
   const four = new BN(4)
+
+  // # Only works for p % 4 == 3 at this time.
+  // # This is the case for all currently supported algorithms.
+  // # This will need to be expanded if curves which do not match this are added.
+  // #  Python-ecdsa has these algorithms implemented.  Copy or reference?
+  // #  https://en.wikipedia.org/wiki/Tonelli%E2%80%93Shanks_algorithm
+  // #  Handbook of Applied Cryptography, algorithms 3.34 - 3.39
+  needs(p.mod(four).eq(three), 'Curve not supported at this time')
+
+  const montP = BN.mont(p)
   const redPow = p.add(one).div(four)
   const yOrderMap: {[index: number]: BN} = {
     2: zero,
@@ -60,16 +74,10 @@ function eccDecodeCompressedPoint (p: BN, a: BN, b: BN/*, order: BN */) {
     const keyLength = xBuff.byteLength
     const x = new BN([...xBuff])
     const yOrder = yOrderMap[compressedPoint[0]]
-    const alpha = x.pow(three).mod(p).add(x.mul(a).mod(p)).add(b).mod(p)
-    // # Only works for p % 4 == 3 at this time.
-    // # This is the case for all currently supported algorithms.
-    // # This will need to be expanded if curves which do not match this are added.
-    // #  Python-ecdsa has these algorithms implemented.  Copy or reference?
-    // #  https://en.wikipedia.org/wiki/Tonelli%E2%80%93Shanks_algorithm
-    // #  Handbook of Applied Cryptography, algorithms 3.34 - 3.39
-    needs(p.mod(four).eq(three), 'Curve not supported at this time')
-    // @ts-ignore
-    const beta = <BN>alpha.toRed(BN.mont(p)).redPow(redPow).fromRed()
+    const x3 = x.pow(three).mod(p)
+    const ax = a.mul(x).mod(p)
+    const alpha = x3.add(ax).add(b).mod(p)
+    const beta = alpha.toRed(montP).redPow(redPow).fromRed()
     if (beta.mod(two).eq(yOrder)) {
       const y = beta
       return returnBuffer(x, y, keyLength)

@@ -31,6 +31,10 @@ export const encodeNamedCurves: Readonly<encodeNamedCurves> = Object.freeze({
   'P-384': secp384r1
 })
 
+/*
+ * 1. This only works for prime curves
+ * 2. This will not handle the point at infinity
+ */
 function eccEncodeCompressedPoint (keyLength: number) {
   return function encode (publicKey: Uint8Array) {
     /* Precondition: publicKey must be the right length.
