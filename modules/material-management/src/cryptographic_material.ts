@@ -66,7 +66,7 @@ export interface DecryptionMaterial<T extends CryptographicMaterial<T>> extends 
 }
 
 export interface WebCryptoMaterial<T extends CryptographicMaterial<T>> extends CryptographicMaterial<T> {
-  setCryptoKey: (dataKey: CryptoKey|MixedBackendCryptoKey) => T
+  setCryptoKey: (dataKey: CryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => T
   getCryptoKey: () => CryptoKey|MixedBackendCryptoKey
   hasCryptoKey: boolean
 }
@@ -90,7 +90,8 @@ export class NodeEncryptionMaterial implements
     needs(suite instanceof NodeAlgorithmSuite, 'Suite must be a NodeAlgorithmSuite')
     this.suite = suite
     // EncryptionMaterial have generated a data key on setUnencryptedDataKey
-    decorateCryptographicMaterial<NodeEncryptionMaterial>(this, KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
+    const setFlags = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
+    decorateCryptographicMaterial<NodeEncryptionMaterial>(this, setFlags)
     decorateEncryptionMaterial<NodeEncryptionMaterial>(this)
     Object.setPrototypeOf(this, NodeEncryptionMaterial.prototype)
     Object.freeze(this)
@@ -118,7 +119,8 @@ export class NodeDecryptionMaterial implements
     needs(suite instanceof NodeAlgorithmSuite, 'Suite must be a NodeAlgorithmSuite')
     this.suite = suite
     // DecryptionMaterial have decrypted a data key on setUnencryptedDataKey
-    decorateCryptographicMaterial<NodeDecryptionMaterial>(this, KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    const setFlags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
+    decorateCryptographicMaterial<NodeDecryptionMaterial>(this, setFlags)
     decorateDecryptionMaterial<NodeDecryptionMaterial>(this)
     Object.setPrototypeOf(this, NodeDecryptionMaterial.prototype)
     Object.freeze(this)
@@ -144,7 +146,7 @@ export class WebCryptoEncryptionMaterial implements
   addEncryptedDataKey!: (edk: EncryptedDataKey, flags: KeyringTraceFlag) => WebCryptoEncryptionMaterial
   setSignatureKey!: (key: SignatureKey) => WebCryptoEncryptionMaterial
   signatureKey?: SignatureKey
-  setCryptoKey!: (dataKey: CryptoKey|MixedBackendCryptoKey) => WebCryptoEncryptionMaterial
+  setCryptoKey!: (dataKey: CryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => WebCryptoEncryptionMaterial
   getCryptoKey!: () => CryptoKey|MixedBackendCryptoKey
   hasCryptoKey!: boolean
   constructor (suite: WebCryptoAlgorithmSuite) {
@@ -152,9 +154,10 @@ export class WebCryptoEncryptionMaterial implements
     needs(suite instanceof WebCryptoAlgorithmSuite, 'Suite must be a WebCryptoAlgorithmSuite')
     this.suite = suite
     // EncryptionMaterial have generated a data key on setUnencryptedDataKey
-    decorateCryptographicMaterial<WebCryptoEncryptionMaterial>(this, KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
+    const setFlag = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
+    decorateCryptographicMaterial<WebCryptoEncryptionMaterial>(this, setFlag)
     decorateEncryptionMaterial<WebCryptoEncryptionMaterial>(this)
-    decorateWebCryptoMaterial<WebCryptoEncryptionMaterial>(this)
+    decorateWebCryptoMaterial<WebCryptoEncryptionMaterial>(this, setFlag)
     Object.setPrototypeOf(this, WebCryptoEncryptionMaterial.prototype)
     Object.freeze(this)
   }
@@ -177,7 +180,7 @@ export class WebCryptoDecryptionMaterial implements
   keyringTrace: KeyringTrace[] = []
   setVerificationKey!: (key: VerificationKey) => WebCryptoDecryptionMaterial
   verificationKey?: VerificationKey
-  setCryptoKey!: (dataKey: CryptoKey|MixedBackendCryptoKey) => WebCryptoDecryptionMaterial
+  setCryptoKey!: (dataKey: CryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => WebCryptoDecryptionMaterial
   getCryptoKey!: () => CryptoKey|MixedBackendCryptoKey
   hasCryptoKey!: boolean
   constructor (suite: WebCryptoAlgorithmSuite) {
@@ -185,9 +188,10 @@ export class WebCryptoDecryptionMaterial implements
     needs(suite instanceof WebCryptoAlgorithmSuite, 'Suite must be a WebCryptoAlgorithmSuite')
     this.suite = suite
     // DecryptionMaterial have decrypted a data key on setUnencryptedDataKey
-    decorateCryptographicMaterial<WebCryptoDecryptionMaterial>(this, KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    const setFlag = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
+    decorateCryptographicMaterial<WebCryptoDecryptionMaterial>(this, setFlag)
     decorateDecryptionMaterial<WebCryptoDecryptionMaterial>(this)
-    decorateWebCryptoMaterial<WebCryptoDecryptionMaterial>(this)
+    decorateWebCryptoMaterial<WebCryptoDecryptionMaterial>(this, setFlag)
     Object.setPrototypeOf(this, WebCryptoDecryptionMaterial.prototype)
     Object.freeze(this)
   }
@@ -392,29 +396,28 @@ export function decorateDecryptionMaterial<T extends DecryptionMaterial<T>> (mat
   return material
 }
 
-export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>> (material: T) {
+export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>> (material: T, setFlags: KeyringTraceFlag) {
   let cryptoKey: Readonly<CryptoKey|MixedBackendCryptoKey>|undefined
 
-  type PluckStructure = [false|CryptoKey['usages'], false|WebCryptoAlgorithmSuite]
-  /* To validate the CryptoKey I need the algorithm suite specification
-   * and a list of valid usages, either `encrypt`|`decrypt` depending on material and
-   * `deriveKey`, in the case of a KDF.
-   */
-  const [ validUsages, suite ]: PluckStructure = material instanceof WebCryptoEncryptionMaterial
-    ? [['encrypt', 'deriveKey'], material.suite]
-    : material instanceof WebCryptoDecryptionMaterial
-      ? [['decrypt', 'deriveKey'], material.suite]
-      : [false, false]
-
-  if (!validUsages || !suite) throw new Error('')
-
-  const setCryptoKey = (dataKey: CryptoKey|MixedBackendCryptoKey) => {
+  const setCryptoKey = (dataKey: CryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => {
     /* Precondition: cryptoKey must not be set.  Modifying the cryptoKey is denied */
     needs(!cryptoKey, 'cryptoKey is already set.')
     /* Precondition: dataKey must be a supported type. */
     needs(isCryptoKey(dataKey) || isMixedBackendCryptoKey(dataKey), 'Unsupported dataKey type.')
     /* Precondition: The CryptoKey must match the algorithm suite specification. */
-    needs(isValidCryptoKey(validUsages, dataKey, suite), 'CryptoKey settings not acceptable.')
+    needs(isValidCryptoKey(dataKey, material), 'CryptoKey settings not acceptable.')
+
+    /* If the material does not have an unencrypted data key,
+     * then we are setting the crypto key here and need a keyring trace .
+     */
+    if (!material.hasUnencryptedDataKey) {
+      /* Precondition: Trace must be set, and the flag must indicate that the data key was generated. */
+      needs(trace && trace.keyName && trace.keyNamespace, 'Malformed KeyringTrace')
+      /* Precondition: On set the required KeyringTraceFlag must be set. */
+      needs(trace.flags & setFlags, 'Required KeyringTraceFlag not set')
+
+      material.keyringTrace.push(trace)
+    }
 
     if (isCryptoKey(dataKey)) {
       cryptoKey = dataKey
@@ -445,43 +448,68 @@ export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>> (mater
   return material
 }
 
-function isCryptoKey (dataKey: any): dataKey is CryptoKey {
-  return dataKey && !!dataKey.algorithm
+export function isCryptoKey (dataKey: any): dataKey is CryptoKey {
+  return dataKey &&
+    'algorithm' in dataKey &&
+    'type' in dataKey &&
+    'algorithm' in dataKey &&
+    'usages' in dataKey &&
+    'extractable' in dataKey
 }
 
-function isValidCryptoKey (
-  validUsages: CryptoKey['usages'],
+export function isValidCryptoKey<T extends WebCryptoMaterial<T>> (
   dataKey: CryptoKey|MixedBackendCryptoKey,
-  suite: WebCryptoAlgorithmSuite
+  material: T
 ) : boolean {
   if (!isCryptoKey(dataKey)) {
     const { zeroByteCryptoKey, nonZeroByteCryptoKey } = dataKey
-    return isValidCryptoKey(validUsages, zeroByteCryptoKey, suite) &&
-      isValidCryptoKey(validUsages, nonZeroByteCryptoKey, suite)
+    return isValidCryptoKey(zeroByteCryptoKey, material) &&
+      isValidCryptoKey(nonZeroByteCryptoKey, material)
   }
 
-  const { encryption, keyLength } = suite
+  const { suite } = material
+  const { encryption, keyLength, kdf } = suite
+  /* To use this function to both set the crypto key and derive the crypto key
+   * I need to check that either usage is valid.
+   */
+  const validUsages = [
+    kdf && 'deriveKey',
+    (material as any).setSignatureKey ? 'encrypt' : 'decrypt']
 
   /* See:
    * https://developer.mozilla.org/en-US/docs/Web/API/CryptoKey
    * https://developer.mozilla.org/en-US/docs/Web/API/AesKeyGenParams
    */
 
+  const { type, algorithm, usages, extractable } = dataKey
+  // @ts-ignore length is an optional value...
+  const { name, length } = algorithm
+
   // Only symmetric algorithms
-  return dataKey.type === 'secret' &&
+  return type === 'secret' &&
     // Must match the suite
-    dataKey.algorithm.name === encryption &&
-    // @ts-ignore Must match the length
-    dataKey.algorithm.length === keyLength &&
-    // I do the work to make only 1 usage work, least privilege
-    dataKey.usages.length === 1 &&
-    // The only usage must be valid: encrypt|decrypt|deriveKey
-    validUsages.includes(dataKey.usages[0]) &&
+    ((kdf && name === kdf) ||
+     (name === encryption && length === keyLength)) &&
+    // Only valid usage are: encrypt|decrypt|deriveKey
+    usages.length === 1 && validUsages.includes(usages[0]) &&
     // Since CryptoKey can not be zeroized, not extractable is the next best thing
-    !dataKey.extractable
+    !extractable
 }
 
 function isMixedBackendCryptoKey (dataKey: any): dataKey is MixedBackendCryptoKey {
   const { zeroByteCryptoKey, nonZeroByteCryptoKey } = dataKey
   return isCryptoKey(zeroByteCryptoKey) && isCryptoKey(nonZeroByteCryptoKey)
+}
+
+export function keyUsageForMaterial<T extends WebCryptoMaterial<T>> (material: T): KeyUsage {
+  const { suite } = material
+  if (suite.kdf) return 'deriveKey'
+  return subtleFunctionForMaterial(material)
+}
+
+export function subtleFunctionForMaterial<T extends WebCryptoMaterial<T>> (material: T) {
+  if (material instanceof WebCryptoEncryptionMaterial) return 'encrypt'
+  if (material instanceof WebCryptoDecryptionMaterial) return 'decrypt'
+
+  throw new Error('Unsupported material')
 }

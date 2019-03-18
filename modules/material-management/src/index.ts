@@ -27,7 +27,7 @@ export { KeyringTrace, KeyringTraceFlag } from './keyring_trace'
 export { MultiKeyring } from './multi_keyring'
 export { NodeMaterialsManager, WebCryptoMaterialsManager } from './materials_manager'
 
-export { NodeEncryptionMaterial, NodeDecryptionMaterial } from './cryptographic_material'
+export { NodeEncryptionMaterial, NodeDecryptionMaterial, isValidCryptoKey, isCryptoKey, keyUsageForMaterial, subtleFunctionForMaterial } from './cryptographic_material'
 export { WebCryptoEncryptionMaterial, WebCryptoDecryptionMaterial } from './cryptographic_material'
 export { isEncryptionMaterial, isDecryptionMaterial } from './cryptographic_material'
 export { SignatureKey, VerificationKey } from './signature_key'

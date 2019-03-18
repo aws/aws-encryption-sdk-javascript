@@ -17,8 +17,29 @@
 
 import { expect } from 'chai'
 import 'mocha'
-import { EncryptedDataKey, NodeAlgorithmSuite, AlgorithmSuiteIdentifier, SignatureKey, VerificationKey, WebCryptoAlgorithmSuite, KeyringTraceFlag } from '../src'
-import { decorateCryptographicMaterial, decorateEncryptionMaterial, decorateDecryptionMaterial, decorateWebCryptoMaterial, NodeEncryptionMaterial, NodeDecryptionMaterial, WebCryptoEncryptionMaterial, WebCryptoDecryptionMaterial } from '../src/cryptographic_material'
+import {
+  EncryptedDataKey,
+  NodeAlgorithmSuite,
+  AlgorithmSuiteIdentifier,
+  SignatureKey,
+  VerificationKey,
+  WebCryptoAlgorithmSuite,
+  KeyringTraceFlag
+} from '../src'
+import {
+  decorateCryptographicMaterial,
+  decorateEncryptionMaterial,
+  decorateDecryptionMaterial,
+  decorateWebCryptoMaterial,
+  NodeEncryptionMaterial,
+  NodeDecryptionMaterial,
+  WebCryptoEncryptionMaterial,
+  WebCryptoDecryptionMaterial,
+  subtleFunctionForMaterial,
+  keyUsageForMaterial,
+  isValidCryptoKey,
+  isCryptoKey
+} from '../src/cryptographic_material'
 
 describe('decorateCryptographicMaterial', () => {
   it('will decorate', () => {
@@ -222,61 +243,168 @@ describe('decorateDecryptionMaterial', () => {
 })
 
 describe('decorateWebCryptoMaterial', () => {
-  it('will decorate', () => {
-    const test: any = decorateWebCryptoMaterial((<any>{}))
-    expect(test).to.haveOwnProperty('setCryptoKey').and.to.be.a('function')
-    expect(test).to.haveOwnProperty('hasCryptoKey').and.to.equal(false)
-  })
-
   it('add CryptoKey', () => {
-    const test: any = decorateWebCryptoMaterial((<any>{}))
-    const key: any = { algorithm: true }
-    test.setCryptoKey(key)
+    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const test: any = decorateWebCryptoMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    test.setCryptoKey(key, trace)
     expect(test.cryptoKey === key).to.equal(true)
     expect(test.hasCryptoKey).to.equal(true)
   })
 
   it('add MixedBackendCryptoKey', () => {
-    const test: any = decorateWebCryptoMaterial((<any>{}))
-    const key: any = { zeroByteCryptoKey: { algorithm: true }, nonZeroByteCryptoKey: { algorithm: true } }
-    test.setCryptoKey(key)
-    expect(test.cryptoKey !== key).to.equal(true)
+    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const test: any = decorateWebCryptoMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
+    const mixedKey: any = { zeroByteCryptoKey: key, nonZeroByteCryptoKey: key }
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    test.setCryptoKey(mixedKey, trace)
+    expect(test.cryptoKey !== mixedKey).to.equal(true)
     expect(test.hasCryptoKey).to.equal(true)
-    expect(test.cryptoKey.zeroByteCryptoKey === key.zeroByteCryptoKey).to.equal(true)
-    expect(test.cryptoKey.nonZeroByteCryptoKey === key.nonZeroByteCryptoKey).to.equal(true)
+    expect(test.cryptoKey.zeroByteCryptoKey === mixedKey.zeroByteCryptoKey).to.equal(true)
+    expect(test.cryptoKey.nonZeroByteCryptoKey === mixedKey.nonZeroByteCryptoKey).to.equal(true)
     expect(Object.isFrozen(test.cryptoKey)).to.equal(true)
   })
 
   it('Precondition: The cryptoKey must be set before we can return it.', () => {
-    const test: any = decorateWebCryptoMaterial((<any>{}))
+    const test: any = decorateWebCryptoMaterial((<any>{}), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
     expect(() => test.cryptoKey).to.throw()
   })
 
   it('Precondition: cryptoKey must not be set.  Modifying the cryptoKey is denied', () => {
-    const test: any = decorateWebCryptoMaterial((<any>{}))
-    const key: any = { algorithm: true }
-    test.setCryptoKey(key)
-    expect(() => test.setCryptoKey(key)).to.throw()
+    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const test: any = decorateWebCryptoMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    test.setCryptoKey(key, trace)
+    expect(() => test.setCryptoKey(key, trace)).to.throw()
   })
 
-  it('Precondition: The CryptoKey must not be extractable.', () => {
-    const test: any = decorateWebCryptoMaterial((<any>{}))
-    const key: any = { algorithm: true, extractable: true }
-    expect(() => test.setCryptoKey(key)).to.throw()
+  it('Precondition: The CryptoKey must match the algorithm suite specification. (extractable)', () => {
+    const test: any = decorateWebCryptoMaterial((<any>{}), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: true }
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    expect(() => test.setCryptoKey(key, trace)).to.throw()
   })
 
-  it('Precondition: The CryptoKey\'s inside MixedBackendCryptoKey must not be extractable.', () => {
-    const test: any = decorateWebCryptoMaterial((<any>{}))
-    const key1: any = { zeroByteCryptoKey: { algorithm: true, extractable: true }, nonZeroByteCryptoKey: { algorithm: true } }
-    const key2: any = { zeroByteCryptoKey: { algorithm: true }, nonZeroByteCryptoKey: { algorithm: true, extractable: true } }
-    expect(() => test.setCryptoKey(key1)).to.throw()
-    expect(() => test.setCryptoKey(key2)).to.throw()
+  it('Precondition: The CryptoKey\'s inside MixedBackendCryptoKey must must match the algorithm suite specification. (extractable)', () => {
+    const test: any = decorateWebCryptoMaterial((<any>{}), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    const key1: any = { zeroByteCryptoKey: { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: true }, nonZeroByteCryptoKey: { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false } }
+    const key2: any = { zeroByteCryptoKey: { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }, nonZeroByteCryptoKey: { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: true } }
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    expect(() => test.setCryptoKey(key1, trace)).to.throw()
+    expect(() => test.setCryptoKey(key2, trace)).to.throw()
   })
 
   it('Precondition: dataKey must be a supported type.', () => {
-    const test: any = decorateWebCryptoMaterial((<any>{}))
+    const test: any = decorateWebCryptoMaterial((<any>{}), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
     const key: any = {}
-    expect(() => test.setCryptoKey(key)).to.throw()
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    expect(() => test.setCryptoKey(key, trace)).to.throw()
+  })
+})
+
+describe('decorateWebCryptoMaterial:Helpers', () => {
+  describe('subtleFunctionForMaterial', () => {
+    it('WebCryptoDecryptionMaterial is decrypt', () => {
+      const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+      const material = new WebCryptoDecryptionMaterial(suite)
+      expect(subtleFunctionForMaterial(material)).to.equal('decrypt')
+    })
+
+    it('WebCryptoEncryptionMaterial is encrypt', () => {
+      const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+      const material = new WebCryptoEncryptionMaterial(suite)
+      expect(subtleFunctionForMaterial(material)).to.equal('encrypt')
+    })
+    it('unsupported', () => {
+      const material = {} as any
+      expect(() => subtleFunctionForMaterial(material)).to.throw()
+    })
+  })
+
+  describe('keyUsageForMaterial', () => {
+    it('ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256 is deriveKey', () => {
+      const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+      const material = new WebCryptoDecryptionMaterial(suite)
+      expect(keyUsageForMaterial(material)).to.equal('deriveKey')
+    })
+
+    it('ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256 is decrypt', () => {
+      const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+      const material = new WebCryptoEncryptionMaterial(suite)
+      expect(keyUsageForMaterial(material)).to.equal('deriveKey')
+    })
+
+    it('WebCryptoDecryptionMaterial is decrypt', () => {
+      const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+      const material = new WebCryptoDecryptionMaterial(suite)
+      expect(keyUsageForMaterial(material)).to.equal('decrypt')
+    })
+
+    it('WebCryptoEncryptionMaterial is encrypt', () => {
+      const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+      const material = new WebCryptoEncryptionMaterial(suite)
+      expect(keyUsageForMaterial(material)).to.equal('encrypt')
+    })
+
+    it('unsupported', () => {
+      const material = {} as any
+      expect(() => keyUsageForMaterial(material)).to.throw()
+    })
+  })
+
+  it('isCryptoKey', () => {
+    const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
+    expect(isCryptoKey(key)).to.equal(true)
+  })
+
+  describe('isValidCryptoKey', () => {
+    it('Suite with KDF is valid for both the derivable key and the derived key', () => {
+      const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+      const material = new WebCryptoEncryptionMaterial(suite)
+      const keyKdf: any = { type: 'secret', algorithm: { name: suite.kdf }, usages: ['deriveKey'], extractable: false }
+      const deriveKey: any = { type: 'secret', algorithm: { name: suite.encryption, length: suite.keyLength }, usages: ['encrypt'], extractable: false }
+      expect(isValidCryptoKey(keyKdf, material)).to.equal(true)
+      expect(isValidCryptoKey(deriveKey, material)).to.equal(true)
+    })
+
+    it('Suite without the KDF is only derivable with the key', () => {
+      const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+      const material = new WebCryptoEncryptionMaterial(suite)
+      const keyKdf: any = { type: 'secret', algorithm: { name: suite.kdf }, usages: ['deriveKey'], extractable: false }
+      const key: any = { type: 'secret', algorithm: { name: suite.encryption, length: suite.keyLength }, usages: ['encrypt'], extractable: false }
+      expect(isValidCryptoKey(keyKdf, material)).to.equal(false)
+      expect(isValidCryptoKey(key, material)).to.equal(true)
+    })
+    it('only type === secret is valid', () => {
+      const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+      const material = new WebCryptoEncryptionMaterial(suite)
+      const key: any = { type: 'private', algorithm: { name: suite.encryption, length: suite.keyLength }, usages: ['encrypt'], extractable: false }
+      expect(isValidCryptoKey(key, material)).to.equal(false)
+    })
+
+    it('length must match', () => {
+      const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+      const material = new WebCryptoEncryptionMaterial(suite)
+      const key: any = { type: 'secret', algorithm: { name: suite.encryption, length: suite.keyLength - 1 }, usages: ['encrypt'], extractable: false }
+      expect(isValidCryptoKey(key, material)).to.equal(false)
+    })
+
+    it('can not be extractable', () => {
+      const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+      const material = new WebCryptoEncryptionMaterial(suite)
+      const key: any = { type: 'secret', algorithm: { name: suite.encryption, length: suite.keyLength }, usages: ['encrypt'], extractable: true }
+      expect(isValidCryptoKey(key, material)).to.equal(false)
+    })
+
+    it('usage must match', () => {
+      const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+      const material = new WebCryptoEncryptionMaterial(suite)
+      const key: any = { type: 'secret', algorithm: { name: suite.encryption, length: suite.keyLength }, usages: ['decrypt'], extractable: false }
+      expect(isValidCryptoKey(key, material)).to.equal(false)
+    })
   })
 })
 
