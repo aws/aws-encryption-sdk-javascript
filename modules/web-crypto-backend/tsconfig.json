@@ -1,31 +1,8 @@
 {
+  "extends": "../tsconfig.settings.json",
   "compilerOptions": {
-    "target": "es2015",
     "outDir": "build/main",
-    "rootDir": "./src",
-    "moduleResolution": "node",
-    "module": "commonjs",
-    "declaration": true,
-    "inlineSourceMap": true,
-    "esModuleInterop": true,
-
-    "strict": true,
-
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-
-    "traceResolution": false,
-    "listEmittedFiles": false,
-    "listFiles": false,
-    "pretty": true,
-
-    "lib": ["es2017", "dom"],
-    "types": ["node"],
-    "typeRoots": [
-      "node_modules/@types"
-    ]
+    "rootDir": "./src"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules/**"]
