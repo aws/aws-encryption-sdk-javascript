@@ -21,7 +21,11 @@ import 'mocha'
 import { MultiKeyring } from '../src/multi_keyring'
 import { Keyring } from '../src/keyring'
 import { NodeEncryptionMaterial, NodeDecryptionMaterial } from '../src/cryptographic_material'
-import { NodeAlgorithmSuite, AlgorithmSuiteIdentifier, EncryptedDataKey, KeyringTraceFlag, KeyringTrace } from '../src' // eslint-disable-line no-unused-vars
+import { NodeAlgorithmSuite } from '../src/node_algorithms'
+import { AlgorithmSuiteIdentifier } from '../src/algorithm_suites'
+import { EncryptedDataKey } from '../src/encrypted_data_key'
+import { KeyringTraceFlag, KeyringTrace } from '../src/keyring_trace' // eslint-disable-line no-unused-vars
+
 chai.use(chaiAsPromised)
 const { expect } = chai
 

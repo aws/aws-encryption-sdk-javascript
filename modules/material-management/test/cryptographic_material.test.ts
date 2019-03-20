@@ -149,7 +149,7 @@ describe('decorateEncryptionMaterial', () => {
   it('add SignatureKey', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const test: any = decorateEncryptionMaterial((<any>{ suite, keyringTrace: [], hasUnencryptedDataKey: true }))
-    const key = new SignatureKey(new Uint8Array(3), new Uint8Array(3))
+    const key = new SignatureKey(new Uint8Array(3), new Uint8Array(3), suite)
     test.setSignatureKey(key)
     expect(test.signatureKey === key).to.equal(true)
   })
@@ -169,15 +169,16 @@ describe('decorateEncryptionMaterial', () => {
   })
 
   it('Precondition: The SignatureKey stored must agree with the algorithm specification.', () => {
+    const suiteWithSig = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const key = new SignatureKey(new Uint8Array(3), new Uint8Array(3))
+    const key = new SignatureKey(new Uint8Array(3), new Uint8Array(3), suiteWithSig)
     const test: any = decorateEncryptionMaterial((<any>{ suite, keyringTrace: [], hasUnencryptedDataKey: true }))
     expect(() => test.setSignatureKey(key)).to.throw()
   })
 
   it('Precondition: signatureKey must not be set.  Modifying the signatureKey is denied.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
-    const key = new SignatureKey(new Uint8Array(3), new Uint8Array(3))
+    const key = new SignatureKey(new Uint8Array(3), new Uint8Array(3), suite)
     const test: any = decorateEncryptionMaterial((<any>{ suite, keyringTrace: [], hasUnencryptedDataKey: true }))
     test.setSignatureKey(key)
     expect(() => test.setSignatureKey(key)).to.throw()
@@ -208,21 +209,22 @@ describe('decorateDecryptionMaterial', () => {
   it('add VerificationKey', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const test: any = decorateDecryptionMaterial((<any>{ suite, keyringTrace: [], hasUnencryptedDataKey: true }))
-    const key = new VerificationKey(new Uint8Array(3))
+    const key = new VerificationKey(new Uint8Array(3), suite)
     test.setVerificationKey(key)
     expect(test.verificationKey === key).to.equal(true)
   })
 
   it('Precondition: The VerificationKey stored must agree with the algorithm specification.', () => {
+    const suiteWithSig = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const key = new VerificationKey(new Uint8Array(3))
+    const key = new VerificationKey(new Uint8Array(3), suiteWithSig)
     const test: any = decorateDecryptionMaterial((<any>{ suite, keyringTrace: [], hasUnencryptedDataKey: true }))
     expect(() => test.setVerificationKey(key)).to.throw()
   })
 
   it('Precondition: verificationKey must not be set.  Modifying the verificationKey is denied.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
-    const key = new VerificationKey(new Uint8Array(3))
+    const key = new VerificationKey(new Uint8Array(3), suite)
     const test: any = decorateDecryptionMaterial((<any>{ suite, keyringTrace: [], hasUnencryptedDataKey: true }))
     test.setVerificationKey(key)
     expect(() => test.setVerificationKey(key)).to.throw()

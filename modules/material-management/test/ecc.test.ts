@@ -65,7 +65,7 @@ describe('ecc', () => {
     expect(() => encodeNamedCurves.prime256v1(publicKey)).to.throw()
   })
 
-  it('encodeNamedCurves.prime256v1', () => {
+  it('decodeNamedCurves.prime256v1', () => {
     const compressPoint = new Uint8Array(prime256v1CompressedFixture)
     const publicKey = decodeNamedCurves.prime256v1(compressPoint)
     expect(publicKey).to.deep.equal(new Uint8Array(prime256v1PublicFixture))
@@ -82,7 +82,7 @@ describe('ecc', () => {
     expect(compressPoint).to.deep.equal(new Uint8Array(secp384r1CompressedFixture))
   })
 
-  it('encodeNamedCurves.secp384r1', () => {
+  it('decodeNamedCurves.secp384r1', () => {
     const compressPoint = new Uint8Array(secp384r1CompressedFixture)
     const publicKey = decodeNamedCurves.secp384r1(compressPoint)
     expect(publicKey).to.deep.equal(new Uint8Array(secp384r1PublicFixture))

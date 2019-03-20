@@ -17,7 +17,7 @@
 
 import { expect } from 'chai'
 import 'mocha'
-import { SignatureKey, VerificationKey, AlgorithmSuiteIdentifier, WebCryptoAlgorithmSuite } from '../src'
+import { SignatureKey, VerificationKey, AlgorithmSuiteIdentifier, NodeAlgorithmSuite } from '../src'
 
 const prime256v1PublicFixture = [ 4,
   54, 131, 184, 190, 94, 145, 250, 132, 150, 193,
@@ -36,14 +36,15 @@ const prime256v1CompressedFixture = [ 2,
 
 describe('SignatureKey', () => {
   it('basic usage', () => {
-    const sigKey = new SignatureKey(new Uint8Array(3), new Uint8Array(3))
-    expect(sigKey).to.haveOwnProperty('privateKey').to.be.instanceOf(Uint8Array)
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const sigKey = new SignatureKey(new Uint8Array(3), new Uint8Array(3), suite)
+    expect(sigKey).to.haveOwnProperty('privateKey').to.be.a('string')
     expect(sigKey).to.haveOwnProperty('compressPoint').to.be.instanceOf(Uint8Array)
   })
 
   it('encodeCompressPoint', () => {
     const publicKey = new Uint8Array(prime256v1PublicFixture)
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const compressPoint = SignatureKey.encodeCompressPoint(publicKey, suite)
     expect(compressPoint).to.deep.equal(new Uint8Array(prime256v1CompressedFixture))
   })
@@ -51,13 +52,14 @@ describe('SignatureKey', () => {
 
 describe('SignatureKey', () => {
   it('basic usage', () => {
-    const verKey = new VerificationKey(new Uint8Array(3))
-    expect(verKey).to.haveOwnProperty('publicKey').to.be.instanceOf(Uint8Array)
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const verKey = new VerificationKey(new Uint8Array(3), suite)
+    expect(verKey).to.haveOwnProperty('publicKey').to.be.a('string')
   })
 
   it('decodeCompressPoint', () => {
     const compressPoint = new Uint8Array(prime256v1CompressedFixture)
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const publicKey = VerificationKey.decodeCompressPoint(compressPoint, suite)
     expect(publicKey).to.deep.equal(new Uint8Array(prime256v1PublicFixture))
   })

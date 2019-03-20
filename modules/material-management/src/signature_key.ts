@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
-import { AlgorithmSuite } from './algorithm_suites' // eslint-disable-line no-unused-vars
+import { AlgorithmSuite, NodeECDHCurve, WebCryptoECDHCurve } from './algorithm_suites' // eslint-disable-line no-unused-vars
 import { encodeNamedCurves } from './ecc_encode'
 import { decodeNamedCurves } from './ecc_decode'
 import { frozenClass, readOnlyBinaryProperty, readOnlyProperty } from './immutable_class'
+import { KeyObject } from 'crypto' // eslint-disable-line no-unused-vars
+import { publicKeyPem, privateKeyPem } from './pem_helpers'
 
 /*
  * This public interface to the SignatureKey object is provided for
@@ -25,14 +27,26 @@ import { frozenClass, readOnlyBinaryProperty, readOnlyProperty } from './immutab
  * need to use it and you should not do so.
  */
 
-type KeyMaterial = Uint8Array|CryptoKey
+type KeyMaterial = string|Uint8Array|KeyObject|CryptoKey
 
 export class SignatureKey {
   public readonly privateKey!: KeyMaterial
   public readonly compressPoint!: Uint8Array
-  constructor (privateKey: KeyMaterial, compressPoint: Uint8Array) {
+  public readonly signatureCurve!: NodeECDHCurve|WebCryptoECDHCurve
+  constructor (privateKey: KeyMaterial, compressPoint: Uint8Array, suite: AlgorithmSuite) {
+    const { signatureCurve: namedCurve } = suite
+    /* Precondition: Do not encode a compress point for an algorithm suite that does not have an ECHD named curve. */
+    if (!namedCurve) throw new Error('Unsupported Algorithm')
+    /* This is unfortunately complicated.  Node v11 crypto will accept
+     * a PEM formated Buffer to sign.  But the ECDH class will still
+     * return Buffers that are not PEM formated, but _only_ the points
+     * on the curve.  This means I have to make a choice about
+     * formating.  I chose to assume that t Buffer/Uin8Array is
+     * _only_ the raw points.
+     */
     if (privateKey instanceof Uint8Array) {
-      readOnlyBinaryProperty(this, 'privateKey', privateKey)
+      const pem = privateKeyPem(namedCurve, fromBuffer(privateKey), fromBuffer(compressPoint))
+      readOnlyProperty<SignatureKey, 'privateKey'>(this, 'privateKey', pem)
     } else {
       readOnlyProperty<SignatureKey, 'privateKey'>(this, 'privateKey', privateKey)
     }
@@ -48,14 +62,25 @@ export class SignatureKey {
     return encodeNamedCurves[namedCurve](publicKeyBytes)
   }
 }
-
 frozenClass(SignatureKey)
 
 export class VerificationKey {
   public readonly publicKey!: KeyMaterial
-  constructor (publicKey: KeyMaterial) {
+  public readonly signatureCurve!: NodeECDHCurve|WebCryptoECDHCurve
+  constructor (publicKey: KeyMaterial, suite: AlgorithmSuite) {
+    const { signatureCurve: namedCurve } = suite
+    /* Precondition: Do not encode a compress point for an algorithm suite that does not have an ECHD named curve. */
+    if (!namedCurve) throw new Error('Unsupported Algorithm')
+    /* This is unfortunately complicated.  Node v11 crypto will accept
+     * a PEM formated Buffer to verify.  But the ECDH class will still
+     * return Buffers that are not PEM formated, but _only_ the points
+     * on the curve.  This means I have to make a choice about
+     * formating.  I chose to assume that t Buffer/Uin8Array is
+     * _only_ the raw points.
+     */
     if (publicKey instanceof Uint8Array) {
-      readOnlyBinaryProperty(this, 'publicKey', publicKey)
+      const pem = publicKeyPem(namedCurve, fromBuffer(publicKey))
+      readOnlyProperty<VerificationKey, 'publicKey'>(this, 'publicKey', pem)
     } else {
       readOnlyProperty<VerificationKey, 'publicKey'>(this, 'publicKey', publicKey)
     }
@@ -71,5 +96,9 @@ export class VerificationKey {
     return decodeNamedCurves[namedCurve](compressPoint)
   }
 }
-
 frozenClass(VerificationKey)
+
+function fromBuffer (uint: Uint8Array) {
+  const { buffer, byteOffset, byteLength } = uint
+  return Buffer.from(buffer, byteOffset, byteLength)
+}
