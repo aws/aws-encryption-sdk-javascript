@@ -35,7 +35,7 @@ export class SignatureKey {
   public readonly signatureCurve!: NodeECDHCurve|WebCryptoECDHCurve
   constructor (privateKey: KeyMaterial, compressPoint: Uint8Array, suite: AlgorithmSuite) {
     const { signatureCurve: namedCurve } = suite
-    /* Precondition: Do not encode a compress point for an algorithm suite that does not have an ECHD named curve. */
+    /* Precondition: Do not encode a compress point for an algorithm suite that does not have an EC named curve. */
     if (!namedCurve) throw new Error('Unsupported Algorithm')
     /* This is unfortunately complicated.  Node v11 crypto will accept
      * a PEM formated Buffer to sign.  But the ECDH class will still
@@ -57,7 +57,7 @@ export class SignatureKey {
 
   static encodeCompressPoint (publicKeyBytes: Uint8Array, suite: AlgorithmSuite) {
     const { signatureCurve: namedCurve } = suite
-    /* Precondition: Do not encode a compress point for an algorithm suite that does not have an ECHD named curve. */
+    /* Precondition: Do not encode a compress point for an algorithm suite that does not have an EC named curve. */
     if (!namedCurve) throw new Error('Unsupported Algorithm')
     return encodeNamedCurves[namedCurve](publicKeyBytes)
   }
@@ -69,7 +69,7 @@ export class VerificationKey {
   public readonly signatureCurve!: NodeECDHCurve|WebCryptoECDHCurve
   constructor (publicKey: KeyMaterial, suite: AlgorithmSuite) {
     const { signatureCurve: namedCurve } = suite
-    /* Precondition: Do not encode a compress point for an algorithm suite that does not have an ECHD named curve. */
+    /* Precondition: Do not encode a compress point for an algorithm suite that does not have an EC named curve. */
     if (!namedCurve) throw new Error('Unsupported Algorithm')
     /* This is unfortunately complicated.  Node v11 crypto will accept
      * a PEM formated Buffer to verify.  But the ECDH class will still
@@ -90,7 +90,7 @@ export class VerificationKey {
 
   static decodeCompressPoint (compressPoint: Uint8Array, suite: AlgorithmSuite) {
     const { signatureCurve: namedCurve } = suite
-    /* Precondition: Do not decode a public key for an algorithm suite that does not have an ECHD named curve. */
+    /* Precondition: Do not decode a public key for an algorithm suite that does not have an EC named curve. */
     if (!namedCurve) throw new Error('Unsupported Algorithm')
 
     return decodeNamedCurves[namedCurve](compressPoint)
