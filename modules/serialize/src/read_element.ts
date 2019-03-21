@@ -66,11 +66,11 @@ export function readElements (
   needs(elementCount >= 0, 'elementCount must be positive.')
 
   while (elementCount--) {
-    /* Precondition: Enough data must exist to read the Uin16 length value. */
+    /* Check for early return (Postcondition): Enough data must exist to read the Uint16 length value. */
     if (readPos + 2 > dataView.byteLength) return false
     const length = dataView.getUint16(readPos, false)
     readPos += 2
-    /* Precondition: Enough data must exist length of the value. */
+    /* Check for early return (Postcondition): Enough data must exist length of the value. */
     if (readPos + length > dataView.byteLength) return false
     const elementBinary = buffer.slice(readPos, readPos + length)
     elements.push(elementBinary)

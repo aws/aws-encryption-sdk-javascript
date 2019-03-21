@@ -37,9 +37,9 @@ export function aadFactory (fromUtf8: (input: string) => Uint8Array) {
 
   function messageAADContentString ({ contentType, isFinalFrame }: {contentType: ContentType, isFinalFrame: boolean}) {
     switch (contentType) {
-      case 1:
+      case ContentType.NO_FRAMING:
         return ContentAADString.NON_FRAMED_STRING_ID
-      case 2:
+      case ContentType.FRAMED_DATA:
         return isFinalFrame
           ? ContentAADString.FINAL_FRAME_STRING_ID
           : ContentAADString.FRAME_STRING_ID

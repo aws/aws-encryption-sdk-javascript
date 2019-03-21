@@ -58,7 +58,7 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
       messageBuffer.byteLength
     )
 
-    /* Precondition: Not Enough Data. Need to have at least 22 bytes of data to begin parsing.
+    /* Check for early return (Postcondition): Not Enough Data. Need to have at least 22 bytes of data to begin parsing.
      * The first 22 bytes of the header are fixed length.  After that
      * there are 2 variable length sections.
      */
@@ -73,7 +73,7 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
     const messageId = messageBuffer.slice(4, 20)
     const contextLength = dataView.getUint16(20)
 
-    /* Precondition: Not Enough Data. Need to have all of the context in bytes before we can parse the next section.
+    /* Check for early return (Postcondition): Not Enough Data. Need to have all of the context in bytes before we can parse the next section.
      * This is the first variable length section.
      */
     if (22 + contextLength > dataView.byteLength) return false // not enough data
@@ -82,7 +82,7 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
     const encryptionContext = decodeEncryptionContext(contextBuffer)
     const dataKeyInfo = deserializeEncryptedDataKeys(messageBuffer, 22 + contextLength)
 
-    /* Precondition: Not Enough Data. deserializeEncryptedDataKeys will return false if it does not have enough data.
+    /* Check for early return (Postcondition): Not Enough Data. deserializeEncryptedDataKeys will return false if it does not have enough data.
      * This is the second variable length section.
      */
     if (!dataKeyInfo) return false // not enough data
@@ -90,7 +90,7 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
     const { encryptedDataKeys, readPos } = dataKeyInfo
     const headerLength = readPos + 1 + 4 + 1 + 4
 
-    /* Precondition: Not Enough Data. Need to have the remaining fixed length data to parse. */
+    /* Check for early return (Postcondition): Not Enough Data. Need to have the remaining fixed length data to parse. */
     if (headerLength > dataView.byteLength) return false // not enough data
 
     const contentType = dataView.getUint8(readPos)
@@ -115,7 +115,7 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
     const { ivLength, tagLength } = algorithmSuite
     const tagLengthBytes = tagLength / 8
 
-    /* Precondition: Not Enough Data. Need to have the Header Auth section.  This is derived from the algorithm suite specification. */
+    /* Check for early return (Postcondition): Not Enough Data. Need to have the Header Auth section.  This is derived from the algorithm suite specification. */
     if (headerLength + ivLength + tagLengthBytes > dataView.byteLength) return false // not enough data
 
     const headerIv = messageBuffer.slice(headerLength, headerLength + ivLength)
@@ -140,7 +140,7 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
     /* Precondition: startPos must be within the byte length of the buffer given. */
     needs(buffer.byteLength >= startPos && startPos >= 0, 'startPos out of bounds.')
 
-    /* Precondition: Need to have at least Uint16 (2) bytes of data. */
+    /* Check for early return (Postcondition): Need to have at least Uint16 (2) bytes of data. */
     if (startPos + 2 > buffer.byteLength) return false
 
     /* Uint8Array is a view on top of the underlying ArrayBuffer.
@@ -160,7 +160,7 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
     needs(encryptedDataKeysCount, 'No EncryptedDataKey found.')
 
     const elementInfo = readElements(encryptedDataKeysCount * 3, buffer, startPos + 2)
-    /* Precondition: readElement will return false if there is not enough data.
+    /* Check for early return (Postcondition): readElement will return false if there is not enough data.
      * I can only continue if I have at least the entire EDK section.
      */
     if (!elementInfo) return false
@@ -183,7 +183,7 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
    */
   function decodeEncryptionContext (encodedEncryptionContext: Uint8Array) {
     const encryptionContext: EncryptionContext = {}
-    /* Precondition: The case of 0 length is defined as an empty object. */
+    /* Check for early return (Postcondition): The case of 0 length is defined as an empty object. */
     if (!encodedEncryptionContext.byteLength) {
       return encryptionContext
     }
@@ -204,7 +204,6 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
      * Unlike the encrypted data key section, the encryption context has a length
      * element.  This means I should always pass the entire section.
      */
-
     if (!elementInfo) throw new Error('context parse error')
     const { elements, readPos } = elementInfo
 

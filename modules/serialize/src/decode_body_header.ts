@@ -83,7 +83,7 @@ export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInf
   /* Precondition: readPos must be within the byte length of the buffer given. */
   needs(dataView.byteLength >= readPos && readPos >= 0, 'readPos out of bounds.')
 
-  /* Precondition: There must be enough data to parse.
+  /* Check for early return (Postcondition): There must be enough data to parse.
    * The format expressed here is
    * SequenceIdentifier: Uint32
    * IVLength: Uint8
@@ -91,33 +91,63 @@ export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInf
    */
   if (4 + ivLength + readPos > dataView.byteLength) return
 
-  if (dataView.getUint32(readPos) !== SequenceIdentifier.SEQUENCE_NUMBER_END) {
-    const sequenceNumber = dataView.getUint32(readPos)
-    /* Postcondition: sequenceNumber must be greater than 0. */
-    needs(sequenceNumber > 0, 'Malformed sequenceNumber.')
-    const iv = buffer.slice(readPos += 4, readPos += ivLength)
-    return {
-      sequenceNumber,
-      iv,
-      contentLength: frameLength,
-      readPos,
-      tagLength,
-      isFinalFrame: false,
-      contentType: ContentType.FRAMED_DATA
-    }
+  if (dataView.getUint32(readPos) === SequenceIdentifier.SEQUENCE_NUMBER_END) {
+    return decodeFinalFrameBodyHeader(buffer, headerInfo, readPos)
   }
 
-  /* Precondition: There must be enough data to parse.
-    * The format expressed here is
-    * SEQUENCE_NUMBER_END: Uint32(FFFF)
-    * SequenceIdentifier: Uint32
-    * IVLength: Uint8
-    * Reserved: Uint32
-    * ContentLength: Uint32
-    */
+  const sequenceNumber = dataView.getUint32(readPos)
+  /* Postcondition: sequenceNumber must be greater than 0. */
+  needs(sequenceNumber > 0, 'Malformed sequenceNumber.')
+  const iv = buffer.slice(readPos += 4, readPos += ivLength)
+  return {
+    sequenceNumber,
+    iv,
+    contentLength: frameLength,
+    readPos,
+    tagLength,
+    isFinalFrame: false,
+    contentType: ContentType.FRAMED_DATA
+  }
+}
+
+/**
+ *  Exported for testing.  Used by decodeBodyHeader to compose a complete solution.
+ * @param buffer Uint8Array
+ * @param headerInfo HeaderInfo
+ * @param readPos number
+ */
+export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): FrameBodyHeader|undefined {
+  /* Precondition: The contentType must be a supported format. */
+  needs(ContentType.FRAMED_DATA === headerInfo.messageHeader.contentType, 'Unknown contentType')
+
+  const { ivLength, tagLength } = headerInfo.algorithmSuite
+
+  /* Uint8Array is a view on top of the underlying ArrayBuffer.
+   * This means that raw underlying memory stored in the ArrayBuffer
+   * may be larger than the Uint8Array.  This is especially true of
+   * the Node.js Buffer object.  The offset and length *must* be
+   * passed to the DataView otherwise I will get unexpected results.
+   */
+  const dataView = new DataView(
+    buffer.buffer,
+    buffer.byteOffset,
+    buffer.byteLength
+  )
+
+  /* Precondition: readPos must be within the byte length of the buffer given. */
+  needs(dataView.byteLength >= readPos && readPos >= 0, 'readPos out of bounds.')
+  /* Check for early return (Postcondition): There must be enough data to parse.
+   * The format expressed here is
+   * SEQUENCE_NUMBER_END: Uint32(FFFF)
+   * SequenceIdentifier: Uint32
+   * IVLength: Uint8
+   * Reserved: Uint32
+   * ContentLength: Uint32
+   */
   if (4 + 4 + ivLength + 4 + readPos > dataView.byteLength) return
 
   /* The precondition SEQUENCE_NUMBER_END: Uint32(FFFF) is handled above. */
+  needs(dataView.getUint32(readPos) === SequenceIdentifier.SEQUENCE_NUMBER_END, '')
   const sequenceNumber = dataView.getUint32(readPos += 4)
   /* Postcondition: sequenceNumber must be greater than 0. */
   needs(sequenceNumber > 0, 'Malformed sequenceNumber.')
@@ -161,7 +191,7 @@ export function decodeNonFrameBodyHeader (buffer: Uint8Array, headerInfo: Header
   /* Precondition: readPos must be within the byte length of the buffer given. */
   needs(dataView.byteLength >= readPos && readPos >= 0, 'readPos out of bounds.')
 
-  /* Precondition: There must be enough data to parse.
+  /* Check for early return (Postcondition): There must be enough data to parse.
     * The format expressed here is
     * IVLength: Uint8
     * ContentLength: Uint64

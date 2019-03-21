@@ -79,7 +79,7 @@ export function serializeFactory (fromUtf8: (input: any) => Uint8Array) {
   }
 
   function serializeEncryptionContext (encodedEncryptionContext: Uint8Array[]) {
-    /* Precondition: If there is no context then the length of the _whole_ serialized portion is 0.
+    /* Check for early return (Postcondition): If there is no context then the length of the _whole_ serialized portion is 0.
      * This is part of the specification of the AWS Encryption SDK Message Format.
      * It is not 0 for length and 0 for count.  The count element is omitted.
      */
