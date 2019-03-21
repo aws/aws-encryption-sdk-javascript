@@ -41,8 +41,6 @@ export abstract class KmsKeyring<S extends SupportedAlgorithmSuites, Client exte
 
   /* Keyrings *must* preserve the order of EDK's.  The generatorKmsKey is the first on this list. */
   async _onEncrypt (material: EncryptionMaterial<S>, context?: EncryptionContext) {
-    // need to append KeyringTrace
-
     const kmsKeys = this.kmsKeys.slice()
     const { clientProvider, generatorKmsKey, grantTokens } = this
     if (generatorKmsKey && !material.hasUnencryptedDataKey) {

@@ -19,7 +19,7 @@ import { DecryptOutput } from './kms_types/DecryptOutput' // eslint-disable-line
 import { EncryptOutput } from './kms_types/EncryptOutput' // eslint-disable-line no-unused-vars
 import { KMS } from './kms_types/KMS' // eslint-disable-line no-unused-vars
 import { regionFromKmsKeyArn } from './region_from_kms_key_arn'
-import { EncryptionContext, EncryptedDataKey } from '@aws-crypto/material-management' // eslint-disable-line no-unused-vars
+import { EncryptionContext, EncryptedDataKey, needs } from '@aws-crypto/material-management' // eslint-disable-line no-unused-vars
 
 export const KMS_PROVIDER_ID = 'aws-kms'
 
@@ -70,7 +70,7 @@ export async function decrypt<Client extends KMS> (
   GrantTokens?: string
 ) {
   /* Precondition:  The EDK must be a KMS edk. */
-  if (edk.providerId === KMS_PROVIDER_ID) throw new Error('')
+  needs(edk.providerId === KMS_PROVIDER_ID, 'Unsupported providerId')
   const region = regionFromKmsKeyArn(edk.providerInfo)
   const client = clientProvider(region)
   /* Precondition: Client region was not provided. */

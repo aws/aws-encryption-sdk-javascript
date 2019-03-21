@@ -1,4 +1,5 @@
-At this time the aws js sdk v3 only exports a node and browser client.
+At this time the AWS SDK for JavaScript v3 only export the
+client for Node.js or browser.
 Since the types are the same and are _only_ exported in the packages
 themselves, to support both versions I can either include both
 packages _or_ copy the types here.  I have chose to copy the types

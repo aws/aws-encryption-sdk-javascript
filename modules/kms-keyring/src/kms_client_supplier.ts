@@ -17,7 +17,9 @@ import { KMS } from './kms_types/KMS' // eslint-disable-line no-unused-vars
 import { KMSConfiguration } from './kms_types/KMSConfiguration' // eslint-disable-line no-unused-vars
 import { needs } from '@aws-crypto/material-management'
 
-export interface KMSConstructible<Client extends KMS, Config extends KMSConfiguration> {new(config: Config) : Client}
+export interface KMSConstructible<Client extends KMS, Config extends KMSConfiguration> {
+  new(config: Config) : Client
+}
 
 export interface KmsClientSupplier<Client extends KMS> {
   /* KmsClientProvider is allowed to return undefined if, for example, user wants to exclude particular regions. */
