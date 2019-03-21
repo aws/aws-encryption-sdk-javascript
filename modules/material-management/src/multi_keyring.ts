@@ -26,14 +26,15 @@ export class MultiKeyring<S extends SupportedAlgorithmSuites> extends Keyring<S>
   constructor (generator?: Keyring<S>, ..._children: Keyring<S>[]) {
     super()
     /* Precondition: generator must be a Keyring. */
-    if (generator && !(generator instanceof Keyring)) throw new Error('')
+    needs(!!generator === generator instanceof Keyring, 'Generator must be a Keyring')
     const children: Keyring<S>[] = []
     Object.defineProperty(this, 'children', {
       get: () => [...children], // inefficient, but immutable
       enumerable: true
     })
     const addChild = (..._children: Keyring<S>[]) => {
-      if (!_children.every(kr => kr instanceof Keyring)) throw new Error('')
+      /* Precondition: a child must ba a Keyring. */
+      needs(_children.every(kr => kr instanceof Keyring), 'Child must be a Keyring')
       children.push(..._children)
       return this
     }
@@ -73,6 +74,9 @@ export class MultiKeyring<S extends SupportedAlgorithmSuites> extends Keyring<S>
     if (this.generator) children.unshift(this.generator)
 
     for (const keyring of children) {
+      /* Check for early return (Postcondition): Do not attempt to decrypt once I have a valid key. */
+      if (material.hasValidKey()) return material
+
       try {
         await keyring.onDecrypt(material, encryptedDataKeys, context)
       } catch (e) {
@@ -81,12 +85,8 @@ export class MultiKeyring<S extends SupportedAlgorithmSuites> extends Keyring<S>
         // If the caller does not have access they may have access
         // through another Keyring.
       }
-
-      // Once I have an unencrypted data key do not attempt any more decrypts
-      if (material.hasValidKey()) return material
     }
     return material
   }
 }
-
 immutableClass(MultiKeyring)

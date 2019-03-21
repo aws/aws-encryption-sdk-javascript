@@ -13,6 +13,15 @@
  * limitations under the License.
  */
 
+/* Before Node.js v11 the crypto module did not support
+  * a method to PEM format a ECDH key.  It has always supported
+  * producing such keys: `crypto.createECDH`.  But formating
+  * these keys as a PEM for use in `crypto.Sign` and
+  * `crypto.Verify` has not been possible in native `crypto`.
+  * As Node.js v6, v8, and v10 reach end of life, this code
+  * can be deleted.
+  */
+
 // @ts-ignore
 import asn from 'asn1.js'
 
@@ -53,9 +62,10 @@ export function publicKeyPem (curve: string, publicKey: Buffer) {
   }, 'der')
 
   return [
-    '-----BEGIN EC PRIVATE KEY-----',
+    '-----BEGIN PUBLIC KEY-----',
     ...chunk64(buff),
-    '-----END EC PRIVATE KEY-----'
+    '-----END PUBLIC KEY-----',
+    ''
   ].join('\n')
 }
 
@@ -68,23 +78,22 @@ export function privateKeyPem (curve: string, privateKey: Buffer, publicKey: Buf
   }, 'der')
 
   return [
-    '-----BEGIN PUBLIC KEY-----',
+    '-----BEGIN EC PRIVATE KEY-----',
     ...chunk64(buff),
-    '-----END PUBLIC KEY-----'
+    '-----END EC PRIVATE KEY-----',
+    ''
   ].join('\n')
 }
 
-function chunk64 (buff: Buffer) {
+export function chunk64 (buff: Buffer) {
   const chunkSize = 64
-  const result: string[] = []
-  const len = buff.byteLength
-  let i = 0
+  const str = buff.toString('base64')
+  const numChunks = Math.ceil(str.length / chunkSize)
+  const chunks: string[] = new Array(numChunks)
 
-  while (i < len) {
-    const chunk = buff
-      .slice(i, i += chunkSize)
-      .toString('base64')
-    result.push(chunk)
+  for (let i = 0, o = 0; i < numChunks; ++i, o += chunkSize) {
+    chunks[i] = str.substr(o, chunkSize)
   }
-  return result
+
+  return chunks
 }

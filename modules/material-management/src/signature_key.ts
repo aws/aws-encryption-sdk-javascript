@@ -58,7 +58,7 @@ export class SignatureKey {
   static encodeCompressPoint (publicKeyBytes: Uint8Array, suite: AlgorithmSuite) {
     const { signatureCurve: namedCurve } = suite
     /* Precondition: Do not encode a compress point for an algorithm suite that does not have an ECHD named curve. */
-    if (namedCurve === void 0) throw new Error('Unsupported Algorithm')
+    if (!namedCurve) throw new Error('Unsupported Algorithm')
     return encodeNamedCurves[namedCurve](publicKeyBytes)
   }
 }
@@ -91,7 +91,7 @@ export class VerificationKey {
   static decodeCompressPoint (compressPoint: Uint8Array, suite: AlgorithmSuite) {
     const { signatureCurve: namedCurve } = suite
     /* Precondition: Do not decode a public key for an algorithm suite that does not have an ECHD named curve. */
-    if (namedCurve === void 0) throw new Error('Unsupported Algorithm')
+    if (!namedCurve) throw new Error('Unsupported Algorithm')
 
     return decodeNamedCurves[namedCurve](compressPoint)
   }
