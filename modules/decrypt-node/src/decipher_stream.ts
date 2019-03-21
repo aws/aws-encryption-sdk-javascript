@@ -66,12 +66,12 @@ export function getDecipherStream () {
           .once('DecipherInfo', (info: DecipherInfo) => {
             decipherInfo = info
           })
-          .on('BodyInfo', (info: BodyInfo) => this._onBodyHeader(info))
-          .on('AuthTag', (authTag: Buffer) => this._onAuthTag(authTag))
+          .on('BodyInfo', this._onBodyHeader)
+          .on('AuthTag', this._onAuthTag)
       })
     }
 
-    _onBodyHeader ({ iv, contentLength, sequenceNumber, isFinalFrame }: BodyInfo) {
+    _onBodyHeader = ({ iv, contentLength, sequenceNumber, isFinalFrame }: BodyInfo) => {
       /* Precondition: decipherInfo must be set before BodyInfo is sent. */
       needs(decipherInfo, 'Malformed State.')
       /* Precondition: Ciphertext must not be flowing before a BodyHeader is processed. */
@@ -129,7 +129,7 @@ export function getDecipherStream () {
       super._read(size)
     }
 
-    async _onAuthTag (authTag: Buffer) {
+    _onAuthTag  = async (authTag: Buffer) => {
       const { decipher, content, contentLength } = decipherState
       /* Precondition: _onAuthTag must be called only after a frame has been accumulated. */
       needs(frameComplete, 'AuthTag before frame.')
