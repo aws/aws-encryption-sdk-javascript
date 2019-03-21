@@ -33,7 +33,7 @@ export async function generateDataKey<Client extends KMS> (
   const region = regionFromKmsKeyArn(KeyId)
   const client = clientProvider(region)
 
-  /* Precondition: Client region was not provided. */
+  /* Check for early return (Postcondition): Client region was not provided. */
   if (!client) return
 
   const dataKey = await client.generateDataKey({ KeyId, GrantTokens, NumberOfBytes, EncryptionContext })
@@ -53,7 +53,7 @@ export async function encrypt<Client extends KMS> (
   const region = regionFromKmsKeyArn(KeyId)
   const client = clientProvider(region)
 
-  /* Precondition: Client region was not provided. */
+  /* Check for early return (Postcondition): Client region was not provided. */
   if (!client) return
 
   const kmsEDK = await client.encrypt({ KeyId, Plaintext, EncryptionContext, GrantTokens })
@@ -73,7 +73,7 @@ export async function decrypt<Client extends KMS> (
   needs(edk.providerId === KMS_PROVIDER_ID, 'Unsupported providerId')
   const region = regionFromKmsKeyArn(edk.providerInfo)
   const client = clientProvider(region)
-  /* Precondition: Client region was not provided. */
+  /* Check for early return (Postcondition): Client region was not provided. */
   if (!client) return
 
   const dataKey = await client.decrypt({ CiphertextBlob: edk.encryptedDataKey, EncryptionContext, GrantTokens })

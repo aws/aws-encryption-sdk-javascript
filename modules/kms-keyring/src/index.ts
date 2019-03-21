@@ -14,6 +14,6 @@
  */
 
 export * from './kms_client_supplier'
-export * from './kms-keyring'
+export * from './kms_keyring'
 export * from './helpers'
 export * from './region_from_kms_key_arn'
