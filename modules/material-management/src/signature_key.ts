@@ -75,7 +75,7 @@ export class VerificationKey {
      * a PEM formated Buffer to verify.  But the ECDH class will still
      * return Buffers that are not PEM formated, but _only_ the points
      * on the curve.  This means I have to make a choice about
-     * formating.  I chose to assume that t Buffer/Uin8Array is
+     * formating.  I chose to assume that the Buffer/Uin8Array is
      * _only_ the raw points.
      */
     if (publicKey instanceof Uint8Array) {
