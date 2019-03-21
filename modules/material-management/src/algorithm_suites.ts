@@ -19,7 +19,7 @@
  * manipulate this structure, but it can occasionally be needed for more
  * advanced use cases, such as writing keyrings.
  *
- * Here we describe the overall shape Algorithm Suites used by the AWS Encryption
+ * Here we describe the overall shape of the Algorithm Suites used by the AWS Encryption
  * SDK for JavaScript.  Specific details for Node.js and WebCrypto can be found
  * in the respective files
  */
