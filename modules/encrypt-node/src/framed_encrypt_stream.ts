@@ -53,6 +53,8 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
   return new (class FramedEncryptStream extends (<new (...args: any[]) => Transform>PortableTransform) {
     _transform (chunk: Buffer, encoding: string, callback: ErrBack) {
       const contentLeft = frameLength - accumulatingFrame.contentLength
+
+      /* Check for early return (Postcondition): Have not accumulated a frame. */
       if (contentLeft > chunk.length) {
         // eat more
         accumulatingFrame.contentLength += chunk.length
@@ -136,6 +138,13 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
         await ioTick()
       }
 
+      /* Finalize the cipher and handle any tail. */
+      const tail = cipher.final()
+      frameSize += tail.length
+      cipherContent.push(tail)
+      /* Push the authTag onto the end.  Yes, I am abusing the name. */
+      cipherContent.push(cipher.getAuthTag())
+
       needs(frameSize === frameLength || isFinalFrame, 'Malformed frame')
 
       for (const cipherText of cipherContent) {
@@ -147,8 +156,6 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
         }
       }
 
-      this.push(cipher.final())
-      this.push(cipher.getAuthTag())
       if (isFinalFrame) this.push(null)
     }
   })()

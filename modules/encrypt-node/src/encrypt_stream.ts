@@ -15,7 +15,7 @@
 
 import {
   NodeCryptographicMaterialsManager, NodeAlgorithmSuite, AlgorithmSuiteIdentifier, // eslint-disable-line no-unused-vars
-  NodeEncryptionMaterial, getEncryptHelper, EncryptionContext // eslint-disable-line no-unused-vars
+  NodeKeyring, NodeEncryptionMaterial, getEncryptHelper, EncryptionContext // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 import { getFramedEncryptStream } from './framed_encrypt_stream'
 import { SignatureStream } from './signature_stream'
@@ -39,8 +39,27 @@ export interface EncryptStreamInput {
   plaintextLength?: number
 }
 
-export function encryptStream (cmm: NodeCryptographicMaterialsManager, op: EncryptStreamInput = {}) {
+/**
+ * Takes a NodeCryptographicMaterialsManager or a NodeKeyring that will
+ * be wrapped in a NodeCryptographicMaterialsManager and returns a stream.
+ * 
+ * @param cmm NodeCryptographicMaterialsManager|NodeKeyring
+ * @param op EncryptStreamInput
+ */
+export function encryptStream (
+  cmm: NodeCryptographicMaterialsManager|NodeKeyring,
+  op: EncryptStreamInput = {}
+) {
   const { suiteId, context, frameLength = 10 } = op
+
+  /* If the cmm is not a MaterialsManager, wrap in one.
+   * I am expecting the NodeCryptographicMaterialsManager to
+   * handle non-keyring parameters.
+   */
+  cmm = cmm instanceof NodeCryptographicMaterialsManager
+    ? cmm
+    : new NodeCryptographicMaterialsManager(cmm)
+
   const suite = suiteId && new NodeAlgorithmSuite(suiteId)
 
   const wrappingStream = new Duplexify()
@@ -50,6 +69,8 @@ export function encryptStream (cmm: NodeCryptographicMaterialsManager, op: Encry
       const { dispose, getSigner } = getEncryptHelper(material)
 
       const { getCipher, messageHeader, rawHeader } = getEncryptionInfo(material, frameLength, context)
+
+      wrappingStream.emit('MessageHeader', messageHeader)
 
       const encryptStream = getFramedEncryptStream(getCipher, messageHeader, dispose)
       const signatureStream = new SignatureStream(getSigner)
