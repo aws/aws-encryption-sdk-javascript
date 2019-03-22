@@ -40,9 +40,9 @@ import { needs } from '@aws-crypto/material-management'
  * @param buffer Uint8Array
  * @param headerInfo HeaderInfo
  * @param readPos number
- * @returns BodyHeader|undefined
+ * @returns BodyHeader|false
  */
-export function decodeBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): BodyHeader|undefined {
+export function decodeBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): BodyHeader|false {
   /* Precondition: The contentType must be a supported format. */
   needs(ContentType[headerInfo.messageHeader.contentType], 'Unknown contentType')
 
@@ -52,7 +52,7 @@ export function decodeBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, re
     case ContentType.NO_FRAMING:
       return decodeNonFrameBodyHeader(buffer, headerInfo, readPos)
   }
-  return undefined
+  return false
 }
 
 /**
@@ -61,7 +61,7 @@ export function decodeBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, re
  * @param headerInfo HeaderInfo
  * @param readPos number
  */
-export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): FrameBodyHeader|undefined {
+export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): FrameBodyHeader|false {
   /* Precondition: The contentType must be a supported format. */
   needs(ContentType.FRAMED_DATA === headerInfo.messageHeader.contentType, 'Unknown contentType')
 
@@ -89,7 +89,7 @@ export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInf
    * IVLength: Uint8
    * There is a special case where the SequenceIdentifier is the Final Frame.
    */
-  if (4 + ivLength + readPos > dataView.byteLength) return
+  if (4 + ivLength + readPos > dataView.byteLength) return false
 
   if (dataView.getUint32(readPos) === SequenceIdentifier.SEQUENCE_NUMBER_END) {
     return decodeFinalFrameBodyHeader(buffer, headerInfo, readPos)
@@ -116,7 +116,7 @@ export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInf
  * @param headerInfo HeaderInfo
  * @param readPos number
  */
-export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): FrameBodyHeader|undefined {
+export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): FrameBodyHeader|false {
   /* Precondition: The contentType must be a supported format. */
   needs(ContentType.FRAMED_DATA === headerInfo.messageHeader.contentType, 'Unknown contentType')
 
@@ -144,7 +144,7 @@ export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: Head
    * Reserved: Uint32
    * ContentLength: Uint32
    */
-  if (4 + 4 + ivLength + 4 + readPos > dataView.byteLength) return
+  if (4 + 4 + ivLength + 4 + readPos > dataView.byteLength) return false
 
   /* The precondition SEQUENCE_NUMBER_END: Uint32(FFFF) is handled above. */
   needs(dataView.getUint32(readPos) === SequenceIdentifier.SEQUENCE_NUMBER_END, '')
@@ -170,7 +170,7 @@ export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: Head
  * @param headerInfo HeaderInfo
  * @param readPos number
  */
-export function decodeNonFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): NonFrameBodyHeader|undefined {
+export function decodeNonFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): NonFrameBodyHeader|false {
   /* Precondition: The contentType must be a supported format. */
   needs(ContentType.NO_FRAMING === headerInfo.messageHeader.contentType, 'Unknown contentType')
 
@@ -196,7 +196,7 @@ export function decodeNonFrameBodyHeader (buffer: Uint8Array, headerInfo: Header
     * IVLength: Uint8
     * ContentLength: Uint64
     */
-  if (ivLength + 8 + readPos > dataView.byteLength) return
+  if (ivLength + 8 + readPos > dataView.byteLength) return false
 
   const iv = buffer.slice(readPos, readPos += ivLength)
   const contentLengthBuff = buffer.slice(readPos, readPos += 8)

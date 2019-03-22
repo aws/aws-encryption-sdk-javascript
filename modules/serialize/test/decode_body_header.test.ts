@@ -131,7 +131,7 @@ describe('decodeFrameBodyHeader', () => {
 
     for (let i = 0; frameHeader.byteLength > i; i++) {
       const test = decodeFrameBodyHeader(frameHeader.slice(0, i), headerInfo, 0)
-      expect(test).to.eql(undefined)
+      expect(test).to.eql(false)
     }
   })
 
@@ -150,7 +150,7 @@ describe('decodeFrameBodyHeader', () => {
 
     for (let i = 0; frameHeader.byteLength > i; i++) {
       const test = decodeFrameBodyHeader(frameHeader.slice(0, i), headerInfo, 0)
-      expect(test).to.eql(undefined)
+      expect(test).to.eql(false)
     }
   })
 
@@ -224,7 +224,7 @@ describe('decodeFrameBodyHeader', () => {
 
     for (let i = 10; buffer.byteLength - 1 > i; i++) {
       const test = decodeFrameBodyHeader(buffer.slice(0, i), headerInfo, 10)
-      expect(test).to.eql(undefined)
+      expect(test).to.eql(false)
     }
   })
 
@@ -243,7 +243,7 @@ describe('decodeFrameBodyHeader', () => {
 
     for (let i = 10; buffer.byteLength > i; i++) {
       const test = decodeFrameBodyHeader(buffer.slice(0, i), headerInfo, 10)
-      expect(test).to.eql(undefined)
+      expect(test).to.eql(false)
     }
   })
 
@@ -343,7 +343,7 @@ describe('decodeNonFrameBodyHeader', () => {
 
     for (let i = 0; frameHeader.byteLength > i; i++) {
       const test = decodeNonFrameBodyHeader(frameHeader.slice(0, i), headerInfo, 0)
-      expect(test).to.eql(undefined)
+      expect(test).to.eql(false)
     }
   })
 

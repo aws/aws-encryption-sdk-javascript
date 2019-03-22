@@ -113,7 +113,7 @@ export function serializeFactory (fromUtf8: (input: any) => Uint8Array) {
     return concatBuffers(
       uInt8(messageHeader.version),
       uInt8(messageHeader.type),
-      uInt16BE(messageHeader.algorithmId),
+      uInt16BE(messageHeader.suiteId),
       messageHeader.messageId,
       serializeEncryptionContext(encodeEncryptionContext(messageHeader.encryptionContext)),
       serializeEncryptedDataKeys(messageHeader.encryptedDataKeys),

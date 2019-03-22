@@ -90,13 +90,21 @@ describe('serializeFactory:encodeEncryptionContext', () => {
   it('should return rational byte array', () => {
     const fromUtf8 = (input: string) => Buffer.from(input)
     const { encodeEncryptionContext } = serializeFactory(fromUtf8)
-    const test = encodeEncryptionContext({ some: 'public', information: '\u00bd + \u00bc = \u00be' })
+    const test = encodeEncryptionContext({ information: '\u00bd + \u00bc = \u00be', some: 'public'})
     expect(test).to.be.instanceof(Array)
     expect(test.length).to.eql(2)
     expect(test[0]).to.be.instanceof(Uint8Array)
     expect(test[1]).to.be.instanceof(Uint8Array)
-    expect(test[0]).to.deep.equal(new Uint8Array([ 0, 4, 115, 111, 109, 101, 0, 6, 112, 117, 98, 108, 105, 99 ]))
-    expect(test[1]).to.deep.equal(new Uint8Array([ 0, 11, 105, 110, 102, 111, 114, 109, 97, 116, 105, 111, 110, 0, 12, 194, 189, 32, 43, 32, 194, 188, 32, 61, 32, 194, 190 ]))
+    expect(test[0]).to.deep.equal(new Uint8Array([ 0, 11, 105, 110, 102, 111, 114, 109, 97, 116, 105, 111, 110, 0, 12, 194, 189, 32, 43, 32, 194, 188, 32, 61, 32, 194, 190 ]))
+    expect(test[1]).to.deep.equal(new Uint8Array([ 0, 4, 115, 111, 109, 101, 0, 6, 112, 117, 98, 108, 105, 99 ]))
+  })
+
+  it('should sort by key', () => {
+    const fromUtf8 = (input: string) => Buffer.from(input)
+    const { encodeEncryptionContext } = serializeFactory(fromUtf8)
+    const test = encodeEncryptionContext({ some: 'public', information: '\u00bd + \u00bc = \u00be'})
+    expect(test[0]).to.deep.equal(new Uint8Array([ 0, 11, 105, 110, 102, 111, 114, 109, 97, 116, 105, 111, 110, 0, 12, 194, 189, 32, 43, 32, 194, 188, 32, 61, 32, 194, 190 ]))
+    expect(test[1]).to.deep.equal(new Uint8Array([ 0, 4, 115, 111, 109, 101, 0, 6, 112, 117, 98, 108, 105, 99 ]))
   })
 })
 
@@ -145,7 +153,7 @@ describe('serializeFactory:serializeMessageHeader', () => {
     const test = serializeMessageHeader({
       version: SerializationVersion.V1,
       type: ObjectType.CUSTOMER_AE_DATA,
-      algorithmId: 0x0014,
+      suiteId: 0x0014,
       messageId: new Uint8Array([ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 ]),
       encryptionContext: { some: 'public', information: '\u00bd + \u00bc = \u00be' },
       encryptedDataKeys: [
@@ -168,7 +176,7 @@ describe('serializeFactory:serializeMessageHeader', () => {
     const test = serializeMessageHeader({
       version: SerializationVersion.V1,
       type: ObjectType.CUSTOMER_AE_DATA,
-      algorithmId: 0x0014,
+      suiteId: 0x0014,
       messageId: new Uint8Array([ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 ]),
       encryptionContext: {},
       encryptedDataKeys: [

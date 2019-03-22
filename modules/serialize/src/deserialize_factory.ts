@@ -22,12 +22,22 @@
  * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-structure
  */
 
-import { IvLength, AlgorithmSuiteIdentifier, EncryptedDataKey, EncryptionContext, needs } from '@aws-crypto/material-management' // eslint-disable-line no-unused-vars
-import { HeaderInfo, IAlgorithm } from './types' // eslint-disable-line no-unused-vars
+import { 
+  IvLength,
+  AlgorithmSuiteIdentifier,
+  AlgorithmSuite,
+  EncryptedDataKey,
+  EncryptionContext,
+  needs 
+} from '@aws-crypto/material-management'
+import { HeaderInfo, AlgorithmSuiteConstructor } from './types' // eslint-disable-line no-unused-vars
 import { readElements } from './read_element'
 
 // To deal with Browser and Node.js I inject a function to handle utf8 encoding.
-export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAlgorithm: IAlgorithm) {
+export function deserializeFactory<Suite extends AlgorithmSuite> (
+  toUtf8: (input: Uint8Array) => string,
+  SdkSuite: AlgorithmSuiteConstructor<Suite>
+) {
   return {
     deserializeMessageHeader,
     deserializeEncryptedDataKeys,
@@ -67,9 +77,9 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
     const version = dataView.getUint8(0)
     const type = dataView.getUint8(1)
 
-    /* Precondition: algorithmId must match supported algorithm suite */
+    /* Precondition: suiteId must match supported algorithm suite */
     needs(AlgorithmSuiteIdentifier[dataView.getUint16(2)], 'Unsupported algorithm suite.')
-    const algorithmId = <AlgorithmSuiteIdentifier>dataView.getUint16(2)
+    const suiteId = <AlgorithmSuiteIdentifier>dataView.getUint16(2)
     const messageId = messageBuffer.slice(4, 20)
     const contextLength = dataView.getUint16(20)
 
@@ -78,8 +88,9 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
      */
     if (22 + contextLength > dataView.byteLength) return false // not enough data
 
-    const contextBuffer = messageBuffer.slice(22, 22 + contextLength)
-    const encryptionContext = decodeEncryptionContext(contextBuffer)
+    const encryptionContext = contextLength > 0
+      ? decodeEncryptionContext(messageBuffer.slice(22, 22 + contextLength))
+      : {}
     const dataKeyInfo = deserializeEncryptedDataKeys(messageBuffer, 22 + contextLength)
 
     /* Check for early return (Postcondition): Not Enough Data. deserializeEncryptedDataKeys will return false if it does not have enough data.
@@ -88,21 +99,34 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
     if (!dataKeyInfo) return false // not enough data
 
     const { encryptedDataKeys, readPos } = dataKeyInfo
+
+    /* I'm doing this here, after decodeEncryptionContext and deserializeEncryptedDataKeys
+     * because they are the bulk of the header section.
+     */
+    const algorithmSuite = new SdkSuite(suiteId)
+    const { ivLength, tagLength } = algorithmSuite
+    const tagLengthBytes = tagLength / 8
     const headerLength = readPos + 1 + 4 + 1 + 4
 
     /* Check for early return (Postcondition): Not Enough Data. Need to have the remaining fixed length data to parse. */
-    if (headerLength > dataView.byteLength) return false // not enough data
+    if (headerLength + ivLength + tagLengthBytes > dataView.byteLength) return false // not enough data
 
     const contentType = dataView.getUint8(readPos)
-    // reserved data 4 bytes
+    const reservedBytes = dataView.getUint32(readPos + 1)
+    /* Postcondition: reservedBytes are defined as 0,0,0,0
+     * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-reserved
+     */ 
+    needs(reservedBytes === 0, 'Malformed Header')
     const headerIvLength = <IvLength>dataView.getUint8(readPos + 1 + 4)
+    /* Postcondition: The headerIvLength must match the algorithm suite specification. */
+    needs(headerIvLength === ivLength, 'Malformed Header')
     const frameLength = dataView.getUint32(readPos + 1 + 4 + 1)
     const rawHeader = messageBuffer.slice(0, headerLength)
 
     const messageHeader = {
       version,
       type,
-      algorithmId,
+      suiteId,
       messageId,
       encryptionContext,
       encryptedDataKeys,
@@ -110,13 +134,6 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
       headerIvLength,
       frameLength
     }
-
-    const algorithmSuite = new SdkAlgorithm(messageHeader.algorithmId)
-    const { ivLength, tagLength } = algorithmSuite
-    const tagLengthBytes = tagLength / 8
-
-    /* Check for early return (Postcondition): Not Enough Data. Need to have the Header Auth section.  This is derived from the algorithm suite specification. */
-    if (headerLength + ivLength + tagLengthBytes > dataView.byteLength) return false // not enough data
 
     const headerIv = messageBuffer.slice(headerLength, headerLength + ivLength)
     const headerAuthTag = messageBuffer.slice(headerLength + ivLength, headerLength + ivLength + tagLengthBytes)
@@ -166,14 +183,15 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
     if (!elementInfo) return false
     const { elements, readPos } = elementInfo
 
-    let keyCount = encryptedDataKeysCount
+    let remainingKeyCount = encryptedDataKeysCount
     const encryptedDataKeys = []
-    while (keyCount--) {
+    while (remainingKeyCount--) {
       const [providerId, providerInfo] = elements.splice(0, 2).map(toUtf8)
       const [encryptedDataKey] = elements.splice(0, 1)
       const edk = new EncryptedDataKey({ providerInfo, providerId, encryptedDataKey })
       encryptedDataKeys.push(edk)
     }
+    Object.freeze(encryptedDataKeys)
     return { encryptedDataKeys, readPos }
   }
 
@@ -213,12 +231,13 @@ export function deserializeFactory (toUtf8: (input: Uint8Array) => string, SdkAl
     let count = pairsCount
     while (count--) {
       const [key, value] = elements.splice(0, 2).map(toUtf8)
+      /* Postcondition: The number of keys in the encryptionContext must match the pairsCount.
+       * If the same Key value is serialized...
+       */
+      needs(encryptionContext[key] === undefined, 'Duplicate encryption context key value.')
       encryptionContext[key] = value
     }
-    /* Postcondition: The number of keys in the encryptionContext must match the pairsCount.
-     * If the same Key value is serialized...
-     */
-    needs(Object.keys(encryptionContext).length === pairsCount, 'Duplicate encryption context key value.')
+    Object.freeze(encryptionContext)
     return encryptionContext
   }
 }

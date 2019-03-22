@@ -15,20 +15,20 @@
 
 import { BinaryData } from './types' // eslint-disable-line no-unused-vars
 
-export function concatBuffers (...inputBuffers: (BinaryData|SharedArrayBuffer|ArrayBufferView)[]) {
+
+
+export function concatBuffers (...inputBuffers: (BinaryData|ArrayBufferView)[]) {
   const neededLength = inputBuffers.reduce((sum, buff) => sum + buff.byteLength, 0)
   const outputBuffer = new Uint8Array(neededLength)
   let offset = 0
 
   inputBuffers
     .forEach(buff => {
-      if (buff instanceof ArrayBuffer) {
-        outputBuffer.set(new Uint8Array(buff), offset)
-      } else if (buff instanceof DataView) {
-        outputBuffer.set(new Uint8Array(buff.buffer), offset)
+      if (ArrayBuffer.isView(buff)) {
+        const {buffer, byteOffset, byteLength} = buff
+        outputBuffer.set(new Uint8Array(buffer, byteOffset, byteLength), offset)
       } else {
-        // @ts-ignore What type is the "without length?"
-        outputBuffer.set(buff, offset)
+        outputBuffer.set(new Uint8Array(buff), offset)
       }
       offset += buff.byteLength
     })

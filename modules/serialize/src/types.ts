@@ -18,17 +18,17 @@ import { IvLength, AlgorithmSuiteIdentifier, AlgorithmSuite, EncryptedDataKey, E
 
 export type BinaryData = Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer
 
-export interface MessageHeader {
+export interface MessageHeader extends Readonly<{
   version: SerializationVersion
   type: ObjectType
-  algorithmId: AlgorithmSuiteIdentifier
+  suiteId: AlgorithmSuiteIdentifier
   messageId: BinaryData
-  encryptionContext: EncryptionContext
-  encryptedDataKeys: EncryptedDataKey[]
+  encryptionContext: Readonly<EncryptionContext>
+  encryptedDataKeys: Readonly<EncryptedDataKey[]>
   contentType: ContentType
   headerIvLength: IvLength
   frameLength: number
-}
+}> {}
 
 export interface BodyHeader {
   sequenceNumber: number
@@ -68,6 +68,6 @@ export type HeaderInfo = {
   headerAuthTag: Uint8Array
 }
 
-export interface IAlgorithm {
-  new (id: AlgorithmSuiteIdentifier): AlgorithmSuite
+export interface AlgorithmSuiteConstructor<Suite extends AlgorithmSuite> {
+  new (id: AlgorithmSuiteIdentifier): Suite
 }

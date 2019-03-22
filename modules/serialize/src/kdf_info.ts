@@ -28,9 +28,9 @@ import { BinaryData } from './types' // eslint-disable-line no-unused-vars
 import { concatBuffers } from './concat_buffers'
 import { uInt16BE } from './uint_util'
 
-export function kdfInfo (algorithmId: AlgorithmSuiteIdentifier, messageId: BinaryData) {
+export function kdfInfo (suiteId: AlgorithmSuiteIdentifier, messageId: BinaryData) {
   return concatBuffers(
-    uInt16BE(algorithmId),
+    uInt16BE(suiteId),
     messageId
   )
 }
