@@ -15,29 +15,26 @@
 
 import {
   KmsKeyring,
-  KmsKeyringInput,
-  KMSConstructible,
-  KmsClientSupplier,
+  KmsKeyringInput, // eslint-disable-line no-unused-vars
+  KMSConstructible, // eslint-disable-line no-unused-vars
+  KmsClientSupplier, // eslint-disable-line no-unused-vars
   getClient,
   limitRegions,
   excludeRegions,
   cacheClients
 } from '@aws-crypto/kms-keyring'
 import {
-  NodeAlgorithmSuite,
+  NodeAlgorithmSuite, // eslint-disable-line no-unused-vars
   immutableClass
 } from '@aws-crypto/material-management-node'
-import {KMS, KMSConfiguration} from '@aws-sdk/client-kms-node'
+import { KMS, KMSConfiguration } from '@aws-sdk/client-kms-node' // eslint-disable-line no-unused-vars
 
 export type KmsKeyringNodeInput = KmsKeyringInput<KMS>
 export type KMSNodeConstructible = KMSConstructible<KMS, KMSConfiguration>
 export type KmsNodeClientSupplier = KmsClientSupplier<KMS>
 
-export class KmsKeyringNode extends KmsKeyring<NodeAlgorithmSuite, KMS> {
-  constructor(input: KmsKeyringNodeInput){
-    super(input)
-  }
-}
+export class KmsKeyringNode extends KmsKeyring<NodeAlgorithmSuite, KMS> {}
 immutableClass(KmsKeyringNode)
 
-export {getClient, limitRegions, excludeRegions, cacheClients}
+const getKmsClient = getClient(KMS)
+export { getKmsClient, limitRegions, excludeRegions, cacheClients }
