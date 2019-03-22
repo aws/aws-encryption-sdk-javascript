@@ -52,6 +52,8 @@ export class ParseHeaderStream extends PortableTransformWithType {
       return callback()
     }
 
+    this.emit('UnValidatedMessageHeader', headerInfo)
+
     const { messageHeader, algorithmSuite } = headerInfo
     const { rawHeader, headerIv, headerAuthTag } = headerInfo
 
@@ -76,6 +78,7 @@ export class ParseHeaderStream extends PortableTransformWithType {
         const verify = getVerify ? getVerify() : void 0
         const verifyInfo: VerifyInfo = { headerInfo, getDecipher, verify, dispose }
         this.emit('VerifyInfo', verifyInfo)
+        this.emit('MessageHeader', headerInfo)
 
         // The header is parsed, pass control
         const readPos = rawHeader.byteLength + headerIv.byteLength + headerAuthTag.byteLength
@@ -85,6 +88,6 @@ export class ParseHeaderStream extends PortableTransformWithType {
         // flush the tail.  Stream control is now in the verify and decrypt streams
         return setImmediate(() => this._transform(tail, encoding, callback))
       })
-      .catch(err => callback(err))
+      .catch(callback)
   }
 }

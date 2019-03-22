@@ -17,7 +17,10 @@ export async function decrypt (
   const stream = decryptStream(cmm)
 
   const plaintext: Buffer[] = []
-  stream.on('data', (chunk: Buffer) => plaintext.push(chunk))
+  let messageHeader
+  stream
+    .once('MessageHeader', _header => { messageHeader = _header })
+    .on('data', (chunk: Buffer) => plaintext.push(chunk))
 
   // This will check both Uint8Array|Buffer
   if (ciphertext instanceof Uint8Array) {
@@ -32,5 +35,8 @@ export async function decrypt (
 
   await finishedAsync(stream)
 
-  return Buffer.concat(plaintext)
+  return {
+    plaintext: Buffer.concat(plaintext),
+    messageHeader
+  }
 }

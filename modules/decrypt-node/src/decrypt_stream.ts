@@ -31,5 +31,12 @@ export function decryptStream (cmm: NodeCryptographicMaterialsManager) {
 
   pipeline(parseHeaderStream, verifyStream, decipherStream)
 
-  return new Duplexify(parseHeaderStream, decipherStream)
+  const stream = new Duplexify(parseHeaderStream, decipherStream)
+
+  // Forward header events
+  parseHeaderStream
+    .once('UnValidatedMessageHeader', header => stream.emit('UnValidatedMessageHeader', header))
+    .once('MessageHeader', header => stream.emit('MessageHeader', header))
+
+  return stream
 }
