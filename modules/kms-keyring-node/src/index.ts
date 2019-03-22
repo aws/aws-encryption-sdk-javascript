@@ -28,13 +28,22 @@ import {
   immutableClass
 } from '@aws-crypto/material-management-node'
 import { KMS, KMSConfiguration } from '@aws-sdk/client-kms-node' // eslint-disable-line no-unused-vars
+const getKmsClient = getClient(KMS)
 
 export type KmsKeyringNodeInput = KmsKeyringInput<KMS>
 export type KMSNodeConstructible = KMSConstructible<KMS, KMSConfiguration>
 export type KmsNodeClientSupplier = KmsClientSupplier<KMS>
 
-export class KmsKeyringNode extends KmsKeyring<NodeAlgorithmSuite, KMS> {}
+export class KmsKeyringNode extends KmsKeyring<NodeAlgorithmSuite, KMS> {
+  constructor({
+    clientProvider = getKmsClient,
+    kmsKeys,
+    generatorKmsKey,
+    grantTokens
+  }) {
+    super({clientProvider, kmsKeys, generatorKmsKey, grantTokens})
+  }
+}
 immutableClass(KmsKeyringNode)
 
-const getKmsClient = getClient(KMS)
 export { getKmsClient, limitRegions, excludeRegions, cacheClients }
