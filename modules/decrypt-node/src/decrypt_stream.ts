@@ -14,7 +14,8 @@
  */
 
 import {
-  NodeCryptographicMaterialsManager // eslint-disable-line no-unused-vars
+  NodeCryptographicMaterialsManager, // eslint-disable-line no-unused-vars
+  NodeKeyring // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 import { ParseHeaderStream } from './parse_header_stream'
 import { VerifyStream } from './verify_stream'
@@ -24,7 +25,15 @@ import Duplexify from 'duplexify'
 // @ts-ignore
 import { pipeline } from 'readable-stream'
 
-export function decryptStream (cmm: NodeCryptographicMaterialsManager) {
+export function decryptStream (cmm: NodeCryptographicMaterialsManager|NodeKeyring) {
+  /* If the cmm is not a MaterialsManager, wrap in one.
+   * I am expecting the NodeCryptographicMaterialsManager to
+   * handle non-keyring parameters.
+   */
+  cmm = cmm instanceof NodeCryptographicMaterialsManager
+    ? cmm
+    : new NodeCryptographicMaterialsManager(cmm)
+
   const parseHeaderStream = new ParseHeaderStream(cmm)
   const verifyStream = new VerifyStream()
   const decipherStream = getDecipherStream()
