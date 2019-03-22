@@ -43,7 +43,7 @@ export function serializeFactory (fromUtf8: (input: any) => Uint8Array) {
 
   function frameIv (ivLength: IvLength, sequenceNumber: number) {
     /* Precondition: sequenceNumber must conform to the specification. i.e. 0 - (2^32 - 1) */
-    needs(sequenceNumber > 0 && SequenceIdentifier.SEQUENCE_NUMBER_END > sequenceNumber, 'sequenceNumber out of bounds')
+    needs(sequenceNumber > 0 && SequenceIdentifier.SEQUENCE_NUMBER_END >= sequenceNumber, 'sequenceNumber out of bounds')
 
     const buff = new Uint8Array(ivLength)
     const view = new DataView(buff.buffer, buff.byteOffset, buff.byteLength)
@@ -74,6 +74,8 @@ export function serializeFactory (fromUtf8: (input: any) => Uint8Array) {
   function encodeEncryptionContext (encryptionContext: EncryptionContext): Uint8Array[] {
     return Object
       .entries(encryptionContext)
+      /* Precondition: The serialized encryption context entries must be sorted by UTF-8 key value. */
+      .sort(([aKey], [bKey]) => aKey.localeCompare(bKey))
       .map(entries => entries.map(fromUtf8))
       .map(([key, value]) => concatBuffers(uInt16BE(key.byteLength), key, uInt16BE(value.byteLength), value))
   }
