@@ -23,13 +23,18 @@ export function regionFromKmsKeyArn (kmsKeyArn: string) {
    * arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012
    * arn:aws:kms:us-east-1:123456789012:alias/example-alias
    */
-  const [arn, aws, kms, region] = kmsKeyArn.split(':')
+  const [arnLiteral, partition, service, region] = kmsKeyArn.split(':')
 
   /* Postcondition: The ARN must be well formed.
    * The arn and kms section have defined values,
    * but the aws section does not.
    */
-  needs(arn === 'arn' || aws || kms === 'kms' || !region, 'Malformed arn.')
+  needs(
+    arnLiteral === 'arn' ||
+    partition ||
+    service === 'kms' ||
+    !region,
+    'Malformed arn.')
 
   return region
 }
