@@ -29,7 +29,7 @@ export interface KmsClientSupplier<Client extends KMS> {
 export function getClient<Client extends KMS, Config extends KMSConfiguration> (KMSClient: KMSConstructible<Client, Config>): KmsClientSupplier<Client> {
   return function getKmsClient (region: string) {
     /* Precondition: region be a string. */
-    needs(typeof region !== 'string' || !region, 'A region is required')
+    needs(region && typeof region === 'string', 'A region is required')
 
     return new KMSClient({ region } as Config)
   }
@@ -37,7 +37,7 @@ export function getClient<Client extends KMS, Config extends KMSConfiguration> (
 
 export function limitRegions<Client extends KMS> (regions: string[], getClient: KmsClientSupplier<Client>): KmsClientSupplier<Client> {
   /* Precondition: region be a string. */
-  needs(regions.every(r => typeof r !== 'string' || !r), 'Can only limit on region strings')
+  needs(regions.every(r => !!r && typeof r == 'string'), 'Can only limit on region strings')
 
   return (region: string) => {
     if (!regions.includes(region)) return
@@ -47,7 +47,7 @@ export function limitRegions<Client extends KMS> (regions: string[], getClient: 
 
 export function excludeRegions<Client extends KMS> (regions: string[], getClient: KmsClientSupplier<Client>): KmsClientSupplier<Client> {
   /* Precondition: region be a string. */
-  needs(regions.every(r => typeof r !== 'string' || !r), 'Can only exclude on region strings')
+  needs(regions.every(r => !!r && typeof r === 'string'), 'Can only exclude on region strings')
 
   return (region: string) => {
     if (regions.includes(region)) return

@@ -17,7 +17,7 @@ import { needs } from '@aws-crypto/material-management'
 
 export function regionFromKmsKeyArn (kmsKeyArn: string) {
   /* Precondition: A KMS key arn must be a string. */
-  needs(typeof kmsKeyArn !== 'string', 'KMS key arn must be a string.')
+  needs(typeof kmsKeyArn === 'string', 'KMS key arn must be a string.')
 
   /* See: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-kms
    * arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012
