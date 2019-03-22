@@ -16,7 +16,7 @@
 // @ts-ignore
 import { Transform as PortableTransform } from 'readable-stream'
 import { Transform } from 'stream' // eslint-disable-line no-unused-vars
-import { Decipher } from 'crypto' // eslint-disable-line no-unused-vars
+import { DecipherGCM } from 'crypto' // eslint-disable-line no-unused-vars
 import { needs } from '@aws-crypto/material-management-node'
 import {
   aadFactory,
@@ -31,12 +31,12 @@ const PortableTransformWithType = (<new (...args: any[]) => Transform>PortableTr
 export interface DecipherInfo {
   messageId: Buffer
   contentType: ContentType
-  getDecipher: (iv: Uint8Array) => Decipher
+  getDecipher: (iv: Uint8Array) => DecipherGCM
   dispose: () => void
 }
 
 interface DecipherState {
-  decipher: Decipher
+  decipher: DecipherGCM
   content: Buffer[]
   contentLength: number
 }
