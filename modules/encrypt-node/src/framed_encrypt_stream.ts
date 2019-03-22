@@ -19,7 +19,7 @@ import {
 } from '@aws-crypto/serialize'
 // @ts-ignore
 import { Transform as PortableTransform } from 'readable-stream'
-import { Cipher } from 'crypto' // eslint-disable-line no-unused-vars
+import { CipherGCM } from 'crypto' // eslint-disable-line no-unused-vars
 import { Transform } from 'stream' // eslint-disable-line no-unused-vars
 import { needs } from '@aws-crypto/material-management-node'
 
@@ -38,7 +38,7 @@ interface EncryptFrame {
   content: Buffer[]
   bodyHeader: Buffer
   headerSent?: boolean
-  cipher: Cipher,
+  cipher: CipherGCM,
   isFinalFrame: boolean
 }
 
@@ -154,7 +154,7 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
   })()
 }
 
-type GetCipher = (iv: Uint8Array) => Cipher
+type GetCipher = (iv: Uint8Array) => CipherGCM
 
 type EncryptFrameInput = {
   pendingFrame: AccumulatingFrame,
