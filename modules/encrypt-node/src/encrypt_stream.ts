@@ -29,7 +29,7 @@ import {
 // @ts-ignore
 import { pipeline } from 'readable-stream'
 
-const fromUtf8 = (input: string) => Buffer.from(input)
+const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const { serializeMessageHeader, headerAuthIv } = serializeFactory(fromUtf8)
 
 export interface EncryptStreamInput {

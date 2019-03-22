@@ -23,7 +23,7 @@ import { CipherGCM } from 'crypto' // eslint-disable-line no-unused-vars
 import { Transform } from 'stream' // eslint-disable-line no-unused-vars
 import { needs } from '@aws-crypto/material-management-node'
 
-const fromUtf8 = (input: string) => Buffer.from(input)
+const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const serialize = serializeFactory(fromUtf8)
 const { finalFrameHeader, frameHeader } = serialize
 const aadUtility = aadFactory(fromUtf8)
