@@ -24,7 +24,9 @@ import {
 import { deserializeFactory, kdfInfo } from '@aws-crypto/serialize'
 import { VerifyInfo } from './verify_stream' // eslint-disable-line no-unused-vars
 
-const toUtf8 = (input: Uint8Array) => Buffer.from(input.buffer, input.byteOffset, input.byteLength).toString()
+const toUtf8 = (input: Uint8Array) => Buffer
+  .from(input.buffer, input.byteOffset, input.byteLength)
+  .toString('utf8')
 const deserialize = deserializeFactory(toUtf8, NodeAlgorithmSuite)
 const PortableTransformWithType = (<new (...args: any[]) => Transform>PortableTransform)
 

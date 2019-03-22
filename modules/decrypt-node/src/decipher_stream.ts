@@ -24,7 +24,7 @@ import {
 } from '@aws-crypto/serialize'
 import { VerifyStream } from './verify_stream'
 
-const fromUtf8 = (input: string) => Buffer.from(input)
+const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const aadUtility = aadFactory(fromUtf8)
 const PortableTransformWithType = (<new (...args: any[]) => Transform>PortableTransform)
 
@@ -49,11 +49,12 @@ export interface BodyInfo {
 }
 
 const ioTick = () => new Promise(resolve => setImmediate(resolve))
+const noop = () => {}
 
 export function getDecipherStream () {
   let decipherInfo: DecipherInfo
   let decipherState: DecipherState = {} as any
-  let pathologicalDrain: Function|false = false
+  let pathologicalDrain: Function = noop
   let frameComplete: Function|false = false
 
   return new (class DecipherStream extends PortableTransformWithType {
@@ -121,10 +122,8 @@ export function getDecipherStream () {
        * if a frame is being pushed, we can release
        * it.
        */
-      if (typeof pathologicalDrain === 'function') {
-        pathologicalDrain()
-        pathologicalDrain = false
-      }
+      pathologicalDrain()
+      pathologicalDrain = noop
 
       super._read(size)
     }
