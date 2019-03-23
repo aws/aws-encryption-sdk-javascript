@@ -128,7 +128,7 @@ export function getDecipherStream () {
       super._read(size)
     }
 
-    _onAuthTag  = async (authTag: Buffer) => {
+    _onAuthTag = async (authTag: Buffer) => {
       const { decipher, content, contentLength } = decipherState
       /* Precondition: _onAuthTag must be called only after a frame has been accumulated. */
       needs(frameComplete, 'AuthTag before frame.')
@@ -168,7 +168,7 @@ export function getDecipherStream () {
     }
 
     _destroy () {
-      // It is possible to have to destroy the stream before 
+      // It is possible to have to destroy the stream before
       // decipherInfo is set.  Especially if the HeaderAuth
       // is not valid.
       decipherInfo && decipherInfo.dispose()

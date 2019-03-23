@@ -30,7 +30,7 @@ import { encrypt } from '@aws-crypto/encrypt-node'
 import { decrypt } from '../src/decrypt'
 
 describe('asdf', () => {
-  it.only('qwerasdf', async () => {
+  it.skip('qwerasdf', async () => {
     class TestKeyring extends NodeKeyring {
       async _onEncrypt (material: NodeEncryptionMaterial) {
         const unencryptedDataKey = new Uint8Array(material.suite.keyLengthBytes).fill(1)
@@ -54,9 +54,9 @@ describe('asdf', () => {
     const plaintext = 'asdf'
     const ciphertext = await encrypt(cmm, plaintext, { suiteId })
 
-    const {plaintext: test, messageHeader} = await decrypt(cmm, ciphertext)
+    const { plaintext: test, messageHeader } = await decrypt(cmm, ciphertext)
 
-    expect(messageHeader.algorithmId).to.equal(suiteId)
+    expect(messageHeader.suiteId).to.equal(suiteId)
     expect(test.toString()).to.equal(plaintext)
   })
 })

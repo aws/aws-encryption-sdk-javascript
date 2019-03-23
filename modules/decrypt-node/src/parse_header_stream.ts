@@ -68,7 +68,7 @@ export class ParseHeaderStream extends PortableTransformWithType {
 
         const { kdfGetDecipher, getVerify, dispose } = getDecryptionHelper(material)
 
-        const info = kdfInfo(messageHeader.algorithmId, messageHeader.messageId)
+        const info = kdfInfo(messageHeader.suiteId, messageHeader.messageId)
         const getDecipher = kdfGetDecipher(info)
         const headerAuth = getDecipher(headerIv)
 
@@ -90,6 +90,6 @@ export class ParseHeaderStream extends PortableTransformWithType {
         // flush the tail.  Stream control is now in the verify and decrypt streams
         return setImmediate(() => this._transform(tail, encoding, callback))
       })
-      .catch(callback)
+      .catch(err => callback(err))
   }
 }
