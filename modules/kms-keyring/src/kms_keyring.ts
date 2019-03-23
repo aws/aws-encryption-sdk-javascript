@@ -17,6 +17,8 @@ import { KmsClientSupplier } from './kms_client_supplier' // eslint-disable-line
 import { needs, Keyring, EncryptionMaterial, DecryptionMaterial, SupportedAlgorithmSuites, EncryptionContext, KeyringTrace, KeyringTraceFlag, EncryptedDataKey, immutableClass } from '@aws-crypto/material-management' // eslint-disable-line no-unused-vars
 import { KMS_PROVIDER_ID, generateDataKey, encrypt, decrypt, kms2EncryptedDataKey } from './helpers'
 import { KMS } from './kms_types/KMS' // eslint-disable-line no-unused-vars
+import { DecryptOutput } from './kms_types/DecryptOutput' // eslint-disable-line no-unused-vars
+import { regionFromKmsKeyArn } from './region_from_kms_key_arn'
 
 export interface KmsKeyringInput<Client extends KMS> {
   clientProvider: KmsClientSupplier<Client>
@@ -31,8 +33,14 @@ export abstract class KmsKeyring<S extends SupportedAlgorithmSuites, Client exte
   public clientProvider: KmsClientSupplier<Client>
   public grantTokens?: string
 
-  constructor ({ clientProvider, kmsKeys = [], generatorKmsKey, grantTokens }: KmsKeyringInput<Client>) {
+  constructor ({ clientProvider, generatorKmsKey, kmsKeys = [], grantTokens }: KmsKeyringInput<Client>) {
     super()
+    /* Precondition: All KMS key arns must be valid. */
+    needs(!generatorKmsKey || !!regionFromKmsKeyArn(generatorKmsKey), 'Malformed arn.')
+    needs(kmsKeys.every(keyarn => !!regionFromKmsKeyArn(keyarn)), 'Malformed arn.')
+    /* Precondition: clientProvider needs to be a callable function. */
+    needs(typeof clientProvider === 'function', '')
+
     this.clientProvider = clientProvider
     this.kmsKeys = kmsKeys
     this.generatorKmsKey = generatorKmsKey
@@ -52,8 +60,11 @@ export abstract class KmsKeyring<S extends SupportedAlgorithmSuites, Client exte
        */
       if (!dataKey) throw new Error('Generator KMS key did not generate a data key')
 
-      const flags = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
+      const flags = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY |
+        KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX |
+        KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
       const trace: KeyringTrace = { keyNamespace: KMS_PROVIDER_ID, keyName: dataKey.KeyId, flags }
+
       material
         /* Postcondition: The unencryptedDataKey length must match the algorithm specification.
          * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
@@ -64,7 +75,7 @@ export abstract class KmsKeyring<S extends SupportedAlgorithmSuites, Client exte
       kmsKeys.unshift(generatorKmsKey)
     }
 
-    /* Postcondition: If a generator exists we *must* have an unencryptedDataKey at this point.
+    /* Precondition: If a generator does not exist, an unencryptedDataKey *must* already exist.
      * Furthermore *only* CMK's explicitly designated as generators can generate data keys.
      * See cryptographic_materials as getUnencryptedDataKey will throw in this case.
      */
@@ -74,6 +85,7 @@ export abstract class KmsKeyring<S extends SupportedAlgorithmSuites, Client exte
     for (const kmsKey of kmsKeys) {
       const kmsEDK = await encrypt(clientProvider, unencryptedDataKey, kmsKey, context, grantTokens)
 
+      /* clientProvider may not return a client, in this case there is not an EDK to add */
       if (kmsEDK) material.addEncryptedDataKey(kms2EncryptedDataKey(kmsEDK), flags)
     }
 
@@ -92,14 +104,17 @@ export abstract class KmsKeyring<S extends SupportedAlgorithmSuites, Client exte
      * the EDK data format always specifies the CMK with the full (non-alias) ARN.
      */
     const decryptableEDKs = encryptedDataKeys
-      .filter(edk => {
-        if (edk.providerId !== KMS_PROVIDER_ID) return false
-        return kmsKeys.includes(edk.providerInfo)
+      .filter(({ providerId, providerInfo }) => {
+        if (providerId !== KMS_PROVIDER_ID) return false
+        return kmsKeys.length
+          ? kmsKeys.includes(providerInfo)
+          : true
       })
 
     for (const edk of decryptableEDKs) {
+      let dataKey: Required<DecryptOutput>|false = false
       try {
-        var dataKey = await decrypt(clientProvider, edk, context, grantTokens)
+        dataKey = await decrypt(clientProvider, edk, context, grantTokens)
       } catch (e) {
         // there should be some debug here?  or wrap?
         // Failures decrypt should not short-circuit the process
@@ -107,23 +122,23 @@ export abstract class KmsKeyring<S extends SupportedAlgorithmSuites, Client exte
         // through another Keyring.
       }
 
-      if (dataKey) {
-        /* Postcondition: The KeyId from KMS must match the encoded KeyID. */
-        needs(dataKey.KeyId === edk.providerInfo, 'KMS Decryption key does not match serialized provider.')
+      /* Check for early return (Postcondition): clientProvider may not return a client. */
+      if (!dataKey) continue
 
-        const flags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
-        const trace: KeyringTrace = { keyNamespace: KMS_PROVIDER_ID, keyName: dataKey.KeyId, flags }
+      /* Postcondition: The KeyId from KMS must match the encoded KeyID. */
+      needs(dataKey.KeyId === edk.providerInfo, 'KMS Decryption key does not match serialized provider.')
 
-        /* Postcondition: The unencryptedDataKey length must match the algorithm specification.
-         * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
-         */
-        material.setUnencryptedDataKey(dataKey.Plaintext, trace)
-        return material
-      }
+      const flags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
+      const trace: KeyringTrace = { keyNamespace: KMS_PROVIDER_ID, keyName: dataKey.KeyId, flags }
+
+      /* Postcondition: The unencryptedDataKey length must match the algorithm specification.
+        * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
+        */
+      material.setUnencryptedDataKey(dataKey.Plaintext, trace)
+      return material
     }
 
     return material
   }
 }
-
 immutableClass(KmsKeyring)

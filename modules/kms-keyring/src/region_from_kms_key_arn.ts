@@ -30,10 +30,10 @@ export function regionFromKmsKeyArn (kmsKeyArn: string) {
    * but the aws section does not.
    */
   needs(
-    arnLiteral === 'arn' ||
-    partition ||
-    service === 'kms' ||
-    !region,
+    arnLiteral === 'arn' &&
+    partition &&
+    service === 'kms' &&
+    region,
     'Malformed arn.')
 
   return region

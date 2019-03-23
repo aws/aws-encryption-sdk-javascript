@@ -23,10 +23,12 @@ export interface KMSConstructible<Client extends KMS, Config extends KMSConfigur
 
 export interface KmsClientSupplier<Client extends KMS> {
   /* KmsClientProvider is allowed to return undefined if, for example, user wants to exclude particular regions. */
-  (region: string): Client|undefined
+  (region: string): Client|false
 }
 
-export function getClient<Client extends KMS, Config extends KMSConfiguration> (KMSClient: KMSConstructible<Client, Config>): KmsClientSupplier<Client> {
+export function getClient<Client extends KMS, Config extends KMSConfiguration> (
+  KMSClient: KMSConstructible<Client, Config>
+): KmsClientSupplier<Client> {
   return function getKmsClient (region: string) {
     /* Precondition: region be a string. */
     needs(region && typeof region === 'string', 'A region is required')
@@ -35,31 +37,39 @@ export function getClient<Client extends KMS, Config extends KMSConfiguration> (
   }
 }
 
-export function limitRegions<Client extends KMS> (regions: string[], getClient: KmsClientSupplier<Client>): KmsClientSupplier<Client> {
+export function limitRegions<Client extends KMS> (
+  regions: string[],
+  getClient: KmsClientSupplier<Client>
+): KmsClientSupplier<Client> {
   /* Precondition: region be a string. */
-  needs(regions.every(r => !!r && typeof r == 'string'), 'Can only limit on region strings')
+  needs(regions.every(r => !!r && typeof r === 'string'), 'Can only limit on region strings')
 
   return (region: string) => {
-    if (!regions.includes(region)) return
+    if (!regions.includes(region)) return false
     return getClient(region)
   }
 }
 
-export function excludeRegions<Client extends KMS> (regions: string[], getClient: KmsClientSupplier<Client>): KmsClientSupplier<Client> {
+export function excludeRegions<Client extends KMS> (
+  regions: string[],
+  getClient: KmsClientSupplier<Client>
+): KmsClientSupplier<Client> {
   /* Precondition: region be a string. */
   needs(regions.every(r => !!r && typeof r === 'string'), 'Can only exclude on region strings')
 
   return (region: string) => {
-    if (regions.includes(region)) return
+    if (regions.includes(region)) return false
     return getClient(region)
   }
 }
 
-export function cacheClients<Client extends KMS> (getClient: KmsClientSupplier<Client>): KmsClientSupplier<Client> {
-  const clientsCache: {[key: string]: Client|undefined} = {}
+export function cacheClients<Client extends KMS> (
+  getClient: KmsClientSupplier<Client>
+): KmsClientSupplier<Client> {
+  const clientsCache: {[key: string]: Client|false} = {}
 
   return (region: string) => {
-    // undefined is a acceptable response...
+    // undefined and false are both false ish, so check for the property
     if (!clientsCache.hasOwnProperty(region)) clientsCache[region] = getClient(region)
     return clientsCache[region]
   }

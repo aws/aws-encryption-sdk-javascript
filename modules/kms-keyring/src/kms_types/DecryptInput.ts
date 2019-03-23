@@ -1,4 +1,4 @@
-import {NodeHttpOptions as __HttpOptions__} from '@aws-sdk/types';
+import {NodeHttpOptions, BrowserHttpOptions} from '@aws-sdk/types';
 import * as __aws_sdk_types from '@aws-sdk/types';
 
 /**
@@ -35,5 +35,5 @@ export interface DecryptInput {
     /**
      * Per-request HTTP configuration options. If set, any options specified will override the corresponding HTTP option set on the client for this command.
      */
-    $httpOptions?: __HttpOptions__;
+    $httpOptions?: NodeHttpOptions|BrowserHttpOptions;
 }

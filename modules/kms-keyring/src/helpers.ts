@@ -34,12 +34,12 @@ export async function generateDataKey<Client extends KMS> (
   const client = clientProvider(region)
 
   /* Check for early return (Postcondition): Client region was not provided. */
-  if (!client) return
+  if (!client) return false
 
   const dataKey = await client.generateDataKey({ KeyId, GrantTokens, NumberOfBytes, EncryptionContext })
 
   /* Postcondition: KMS must return serializable values. */
-  if (!isRequiredGenerateDataKeyOutput<typeof dataKey>(dataKey)) throw new Error('bad')
+  if (!isRequiredGenerateDataKeyOutput<typeof dataKey>(dataKey)) throw new Error('Malformed KMS response.')
   return dataKey
 }
 
@@ -54,12 +54,12 @@ export async function encrypt<Client extends KMS> (
   const client = clientProvider(region)
 
   /* Check for early return (Postcondition): Client region was not provided. */
-  if (!client) return
+  if (!client) return false
 
   const kmsEDK = await client.encrypt({ KeyId, Plaintext, EncryptionContext, GrantTokens })
 
   /* Postcondition: KMS must return serializable values. */
-  if (!isRequiredEncryptOutput(kmsEDK)) throw new Error('')
+  if (!isRequiredEncryptOutput(kmsEDK)) throw new Error('Malformed KMS response.')
   return kmsEDK
 }
 
@@ -68,18 +68,18 @@ export async function decrypt<Client extends KMS> (
   edk: EncryptedDataKey,
   EncryptionContext?: EncryptionContext,
   GrantTokens?: string
-) {
+): Promise<Required<DecryptOutput>|false> {
   /* Precondition:  The EDK must be a KMS edk. */
   needs(edk.providerId === KMS_PROVIDER_ID, 'Unsupported providerId')
   const region = regionFromKmsKeyArn(edk.providerInfo)
   const client = clientProvider(region)
   /* Check for early return (Postcondition): Client region was not provided. */
-  if (!client) return
+  if (!client) return false
 
   const dataKey = await client.decrypt({ CiphertextBlob: edk.encryptedDataKey, EncryptionContext, GrantTokens })
 
   /* Postcondition: KMS must return usable values. */
-  if (!isRequiredDecryptOutput(dataKey)) throw new Error('')
+  if (!isRequiredDecryptOutput(dataKey)) throw new Error('Malformed KMS response.')
   return dataKey
 }
 
