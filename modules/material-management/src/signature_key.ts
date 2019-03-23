@@ -17,7 +17,6 @@ import { AlgorithmSuite, NodeECDHCurve, WebCryptoECDHCurve } from './algorithm_s
 import { encodeNamedCurves } from './ecc_encode'
 import { decodeNamedCurves } from './ecc_decode'
 import { frozenClass, readOnlyBinaryProperty, readOnlyProperty } from './immutable_class'
-import { KeyObject } from 'crypto' // eslint-disable-line no-unused-vars
 import { publicKeyPem, privateKeyPem } from './pem_helpers'
 
 /*
@@ -27,13 +26,11 @@ import { publicKeyPem, privateKeyPem } from './pem_helpers'
  * need to use it and you should not do so.
  */
 
-type KeyMaterial = string|Uint8Array|KeyObject|CryptoKey
-
 export class SignatureKey {
-  public readonly privateKey!: KeyMaterial
+  public readonly privateKey!: string|CryptoKey
   public readonly compressPoint!: Uint8Array
   public readonly signatureCurve!: NodeECDHCurve|WebCryptoECDHCurve
-  constructor (privateKey: KeyMaterial, compressPoint: Uint8Array, suite: AlgorithmSuite) {
+  constructor (privateKey: Uint8Array|CryptoKey, compressPoint: Uint8Array, suite: AlgorithmSuite) {
     const { signatureCurve: namedCurve } = suite
     /* Precondition: Do not encode a compress point for an algorithm suite that does not have an EC named curve. */
     if (!namedCurve) throw new Error('Unsupported Algorithm')
@@ -65,9 +62,9 @@ export class SignatureKey {
 frozenClass(SignatureKey)
 
 export class VerificationKey {
-  public readonly publicKey!: KeyMaterial
+  public readonly publicKey!: string|CryptoKey
   public readonly signatureCurve!: NodeECDHCurve|WebCryptoECDHCurve
-  constructor (publicKey: KeyMaterial, suite: AlgorithmSuite) {
+  constructor (publicKey: Uint8Array|CryptoKey, suite: AlgorithmSuite) {
     const { signatureCurve: namedCurve } = suite
     /* Precondition: Do not encode a compress point for an algorithm suite that does not have an EC named curve. */
     if (!namedCurve) throw new Error('Unsupported Algorithm')
