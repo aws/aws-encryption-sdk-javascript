@@ -15,18 +15,27 @@
 
 import {
   WebCryptoAlgorithmSuite,
-  WebCryptoCryptographicMaterialsManager,
-  WebCryptoEncryptionRequest,
-  EncryptionContext,
+  WebCryptoCryptographicMaterialsManager, // eslint-disable-line no-unused-vars
+  WebCryptoEncryptionRequest, // eslint-disable-line no-unused-vars
+  EncryptionContext, // eslint-disable-line no-unused-vars
   AlgorithmSuiteIdentifier,
   getEncryptHelper
 } from '@aws-crypto/material-management-browser'
-import {serializeFactory, aadFactory, kdfInfo, concatBuffers, MessageHeader, SerializationVersion, ObjectType, ContentType} from '@aws-crypto/serialize'
-import {fromUtf8} from '@aws-sdk/util-utf8-browser'
-import {getWebCryptoBackend} from '@aws-crypto/web-crypto-backend'
+import {
+  serializeFactory,
+  aadFactory,
+  kdfInfo,
+  concatBuffers,
+  MessageHeader, // eslint-disable-line no-unused-vars
+  SerializationVersion,
+  ObjectType,
+  ContentType
+} from '@aws-crypto/serialize'
+import { fromUtf8 } from '@aws-sdk/util-utf8-browser'
+import { getWebCryptoBackend } from '@aws-crypto/web-crypto-backend'
 
 const serialize = serializeFactory(fromUtf8)
-const {messageAADContentString, messageAAD} = aadFactory(fromUtf8)
+const { messageAADContentString, messageAAD } = aadFactory(fromUtf8)
 
 export interface EncryptInput {
   suiteId?: AlgorithmSuiteIdentifier
@@ -40,10 +49,10 @@ export interface EncryptResult {
   cipherMessage: Uint8Array
 }
 
-export async function encrypt(
+export async function encrypt (
   cmm: WebCryptoCryptographicMaterialsManager,
   plaintext: Uint8Array,
-  {suiteId, encryptionContext}: EncryptInput = {}
+  { suiteId, encryptionContext }: EncryptInput = {}
 ): Promise<EncryptResult> {
   const backend = await getWebCryptoBackend()
   if (!backend) throw new Error('No supported crypto backend')
@@ -59,20 +68,20 @@ export async function encrypt(
     frameLength,
     plaintextLength
   }
- 
-  const {material, context} = await cmm.getEncryptionMaterials(encryptionRequest)
-  const {kdfGetSubtleEncrypt, subtleSign, dispose} = await getEncryptHelper(material)
+
+  const { material, context } = await cmm.getEncryptionMaterials(encryptionRequest)
+  const { kdfGetSubtleEncrypt, subtleSign, dispose } = await getEncryptHelper(material)
 
   // Why is this here?
   const idLength = 16
   const messageId = await backend.randomValues(idLength)
 
-  const {id, ivLength} = material.suite
+  const { id, ivLength } = material.suite
 
-  const messageHeader = {
+  const messageHeader: MessageHeader = {
     version: SerializationVersion.V1,
     type: ObjectType.CUSTOMER_AE_DATA,
-    algorithmId: id,
+    suiteId: id,
     messageId,
     encryptionContext: context,
     encryptedDataKeys: material.encryptedDataKeys,
@@ -93,7 +102,7 @@ export async function encrypt(
   const finalFrameHeader = serialize.finalFrameHeader(sequenceNumber, frameIv, plaintextLength)
   const messageAdditionalData = messageAAD(
     messageId,
-    messageAADContentString({contentType: messageHeader.contentType, isFinalFrame: true}),
+    messageAADContentString({ contentType: messageHeader.contentType, isFinalFrame: true }),
     sequenceNumber,
     plaintextLength
   )
@@ -111,8 +120,8 @@ export async function encrypt(
 
   if (typeof subtleSign === 'function') {
     const signature = await subtleSign(cipherMessage)
-    return {cipherMessage: concatBuffers(cipherMessage, signature), messageHeader}
+    return { cipherMessage: concatBuffers(cipherMessage, signature), messageHeader }
   } else {
-    return {cipherMessage, messageHeader}
+    return { cipherMessage, messageHeader }
   }
 }

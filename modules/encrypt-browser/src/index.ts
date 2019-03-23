@@ -13,4 +13,4 @@
  * limitations under the License.
  */
 
- export {encrypt, EncryptInput, EncryptResult} from './encrypt'
+export { encrypt, EncryptInput, EncryptResult } from './encrypt'
