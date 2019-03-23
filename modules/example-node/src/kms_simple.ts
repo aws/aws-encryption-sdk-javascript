@@ -29,14 +29,13 @@
  */
 
 import { NodeCryptographicMaterialsManager, AlgorithmSuiteIdentifier } from '@aws-crypto/material-management-node'
-import { KmsKeyringNode, getKmsClient } from '@aws-crypto/kms-keyring-node'
+import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
 import { encrypt } from '@aws-crypto/encrypt-node'
 import { decrypt } from '@aws-crypto/decrypt-node'
 
-export async function kmsStreamTest () {
-  const clientProvider = getKmsClient
+export async function kmsSimpleTest () {
   const generatorKmsKey = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
-  const keyring = new KmsKeyringNode({ clientProvider, generatorKmsKey })
+  const keyring = new KmsKeyringNode({ generatorKmsKey })
 
   const cmm = new NodeCryptographicMaterialsManager(keyring)
   const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16

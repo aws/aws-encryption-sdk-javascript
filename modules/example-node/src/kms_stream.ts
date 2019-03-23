@@ -37,7 +37,7 @@ import { createReadStream, createWriteStream } from 'fs'
 import { promisify } from 'util'
 const finishedAsync = promisify(finished)
 
-export async function kmsTest () {
+export async function kmsStreamTest () {
   const clientProvider = getKmsClient
   const generatorKmsKey = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
   const keyring = new KmsKeyringNode({ clientProvider, generatorKmsKey })

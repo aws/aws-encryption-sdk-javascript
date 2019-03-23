@@ -18,18 +18,18 @@
 import { expect } from 'chai'
 import 'mocha'
 import { rsaTest } from '../src/rsa_simple'
-import { kmsTest } from '../src/kms_simple'
+import { kmsSimpleTest } from '../src/kms_simple'
 
 describe('test', () => {
   it('rsa', async () => {
     const { cleartext, plaintext } = await rsaTest()
 
-    expect(cleartext.toString()).to.equal(plaintext)
+    expect(plaintext.toString()).to.equal(cleartext)
   })
 
   it('kms', async () => {
-    const { cleartext, plaintext } = await kmsTest()
+    const { cleartext, plaintext } = await kmsSimpleTest()
 
-    expect(cleartext.toString()).to.equal(plaintext)
+    expect(plaintext.toString()).to.equal(cleartext)
   })
 })

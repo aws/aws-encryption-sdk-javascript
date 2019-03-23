@@ -51,11 +51,11 @@ export async function rsaTest () {
   const cmm = new NodeCryptographicMaterialsManager(keyring)
   const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
 
-  const plaintext = 'asdf'
+  const cleartext = 'asdf'
 
-  const ciphertext = await encrypt(cmm, plaintext, { suiteId })
+  const ciphertext = await encrypt(cmm, cleartext, { suiteId })
 
-  const cleartext = await decrypt(cmm, ciphertext)
+  const { plaintext } = await decrypt(cmm, ciphertext)
 
   return { plaintext, ciphertext, cleartext }
 }
