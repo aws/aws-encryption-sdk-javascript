@@ -13,37 +13,4 @@
  * limitations under the License.
  */
 
-import {
-  KmsKeyring,
-  KmsKeyringInput, // eslint-disable-line no-unused-vars
-  KMSConstructible, // eslint-disable-line no-unused-vars
-  KmsClientSupplier, // eslint-disable-line no-unused-vars
-  getClient,
-  limitRegions,
-  excludeRegions,
-  cacheClients
-} from '@aws-crypto/kms-keyring'
-import {
-  NodeAlgorithmSuite, // eslint-disable-line no-unused-vars
-  immutableClass
-} from '@aws-crypto/material-management-node'
-import { KMS, KMSConfiguration } from '@aws-sdk/client-kms-node' // eslint-disable-line no-unused-vars
-const getKmsClient = getClient(KMS)
-
-export type KmsKeyringNodeInput = KmsKeyringInput<KMS>
-export type KMSNodeConstructible = KMSConstructible<KMS, KMSConfiguration>
-export type KmsNodeClientSupplier = KmsClientSupplier<KMS>
-
-export class KmsKeyringNode extends KmsKeyring<NodeAlgorithmSuite, KMS> {
-  constructor({
-    clientProvider = getKmsClient,
-    kmsKeys,
-    generatorKmsKey,
-    grantTokens
-  }) {
-    super({clientProvider, kmsKeys, generatorKmsKey, grantTokens})
-  }
-}
-immutableClass(KmsKeyringNode)
-
-export { getKmsClient, limitRegions, excludeRegions, cacheClients }
+export * from './kms_keyring_node'
