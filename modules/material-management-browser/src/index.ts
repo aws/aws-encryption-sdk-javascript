@@ -25,7 +25,7 @@ export {
   WebCryptoDecryptionMaterial, WebCryptoEncryptionMaterial, WebCryptoAlgorithmSuite,
   AlgorithmSuiteIdentifier, EncryptionContext, EncryptedDataKey,
   KeyringTrace, KeyringTraceFlag, needs, MixedBackendCryptoKey,
-  immutableBaseClass, immutableClass, frozenClass, readOnlyProperty
+  immutableBaseClass, immutableClass, frozenClass, readOnlyProperty, keyUsageForMaterial
 } from '@aws-crypto/material-management'
 
 export abstract class WebCryptoKeyring extends Keyring<WebCryptoAlgorithmSuite> {}
