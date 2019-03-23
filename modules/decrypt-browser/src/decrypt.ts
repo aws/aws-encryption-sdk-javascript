@@ -15,46 +15,46 @@
 
 import {
   WebCryptoAlgorithmSuite,
-  WebCryptoCryptographicMaterialsManager,
+  WebCryptoCryptographicMaterialsManager, // eslint-disable-line no-unused-vars
   getDecryptionHelper,
-  GetSubtleDecrypt
+  GetSubtleDecrypt // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
 import {
-  MessageHeader,
+  MessageHeader, // eslint-disable-line no-unused-vars
   deserializeFactory,
   kdfInfo,
   decodeBodyHeader,
   aadFactory,
   concatBuffers,
-  HeaderInfo
+  HeaderInfo // eslint-disable-line no-unused-vars
 } from '@aws-crypto/serialize'
-import {fromUtf8, toUtf8} from '@aws-sdk/util-utf8-browser'
+import { fromUtf8, toUtf8 } from '@aws-sdk/util-utf8-browser'
 
 const deserialize = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
-const {messageAADContentString, messageAAD} = aadFactory(fromUtf8)
+const { messageAADContentString, messageAAD } = aadFactory(fromUtf8)
 
 export interface DecryptResult {
   messageHeader: MessageHeader
   clearMessage: Uint8Array
 }
 
-export async function decrypt(cmm: WebCryptoCryptographicMaterialsManager, ciphertext: Uint8Array): Promise<DecryptResult> {
+export async function decrypt (cmm: WebCryptoCryptographicMaterialsManager, ciphertext: Uint8Array): Promise<DecryptResult> {
   const headerInfo = deserialize.deserializeMessageHeader(ciphertext)
   if (headerInfo === false) throw new Error('Unable to parse Header')
-  const {messageHeader} = headerInfo
-  const {rawHeader, headerIv, headerAuthTag}  = headerInfo
-  const {encryptionContext, encryptedDataKeys, algorithmId} = messageHeader
-  const suite = new WebCryptoAlgorithmSuite(algorithmId)
+  const { messageHeader } = headerInfo
+  const { rawHeader, headerIv, headerAuthTag } = headerInfo
+  const { encryptionContext, encryptedDataKeys, suiteId, messageId } = messageHeader
+  const suite = new WebCryptoAlgorithmSuite(suiteId)
 
-  const {material} = await cmm.decryptMaterials({suite, encryptionContext, encryptedDataKeys})
-  const {kdfGetSubtleDecrypt, subtleVerify, dispose} = await getDecryptionHelper(material)
-  const info = kdfInfo(messageHeader.algorithmId, messageHeader.messageId)
+  const { material } = await cmm.decryptMaterials({ suite, encryptionContext, encryptedDataKeys })
+  const { kdfGetSubtleDecrypt, subtleVerify, dispose } = await getDecryptionHelper(material)
+  const info = kdfInfo(suiteId, messageId)
   const getSubtleDecrypt = kdfGetSubtleDecrypt(info)
 
   // The tag is appended to the Data
   await getSubtleDecrypt(headerIv, rawHeader)(headerAuthTag) // will throw if invalid
 
-  const {clearMessage, readPos} = await bodyDecrypt ({buffer: ciphertext, getSubtleDecrypt, headerInfo})
+  const { clearMessage, readPos } = await bodyDecrypt({ buffer: ciphertext, getSubtleDecrypt, headerInfo })
 
   dispose()
 
@@ -62,9 +62,9 @@ export async function decrypt(cmm: WebCryptoCryptographicMaterialsManager, ciphe
     const data = ciphertext.slice(0, readPos)
     const signature = ciphertext.slice(readPos)
     if (!(await subtleVerify(signature, data))) throw new Error('signature error')
-    return {messageHeader, clearMessage}
+    return { messageHeader, clearMessage }
   } else {
-    return {messageHeader, clearMessage}
+    return { messageHeader, clearMessage }
   }
 }
 
@@ -78,31 +78,30 @@ interface FramedDecryptOptions extends BodyDecryptOptions {
   readPos: number
 }
 
-async function bodyDecrypt({buffer, getSubtleDecrypt, headerInfo}: BodyDecryptOptions) {
+async function bodyDecrypt ({ buffer, getSubtleDecrypt, headerInfo }: BodyDecryptOptions) {
   let readPos = headerInfo.headerIv.byteLength + headerInfo.rawHeader.byteLength + headerInfo.headerAuthTag.byteLength
   const clearBuffers: ArrayBuffer[] = []
   while (true) {
-    const {clearBlob, frameInfo} = await framedDecrypt({buffer, getSubtleDecrypt, headerInfo, readPos})
+    const { clearBlob, frameInfo } = await framedDecrypt({ buffer, getSubtleDecrypt, headerInfo, readPos })
     clearBuffers.push(clearBlob)
     readPos = frameInfo.readPos
     if (frameInfo.isFinalFrame) {
       const clearMessage = concatBuffers(...clearBuffers)
-      return {clearMessage, readPos}
+      return { clearMessage, readPos }
     }
   }
 }
 
 // This will work for nonFramed content as well.  It simply treats it as a single frame.
-async function framedDecrypt({buffer, getSubtleDecrypt, headerInfo, readPos}: FramedDecryptOptions) {
-  const {messageHeader: {messageId}} = headerInfo
+async function framedDecrypt ({ buffer, getSubtleDecrypt, headerInfo, readPos }: FramedDecryptOptions) {
+  const { messageHeader: { messageId } } = headerInfo
   const frameInfo = decodeBodyHeader(buffer, headerInfo, readPos)
   if (!frameInfo) throw new Error('Format Error')
-  const cipherLength = frameInfo.contentLength + frameInfo.tagLength/8
+  const cipherLength = frameInfo.contentLength + frameInfo.tagLength / 8
   const contentString = messageAADContentString(frameInfo)
   const messageAdditionalData = messageAAD(messageId, contentString, frameInfo.sequenceNumber, frameInfo.contentLength)
   const cipherBlob = buffer.slice(frameInfo.readPos, frameInfo.readPos + cipherLength)
   const clearBlob = await getSubtleDecrypt(frameInfo.iv, messageAdditionalData)(cipherBlob)
   frameInfo.readPos += cipherLength
-  return {clearBlob, frameInfo}
+  return { clearBlob, frameInfo }
 }
-

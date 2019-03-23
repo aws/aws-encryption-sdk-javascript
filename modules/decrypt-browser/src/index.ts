@@ -13,4 +13,4 @@
  * limitations under the License.
  */
 
- export {decrypt, DecryptResult} from './decrypt'
+export { decrypt, DecryptResult } from './decrypt'
