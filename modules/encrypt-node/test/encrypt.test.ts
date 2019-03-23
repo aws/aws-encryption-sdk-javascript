@@ -34,7 +34,7 @@ import { encrypt } from '../src/encrypt'
 const never = () => { throw new Error('never') }
 
 describe('asdf', () => {
-  it('encrypt', async () => {
+  it.skip('encrypt', async () => {
     class TestKeyring extends NodeKeyring {
       async _onEncrypt (material: NodeEncryptionMaterial) {
         const unencryptedDataKey = new Uint8Array(material.suite.keyLengthBytes).fill(1)
@@ -58,7 +58,7 @@ describe('asdf', () => {
     console.log(ciphertext)
   })
 
-  it('getFramedEncryptStream', (done) => {
+  it.skip('getFramedEncryptStream', (done) => {
     const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     const suite = new NodeAlgorithmSuite(suiteId)
     const material = new NodeEncryptionMaterial(suite)
@@ -95,7 +95,7 @@ describe('asdf', () => {
       })
   })
 
-  it('duplex', (done) => {
+  it.skip('duplex', (done) => {
     class TestKeyring extends NodeKeyring {
       async _onEncrypt (material: NodeEncryptionMaterial) {
         const unencryptedDataKey = new Uint8Array(material.suite.keyLengthBytes).fill(1)

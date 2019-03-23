@@ -42,7 +42,7 @@ export interface EncryptStreamInput {
 /**
  * Takes a NodeCryptographicMaterialsManager or a NodeKeyring that will
  * be wrapped in a NodeCryptographicMaterialsManager and returns a stream.
- * 
+ *
  * @param cmm NodeCryptographicMaterialsManager|NodeKeyring
  * @param op EncryptStreamInput
  */
@@ -97,10 +97,10 @@ export function getEncryptionInfo (material : NodeEncryptionMaterial, frameLengt
   const messageHeader: MessageHeader = Object.freeze({
     version: SerializationVersion.V1,
     type: ObjectType.CUSTOMER_AE_DATA,
-    algorithmId: id,
+    suiteId: id,
     messageId,
     encryptionContext: context,
-    encryptedDataKeys: material.encryptedDataKeys, // freeze me please
+    encryptedDataKeys: Object.freeze(material.encryptedDataKeys), // freeze me please
     contentType: ContentType.FRAMED_DATA,
     headerIvLength: ivLength,
     frameLength
@@ -108,7 +108,7 @@ export function getEncryptionInfo (material : NodeEncryptionMaterial, frameLengt
 
   const headerBytes = serializeMessageHeader(messageHeader)
   const headerBuffer = Buffer.from(<ArrayBuffer>headerBytes.buffer)
-  const info = kdfInfo(messageHeader.algorithmId, messageHeader.messageId)
+  const info = kdfInfo(messageHeader.suiteId, messageHeader.messageId)
   const getCipher = kdfGetCipher(info)
   const headerIv = headerAuthIv(ivLength)
   const validateHeader = getCipher(headerIv)
