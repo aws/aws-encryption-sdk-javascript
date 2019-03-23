@@ -22,15 +22,15 @@
  * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-structure
  */
 
-import { 
-  IvLength,
+import {
+  IvLength, // eslint-disable-line no-unused-vars
   AlgorithmSuiteIdentifier,
-  AlgorithmSuite,
+  AlgorithmSuite, // eslint-disable-line no-unused-vars
   EncryptedDataKey,
-  EncryptionContext,
-  needs 
+  EncryptionContext, // eslint-disable-line no-unused-vars
+  needs
 } from '@aws-crypto/material-management'
-import { HeaderInfo, AlgorithmSuiteConstructor } from './types' // eslint-disable-line no-unused-vars
+import { HeaderInfo, AlgorithmSuiteConstructor, MessageHeader } from './types' // eslint-disable-line no-unused-vars
 import { readElements } from './read_element'
 
 // To deal with Browser and Node.js I inject a function to handle utf8 encoding.
@@ -115,7 +115,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
     const reservedBytes = dataView.getUint32(readPos + 1)
     /* Postcondition: reservedBytes are defined as 0,0,0,0
      * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-reserved
-     */ 
+     */
     needs(reservedBytes === 0, 'Malformed Header')
     const headerIvLength = <IvLength>dataView.getUint8(readPos + 1 + 4)
     /* Postcondition: The headerIvLength must match the algorithm suite specification. */
@@ -123,7 +123,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
     const frameLength = dataView.getUint32(readPos + 1 + 4 + 1)
     const rawHeader = messageBuffer.slice(0, headerLength)
 
-    const messageHeader = {
+    const messageHeader: MessageHeader = {
       version,
       type,
       suiteId,
@@ -153,7 +153,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
    * @param buffer Uint8Array
    * @param startPos number
    */
-  function deserializeEncryptedDataKeys (buffer: Uint8Array, startPos: number) {
+  function deserializeEncryptedDataKeys (buffer: Uint8Array, startPos: number): {encryptedDataKeys: ReadonlyArray<EncryptedDataKey>, readPos: number}|false {
     /* Precondition: startPos must be within the byte length of the buffer given. */
     needs(buffer.byteLength >= startPos && startPos >= 0, 'startPos out of bounds.')
 

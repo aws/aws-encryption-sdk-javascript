@@ -24,7 +24,7 @@ export interface MessageHeader extends Readonly<{
   suiteId: AlgorithmSuiteIdentifier
   messageId: BinaryData
   encryptionContext: Readonly<EncryptionContext>
-  encryptedDataKeys: Readonly<EncryptedDataKey[]>
+  encryptedDataKeys: ReadonlyArray<EncryptedDataKey>
   contentType: ContentType
   headerIvLength: IvLength
   frameLength: number

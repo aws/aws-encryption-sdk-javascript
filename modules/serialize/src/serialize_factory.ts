@@ -23,7 +23,7 @@
  */
 
 import { concatBuffers } from './concat_buffers'
-import { IvLength, EncryptionContext, IEncryptedDataKey, needs } from '@aws-crypto/material-management' // eslint-disable-line no-unused-vars
+import { IvLength, EncryptionContext, needs, EncryptedDataKey } from '@aws-crypto/material-management' // eslint-disable-line no-unused-vars
 import { SequenceIdentifier } from './identifiers'
 import { uInt16BE, uInt8, uInt32BE } from './uint_util'
 import { MessageHeader } from './types' // eslint-disable-line no-unused-vars
@@ -92,7 +92,7 @@ export function serializeFactory (fromUtf8: (input: any) => Uint8Array) {
     return concatBuffers(aadLength, aadData)
   }
 
-  function serializeEncryptedDataKeys (encryptedDataKeys: IEncryptedDataKey[]) {
+  function serializeEncryptedDataKeys (encryptedDataKeys: ReadonlyArray<EncryptedDataKey>) {
     const encryptedKeyInfo = encryptedDataKeys
       .map(({ providerId, providerInfo, encryptedDataKey }) => {
         const [providerIdBytes, keyInfoBytes] = [providerId, providerInfo].map(fromUtf8)
