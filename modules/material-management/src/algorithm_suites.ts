@@ -28,7 +28,7 @@ import { immutableClass } from './immutable_class'
 import { needs } from './needs'
 
 /* References to https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/algorithms-reference.html
- * These define the possible parameters are the parameters for algorithm specifications that correspond
+ * These define the possible parameters for algorithm specifications that correspond
  * to the Node.js or WebCrypto environment.
  * These parameters are composed into an algorithm suite specification for each
  * environment in the respective files.
