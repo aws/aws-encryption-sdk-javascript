@@ -23,11 +23,11 @@ import {
 } from 'crypto'
 import { HKDF } from '@aws-crypto/hkdf-node'
 
-type KDFIndex = {[K in NodeHash]: ReturnType<typeof HKDF>}
-const kdfIndex: KDFIndex = {
+type KDFIndex = Readonly<{[K in NodeHash]: ReturnType<typeof HKDF>}>
+const kdfIndex: KDFIndex = Object.freeze({
   sha256: HKDF('sha256' as NodeHash),
   sha384: HKDF('sha384' as NodeHash)
-}
+})
 
 interface getCipher {
   (info?: Uint8Array) : (iv: Uint8Array) => CipherGCM
@@ -52,7 +52,11 @@ export const getEncryptHelper: getEncryptHelper = (material: NodeEncryptionMater
   needs(material.hasUnencryptedDataKey, 'Material has no unencrypted data key.')
 
   const { signatureHash } = material.suite
-  const kdfGetCipher = getCryptoStream(material)
+  /* Conditional types can not narrow the return type :(
+   * Function overloads "works" but then I can not export
+   * the function and have eslint be happy (Multiple exports of name)
+   */
+  const kdfGetCipher = <getCipher>getCryptoStream(material)
   return Object.freeze({
     kdfGetCipher,
     getSigner: signatureHash ? getSigner : undefined,
@@ -69,14 +73,16 @@ export const getEncryptHelper: getEncryptHelper = (material: NodeEncryptionMater
      */
     needs(material.hasUnencryptedDataKey, 'Unencrypted data key has been zeroed.')
 
-    if (!signatureHash) throw new Error('')
+    if (!signatureHash) throw new Error('Material does not support signature.')
     const { signatureKey } = material
-    if (!signatureKey) throw new Error('')
+    if (!signatureKey) throw new Error('Material does not support signature.')
+    const { privateKey } = signatureKey
+    if (typeof privateKey !== 'string') throw new Error('Material does not support signature.')
 
     const signer = Object.assign(
       createSign(signatureHash),
-      // @ts-ignore don't export the private key if we don't have to
-      { awsCryptoSign: () => signer.sign(signatureKey.privateKey) })
+      // don't export the private key if we don't have to
+      { awsCryptoSign: () => signer.sign(privateKey) })
 
     return signer
   }
@@ -109,7 +115,11 @@ export const getDecryptionHelper: getDecryptionHelper = (material: NodeDecryptio
 
   const { signatureHash } = material.suite
 
-  const kdfGetDecipher = getCryptoStream(material)
+  /* Conditional types can not narrow the return type :(
+   * Function overloads "works" but then I can not export
+   * the function and have eslint be happy (Multiple exports of name)
+   */
+  const kdfGetDecipher = <getDecipher>getCryptoStream(material)
   return Object.freeze({
     kdfGetDecipher,
     getVerify: signatureHash ? getVerify : undefined,
@@ -117,9 +127,9 @@ export const getDecryptionHelper: getDecryptionHelper = (material: NodeDecryptio
   })
 
   function getVerify () {
-    if (!signatureHash) throw new Error('')
+    if (!signatureHash) throw new Error('Material does not support signature.')
     const { verificationKey } = material
-    if (!verificationKey) throw new Error('')
+    if (!verificationKey) throw new Error('Material does not support signature.')
 
     const verify = Object.assign(
       createVerify(signatureHash),
@@ -134,9 +144,7 @@ export const getDecryptionHelper: getDecryptionHelper = (material: NodeDecryptio
   }
 }
 
-function getCryptoStream(material: NodeEncryptionMaterial): getCipher
-function getCryptoStream(material: NodeDecryptionMaterial): getDecipher
-function getCryptoStream (material: NodeEncryptionMaterial|NodeDecryptionMaterial) {
+export function getCryptoStream (material: NodeEncryptionMaterial|NodeDecryptionMaterial) {
   const { encryption: cipherName, ivLength } = material.suite
 
   const createCryptoStream = material instanceof NodeEncryptionMaterial
@@ -151,7 +159,7 @@ function getCryptoStream (material: NodeEncryptionMaterial|NodeDecryptionMateria
   return (info?: Uint8Array) => {
     const derivedKey = nodeKdf(material, info)
     return (iv: Uint8Array) => {
-      /* Precondition: The length of the IV must match the algorithm suite specification */
+      /* Precondition: The length of the IV must match the algorithm suite specification. */
       needs(iv.byteLength === ivLength, 'Iv length does not match algorithm suite specification')
       /* Precondition: The material must have not been zeroed.
       * hasUnencryptedDataKey will check that the unencrypted data key has been set
@@ -172,9 +180,21 @@ export function nodeKdf (material: NodeEncryptionMaterial|NodeDecryptionMaterial
 
   const { kdf, kdfHash, keyLengthBytes } = material.suite
 
-  if (kdf === 'HKDF' && kdfHash !== void 0 && info) {
-    return kdfIndex[kdfHash](Buffer.from(dataKey.buffer))(keyLengthBytes, Buffer.from(info.buffer))
-  } else {
-    return dataKey
-  }
+  /* Check for early return (Postcondition): No KDF, just return the unencrypted data key. */
+  if (!kdf) return dataKey
+
+  /* Precondition: Valid HKDF values must exist. */
+  needs(
+    kdf === 'HKDF' &&
+    kdfHash &&
+    kdfIndex[kdfHash] &&
+    info instanceof Uint8Array,
+    ''
+  )
+  // info and kdfHash are now defined
+  const toExtract = Buffer.from(dataKey.buffer, dataKey.byteOffset, dataKey.byteLength)
+  const { buffer, byteOffset, byteLength } = <Uint8Array> info
+  const infoBuff = Buffer.from(buffer, byteOffset, byteLength)
+
+  return kdfIndex[<NodeHash>kdfHash](toExtract)(keyLengthBytes, infoBuff)
 }

@@ -15,26 +15,31 @@
 
 import {
   NodeMaterialsManager, EncryptionRequest, DecryptionRequest, EncryptionContext, // eslint-disable-line no-unused-vars
-  EncryptionResponse, DecryptionResponse, Keyring, // eslint-disable-line no-unused-vars
-  NodeAlgorithmSuite, NodeEncryptionMaterial, NodeDecryptionMaterial, SignatureKey, needs, VerificationKey, AlgorithmSuiteIdentifier
+  EncryptionResponse, DecryptionResponse, // eslint-disable-line no-unused-vars
+  NodeAlgorithmSuite, NodeEncryptionMaterial, NodeDecryptionMaterial, SignatureKey,
+  needs, VerificationKey, AlgorithmSuiteIdentifier,
+  immutableClass, readOnlyProperty, Keyring
 } from '@aws-crypto/material-management'
 
 import { ENCODED_SIGNER_KEY } from '@aws-crypto/serialize'
 
 import { createECDH } from 'crypto'
 
-type NodeKeyring = Keyring<NodeAlgorithmSuite>
+export abstract class NodeKeyring extends Keyring<NodeAlgorithmSuite> {}
+immutableClass(NodeKeyring)
 export type NodeEncryptionRequest = EncryptionRequest<NodeAlgorithmSuite>
 export type NodeDecryptionRequest = DecryptionRequest<NodeAlgorithmSuite>
 export type NodeEncryptionResponse = EncryptionResponse<NodeAlgorithmSuite>
 export type NodeDecryptionResponse = DecryptionResponse<NodeAlgorithmSuite>
 
 export class NodeCryptographicMaterialsManager implements NodeMaterialsManager {
-  readonly keyring: NodeKeyring
+  readonly keyring!: NodeKeyring
   constructor (keyring: NodeKeyring) {
-    // needs(keyring instanceof Keyring, 'Unsupported type.')
-    this.keyring = keyring
+    /* Precondition: keyrings must be a NodeKeyring. */
+    needs(keyring instanceof NodeKeyring, 'Unsupported type.')
+    readOnlyProperty(this, 'keyring', keyring)
   }
+
   async getEncryptionMaterials ({ suite, encryptionContext }: NodeEncryptionRequest): Promise<NodeEncryptionResponse> {
     suite = suite || new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
     const material = new NodeEncryptionMaterial(suite)
@@ -57,7 +62,10 @@ export class NodeCryptographicMaterialsManager implements NodeMaterialsManager {
 
     await this.keyring.onDecrypt(material, encryptedDataKeys.slice(), encryptionContext)
 
-    /* Postcondition: The material must contain a valid unencrypted dataKey. */
+    /* Postcondition: The material must contain a valid unencrypted dataKey.
+     * See: cryptographic_materials.ts, `getUnencryptedDataKey` also verifies
+     * that the unencrypted data key has not been manipulated.
+     */
     needs(material.getUnencryptedDataKey(), 'Unencrypted data key is invalid.')
 
     return { material, context: encryptionContext || {} }
@@ -66,25 +74,28 @@ export class NodeCryptographicMaterialsManager implements NodeMaterialsManager {
   async _generateSigningKeyAndUpdateEncryptionContext (material: NodeEncryptionMaterial, context?: EncryptionContext) {
     const { signatureCurve: namedCurve } = material.suite
 
-    /* Precondition: The algorithm suite specification must support a signatureCurve. */
-    if (!namedCurve) return { ...context }
+    /* Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve. */
+    if (!namedCurve) return Object.freeze({ ...context })
 
     const ecdh = createECDH(namedCurve)
     ecdh.generateKeys()
-    // @ts-ignore
+    // @ts-ignore I want a compressed buffer.
     const compressPoint = ecdh.getPublicKey(undefined, 'compressed')
     const privateKey = ecdh.getPrivateKey()
     const signatureKey = new SignatureKey(privateKey, new Uint8Array(compressPoint), material.suite)
 
     material.setSignatureKey(signatureKey)
 
-    return { ...context, [ENCODED_SIGNER_KEY]: compressPoint.toString('base64') }
+    return Object.freeze({
+      ...context,
+      [ENCODED_SIGNER_KEY]: compressPoint.toString('base64')
+    })
   }
 
   async _loadVerificationKeyFromEncryptionContext (material: NodeDecryptionMaterial, context?: EncryptionContext) {
     const { signatureCurve: namedCurve } = material.suite
 
-    /* Precondition: The algorithm suite specification must support a signatureCurve. */
+    /* Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve. */
     if (!namedCurve) return material
 
     /* Precondition: If the algorithm suite specification requires a signatureCurve a context must exist. */
@@ -100,3 +111,4 @@ export class NodeCryptographicMaterialsManager implements NodeMaterialsManager {
     return material.setVerificationKey(new VerificationKey(publicKeyBytes, material.suite))
   }
 }
+immutableClass(NodeCryptographicMaterialsManager)

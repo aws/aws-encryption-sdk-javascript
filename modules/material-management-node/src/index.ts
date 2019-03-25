@@ -19,7 +19,7 @@ import {
 } from '@aws-crypto/material-management'
 
 export * from './node_cryptographic_materials_manager'
-export * from './material_helpers'
+export { getEncryptHelper, getDecryptionHelper } from './material_helpers'
 export {
   NodeDecryptionMaterial, NodeEncryptionMaterial, NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier, EncryptionContext, EncryptedDataKey,
