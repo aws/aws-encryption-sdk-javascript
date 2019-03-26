@@ -22,6 +22,26 @@ import { NodeAlgorithmSuite } from './node_algorithms'
 import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 import { needs } from './needs'
 
+let timingSafeEqual: (a: Uint8Array, b: Uint8Array) => boolean
+try {
+  const {timingSafeEqual: nodeTimingSafeEqual} = require('crypto')
+  timingSafeEqual = nodeTimingSafeEqual
+} catch {
+  /* https://codahale.com/a-lesson-in-timing-attacks/ */
+  timingSafeEqual = function timingSafeEqual (a: Uint8Array, b: Uint8Array) {
+    /* Check for early return (Postcondition): Size is well-know information
+     * and does not leak information about contents.
+     */
+    if (a.byteLength !== b.byteLength) return false
+
+    let diff = 0
+    for (let i = 0; i < b.length; i++) {
+      diff |= a[i] ^ b[i]
+    }
+    return (diff === 0)
+  }
+}
+
 /*
  * This public interface to the CryptographicMaterial object is provided for
  * developers of CMMs and keyrings only. If you are a user of the AWS Encryption
@@ -248,7 +268,7 @@ export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>
      */
     needs(!unencryptedDataKeyZeroed, 'unencryptedDataKey has been zeroed.')
     /* Precondition: The unencryptedDataKey must not have been modified. */
-    needs(udkForVerification.every((v, i) => unencryptedDataKey[i] === v), 'unencryptedDataKey has been corrupted.')
+    needs(timingSafeEqual(udkForVerification, unencryptedDataKey), 'unencryptedDataKey has been corrupted.')
     return unencryptedDataKey
   }
   Object.defineProperty(material, 'hasUnencryptedDataKey', {
@@ -280,9 +300,9 @@ export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>
     enumerable: true
   })
 
-  readOnlyProperty<T, 'setUnencryptedDataKey'>(material, 'setUnencryptedDataKey', setUnencryptedDataKey)
-  readOnlyProperty<T, 'getUnencryptedDataKey'>(material, 'getUnencryptedDataKey', getUnencryptedDataKey)
-  readOnlyProperty<T, 'zeroUnencryptedDataKey'>(material, 'zeroUnencryptedDataKey', zeroUnencryptedDataKey)
+  readOnlyProperty(material, 'setUnencryptedDataKey', setUnencryptedDataKey)
+  readOnlyProperty(material, 'getUnencryptedDataKey', getUnencryptedDataKey)
+  readOnlyProperty(material, 'zeroUnencryptedDataKey', zeroUnencryptedDataKey)
 
   return material
 }
@@ -320,7 +340,7 @@ export function decorateEncryptionMaterial<T extends EncryptionMaterial<T>> (mat
     return material
   }
 
-  readOnlyProperty<T, 'addEncryptedDataKey'>(material, 'addEncryptedDataKey', addEncryptedDataKey)
+  readOnlyProperty(material, 'addEncryptedDataKey', addEncryptedDataKey)
   Object.defineProperty(material, 'encryptedDataKeys', {
     // I only want EDKs added through addEncryptedDataKey
     // so I return a new array
@@ -340,7 +360,7 @@ export function decorateEncryptionMaterial<T extends EncryptionMaterial<T>> (mat
     signatureKey = key
     return material
   }
-  readOnlyProperty<T, 'setSignatureKey'>(material, 'setSignatureKey', setSignatureKey)
+  readOnlyProperty(material, 'setSignatureKey', setSignatureKey)
   Object.defineProperty(material, 'signatureKey', {
     get: () => {
       /* Precondition: The SignatureKey requested must agree with the algorithm specification.
@@ -380,7 +400,7 @@ export function decorateDecryptionMaterial<T extends DecryptionMaterial<T>> (mat
     verificationKey = key
     return material
   }
-  readOnlyProperty<T, 'setVerificationKey'>(material, 'setVerificationKey', setVerificationKey)
+  readOnlyProperty(material, 'setVerificationKey', setVerificationKey)
   Object.defineProperty(material, 'verificationKey', {
     get: () => {
       /* Precondition: The VerificationKey requested must agree with the algorithm specification.
@@ -429,7 +449,7 @@ export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>> (mater
     return material
   }
 
-  readOnlyProperty<T, 'setCryptoKey'>(material, 'setCryptoKey', setCryptoKey)
+  readOnlyProperty(material, 'setCryptoKey', setCryptoKey)
   Object.defineProperty(material, 'cryptoKey', {
     get: () => {
       /* Precondition: The cryptoKey must be set before we can return it. */
