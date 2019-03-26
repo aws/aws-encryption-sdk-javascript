@@ -56,7 +56,7 @@ export function webCryptoBackendFactory (window: Window) {
     }
 
     /* Postcondition: If no SubtleCrypto exists, a fallback must configured. */
-    if (fallbackRequired && !subtle && !webCryptoFallback) {
+    if (!subtle && !webCryptoFallback) {
       throw new Error('A Fallback is required because no subtle backend exists.')
     }
 
