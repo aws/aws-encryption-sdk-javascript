@@ -63,8 +63,9 @@ export class MultiKeyring<S extends SupportedAlgorithmSuites> extends Keyring<S>
       await keyring.onEncrypt(generated, context)
     }
 
-    // A Postcondition for Keyrings is that they must not create new CryptographicMaterial
-    // therefore the generated material has all the data we want
+    // Keyrings are required to not create new EncryptionMaterial instances, but
+    // only append EncryptedDataKey.  Therefore the generated material has all
+    // the data I want.
     return generated
   }
 
