@@ -65,9 +65,9 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
    * The most clear example is from KMS.  KMS is a regional service.
    * This means that a call to decrypt an EDK must go to the
    * region that "owns" this EDK.  If the decryption is done
-   * in a different region, then this call will travel over
-   * the internet.  To control this behavior the person
-   * who called encrypt can control the order of EDK.
+   * in a different region. To control this behavior the person
+   * who called encrypt can control the order of EDK and in the
+   * configuration of the KMS Keyring.
    */
   async onDecrypt (material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[], context?: EncryptionContext): Promise<DecryptionMaterial<S>> {
     /* Precondition: material must be DecryptionMaterial. */
