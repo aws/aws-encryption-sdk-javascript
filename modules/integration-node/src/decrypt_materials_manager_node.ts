@@ -1,0 +1,105 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"). You may not use
+ * this file except in compliance with the License. A copy of the License is
+ * located at
+ *
+ *     http://aws.amazon.com/apache2.0/
+ *
+ * or in the "license" file accompanying this file. This file is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import {
+  needs,
+  NodeCryptographicMaterialsManager,
+  MultiKeyringNode
+} from '@aws-crypto/material-management-node'
+import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
+import {
+  RawAesKeyringNode,
+  WrappingSuiteIdentifier, // eslint-disable-line no-unused-vars
+  RawAesWrappingSuiteIdentifier
+} from '@aws-crypto/raw-aes-keyring-node'
+import { RawRsaKeyringNode } from '@aws-crypto/raw-rsa-keyring-node'
+import {
+  RsaKeyInfo, // eslint-disable-line no-unused-vars
+  AesKeyInfo, // eslint-disable-line no-unused-vars
+  KmsKeyInfo, // eslint-disable-line no-unused-vars
+  RSAKey, // eslint-disable-line no-unused-vars
+  AESKey, // eslint-disable-line no-unused-vars
+  KMSKey, // eslint-disable-line no-unused-vars
+  KeyInfoTuple // eslint-disable-line no-unused-vars
+} from './types'
+import { constants } from 'crypto'
+
+const Bits2RawAesWrappingSuiteIdentifier: {[key: number]: WrappingSuiteIdentifier} = {
+  128: RawAesWrappingSuiteIdentifier.AES128_GCM_IV12_TAG16_NO_PADDING,
+  192: RawAesWrappingSuiteIdentifier.AES192_GCM_IV12_TAG16_NO_PADDING,
+  256: RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
+}
+
+export function decryptMaterialsManagerNode (keyInfos: KeyInfoTuple[]) {
+  const children = keyInfos.map(keyringNode)
+  const keyring = new MultiKeyringNode({ children })
+  return new NodeCryptographicMaterialsManager(keyring)
+}
+
+function keyringNode ([ info, key ]: KeyInfoTuple) {
+  if (info.type === 'aws-kms' && key.type === 'aws-kms') {
+    return kmsKeyring(info, key)
+  }
+  if (info.type === 'raw' && info['encryption-algorithm'] === 'aes' && key.type === 'symmetric') {
+    return aesKeyring(info, key)
+  }
+  if (info.type === 'raw' && info['encryption-algorithm'] === 'rsa' && (key.type === 'public' || key.type === 'private')) {
+    return rsaKeyring(info, key)
+  }
+  throw new Error('Unsupported keyring type')
+}
+
+function kmsKeyring (_keyInfo: KmsKeyInfo, key: KMSKey) {
+  const keyIds = [key['key-id']]
+  return new KmsKeyringNode({ keyIds })
+}
+
+function aesKeyring (keyInfo:AesKeyInfo, key: AESKey) {
+  const keyName = key['key-id']
+  const keyNamespace = keyInfo['provider-id']
+  const { encoding, material } = key
+  const unencryptedMasterKey = Buffer.alloc(key.bits / 8, material, encoding)
+  const wrappingSuite = Bits2RawAesWrappingSuiteIdentifier[key.bits]
+  return new RawAesKeyringNode({ keyName, keyNamespace, unencryptedMasterKey, wrappingSuite })
+}
+
+function rsaKeyring (keyInfo: RsaKeyInfo, key: RSAKey) {
+  const keyName = key['key-id']
+  const keyNamespace = keyInfo['provider-id']
+  const rsaKey = key.type === 'private'
+    ? { privateKey: key.material }
+    : { publicKey: key.material }
+  const padding = rsaPadding(keyInfo)
+  return new RawRsaKeyringNode({ keyName, keyNamespace, rsaKey, padding })
+}
+
+function rsaPadding (keyInfo: RsaKeyInfo) {
+  const paddingAlgorithm = keyInfo['padding-algorithm']
+  const paddingHash = keyInfo['padding-hash']
+
+  if (paddingAlgorithm === 'pkcs1') return constants.RSA_PKCS1_PADDING
+  needs(paddingHash === 'sha1', 'Not supported at this time.')
+
+  return constants.RSA_PKCS1_OAEP_PADDING
+}
+
+export class NotSupported extends Error {
+  code: string
+  constructor (message?: string) {
+    super(message)
+    Object.setPrototypeOf(this, NotSupported.prototype)
+    this.code = 'NOT_SUPPORTED'
+  }
+}
