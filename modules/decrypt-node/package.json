@@ -3,7 +3,8 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
-    "prepublishOnly": "tsc -p tsconfig.json && tsc -p tsconfig.module.json",
+    "prepublishOnly": "npm run build",
+    "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
     "lint": "standard src/*.ts test/**/*.ts",
     "mocha": "mocha --require ts-node/register test/**/*test.ts",
     "test": "npm run lint && npm run coverage",
