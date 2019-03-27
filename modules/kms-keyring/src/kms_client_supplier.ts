@@ -69,8 +69,45 @@ export function cacheClients<Client extends KMS> (
   const clientsCache: {[key: string]: Client|false} = {}
 
   return (region: string) => {
-    // undefined and false are both false ish, so check for the property
-    if (!clientsCache.hasOwnProperty(region)) clientsCache[region] = getClient(region)
+    // Do not cache until KMS has been responded in the given region
+    if (!clientsCache.hasOwnProperty(region)) return deferCache(clientsCache, region, getClient(region))
     return clientsCache[region]
+  }
+}
+
+type KMSOperations = keyof KMS
+/* It is possible that a malicious user can attempt a local resource 
+ * DOS by sending ciphertext with a large number of spurious regions.
+ * This will fill the cache with regions and exhaust resources.
+ * To avoid this, a call succeeds in contacting KMS.
+ * This does *not* mean that this call is successful,
+ * only that the region is backed by a functional KMS service.
+ */
+function deferCache<Client extends KMS> (
+  clientsCache: {[key: string]: Client|false},
+  region: string,
+  client: Client|false
+): Client|false {
+  if (!client) {
+    clientsCache[region] = false
+    return false
+  }
+  const { encrypt, decrypt, generateDataKey } = client
+
+  return (<KMSOperations[]>['encrypt', 'decrypt', 'generateDataKey']).reduce(wrapOperation, client)
+
+  function wrapOperation (client: Client, name: KMSOperations): Client {
+    type params = Parameters<KMS[typeof name]>
+    type retValue = ReturnType<KMS[typeof name]>
+    const original = client[name]
+    client[name] = function (...args: params): retValue {
+      // @ts-ignore (there should be a TypeScript solution for this)
+      return original.apply(client, args)
+        .then((response: any) => {
+          clientsCache[region] = Object.assign(client, { encrypt, decrypt, generateDataKey })
+          return response
+        })
+    }
+    return client
   }
 }
