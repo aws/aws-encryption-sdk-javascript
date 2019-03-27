@@ -22,7 +22,7 @@ import { SignatureStream } from './signature_stream'
 import Duplexify from 'duplexify'
 import { randomBytes } from 'crypto'
 import {
-  MessageHeader, 
+  MessageHeader, // eslint-disable-line no-unused-vars
   serializeFactory, kdfInfo, ContentType, SerializationVersion, ObjectType
 } from '@aws-crypto/serialize'
 

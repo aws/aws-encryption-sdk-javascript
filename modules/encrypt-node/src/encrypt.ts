@@ -10,7 +10,7 @@ import {
 import { finished } from 'readable-stream'
 import { Readable } from 'stream' // eslint-disable-line no-unused-vars
 import { Duplexify } from 'duplexify' // eslint-disable-line no-unused-vars
-import { MessageHeader } from '@aws-crypto/serialize';
+import { MessageHeader } from '@aws-crypto/serialize' // eslint-disable-line no-unused-vars
 
 interface EncryptInput extends EncryptStreamInput {
   encoding?: string
@@ -55,7 +55,7 @@ export async function encrypt (
   }
 }
 
-function finishedAsync(stream: Duplexify) {
+function finishedAsync (stream: Duplexify) {
   return new Promise((resolve, reject) => {
     finished(stream, (err: Error) => err ? reject(err) : resolve())
   })
