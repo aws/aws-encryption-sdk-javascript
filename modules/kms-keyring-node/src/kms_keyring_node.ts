@@ -25,7 +25,7 @@ import {
 } from '@aws-crypto/kms-keyring'
 import {
   NodeAlgorithmSuite, // eslint-disable-line no-unused-vars
-  immutableClass
+  immutableClass, NodeKeyring
 } from '@aws-crypto/material-management-node'
 import { KMS, KMSConfiguration } from '@aws-sdk/client-kms-node' // eslint-disable-line no-unused-vars
 const getKmsClient = getClient(KMS)
@@ -41,8 +41,13 @@ export class KmsKeyringNode extends KmsKeyring<NodeAlgorithmSuite, KMS> {
     kmsKeys,
     generatorKmsKey,
     grantTokens
-  }: KmsKeyringNodeInput) {
+  }: KmsKeyringNodeInput = {}) {
     super({ clientProvider, kmsKeys, generatorKmsKey, grantTokens })
+  }
+
+  [Symbol.hasInstance] (obj: any) {
+    return obj instanceof NodeKeyring ||
+      Function.prototype[Symbol.hasInstance].call(this, obj)
   }
 }
 immutableClass(KmsKeyringNode)
