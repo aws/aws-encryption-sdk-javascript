@@ -184,7 +184,13 @@ function getSubtleFunction (material: Material, backend: WebCryptoBackend) {
   }
 }
 
-export async function WebCryptoKdf (subtle: SubtleCrypto, material: Material, cryptoKey: CryptoKey, keyUsages: SubtleFunction[], info: Uint8Array) {
+export async function WebCryptoKdf (
+  subtle: SubtleCrypto,
+  material: Material,
+  cryptoKey: CryptoKey,
+  keyUsages: SubtleFunction[],
+  info: Uint8Array
+): Promise<CryptoKey> {
   const { kdf, kdfHash, keyLength, encryption } = material.suite
 
   if (kdf === 'HKDF' && kdfHash) {
