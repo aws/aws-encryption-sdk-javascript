@@ -22,7 +22,7 @@ import { UnsupportedAlgorithm, KeyLengthError } from './errors'
  * @param algorithm [String] The name of the hash algorithm to use
  * @return [Function] The extract function decorated with expand and verify functions
  */
-export function HKDF (algorithm: string = 'sha256') {
+export function HKDF (algorithm: string = 'sha256'): HKDFOutput {
   // Check the length and support
   try {
     var hashLength = createHash(algorithm).digest().length
@@ -33,8 +33,8 @@ export function HKDF (algorithm: string = 'sha256') {
   const maxLength = 255 * hashLength
 
   // decorate the return function
-  extractExpand.expand = expand
   extractExpand.extract = extract
+  extractExpand.expand = expand
 
   return extractExpand
 
@@ -91,3 +91,19 @@ export function HKDF (algorithm: string = 'sha256') {
     return Buffer.concat(memo, length)
   }
 }
+
+export interface Extract {
+  (ikm: string|Buffer, salt?: string|Buffer|false): Buffer
+}
+
+export interface Expand {
+  (prk:Buffer, length:number, info?:Buffer): Buffer
+}
+
+export interface HKDFOutput {
+  (...args: Parameters<Extract>): (...args: Curry<Parameters<Expand>>) => Buffer
+  extract: Extract
+  expand: Expand
+}
+
+type Curry<T extends any[]> = ((...args: T) => void) extends (head: any, ...tail: infer U) => any ? U : never;
