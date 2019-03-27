@@ -6,9 +6,8 @@ import { decryptStream } from './decrypt_stream'
 
 // @ts-ignore
 import { finished } from 'readable-stream'
-import { Readable } from 'stream' // eslint-disable-line no-unused-vars
+import { Readable, Duplex } from 'stream' // eslint-disable-line no-unused-vars
 import { MessageHeader } from '@aws-crypto/serialize' // eslint-disable-line no-unused-vars
-import { Duplex } from 'stream' // eslint-disable-line no-unused-vars
 
 export interface DecryptOutput {
   plaintext: Buffer
@@ -48,7 +47,7 @@ export async function decrypt (
   }
 }
 
-function finishedAsync(stream: Duplex) {
+function finishedAsync (stream: Duplex) {
   return new Promise((resolve, reject) => {
     finished(stream, (err: Error) => err ? reject(err) : resolve())
   })
