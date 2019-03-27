@@ -38,7 +38,10 @@ export interface DecryptResult {
   clearMessage: Uint8Array
 }
 
-export async function decrypt (cmm: WebCryptoCryptographicMaterialsManager, ciphertext: Uint8Array): Promise<DecryptResult> {
+export async function decrypt (
+  cmm: WebCryptoCryptographicMaterialsManager,
+  ciphertext: Uint8Array
+): Promise<DecryptResult> {
   const headerInfo = deserialize.deserializeMessageHeader(ciphertext)
   if (headerInfo === false) throw new Error('Unable to parse Header')
   const { messageHeader } = headerInfo
