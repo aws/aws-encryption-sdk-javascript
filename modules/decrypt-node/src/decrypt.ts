@@ -7,9 +7,8 @@ import { decryptStream } from './decrypt_stream'
 // @ts-ignore
 import { finished } from 'readable-stream'
 import { Readable } from 'stream' // eslint-disable-line no-unused-vars
-import { promisify } from 'util'
 import { MessageHeader } from '@aws-crypto/serialize' // eslint-disable-line no-unused-vars
-const finishedAsync = promisify(finished)
+import { Duplex } from 'stream' // eslint-disable-line no-unused-vars
 
 export interface DecryptOutput {
   plaintext: Buffer
@@ -26,7 +25,7 @@ export async function decrypt (
   const plaintext: Buffer[] = []
   let messageHeader: MessageHeader|false = false
   stream
-    .once('MessageHeader', (_header: MessageHeader) => { messageHeader = _header })
+    .once('MessageHeader', (header: MessageHeader) => { messageHeader = header })
     .on('data', (chunk: Buffer) => plaintext.push(chunk))
 
   // This will check both Uint8Array|Buffer
@@ -47,4 +46,10 @@ export async function decrypt (
     plaintext: Buffer.concat(plaintext),
     messageHeader
   }
+}
+
+function finishedAsync(stream: Duplex) {
+  return new Promise((resolve, reject) => {
+    finished(stream, (err: Error) => err ? reject(err) : resolve())
+  })
 }

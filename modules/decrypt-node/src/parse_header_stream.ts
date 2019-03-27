@@ -54,8 +54,6 @@ export class ParseHeaderStream extends PortableTransformWithType {
       return callback()
     }
 
-    this.emit('UnValidatedMessageHeader', headerInfo)
-
     const { messageHeader, algorithmSuite } = headerInfo
     const { rawHeader, headerIv, headerAuthTag } = headerInfo
 

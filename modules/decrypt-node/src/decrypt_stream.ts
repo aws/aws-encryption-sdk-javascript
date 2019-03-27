@@ -21,11 +21,12 @@ import { ParseHeaderStream } from './parse_header_stream'
 import { VerifyStream } from './verify_stream'
 import { getDecipherStream } from './decipher_stream'
 import Duplexify from 'duplexify'
+import { Duplex } from 'stream' // eslint-disable-line no-unused-vars
 
 // @ts-ignore
 import { pipeline } from 'readable-stream'
 
-export function decryptStream (cmm: NodeCryptographicMaterialsManager|NodeKeyring) {
+export function decryptStream (cmm: NodeCryptographicMaterialsManager|NodeKeyring): Duplex {
   /* If the cmm is not a MaterialsManager, wrap in one.
    * I am expecting the NodeCryptographicMaterialsManager to
    * handle non-keyring parameters.
@@ -44,7 +45,6 @@ export function decryptStream (cmm: NodeCryptographicMaterialsManager|NodeKeyrin
 
   // Forward header events
   parseHeaderStream
-    .once('UnValidatedMessageHeader', header => stream.emit('UnValidatedMessageHeader', header))
     .once('MessageHeader', header => stream.emit('MessageHeader', header))
 
   return stream
