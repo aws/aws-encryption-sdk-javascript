@@ -18,7 +18,7 @@
 import { expect } from 'chai'
 import 'mocha'
 import { KmsKeyringNode } from '../src/kms_keyring_browser'
-import { WebCryptoKeyring} from '@aws-crypto/material-management-browser'
+import { WebCryptoKeyring } from '@aws-crypto/material-management-browser'
 
 describe('KmsKeyringNode', () => {
   it('instance of WebCryptoKeyring', () => {
