@@ -175,7 +175,7 @@ export function getCryptoStream (material: NodeEncryptionMaterial|NodeDecryption
   }
 }
 
-export function nodeKdf (material: NodeEncryptionMaterial|NodeDecryptionMaterial, info?: Uint8Array) {
+export function nodeKdf (material: NodeEncryptionMaterial|NodeDecryptionMaterial, info?: Uint8Array): Uint8Array {
   const dataKey = material.getUnencryptedDataKey()
 
   const { kdf, kdfHash, keyLengthBytes } = material.suite
