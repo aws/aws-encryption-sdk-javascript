@@ -20,6 +20,7 @@
     "@aws-crypto/material-management-browser": "^0.0.1",
     "@aws-crypto/kms-keyring": "^0.0.1",
     "@aws-crypto/web-crypto-backend": "^0.0.1",
+    "@aws-sdk/client-kms-browser": "^0.1.0-preview.2",
     "@aws-sdk/types": "0.1.0-preview.1",
     "tslib": "^1.9.3"
   },
