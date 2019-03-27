@@ -22,12 +22,13 @@ import { SignatureStream } from './signature_stream'
 import Duplexify from 'duplexify'
 import { randomBytes } from 'crypto'
 import {
-  MessageHeader, // eslint-disable-line no-unused-vars
+  MessageHeader, 
   serializeFactory, kdfInfo, ContentType, SerializationVersion, ObjectType
 } from '@aws-crypto/serialize'
 
 // @ts-ignore
 import { pipeline } from 'readable-stream'
+import { Duplex } from 'stream' // eslint-disable-line no-unused-vars
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const { serializeMessageHeader, headerAuthIv } = serializeFactory(fromUtf8)
@@ -49,7 +50,7 @@ export interface EncryptStreamInput {
 export function encryptStream (
   cmm: NodeCryptographicMaterialsManager|NodeKeyring,
   op: EncryptStreamInput = {}
-) {
+): Duplex {
   const { suiteId, context, frameLength = 10 } = op
 
   /* If the cmm is not a MaterialsManager, wrap in one.
