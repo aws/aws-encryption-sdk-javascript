@@ -14,7 +14,19 @@
  */
 
 import { KmsClientSupplier } from './kms_client_supplier' // eslint-disable-line no-unused-vars
-import { needs, Keyring, EncryptionMaterial, DecryptionMaterial, SupportedAlgorithmSuites, EncryptionContext, KeyringTrace, KeyringTraceFlag, EncryptedDataKey, immutableClass } from '@aws-crypto/material-management' // eslint-disable-line no-unused-vars
+import {
+  needs,
+  Keyring,
+  EncryptionMaterial, // eslint-disable-line no-unused-vars
+  DecryptionMaterial, // eslint-disable-line no-unused-vars
+  SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
+  EncryptionContext, // eslint-disable-line no-unused-vars
+  KeyringTrace, // eslint-disable-line no-unused-vars
+  KeyringTraceFlag,
+  EncryptedDataKey, // eslint-disable-line no-unused-vars
+  immutableClass,
+  readOnlyProperty
+} from '@aws-crypto/material-management'
 import { KMS_PROVIDER_ID, generateDataKey, encrypt, decrypt, kms2EncryptedDataKey } from './helpers'
 import { KMS } from './kms_types/KMS' // eslint-disable-line no-unused-vars
 import { DecryptOutput } from './kms_types/DecryptOutput' // eslint-disable-line no-unused-vars
@@ -28,9 +40,9 @@ export interface KmsKeyringInput<Client extends KMS> {
 }
 
 export abstract class KmsKeyring<S extends SupportedAlgorithmSuites, Client extends KMS> extends Keyring<S> {
-  public kmsKeys: string[] = []
+  public kmsKeys!: string[]
   public generatorKmsKey?: string
-  public clientProvider: KmsClientSupplier<Client>
+  public clientProvider!: KmsClientSupplier<Client>
   public grantTokens?: string
 
   constructor ({ clientProvider, generatorKmsKey, kmsKeys = [], grantTokens }: KmsKeyringInput<Client>) {
@@ -41,10 +53,10 @@ export abstract class KmsKeyring<S extends SupportedAlgorithmSuites, Client exte
     /* Precondition: clientProvider needs to be a callable function. */
     needs(typeof clientProvider === 'function', '')
 
-    this.clientProvider = clientProvider
-    this.kmsKeys = kmsKeys
-    this.generatorKmsKey = generatorKmsKey
-    this.grantTokens = grantTokens
+    readOnlyProperty(this, 'clientProvider', clientProvider)
+    readOnlyProperty(this, 'kmsKeys', kmsKeys)
+    readOnlyProperty(this, 'generatorKmsKey', generatorKmsKey)
+    readOnlyProperty(this, 'grantTokens', grantTokens)
   }
 
   /* Keyrings *must* preserve the order of EDK's.  The generatorKmsKey is the first on this list. */

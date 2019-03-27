@@ -49,7 +49,7 @@ export async function encrypt<Client extends KMS> (
   KeyId: string,
   EncryptionContext?: EncryptionContext,
   GrantTokens?: string
-) {
+): Promise<Required<EncryptOutput>|false> {
   const region = regionFromKmsKeyArn(KeyId)
   const client = clientProvider(region)
 

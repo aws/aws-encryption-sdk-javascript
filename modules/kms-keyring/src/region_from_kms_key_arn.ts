@@ -15,7 +15,7 @@
 
 import { needs } from '@aws-crypto/material-management'
 
-export function regionFromKmsKeyArn (kmsKeyArn: string) {
+export function regionFromKmsKeyArn (kmsKeyArn: string): string {
   /* Precondition: A KMS key arn must be a string. */
   needs(typeof kmsKeyArn === 'string', 'KMS key arn must be a string.')
 
