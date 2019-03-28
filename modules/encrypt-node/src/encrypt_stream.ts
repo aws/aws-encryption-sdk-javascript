@@ -15,7 +15,7 @@
 
 import {
   NodeCryptographicMaterialsManager, NodeAlgorithmSuite, AlgorithmSuiteIdentifier, // eslint-disable-line no-unused-vars
-  NodeKeyring, NodeEncryptionMaterial, getEncryptHelper, EncryptionContext // eslint-disable-line no-unused-vars
+  KeyringNode, NodeEncryptionMaterial, getEncryptHelper, EncryptionContext // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 import { getFramedEncryptStream } from './framed_encrypt_stream'
 import { SignatureStream } from './signature_stream'
@@ -41,14 +41,14 @@ export interface EncryptStreamInput {
 }
 
 /**
- * Takes a NodeCryptographicMaterialsManager or a NodeKeyring that will
+ * Takes a NodeCryptographicMaterialsManager or a KeyringNode that will
  * be wrapped in a NodeCryptographicMaterialsManager and returns a stream.
  *
- * @param cmm NodeCryptographicMaterialsManager|NodeKeyring
+ * @param cmm NodeCryptographicMaterialsManager|KeyringNode
  * @param op EncryptStreamInput
  */
 export function encryptStream (
-  cmm: NodeCryptographicMaterialsManager|NodeKeyring,
+  cmm: NodeCryptographicMaterialsManager|KeyringNode,
   op: EncryptStreamInput = {}
 ): Duplex {
   const { suiteId, context, frameLength = 10 } = op

@@ -14,11 +14,12 @@
  */
 
 import { Transform } from 'stream'
-import { Signer } from 'crypto' // eslint-disable-line no-unused-vars
+import { GetSigner } from '@aws-crypto/material-management-node' // eslint-disable-line no-unused-vars
 
-type GetSigner = () => Signer
+type AWSSigner = ReturnType<GetSigner>
+
 export class SignatureStream extends Transform {
-  private _signer!: Signer|undefined
+  private _signer!: AWSSigner|undefined
   constructor (getSigner?: GetSigner) {
     super()
     const value = getSigner && getSigner()
@@ -33,8 +34,7 @@ export class SignatureStream extends Transform {
   }
 
   _flush (callback: Function) {
-    // @ts-ignore The private key is already bound. Emit the signature
-    this._signer && this.push(this._signer.sign())
+    this._signer && this.push(this._signer.awsCryptoSign())
     callback()
   }
 }

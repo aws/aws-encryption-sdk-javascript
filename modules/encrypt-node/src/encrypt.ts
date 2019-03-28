@@ -8,8 +8,7 @@ import {
 
 // @ts-ignore
 import { finished } from 'readable-stream'
-import { Readable } from 'stream' // eslint-disable-line no-unused-vars
-import { Duplexify } from 'duplexify' // eslint-disable-line no-unused-vars
+import { Readable, Duplex } from 'stream' // eslint-disable-line no-unused-vars
 import { MessageHeader } from '@aws-crypto/serialize' // eslint-disable-line no-unused-vars
 
 interface EncryptInput extends EncryptStreamInput {
@@ -30,9 +29,9 @@ export async function encrypt (
   const { encoding } = op
 
   const ciphertext: Buffer[] = []
-  const messageHeader: MessageHeader|false = false
+  let messageHeader: MessageHeader|false = false
   stream
-    .once('MessageHeader', header => stream.emit('MessageHeader', header))
+    .once('MessageHeader', header => { messageHeader = header })
     .on('data', (chunk: Buffer) => ciphertext.push(chunk))
 
   // This will check both Uint8Array|Buffer
@@ -55,7 +54,7 @@ export async function encrypt (
   }
 }
 
-function finishedAsync (stream: Duplexify) {
+function finishedAsync (stream: Duplex) {
   return new Promise((resolve, reject) => {
     finished(stream, (err: Error) => err ? reject(err) : resolve())
   })
