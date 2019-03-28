@@ -13,22 +13,12 @@
  * limitations under the License.
  */
 
-import {
-  WebCryptoAlgorithmSuite, // eslint-disable-line no-unused-vars
-  Keyring, MultiKeyring, immutableClass
-} from '@aws-crypto/material-management'
-
 export * from './browser_cryptographic_materials_manager'
 export * from './material_helpers'
 export * from './bytes2JWK'
 export {
   WebCryptoDecryptionMaterial, WebCryptoEncryptionMaterial, WebCryptoAlgorithmSuite,
-  AlgorithmSuiteIdentifier, EncryptionContext, EncryptedDataKey,
-  KeyringTrace, KeyringTraceFlag, needs, MixedBackendCryptoKey,
+  AlgorithmSuiteIdentifier, EncryptionContext, EncryptedDataKey, KeyringWebCrypto,
+  KeyringTrace, KeyringTraceFlag, needs, MixedBackendCryptoKey, MultiKeyringWebCrypto,
   immutableBaseClass, immutableClass, frozenClass, readOnlyProperty, keyUsageForMaterial
 } from '@aws-crypto/material-management'
-
-export abstract class WebCryptoKeyring extends Keyring<WebCryptoAlgorithmSuite> {}
-export abstract class WebCryptoMultiKeyring extends MultiKeyring<WebCryptoAlgorithmSuite> {}
-immutableClass(WebCryptoKeyring)
-immutableClass(WebCryptoMultiKeyring)
