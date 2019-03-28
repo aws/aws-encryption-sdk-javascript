@@ -18,7 +18,8 @@
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import 'mocha'
-import { NodeCryptographicMaterialsManager, NodeKeyring } from '../src/node_cryptographic_materials_manager'
+import { KeyringNode } from '@aws-crypto/material-management'
+import { NodeCryptographicMaterialsManager } from '../src/node_cryptographic_materials_manager'
 import {
   NodeEncryptionMaterial, // eslint-disable-line no-unused-vars
   NodeDecryptionMaterial, // eslint-disable-line no-unused-vars
@@ -33,7 +34,7 @@ const { expect } = chai
 
 describe('NodeCryptographicMaterialsManager', () => {
   it('constructor sets keyring', () => {
-    class TestKeyring extends NodeKeyring {
+    class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
       }
@@ -52,12 +53,12 @@ describe('NodeCryptographicMaterialsManager', () => {
     })
   })
 
-  it('Precondition: keyrings must be a NodeKeyring.', () => {
+  it('Precondition: keyrings must be a KeyringNode.', () => {
     expect(() => new NodeCryptographicMaterialsManager({} as any)).to.throw()
   })
 
   it('should create a signature key and append it to context', async () => {
-    class TestKeyring extends NodeKeyring {
+    class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
       }
@@ -80,7 +81,7 @@ describe('NodeCryptographicMaterialsManager', () => {
   })
 
   it('Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve.', async () => {
-    class TestKeyring extends NodeKeyring {
+    class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
       }
@@ -102,7 +103,7 @@ describe('NodeCryptographicMaterialsManager', () => {
   })
 
   it('Set the verification key.', async () => {
-    class TestKeyring extends NodeKeyring {
+    class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
       }
@@ -128,7 +129,7 @@ describe('NodeCryptographicMaterialsManager', () => {
   })
 
   it('Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve.', async () => {
-    class TestKeyring extends NodeKeyring {
+    class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
       }
@@ -147,7 +148,7 @@ describe('NodeCryptographicMaterialsManager', () => {
   })
 
   it('Precondition: If the algorithm suite specification requires a signatureCurve a context must exist.', async () => {
-    class TestKeyring extends NodeKeyring {
+    class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
       }
@@ -165,7 +166,7 @@ describe('NodeCryptographicMaterialsManager', () => {
   })
 
   it('Precondition: The context must contain the public key.', async () => {
-    class TestKeyring extends NodeKeyring {
+    class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
       }
@@ -186,7 +187,7 @@ describe('NodeCryptographicMaterialsManager', () => {
   it('Postcondition: The material must contain a valid unencrypted dataKey.', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
 
-    class TestKeyring extends NodeKeyring {
+    class TestKeyring extends KeyringNode {
       async _onEncrypt (material: NodeEncryptionMaterial): Promise<NodeEncryptionMaterial> {
         return material
       }
@@ -203,7 +204,7 @@ describe('NodeCryptographicMaterialsManager', () => {
   it('Postcondition: The material must contain at least 1 EncryptedDataKey.', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
 
-    class TestKeyring extends NodeKeyring {
+    class TestKeyring extends KeyringNode {
       async _onEncrypt (material: NodeEncryptionMaterial): Promise<NodeEncryptionMaterial> {
         const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
         const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
@@ -222,7 +223,7 @@ describe('NodeCryptographicMaterialsManager', () => {
   it('Postcondition: The material must contain a valid unencrypted dataKey.', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
-    class TestKeyring extends NodeKeyring {
+    class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
       }
@@ -242,7 +243,7 @@ describe('NodeCryptographicMaterialsManager', () => {
   it('Return decryption material', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
-    class TestKeyring extends NodeKeyring {
+    class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
       }

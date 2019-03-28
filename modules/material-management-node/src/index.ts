@@ -13,21 +13,16 @@
  * limitations under the License.
  */
 
-import {
-  NodeAlgorithmSuite, // eslint-disable-line no-unused-vars
-  Keyring, MultiKeyring, immutableClass
-} from '@aws-crypto/material-management'
-
 export * from './node_cryptographic_materials_manager'
-export { getEncryptHelper, getDecryptionHelper } from './material_helpers'
+export {
+  getEncryptHelper,
+  getDecryptionHelper,
+  GetSigner,
+  GetVerify
+} from './material_helpers'
 export {
   NodeDecryptionMaterial, NodeEncryptionMaterial, NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier, EncryptionContext, EncryptedDataKey,
-  KeyringTrace, KeyringTraceFlag, needs,
+  KeyringTrace, KeyringTraceFlag, needs, KeyringNode, MultiKeyringNode,
   immutableBaseClass, immutableClass, frozenClass, readOnlyProperty
 } from '@aws-crypto/material-management'
-
-export abstract class NodeKeyring extends Keyring<NodeAlgorithmSuite> {}
-export abstract class NodeMultiKeyring extends MultiKeyring<NodeAlgorithmSuite> {}
-immutableClass(NodeKeyring)
-immutableClass(NodeMultiKeyring)

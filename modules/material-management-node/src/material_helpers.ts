@@ -29,25 +29,25 @@ const kdfIndex: KDFIndex = Object.freeze({
   sha384: HKDF('sha384' as NodeHash)
 })
 
-interface getCipher {
+export interface GetCipher {
   (info?: Uint8Array) : (iv: Uint8Array) => CipherGCM
 }
 
-interface getSigner {
+export interface GetSigner {
   () : Signer & {awsCryptoSign: () => Buffer}
 }
 
 export interface NodeEncryptionMaterialHelper {
-  kdfGetCipher: getCipher
-  getSigner?: getSigner
+  kdfGetCipher: GetCipher
+  getSigner?: GetSigner
   dispose: () => void
 }
 
-interface getEncryptHelper {
+export interface GetEncryptHelper {
   (material: NodeEncryptionMaterial) : NodeEncryptionMaterialHelper
 }
 
-export const getEncryptHelper: getEncryptHelper = (material: NodeEncryptionMaterial) => {
+export const getEncryptHelper: GetEncryptHelper = (material: NodeEncryptionMaterial) => {
   /* Precondition: There must be an unencrypted data key. */
   needs(material.hasUnencryptedDataKey, 'Material has no unencrypted data key.')
 
@@ -56,7 +56,7 @@ export const getEncryptHelper: getEncryptHelper = (material: NodeEncryptionMater
    * Function overloads "works" but then I can not export
    * the function and have eslint be happy (Multiple exports of name)
    */
-  const kdfGetCipher = <getCipher>getCryptoStream(material)
+  const kdfGetCipher = <GetCipher>getCryptoStream(material)
   return Object.freeze({
     kdfGetCipher,
     getSigner: signatureHash ? getSigner : undefined,
@@ -92,24 +92,24 @@ export const getEncryptHelper: getEncryptHelper = (material: NodeEncryptionMater
   }
 }
 
-interface getDecipher {
+export interface GetDecipher {
   (info?: Uint8Array) : (iv: Uint8Array) => DecipherGCM
 }
-interface getVerify {
+export interface GetVerify {
   () : Verify & {awsCryptoVerify: (signature: Buffer) => boolean}
 }
 
 export interface NodeDecryptionMaterialHelper {
-  kdfGetDecipher: getDecipher
-  getVerify?: getVerify
+  kdfGetDecipher: GetDecipher
+  getVerify?: GetVerify
   dispose: () => void
 }
 
-interface getDecryptionHelper {
+export interface GetDecryptionHelper {
   (material: NodeDecryptionMaterial) : NodeDecryptionMaterialHelper
 }
 
-export const getDecryptionHelper: getDecryptionHelper = (material: NodeDecryptionMaterial) => {
+export const getDecryptionHelper: GetDecryptionHelper = (material: NodeDecryptionMaterial) => {
   /* Precondition: There must be an unencrypted data key. */
   needs(material.hasUnencryptedDataKey, 'Material has no unencrypted data key.')
 
@@ -119,7 +119,7 @@ export const getDecryptionHelper: getDecryptionHelper = (material: NodeDecryptio
    * Function overloads "works" but then I can not export
    * the function and have eslint be happy (Multiple exports of name)
    */
-  const kdfGetDecipher = <getDecipher>getCryptoStream(material)
+  const kdfGetDecipher = <GetDecipher>getCryptoStream(material)
   return Object.freeze({
     kdfGetDecipher,
     getVerify: signatureHash ? getVerify : undefined,

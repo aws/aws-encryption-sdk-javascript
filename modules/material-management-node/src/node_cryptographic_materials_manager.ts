@@ -18,25 +18,23 @@ import {
   EncryptionResponse, DecryptionResponse, // eslint-disable-line no-unused-vars
   NodeAlgorithmSuite, NodeEncryptionMaterial, NodeDecryptionMaterial, SignatureKey,
   needs, VerificationKey, AlgorithmSuiteIdentifier,
-  immutableClass, readOnlyProperty, Keyring
+  immutableClass, readOnlyProperty, KeyringNode
 } from '@aws-crypto/material-management'
 
 import { ENCODED_SIGNER_KEY } from '@aws-crypto/serialize'
 
 import { createECDH } from 'crypto'
 
-export abstract class NodeKeyring extends Keyring<NodeAlgorithmSuite> {}
-immutableClass(NodeKeyring)
 export type NodeEncryptionRequest = EncryptionRequest<NodeAlgorithmSuite>
 export type NodeDecryptionRequest = DecryptionRequest<NodeAlgorithmSuite>
 export type NodeEncryptionResponse = EncryptionResponse<NodeAlgorithmSuite>
 export type NodeDecryptionResponse = DecryptionResponse<NodeAlgorithmSuite>
 
 export class NodeCryptographicMaterialsManager implements NodeMaterialsManager {
-  readonly keyring!: NodeKeyring
-  constructor (keyring: NodeKeyring) {
+  readonly keyring!: KeyringNode
+  constructor (keyring: KeyringNode) {
     /* Precondition: keyrings must be a NodeKeyring. */
-    needs(keyring instanceof NodeKeyring, 'Unsupported type.')
+    needs(keyring instanceof KeyringNode, 'Unsupported type.')
     readOnlyProperty(this, 'keyring', keyring)
   }
 
