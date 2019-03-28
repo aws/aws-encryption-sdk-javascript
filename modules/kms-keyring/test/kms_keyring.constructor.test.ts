@@ -17,48 +17,50 @@
 
 import { expect } from 'chai'
 import 'mocha'
-import { KmsKeyring } from '../src/kms_keyring'
-import { NodeAlgorithmSuite } from '@aws-crypto/material-management' // eslint-disable-line no-unused-vars
-import { KMS } from '../src/kms_types/KMS' // eslint-disable-line no-unused-vars
+import {
+  KmsKeyringClass,
+  KeyRingConstructible // eslint-disable-line no-unused-vars
+} from '../src/kms_keyring'
+import { NodeAlgorithmSuite, Keyring } from '@aws-crypto/material-management' // eslint-disable-line no-unused-vars
 
 describe('KmsKeyring: constructor', () => {
   it('set properties', () => {
     const clientProvider: any = () => {}
-    const generatorKmsKey = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
-    const kmsKeys = ['arn:aws:kms:us-east-1:123456789012:alias/example-alias']
+    const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const keyIds = ['arn:aws:kms:us-east-1:123456789012:alias/example-alias']
     const grantTokens = 'grant'
 
-    class TestKmsKeyring extends KmsKeyring<NodeAlgorithmSuite, KMS> {}
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
 
-    const test = new TestKmsKeyring({ clientProvider, generatorKmsKey, kmsKeys, grantTokens })
+    const test = new TestKmsKeyring({ clientProvider, generatorKeyId, keyIds, grantTokens })
     expect(test.clientProvider).to.equal(clientProvider)
-    expect(test.generatorKmsKey).to.equal(generatorKmsKey)
-    expect(test.kmsKeys).to.equal(kmsKeys)
+    expect(test.generatorKeyId).to.equal(generatorKeyId)
+    expect(test.keyIds).to.equal(keyIds)
     expect(test.grantTokens).to.equal(grantTokens)
   })
 
   it('Precondition: All KMS key arns must be valid.', () => {
     const clientProvider: any = () => {}
-    class TestKmsKeyring extends KmsKeyring<NodeAlgorithmSuite, KMS> {}
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
 
     expect(() => new TestKmsKeyring({
       clientProvider,
-      generatorKmsKey: 'Not arn'
+      generatorKeyId: 'Not arn'
     })).to.throw()
 
     expect(() => new TestKmsKeyring({
       clientProvider,
-      kmsKeys: ['Not arn']
+      keyIds: ['Not arn']
     })).to.throw()
 
     expect(() => new TestKmsKeyring({
       clientProvider,
-      kmsKeys: ['arn:aws:kms:us-east-1:123456789012:alias/example-alias', 'Not arn']
+      keyIds: ['arn:aws:kms:us-east-1:123456789012:alias/example-alias', 'Not arn']
     })).to.throw()
   })
 
   it('Precondition: clientProvider needs to be a callable function.', () => {
-    class TestKmsKeyring extends KmsKeyring<NodeAlgorithmSuite, KMS> {}
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
     const clientProvider: any = 'not function'
     expect(() => new TestKmsKeyring({ clientProvider })).to.throw()
   })

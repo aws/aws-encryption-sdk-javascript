@@ -16,7 +16,7 @@
 import { KmsClientSupplier } from './kms_client_supplier' // eslint-disable-line no-unused-vars
 import {
   needs,
-  Keyring,
+  Keyring, // eslint-disable-line no-unused-vars
   EncryptionMaterial, // eslint-disable-line no-unused-vars
   DecryptionMaterial, // eslint-disable-line no-unused-vars
   SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
@@ -34,123 +34,147 @@ import { regionFromKmsKeyArn } from './region_from_kms_key_arn'
 
 export interface KmsKeyringInput<Client extends KMS> {
   clientProvider: KmsClientSupplier<Client>
-  kmsKeys?: string[]
-  generatorKmsKey?: string
+  keyIds?: string[]
+  generatorKeyId?: string
   grantTokens?: string
 }
 
-export abstract class KmsKeyring<S extends SupportedAlgorithmSuites, Client extends KMS> extends Keyring<S> {
-  public kmsKeys!: string[]
-  public generatorKmsKey?: string
-  public clientProvider!: KmsClientSupplier<Client>
-  public grantTokens?: string
+export interface KeyRing<S extends SupportedAlgorithmSuites, Client extends KMS> extends Keyring<S> {
+  keyIds: string[]
+  generatorKeyId?: string
+  clientProvider: KmsClientSupplier<Client>
+  grantTokens?: string
+  _onEncrypt(material: EncryptionMaterial<S>, context?: EncryptionContext): Promise<EncryptionMaterial<S>>
+  _onDecrypt(material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[], context?: EncryptionContext): Promise<DecryptionMaterial<S>>
+}
 
-  constructor ({ clientProvider, generatorKmsKey, kmsKeys = [], grantTokens }: KmsKeyringInput<Client>) {
-    super()
-    /* Precondition: All KMS key arns must be valid. */
-    needs(!generatorKmsKey || !!regionFromKmsKeyArn(generatorKmsKey), 'Malformed arn.')
-    needs(kmsKeys.every(keyarn => !!regionFromKmsKeyArn(keyarn)), 'Malformed arn.')
-    /* Precondition: clientProvider needs to be a callable function. */
-    needs(typeof clientProvider === 'function', '')
+export interface KmsKeyRingConstructible<S extends SupportedAlgorithmSuites, Client extends KMS> {
+  new(input: KmsKeyringInput<Client>): KeyRing<S, Client>
+}
 
-    readOnlyProperty(this, 'clientProvider', clientProvider)
-    readOnlyProperty(this, 'kmsKeys', kmsKeys)
-    readOnlyProperty(this, 'generatorKmsKey', generatorKmsKey)
-    readOnlyProperty(this, 'grantTokens', grantTokens)
-  }
+export interface KeyRingConstructible<S extends SupportedAlgorithmSuites> {
+  new(): Keyring<S>
+}
 
-  /* Keyrings *must* preserve the order of EDK's.  The generatorKmsKey is the first on this list. */
-  async _onEncrypt (material: EncryptionMaterial<S>, context?: EncryptionContext) {
-    const kmsKeys = this.kmsKeys.slice()
-    const { clientProvider, generatorKmsKey, grantTokens } = this
-    if (generatorKmsKey && !material.hasUnencryptedDataKey) {
-      const dataKey = await generateDataKey(clientProvider, material.suite.keyLengthBytes, generatorKmsKey, context, grantTokens)
-      /* Precondition: A generatorKmsKey must generate if we do not have an unencrypted data key.
-       * Client supplier is allowed to return undefined if, for example, user wants to exclude particular
-       * regions. But if we are here it means that user configured keyring with a KMS key that was
-       * incompatible with the client supplier in use.
-       */
-      if (!dataKey) throw new Error('Generator KMS key did not generate a data key')
+export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client extends KMS> (
+  BaseKeyring: KeyRingConstructible<S>
+): KmsKeyRingConstructible<S, Client> {
+  class KmsKeyring extends BaseKeyring implements KeyRing<S, Client> {
+    public keyIds!: string[]
+    public generatorKeyId?: string
+    public clientProvider!: KmsClientSupplier<Client>
+    public grantTokens?: string
 
-      const flags = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY |
-        KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX |
-        KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
-      const trace: KeyringTrace = { keyNamespace: KMS_PROVIDER_ID, keyName: dataKey.KeyId, flags }
+    constructor ({ clientProvider, generatorKeyId, keyIds = [], grantTokens }: KmsKeyringInput<Client>) {
+      super()
+      /* Precondition: This is an abstract class. (But TypeScript does not have a clean way to model this) */
+      needs(this.constructor !== KmsKeyring, 'new KmsKeyring is not allowed')
+      /* Precondition: All KMS key arns must be valid. */
+      needs(!generatorKeyId || !!regionFromKmsKeyArn(generatorKeyId), 'Malformed arn.')
+      needs(keyIds.every(keyarn => !!regionFromKmsKeyArn(keyarn)), 'Malformed arn.')
+      /* Precondition: clientProvider needs to be a callable function. */
+      needs(typeof clientProvider === 'function', '')
 
-      material
-        /* Postcondition: The unencryptedDataKey length must match the algorithm specification.
-         * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
-         */
-        .setUnencryptedDataKey(dataKey.Plaintext, trace)
-        .addEncryptedDataKey(kms2EncryptedDataKey(dataKey), KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
-    } else if (generatorKmsKey) {
-      kmsKeys.unshift(generatorKmsKey)
+      readOnlyProperty(this, 'clientProvider', clientProvider)
+      readOnlyProperty(this, 'keyIds', keyIds)
+      readOnlyProperty(this, 'generatorKeyId', generatorKeyId)
+      readOnlyProperty(this, 'grantTokens', grantTokens)
     }
 
-    /* Precondition: If a generator does not exist, an unencryptedDataKey *must* already exist.
-     * Furthermore *only* CMK's explicitly designated as generators can generate data keys.
-     * See cryptographic_materials as getUnencryptedDataKey will throw in this case.
-     */
-    const unencryptedDataKey = material.getUnencryptedDataKey()
+    /* Keyrings *must* preserve the order of EDK's.  The generatorKeyId is the first on this list. */
+    async _onEncrypt (material: EncryptionMaterial<S>, context?: EncryptionContext) {
+      const keyIds = this.keyIds.slice()
+      const { clientProvider, generatorKeyId, grantTokens } = this
+      if (generatorKeyId && !material.hasUnencryptedDataKey) {
+        const dataKey = await generateDataKey(clientProvider, material.suite.keyLengthBytes, generatorKeyId, context, grantTokens)
+        /* Precondition: A generatorKeyId must generate if we do not have an unencrypted data key.
+        * Client supplier is allowed to return undefined if, for example, user wants to exclude particular
+        * regions. But if we are here it means that user configured keyring with a KMS key that was
+        * incompatible with the client supplier in use.
+        */
+        if (!dataKey) throw new Error('Generator KMS key did not generate a data key')
 
-    const flags = KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
-    for (const kmsKey of kmsKeys) {
-      const kmsEDK = await encrypt(clientProvider, unencryptedDataKey, kmsKey, context, grantTokens)
+        const flags = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY |
+          KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX |
+          KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
+        const trace: KeyringTrace = { keyNamespace: KMS_PROVIDER_ID, keyName: dataKey.KeyId, flags }
 
-      /* clientProvider may not return a client, in this case there is not an EDK to add */
-      if (kmsEDK) material.addEncryptedDataKey(kms2EncryptedDataKey(kmsEDK), flags)
-    }
-
-    return material
-  }
-
-  async _onDecrypt (material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[], context?: EncryptionContext) {
-    const kmsKeys = this.kmsKeys.slice()
-    const { clientProvider, generatorKmsKey, grantTokens } = this
-    if (generatorKmsKey) kmsKeys.unshift(generatorKmsKey)
-
-    /* If there are no key IDs in the list, keyring is in "discovery" mode and will attempt KMS calls with
-     * every ARN it comes across in the message. If there are key IDs in the list, it will cross check the
-     * ARN it reads with that list before attempting KMS calls. Note that if caller provided key IDs in
-     * anything other than a CMK ARN format, the SDK will not attempt to decrypt those data keys, because
-     * the EDK data format always specifies the CMK with the full (non-alias) ARN.
-     */
-    const decryptableEDKs = encryptedDataKeys
-      .filter(({ providerId, providerInfo }) => {
-        if (providerId !== KMS_PROVIDER_ID) return false
-        return kmsKeys.length
-          ? kmsKeys.includes(providerInfo)
-          : true
-      })
-
-    for (const edk of decryptableEDKs) {
-      let dataKey: Required<DecryptOutput>|false = false
-      try {
-        dataKey = await decrypt(clientProvider, edk, context, grantTokens)
-      } catch (e) {
-        // there should be some debug here?  or wrap?
-        // Failures decrypt should not short-circuit the process
-        // If the caller does not have access they may have access
-        // through another Keyring.
+        material
+          /* Postcondition: The unencryptedDataKey length must match the algorithm specification.
+          * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
+          */
+          .setUnencryptedDataKey(dataKey.Plaintext, trace)
+          .addEncryptedDataKey(kms2EncryptedDataKey(dataKey), KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+      } else if (generatorKeyId) {
+        keyIds.unshift(generatorKeyId)
       }
 
-      /* Check for early return (Postcondition): clientProvider may not return a client. */
-      if (!dataKey) continue
+      /* Precondition: If a generator does not exist, an unencryptedDataKey *must* already exist.
+      * Furthermore *only* CMK's explicitly designated as generators can generate data keys.
+      * See cryptographic_materials as getUnencryptedDataKey will throw in this case.
+      */
+      const unencryptedDataKey = material.getUnencryptedDataKey()
 
-      /* Postcondition: The KeyId from KMS must match the encoded KeyID. */
-      needs(dataKey.KeyId === edk.providerInfo, 'KMS Decryption key does not match serialized provider.')
+      const flags = KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
+      for (const kmsKey of keyIds) {
+        const kmsEDK = await encrypt(clientProvider, unencryptedDataKey, kmsKey, context, grantTokens)
 
-      const flags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
-      const trace: KeyringTrace = { keyNamespace: KMS_PROVIDER_ID, keyName: dataKey.KeyId, flags }
+        /* clientProvider may not return a client, in this case there is not an EDK to add */
+        if (kmsEDK) material.addEncryptedDataKey(kms2EncryptedDataKey(kmsEDK), flags)
+      }
 
-      /* Postcondition: The unencryptedDataKey length must match the algorithm specification.
-        * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
-        */
-      material.setUnencryptedDataKey(dataKey.Plaintext, trace)
       return material
     }
 
-    return material
+    async _onDecrypt (material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[], context?: EncryptionContext) {
+      const keyIds = this.keyIds.slice()
+      const { clientProvider, generatorKeyId, grantTokens } = this
+      if (generatorKeyId) keyIds.unshift(generatorKeyId)
+
+      /* If there are no key IDs in the list, keyring is in "discovery" mode and will attempt KMS calls with
+      * every ARN it comes across in the message. If there are key IDs in the list, it will cross check the
+      * ARN it reads with that list before attempting KMS calls. Note that if caller provided key IDs in
+      * anything other than a CMK ARN format, the SDK will not attempt to decrypt those data keys, because
+      * the EDK data format always specifies the CMK with the full (non-alias) ARN.
+      */
+      const decryptableEDKs = encryptedDataKeys
+        .filter(({ providerId, providerInfo }) => {
+          if (providerId !== KMS_PROVIDER_ID) return false
+          return keyIds.length
+            ? keyIds.includes(providerInfo)
+            : true
+        })
+
+      for (const edk of decryptableEDKs) {
+        let dataKey: Required<DecryptOutput>|false = false
+        try {
+          dataKey = await decrypt(clientProvider, edk, context, grantTokens)
+        } catch (e) {
+          // there should be some debug here?  or wrap?
+          // Failures decrypt should not short-circuit the process
+          // If the caller does not have access they may have access
+          // through another Keyring.
+        }
+
+        /* Check for early return (Postcondition): clientProvider may not return a client. */
+        if (!dataKey) continue
+
+        /* Postcondition: The KeyId from KMS must match the encoded KeyID. */
+        needs(dataKey.KeyId === edk.providerInfo, 'KMS Decryption key does not match serialized provider.')
+
+        const flags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
+        const trace: KeyringTrace = { keyNamespace: KMS_PROVIDER_ID, keyName: dataKey.KeyId, flags }
+
+        /* Postcondition: The unencryptedDataKey length must match the algorithm specification.
+          * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
+          */
+        material.setUnencryptedDataKey(dataKey.Plaintext, trace)
+        return material
+      }
+
+      return material
+    }
   }
+  immutableClass(KmsKeyring)
+  return KmsKeyring
 }
-immutableClass(KmsKeyring)

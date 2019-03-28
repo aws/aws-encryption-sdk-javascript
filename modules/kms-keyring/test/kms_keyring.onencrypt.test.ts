@@ -18,9 +18,17 @@
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import 'mocha'
-import { KmsKeyring } from '../src/kms_keyring'
-import { NodeAlgorithmSuite, AlgorithmSuiteIdentifier, NodeEncryptionMaterial, KeyringTraceFlag } from '@aws-crypto/material-management'
-import { KMS } from '../src/kms_types/KMS' // eslint-disable-line no-unused-vars
+import {
+  KmsKeyringClass,
+  KeyRingConstructible // eslint-disable-line no-unused-vars
+} from '../src/kms_keyring'
+import {
+  NodeAlgorithmSuite,
+  AlgorithmSuiteIdentifier,
+  NodeEncryptionMaterial,
+  KeyringTraceFlag,
+  Keyring
+} from '@aws-crypto/material-management'
 import { GenerateDataKeyInput } from '../src/kms_types/GenerateDataKeyInput' // eslint-disable-line no-unused-vars
 import { EncryptInput } from '../src/kms_types/EncryptInput' // eslint-disable-line no-unused-vars
 chai.use(chaiAsPromised)
@@ -28,9 +36,9 @@ const { expect } = chai
 
 describe('KmsKeyring: _onEncrypt', () => {
   it('returns material', async () => {
-    const generatorKmsKey = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const encryptKmsKey = 'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012'
-    const kmsKeys = [encryptKmsKey]
+    const keyIds = [encryptKmsKey]
     const context = { some: 'context' }
     const grantTokens = 'grant'
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
@@ -55,12 +63,12 @@ describe('KmsKeyring: _onEncrypt', () => {
         }
       }
     }
-    class TestKmsKeyring extends KmsKeyring<NodeAlgorithmSuite, KMS> {}
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
 
     const testKeyring = new TestKmsKeyring({
       clientProvider,
-      generatorKmsKey,
-      kmsKeys,
+      generatorKeyId,
+      keyIds,
       grantTokens
     })
 
@@ -71,14 +79,14 @@ describe('KmsKeyring: _onEncrypt', () => {
     expect(material.encryptedDataKeys).to.have.lengthOf(2)
     const [edkGenerate, edkEncrypt] = material.encryptedDataKeys
     expect(edkGenerate.providerId).to.equal('aws-kms')
-    expect(edkGenerate.providerInfo).to.equal(generatorKmsKey)
+    expect(edkGenerate.providerInfo).to.equal(generatorKeyId)
     expect(edkEncrypt.providerId).to.equal('aws-kms')
     expect(edkEncrypt.providerInfo).to.equal(encryptKmsKey)
 
     expect(material.keyringTrace).to.have.lengthOf(2)
     const [traceGenerate, traceEncrypt] = material.keyringTrace
     expect(traceGenerate.keyNamespace).to.equal('aws-kms')
-    expect(traceGenerate.keyName).to.equal(generatorKmsKey)
+    expect(traceGenerate.keyName).to.equal(generatorKeyId)
     expect(traceGenerate.flags & KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY).to.equal(KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
     expect(traceGenerate.flags & KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY).to.equal(KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
     expect(traceGenerate.flags & KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX).to.equal(KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
@@ -88,10 +96,10 @@ describe('KmsKeyring: _onEncrypt', () => {
     expect(traceEncrypt.flags & KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX).to.equal(KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
   })
 
-  it('Precondition: A generatorKmsKey must generate if we do not have an unencrypted data key.', async () => {
-    const generatorKmsKey = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+  it('Precondition: A generatorKeyId must generate if we do not have an unencrypted data key.', async () => {
+    const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const encryptKmsKey = 'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012'
-    const kmsKeys = [encryptKmsKey]
+    const keyIds = [encryptKmsKey]
     const context = { some: 'context' }
     const grantTokens = 'grant'
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
@@ -99,12 +107,12 @@ describe('KmsKeyring: _onEncrypt', () => {
     const clientProvider: any = () => {
       return false
     }
-    class TestKmsKeyring extends KmsKeyring<NodeAlgorithmSuite, KMS> {}
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
 
     const testKeyring = new TestKmsKeyring({
       clientProvider,
-      generatorKmsKey,
-      kmsKeys,
+      generatorKeyId,
+      keyIds,
       grantTokens
     })
 
@@ -114,7 +122,7 @@ describe('KmsKeyring: _onEncrypt', () => {
 
   it('Precondition: If a generator does not exist, an unencryptedDataKey *must* already exist.', async () => {
     const encryptKmsKey = 'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012'
-    const kmsKeys = [encryptKmsKey]
+    const keyIds = [encryptKmsKey]
     const context = { some: 'context' }
     const grantTokens = 'grant'
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
@@ -122,11 +130,11 @@ describe('KmsKeyring: _onEncrypt', () => {
     const clientProvider: any = () => {
       return false
     }
-    class TestKmsKeyring extends KmsKeyring<NodeAlgorithmSuite, KMS> {}
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
 
     const testKeyring = new TestKmsKeyring({
       clientProvider,
-      kmsKeys,
+      keyIds,
       grantTokens
     })
 
@@ -135,7 +143,7 @@ describe('KmsKeyring: _onEncrypt', () => {
   })
 
   it('generator should encrypt if material already generated', async () => {
-    const generatorKmsKey = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
     const clientProvider: any = () => {
@@ -147,11 +155,11 @@ describe('KmsKeyring: _onEncrypt', () => {
         }
       }
     }
-    class TestKmsKeyring extends KmsKeyring<NodeAlgorithmSuite, KMS> {}
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
 
     const testKeyring = new TestKmsKeyring({
       clientProvider,
-      generatorKmsKey
+      generatorKeyId
     })
 
     const seedMaterial = new NodeEncryptionMaterial(suite)
@@ -167,28 +175,28 @@ describe('KmsKeyring: _onEncrypt', () => {
     expect(material.encryptedDataKeys).to.have.lengthOf(1)
     const [kmsEDK] = material.encryptedDataKeys
     expect(kmsEDK.providerId).to.equal('aws-kms')
-    expect(kmsEDK.providerInfo).to.equal(generatorKmsKey)
+    expect(kmsEDK.providerInfo).to.equal(generatorKeyId)
 
     expect(material.keyringTrace).to.have.lengthOf(2)
     const [, kmsTrace] = material.keyringTrace
     expect(kmsTrace.keyNamespace).to.equal('aws-kms')
-    expect(kmsTrace.keyName).to.equal(generatorKmsKey)
+    expect(kmsTrace.keyName).to.equal(generatorKeyId)
     expect(kmsTrace.flags & KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY).to.equal(KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
     expect(kmsTrace.flags & KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX).to.equal(KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
   })
 
   it('clientProvider may not return a client, in this case there is not an EDK to add', async () => {
-    const generatorKmsKey = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
     const clientProvider: any = () => {
       return false
     }
-    class TestKmsKeyring extends KmsKeyring<NodeAlgorithmSuite, KMS> {}
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
 
     const testKeyring = new TestKmsKeyring({
       clientProvider,
-      generatorKmsKey
+      generatorKeyId
     })
 
     const seedMaterial = new NodeEncryptionMaterial(suite)

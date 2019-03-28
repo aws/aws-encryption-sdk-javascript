@@ -142,6 +142,46 @@ describe('cacheClients', () => {
     const test = getKmsClient(region)
     expect(test).instanceOf(TestKMS)
     expect(assertCount).to.equal(1)
+  })
+
+  it('does not cache the client until KMS has been contacted', () => {
+    const region = 'us-west-2'
+    let assertCount = 0
+    const TestKMS: any = class {
+      constructor (config: KMSConfiguration) {
+        expect(config.region).to.equal(region)
+        assertCount++
+      }
+    }
+    const getKmsClient = cacheClients(getClient(TestKMS))
+    const test = getKmsClient(region)
+    expect(test).instanceOf(TestKMS)
+    expect(assertCount).to.equal(1)
+
+    const test2 = getKmsClient(region)
+    expect(test === test2).to.equal(false)
+    expect(assertCount).to.equal(2)
+  })
+
+  it('cache the client after KMS has been contacted', async () => {
+    const region = 'us-west-2'
+    let assertCount = 0
+    const TestKMS: any = class {
+      constructor (config: KMSConfiguration) {
+        expect(config.region).to.equal(region)
+        assertCount++
+      }
+      async decrypt () {
+
+      }
+    }
+    const getKmsClient = cacheClients(getClient(TestKMS))
+    const test = getKmsClient(region)
+    if (!test) throw new Error('never')
+    expect(test).instanceOf(TestKMS)
+    expect(assertCount).to.equal(1)
+
+    await test.decrypt({} as any)
 
     const test2 = getKmsClient(region)
     expect(test === test2).to.equal(true)

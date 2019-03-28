@@ -76,7 +76,7 @@ export function cacheClients<Client extends KMS> (
 }
 
 type KMSOperations = keyof KMS
-/* It is possible that a malicious user can attempt a local resource 
+/* It is possible that a malicious user can attempt a local resource
  * DOS by sending ciphertext with a large number of spurious regions.
  * This will fill the cache with regions and exhaust resources.
  * To avoid this, a call succeeds in contacting KMS.
@@ -88,6 +88,7 @@ function deferCache<Client extends KMS> (
   region: string,
   client: Client|false
 ): Client|false {
+  /* Check for early return (Postcondition): No client, then I cache false and move on. */
   if (!client) {
     clientsCache[region] = false
     return false
@@ -96,6 +97,7 @@ function deferCache<Client extends KMS> (
 
   return (<KMSOperations[]>['encrypt', 'decrypt', 'generateDataKey']).reduce(wrapOperation, client)
 
+  /* Wrap each of the operations to cache the client on response */
   function wrapOperation (client: Client, name: KMSOperations): Client {
     type params = Parameters<KMS[typeof name]>
     type retValue = ReturnType<KMS[typeof name]>
