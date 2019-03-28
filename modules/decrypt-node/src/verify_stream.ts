@@ -16,8 +16,11 @@
 // @ts-ignore
 import { Transform as PortableTransform } from 'readable-stream'
 import { Transform } from 'stream' // eslint-disable-line no-unused-vars
-import { DecipherGCM, Verify } from 'crypto' // eslint-disable-line no-unused-vars
-import { needs } from '@aws-crypto/material-management-node'
+import { DecipherGCM } from 'crypto' // eslint-disable-line no-unused-vars
+import {
+  needs,
+  GetVerify // eslint-disable-line no-unused-vars
+} from '@aws-crypto/material-management-node'
 import {
   decodeBodyHeader,
   BodyHeader, // eslint-disable-line no-unused-vars
@@ -26,7 +29,7 @@ import {
 import { ParseHeaderStream } from './parse_header_stream'
 import { DecipherInfo } from './decipher_stream' // eslint-disable-line no-unused-vars
 
-type AWSVerify = Verify & {awsCryptoVerify: (signature: Buffer) => boolean}
+type AWSVerify = ReturnType<GetVerify>
 const PortableTransformWithType = (<new (...args: any[]) => Transform>PortableTransform)
 
 export interface VerifyInfo {
@@ -40,14 +43,15 @@ interface VerifyState {
   buffer: Buffer
   authTagBuffer: Buffer
   currentFrame?: BodyHeader
-  signature?: Buffer
+  signature: Buffer
 }
 
 export class VerifyStream extends PortableTransformWithType {
   private _headerInfo!: HeaderInfo
   private _verifyState: VerifyState = {
     buffer: Buffer.alloc(0),
-    authTagBuffer: Buffer.alloc(0)
+    authTagBuffer: Buffer.alloc(0),
+    signature: Buffer.alloc(0)
   }
   private _verify?: AWSVerify
   constructor () {
@@ -142,7 +146,7 @@ export class VerifyStream extends PortableTransformWithType {
       }
     }
 
-    if (chunk.length && state.signature) {
+    if (chunk.length) {
       state.signature = Buffer.concat([state.signature, chunk])
     }
 
@@ -151,7 +155,7 @@ export class VerifyStream extends PortableTransformWithType {
 
   push (chunk: any, encoding?: string | undefined): boolean {
     // Typescript???? this._verify instanceof Verify is better....
-    if (this._verify) {
+    if (this._verify && chunk) {
       this._verify.update(chunk)
     }
     return super.push(chunk, encoding)
@@ -161,7 +165,7 @@ export class VerifyStream extends PortableTransformWithType {
     /* Precondition: If there is no verify stream do not attempt to verify. */
     if (!this._verify) return callback()
     /* Precondition: If there is a verify stream, there must be a signature. */
-    if (!this._verifyState.signature) throw new Error('Invalid Signature')
+    needs(this._verifyState.signature.length, 'Invalid Signature')
     const isVerified = this._verify.awsCryptoVerify(this._verifyState.signature)
     /* Postcondition: The signature must be valid. */
     needs(isVerified, 'Invalid Signature')

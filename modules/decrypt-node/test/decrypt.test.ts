@@ -52,7 +52,7 @@ describe('asdf', () => {
     const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
 
     const plaintext = 'asdf'
-    const ciphertext = await encrypt(cmm, plaintext, { suiteId })
+    const { ciphertext } = await encrypt(cmm, plaintext, { suiteId })
 
     const { plaintext: test, messageHeader } = await decrypt(cmm, ciphertext)
 
