@@ -28,21 +28,22 @@
  * limitations under the License.
  */
 
-import { NodeCryptographicMaterialsManager, AlgorithmSuiteIdentifier } from '@aws-crypto/material-management-node'
 import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
 import { encrypt } from '@aws-crypto/encrypt-node'
 import { decrypt } from '@aws-crypto/decrypt-node'
+import { NodeCryptographicMaterialsManager } from '@aws-crypto/material-management-node'
 
 export async function kmsSimpleTest () {
-  const generatorKmsKey = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
-  const keyring = new KmsKeyringNode({ generatorKmsKey })
+  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+  const keyIds = ['arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt', 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt']
+  const keyring = new KmsKeyringNode({ generatorKeyId, keyIds })
 
   const cmm = new NodeCryptographicMaterialsManager(keyring)
-  const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
 
+  const context = { some: 'context' }
   const plaintext = 'asdf'
 
-  const ciphertext = await encrypt(cmm, plaintext, { suiteId })
+  const { ciphertext } = await encrypt(cmm, plaintext, { context })
 
   const cleartext = await decrypt(cmm, ciphertext)
 

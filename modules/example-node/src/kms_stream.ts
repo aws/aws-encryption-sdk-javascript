@@ -28,7 +28,7 @@
  * limitations under the License.
  */
 
-import { NodeCryptographicMaterialsManager, AlgorithmSuiteIdentifier } from '@aws-crypto/material-management-node'
+import { NodeCryptographicMaterialsManager } from '@aws-crypto/material-management-node'
 import { KmsKeyringNode, getKmsClient } from '@aws-crypto/kms-keyring-node'
 import { encryptStream } from '@aws-crypto/encrypt-node'
 import { decryptStream } from '@aws-crypto/decrypt-node'
@@ -39,14 +39,14 @@ const finishedAsync = promisify(finished)
 
 export async function kmsStreamTest () {
   const clientProvider = getKmsClient
-  const generatorKmsKey = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
-  const keyring = new KmsKeyringNode({ clientProvider, generatorKmsKey })
+  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+  const keyring = new KmsKeyringNode({ clientProvider, generatorKeyId })
 
   const cmm = new NodeCryptographicMaterialsManager(keyring)
-  const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
 
+  const context = { some: 'context' }
   const stream = createReadStream('../package.json')
-    .pipe(encryptStream(cmm, { suiteId }))
+    .pipe(encryptStream(cmm, { context }))
     .pipe(decryptStream(cmm))
     .pipe(createWriteStream('../package.json.decrypt'))
 

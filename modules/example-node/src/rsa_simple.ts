@@ -28,7 +28,7 @@
  * limitations under the License.
  */
 
-import { NodeCryptographicMaterialsManager, AlgorithmSuiteIdentifier } from '@aws-crypto/material-management-node'
+import { NodeCryptographicMaterialsManager } from '@aws-crypto/material-management-node'
 import { RsaKeyringNode } from '@aws-crypto/rsa-keyring-node'
 import { encrypt } from '@aws-crypto/encrypt-node'
 import { decrypt } from '@aws-crypto/decrypt-node'
@@ -48,12 +48,13 @@ export async function rsaTest () {
   const rsaKey = await generateRsaKeys()
 
   const keyring = new RsaKeyringNode({ keyName, keyNamespace, rsaKey })
-  const cmm = new NodeCryptographicMaterialsManager(keyring)
-  const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
 
+  const cmm = new NodeCryptographicMaterialsManager(keyring)
+
+  const context = { some: 'context' }
   const cleartext = 'asdf'
 
-  const ciphertext = await encrypt(cmm, cleartext, { suiteId })
+  const { ciphertext } = await encrypt(cmm, cleartext, { context })
 
   const { plaintext } = await decrypt(cmm, ciphertext)
 
