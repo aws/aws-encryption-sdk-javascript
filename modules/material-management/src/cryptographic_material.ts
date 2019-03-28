@@ -24,7 +24,7 @@ import { needs } from './needs'
 
 let timingSafeEqual: (a: Uint8Array, b: Uint8Array) => boolean
 try {
-  const {timingSafeEqual: nodeTimingSafeEqual} = require('crypto')
+  const { timingSafeEqual: nodeTimingSafeEqual } = require('crypto')
   timingSafeEqual = nodeTimingSafeEqual
 } catch {
   /* https://codahale.com/a-lesson-in-timing-attacks/ */

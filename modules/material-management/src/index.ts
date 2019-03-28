@@ -13,6 +13,12 @@
  * limitations under the License.
  */
 
+import { Keyring } from './keyring'
+import { MultiKeyring } from './multi_keyring'
+import { NodeAlgorithmSuite } from './node_algorithms' // eslint-disable-line no-unused-vars
+import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms' // eslint-disable-line no-unused-vars
+import { immutableClass } from './immutable_class'
+
 export { AlgorithmSuiteIdentifier, AlgorithmSuiteName, AlgorithmSuite } from './algorithm_suites'
 export { AlgorithmSuiteTypeNode, AlgorithmSuiteTypeWebCrypto } from './algorithm_suites'
 export { NodeEncryption, WebCryptoEncryption } from './algorithm_suites'
@@ -38,3 +44,12 @@ export { immutableBaseClass, immutableClass, frozenClass, readOnlyProperty } fro
 export { needs } from './needs'
 
 export * from './types'
+
+export abstract class KeyringNode extends Keyring<NodeAlgorithmSuite> {}
+immutableClass(KeyringNode)
+export class MultiKeyringNode extends MultiKeyring<NodeAlgorithmSuite> {}
+immutableClass(MultiKeyringNode)
+export abstract class KeyringWebCrypto extends Keyring<WebCryptoAlgorithmSuite> {}
+immutableClass(KeyringWebCrypto)
+export class MultiKeyringWebCrypto extends MultiKeyring<WebCryptoAlgorithmSuite> {}
+immutableClass(MultiKeyringWebCrypto)
