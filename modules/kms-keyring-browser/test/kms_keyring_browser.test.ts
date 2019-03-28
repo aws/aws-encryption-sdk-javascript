@@ -17,12 +17,12 @@
 
 import { expect } from 'chai'
 import 'mocha'
-import { KmsKeyringNode } from '../src/kms_keyring_browser'
-import { WebCryptoKeyring } from '@aws-crypto/material-management-browser'
+import { KmsKeyringBrowser } from '../src/kms_keyring_browser'
+import { KeyringWebCrypto } from '@aws-crypto/material-management-browser'
 
 describe('KmsKeyringNode', () => {
-  it('instance of WebCryptoKeyring', () => {
-    const test = new KmsKeyringNode()
-    expect(test instanceof WebCryptoKeyring).to.equal(true)
+  it('instance of KeyringWebCrypto', () => {
+    const test = new KmsKeyringBrowser()
+    expect(test instanceof KeyringWebCrypto).to.equal(true)
   })
 })

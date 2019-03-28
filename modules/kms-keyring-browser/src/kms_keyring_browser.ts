@@ -14,7 +14,8 @@
  */
 
 import {
-  KmsKeyring,
+  KmsKeyringClass,
+  KeyRingConstructible, // eslint-disable-line no-unused-vars
   KmsKeyringInput, // eslint-disable-line no-unused-vars
   KMSConstructible, // eslint-disable-line no-unused-vars
   KmsClientSupplier, // eslint-disable-line no-unused-vars
@@ -31,7 +32,7 @@ import {
   EncryptedDataKey, // eslint-disable-line no-unused-vars
   immutableClass,
   importCryptoKey,
-  WebCryptoKeyring
+  KeyringWebCrypto // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
 import { getWebCryptoBackend } from '@aws-crypto/web-crypto-backend'
 import { KMS, KMSConfiguration } from '@aws-sdk/client-kms-browser' // eslint-disable-line no-unused-vars
@@ -43,14 +44,14 @@ export type KmsKeyringWebCryptoInput = Partial<KmsKeyringInput<KMS>>
 export type KMSWebCryptoConstructible = KMSConstructible<KMS, KMSConfiguration>
 export type KmsWebCryptoClientSupplier = KmsClientSupplier<KMS>
 
-export class KmsKeyringNode extends KmsKeyring<WebCryptoAlgorithmSuite, KMS> {
+export class KmsKeyringBrowser extends KmsKeyringClass(KeyringWebCrypto as KeyRingConstructible<WebCryptoAlgorithmSuite>) {
   constructor ({
     clientProvider = cacheKmsClients,
-    kmsKeys,
-    generatorKmsKey,
+    keyIds,
+    generatorKeyId,
     grantTokens
   }: KmsKeyringWebCryptoInput = {}) {
-    super({ clientProvider, kmsKeys, generatorKmsKey, grantTokens })
+    super({ clientProvider, keyIds, generatorKeyId, grantTokens })
   }
 
   async _onEncrypt (material: WebCryptoEncryptionMaterial, context?: EncryptionContext) {
@@ -88,12 +89,7 @@ export class KmsKeyringNode extends KmsKeyring<WebCryptoAlgorithmSuite, KMS> {
 
     return _material.setCryptoKey(cryptoKey, trace)
   }
-
-  [Symbol.hasInstance] (obj: any) {
-    return obj instanceof WebCryptoKeyring ||
-      Function.prototype[Symbol.hasInstance].call(this, obj)
-  }
 }
-immutableClass(KmsKeyringNode)
+immutableClass(KmsKeyringBrowser)
 
 export { getClient, cacheKmsClients, limitRegions, excludeRegions, cacheClients }
