@@ -14,7 +14,8 @@
  */
 
 import {
-  KmsKeyring,
+  KmsKeyringClass,
+  KeyRingConstructible, // eslint-disable-line no-unused-vars
   KmsKeyringInput, // eslint-disable-line no-unused-vars
   KMSConstructible, // eslint-disable-line no-unused-vars
   KmsClientSupplier, // eslint-disable-line no-unused-vars
@@ -25,7 +26,7 @@ import {
 } from '@aws-crypto/kms-keyring'
 import {
   NodeAlgorithmSuite, // eslint-disable-line no-unused-vars
-  immutableClass, NodeKeyring
+  immutableClass, KeyringNode
 } from '@aws-crypto/material-management-node'
 import { KMS, KMSConfiguration } from '@aws-sdk/client-kms-node' // eslint-disable-line no-unused-vars
 const getKmsClient = getClient(KMS)
@@ -35,19 +36,14 @@ export type KmsKeyringNodeInput = Partial<KmsKeyringInput<KMS>>
 export type KMSNodeConstructible = KMSConstructible<KMS, KMSConfiguration>
 export type KmsNodeClientSupplier = KmsClientSupplier<KMS>
 
-export class KmsKeyringNode extends KmsKeyring<NodeAlgorithmSuite, KMS> {
+export class KmsKeyringNode extends KmsKeyringClass(KeyringNode as KeyRingConstructible<NodeAlgorithmSuite>) {
   constructor ({
     clientProvider = cacheKmsClients,
-    kmsKeys,
-    generatorKmsKey,
+    keyIds,
+    generatorKeyId,
     grantTokens
   }: KmsKeyringNodeInput = {}) {
-    super({ clientProvider, kmsKeys, generatorKmsKey, grantTokens })
-  }
-
-  [Symbol.hasInstance] (obj: any) {
-    return obj instanceof NodeKeyring ||
-      Function.prototype[Symbol.hasInstance].call(this, obj)
+    super({ clientProvider, keyIds, generatorKeyId, grantTokens })
   }
 }
 immutableClass(KmsKeyringNode)

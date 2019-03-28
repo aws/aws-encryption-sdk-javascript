@@ -18,11 +18,11 @@
 import { expect } from 'chai'
 import 'mocha'
 import { KmsKeyringNode } from '../src/kms_keyring_node'
-import { NodeKeyring } from '@aws-crypto/material-management-node'
+import { KeyringNode } from '@aws-crypto/material-management-node'
 
 describe('KmsKeyringNode', () => {
   it('instanceof NodeKeyring', () => {
     const test = new KmsKeyringNode()
-    expect(test instanceof NodeKeyring).to.equal(true)
+    expect(test instanceof KeyringNode).to.equal(true)
   })
 })
