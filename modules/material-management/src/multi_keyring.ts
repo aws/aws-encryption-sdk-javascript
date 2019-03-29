@@ -26,26 +26,18 @@ export interface MultiKeyringInput<S extends SupportedAlgorithmSuites> {
 
 export class MultiKeyring<S extends SupportedAlgorithmSuites> extends Keyring<S> {
   public readonly generator?: Keyring<S>
-  public readonly children!: Keyring<S>[]
-  public readonly addChild!: (...children: Keyring<S>[]) => MultiKeyring<S>
-  constructor ({generator, children: _children = [] }: MultiKeyringInput<S>) {
+  public readonly children!: ReadonlyArray<Keyring<S>>
+  constructor ({ generator, children = [] }: MultiKeyringInput<S>) {
     super()
+    /* Precondition: MultiKeyring must have keyrings. */
+    needs(generator || children.length, 'Noop MultiKeyring is not supported.')
     /* Precondition: generator must be a Keyring. */
     needs(!!generator === generator instanceof Keyring, 'Generator must be a Keyring')
-    const children: Keyring<S>[] = []
-    Object.defineProperty(this, 'children', {
-      get: () => [...children], // inefficient, but immutable
-      enumerable: true
-    })
-    const addChild = (..._children: Keyring<S>[]) => {
-      /* Precondition: a child must ba a Keyring. */
-      needs(_children.every(kr => kr instanceof Keyring), 'Child must be a Keyring')
-      children.push(..._children)
-      return this
-    }
-    readOnlyProperty<MultiKeyring<S>, 'addChild'>(this, 'addChild', addChild)
-    readOnlyProperty<MultiKeyring<S>, 'generator'>(this, 'generator', generator)
-    this.addChild(..._children)
+    /* Precondition: All children must be Keyrings. */
+    needs(children.every(kr => kr instanceof Keyring), 'Child must be a Keyring')
+
+    readOnlyProperty(this, 'children', Object.freeze(children.slice()))
+    readOnlyProperty(this, 'generator', generator)
   }
 
   async _onEncrypt (material: EncryptionMaterial<S>, context?: EncryptionContext) {
@@ -75,8 +67,7 @@ export class MultiKeyring<S extends SupportedAlgorithmSuites> extends Keyring<S>
   }
 
   async _onDecrypt (material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[], context?: EncryptionContext) {
-    const children = this.children
-    // children returns a clone, so mutating it will not change the underlying array
+    const children = this.children.slice()
     if (this.generator) children.unshift(this.generator)
 
     for (const keyring of children) {
