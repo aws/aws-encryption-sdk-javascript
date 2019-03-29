@@ -19,11 +19,16 @@ import { EncryptionContext, EncryptionMaterial, DecryptionMaterial, SupportedAlg
 import { needs } from './needs'
 import { EncryptedDataKey } from './encrypted_data_key' // eslint-disable-line no-unused-vars
 
+export interface MultiKeyringInput<S extends SupportedAlgorithmSuites> {
+  generator?: Keyring<S>
+  children?: Keyring<S>[]
+}
+
 export class MultiKeyring<S extends SupportedAlgorithmSuites> extends Keyring<S> {
   public readonly generator?: Keyring<S>
   public readonly children!: Keyring<S>[]
   public readonly addChild!: (...children: Keyring<S>[]) => MultiKeyring<S>
-  constructor (generator?: Keyring<S>, ..._children: Keyring<S>[]) {
+  constructor ({generator, children: _children = [] }: MultiKeyringInput<S>) {
     super()
     /* Precondition: generator must be a Keyring. */
     needs(!!generator === generator instanceof Keyring, 'Generator must be a Keyring')
