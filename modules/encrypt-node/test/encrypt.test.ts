@@ -19,7 +19,7 @@
 import 'mocha'
 import {
   NodeDecryptionMaterial, // eslint-disable-line no-unused-vars
-  NodeAlgorithmSuite, NodeEncryptionMaterial, NodeCryptographicMaterialsManager, NodeKeyring, EncryptedDataKey,
+  NodeAlgorithmSuite, NodeEncryptionMaterial, NodeCryptographicMaterialsManager, KeyringNode, EncryptedDataKey,
   KeyringTraceFlag, AlgorithmSuiteIdentifier
 } from '@aws-crypto/material-management-node'
 
@@ -35,7 +35,7 @@ const never = () => { throw new Error('never') }
 
 describe('asdf', () => {
   it.skip('encrypt', async () => {
-    class TestKeyring extends NodeKeyring {
+    class TestKeyring extends KeyringNode {
       async _onEncrypt (material: NodeEncryptionMaterial) {
         const unencryptedDataKey = new Uint8Array(material.suite.keyLengthBytes).fill(1)
         const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
@@ -96,7 +96,7 @@ describe('asdf', () => {
   })
 
   it.skip('duplex', (done) => {
-    class TestKeyring extends NodeKeyring {
+    class TestKeyring extends KeyringNode {
       async _onEncrypt (material: NodeEncryptionMaterial) {
         const unencryptedDataKey = new Uint8Array(material.suite.keyLengthBytes).fill(1)
         const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
