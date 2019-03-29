@@ -41,9 +41,10 @@ export class KmsKeyringNode extends KmsKeyringClass(KeyringNode as KeyRingConstr
     clientProvider = cacheKmsClients,
     keyIds,
     generatorKeyId,
-    grantTokens
+    grantTokens,
+    discovery
   }: KmsKeyringNodeInput = {}) {
-    super({ clientProvider, keyIds, generatorKeyId, grantTokens })
+    super({ clientProvider, keyIds, generatorKeyId, grantTokens, discovery })
   }
 }
 immutableClass(KmsKeyringNode)
