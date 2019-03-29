@@ -42,6 +42,7 @@
   "main": "./build/main/index.js",
   "module": "./build/module/index.js",
   "types": "./build/main/index.d.ts",
+  "files": ["./build/**/*"],
   "standard": {
     "parser": "@typescript-eslint/parser",
     "plugins": [
