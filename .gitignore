@@ -1,10 +1,29 @@
-/node_modules/
-/build/
-.vscode
+# Vim swap files
+*~
+*.swp
+*.swo
+
+# OS Artifacts
 .DS_Store
-/lerna-debug.log
+
+# Artifacts
+build
+node_modules
 package-lock.json
-/.nyc_output
-/coverage
-modules/**/node_modules
-modules/**/build
+
+# VSCode
+.vscode
+.history
+
+# nyc/code coverage
+.nyc_output
+coverage
+
+# symlink to test vectors
+/modules/integration-node/fixtures
+
+# Lerna
+/lerna-debug.log
+
+# TypeScript config is built by ./util/bootstrap_tsconfig
+/tsconfig.json

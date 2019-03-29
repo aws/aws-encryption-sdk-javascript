@@ -1,16 +1,18 @@
 {
-  "name": "aws-encryption-sdk-browser",
+  "name": "aws-encryption-sdk-javascript",
   "private": true,
   "version": "0.0.1",
-  "description": "AWS Encryption SDK for browsers",
+  "description": "AWS Encryption SDK for JavaScript",
   "main": "index.js",
   "scripts": {
-    "bootstrap": "lerna bootstrap",
+    "bootstrap": "./util/bootstrap_tsconfig && lerna bootstrap",
     "clean": "npm run clear-build-cache && lerna clean",
     "clear-build-cache": "rimraf ./modules/*/build/*",
     "lint": "standard modules/**/src/*.ts modules/**/test/**/*.ts",
     "build": "tsc -b",
-    "test": "mocha --require ts-node/register modules/**/test/*test.ts"
+    "mocha": "mocha --require ts-node/register modules/**/test/*test.ts",
+    "coverage": "nyc --check-coverage -x 'modules/**/test/*test.ts' npm run mocha",
+    "test": "npm run lint && npm run build && npm run coverage"
   },
   "repository": {
     "type": "git",
@@ -26,6 +28,7 @@
     "mocha": "^5.2.0",
     "rimraf": "^2.6.2",
     "standard": "^12.0.1",
+    "nyc": "^12.0.2",
     "ts-node": "^7.0.1",
     "tslib": "^1.9.3",
     "typescript": "^3.2.0"
