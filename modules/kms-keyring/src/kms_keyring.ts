@@ -37,13 +37,15 @@ export interface KmsKeyringInput<Client extends KMS> {
   keyIds?: string[]
   generatorKeyId?: string
   grantTokens?: string
+  discovery?: boolean
 }
 
 export interface KeyRing<S extends SupportedAlgorithmSuites, Client extends KMS> extends Keyring<S> {
-  keyIds: string[]
+  keyIds: ReadonlyArray<string>
   generatorKeyId?: string
   clientProvider: KmsClientSupplier<Client>
   grantTokens?: string
+  isDiscovery: boolean
   _onEncrypt(material: EncryptionMaterial<S>, context?: EncryptionContext): Promise<EncryptionMaterial<S>>
   _onDecrypt(material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[], context?: EncryptionContext): Promise<DecryptionMaterial<S>>
 }
@@ -60,29 +62,36 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
   BaseKeyring: KeyRingConstructible<S>
 ): KmsKeyRingConstructible<S, Client> {
   class KmsKeyring extends BaseKeyring implements KeyRing<S, Client> {
-    public keyIds!: string[]
+    public keyIds!: ReadonlyArray<string>
     public generatorKeyId?: string
     public clientProvider!: KmsClientSupplier<Client>
     public grantTokens?: string
+    public isDiscovery!: boolean
 
-    constructor ({ clientProvider, generatorKeyId, keyIds = [], grantTokens }: KmsKeyringInput<Client>) {
+    constructor ({ clientProvider, generatorKeyId, keyIds = [], grantTokens, discovery }: KmsKeyringInput<Client>) {
       super()
       /* Precondition: This is an abstract class. (But TypeScript does not have a clean way to model this) */
       needs(this.constructor !== KmsKeyring, 'new KmsKeyring is not allowed')
+      /* Precondition: A noop KmsKeyring is not allowed.  You must explicitly set discovery or keyIds. */
+      needs(!!discovery !== !!(generatorKeyId || keyIds.length), 'Noop keyring is not allowed: Set a keyId or discovery')
       /* Precondition: All KMS key arns must be valid. */
       needs(!generatorKeyId || !!regionFromKmsKeyArn(generatorKeyId), 'Malformed arn.')
       needs(keyIds.every(keyarn => !!regionFromKmsKeyArn(keyarn)), 'Malformed arn.')
       /* Precondition: clientProvider needs to be a callable function. */
-      needs(typeof clientProvider === 'function', '')
+      needs(typeof clientProvider === 'function', 'Missing clientProvider')
 
       readOnlyProperty(this, 'clientProvider', clientProvider)
-      readOnlyProperty(this, 'keyIds', keyIds)
+      readOnlyProperty(this, 'keyIds', Object.freeze(keyIds.slice()))
       readOnlyProperty(this, 'generatorKeyId', generatorKeyId)
       readOnlyProperty(this, 'grantTokens', grantTokens)
+      readOnlyProperty(this, 'isDiscovery', !!discovery)
     }
 
     /* Keyrings *must* preserve the order of EDK's.  The generatorKeyId is the first on this list. */
     async _onEncrypt (material: EncryptionMaterial<S>, context?: EncryptionContext) {
+      /* Check for early return (Postcondition): Discovery Keyrings do not encrypt. */
+      if (this.isDiscovery) return material
+
       const keyIds = this.keyIds.slice()
       const { clientProvider, generatorKeyId, grantTokens } = this
       if (generatorKeyId && !material.hasUnencryptedDataKey) {
@@ -140,9 +149,10 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
       const decryptableEDKs = encryptedDataKeys
         .filter(({ providerId, providerInfo }) => {
           if (providerId !== KMS_PROVIDER_ID) return false
-          return keyIds.length
-            ? keyIds.includes(providerInfo)
-            : true
+          /* Discovery keyrings can not have keyIds configured,
+           * and non-discovery keyrings must have keyIds configured.
+           */
+          return this.isDiscovery || keyIds.includes(providerInfo)
         })
 
       for (const edk of decryptableEDKs) {

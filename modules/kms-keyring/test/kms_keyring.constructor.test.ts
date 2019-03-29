@@ -35,8 +35,34 @@ describe('KmsKeyring: constructor', () => {
     const test = new TestKmsKeyring({ clientProvider, generatorKeyId, keyIds, grantTokens })
     expect(test.clientProvider).to.equal(clientProvider)
     expect(test.generatorKeyId).to.equal(generatorKeyId)
-    expect(test.keyIds).to.equal(keyIds)
+    expect(test.keyIds).to.deep.equal(keyIds)
     expect(test.grantTokens).to.equal(grantTokens)
+    expect(test.isDiscovery).to.equal(false)
+  })
+
+  it('set properties for discovery keyring', () => {
+    const clientProvider: any = () => {}
+    const discovery = true
+
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
+
+    const test = new TestKmsKeyring({ clientProvider, discovery })
+    expect(test.clientProvider).to.equal(clientProvider)
+    expect(test.generatorKeyId).to.equal(undefined)
+    expect(test.keyIds).to.deep.equal([])
+    expect(test.grantTokens).to.equal(undefined)
+    expect(test.isDiscovery).to.equal(true)
+  })
+
+  it('Precondition: A noop KmsKeyring is not allowed.  You must explicitly set discovery or keyIds.', () => {
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
+    const clientProvider: any = () => {}
+    expect(() => new TestKmsKeyring({ clientProvider })).to.throw()
+
+    const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const keyIds = ['arn:aws:kms:us-east-1:123456789012:alias/example-alias']
+    const discovery = true
+    expect(() => new TestKmsKeyring({ clientProvider, generatorKeyId, keyIds, discovery })).to.throw()
   })
 
   it('Precondition: All KMS key arns must be valid.', () => {
@@ -62,6 +88,7 @@ describe('KmsKeyring: constructor', () => {
   it('Precondition: clientProvider needs to be a callable function.', () => {
     class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
     const clientProvider: any = 'not function'
-    expect(() => new TestKmsKeyring({ clientProvider })).to.throw()
+    const discovery = true
+    expect(() => new TestKmsKeyring({ clientProvider, discovery })).to.throw()
   })
 })

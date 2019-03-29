@@ -90,6 +90,7 @@ describe('KmsKeyring: _onDecrypt',
       const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
       const context = { some: 'context' }
       const grantTokens = 'grant'
+      const discovery = true
       const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
       const clientProvider: any = () => {
@@ -107,7 +108,8 @@ describe('KmsKeyring: _onDecrypt',
 
       const testKeyring = new TestKmsKeyring({
         clientProvider,
-        grantTokens
+        grantTokens,
+        discovery
       })
 
       const edk = new EncryptedDataKey({
@@ -136,6 +138,7 @@ describe('KmsKeyring: _onDecrypt',
       const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
       const context = { some: 'context' }
       const grantTokens = 'grant'
+      const discovery = true
       const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
       const clientProvider: any = () => {
@@ -148,7 +151,8 @@ describe('KmsKeyring: _onDecrypt',
 
       const testKeyring = new TestKmsKeyring({
         clientProvider,
-        grantTokens
+        grantTokens,
+        discovery
       })
 
       const edk = new EncryptedDataKey({
