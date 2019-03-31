@@ -22,7 +22,7 @@ import { KeyringWebCrypto } from '@aws-crypto/material-management-browser'
 
 describe('KmsKeyringNode', () => {
   it('instance of KeyringWebCrypto', () => {
-    const test = new KmsKeyringBrowser()
+    const test = new KmsKeyringBrowser({discovery: true})
     expect(test instanceof KeyringWebCrypto).to.equal(true)
   })
 })
