@@ -243,6 +243,12 @@ export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>
     needs(!unencryptedDataKey, 'unencryptedDataKey has already been set')
     /* Precondition: dataKey must be Binary Data */
     needs(dataKey instanceof Uint8Array, 'dataKey must be a Uint8Array')
+    /* Precondition: dataKey should have an ArrayBuffer that *only* stores the key.
+     * This is a simple check to make sure that the key is not stored on
+     * a large potentially shared ArrayBuffer.
+     * If this was the case, it may be possible to find or manipulate.
+     */
+    needs(dataKey.byteOffset === 0, 'Unencrypted Master Key must be an isolated buffer.')
     /* Precondition: The data key's length must agree with algorithm specification.
      * If this is not the case, it either means ciphertext was tampered
      * with or the keyring implementation is not setting the length properly.
