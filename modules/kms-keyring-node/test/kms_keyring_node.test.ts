@@ -22,7 +22,7 @@ import { KeyringNode } from '@aws-crypto/material-management-node'
 
 describe('KmsKeyringNode', () => {
   it('instanceof NodeKeyring', () => {
-    const test = new KmsKeyringNode()
+    const test = new KmsKeyringNode({discovery: true})
     expect(test instanceof KeyringNode).to.equal(true)
   })
 })
