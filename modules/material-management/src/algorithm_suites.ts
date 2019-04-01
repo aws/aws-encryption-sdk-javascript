@@ -120,3 +120,16 @@ export abstract class AlgorithmSuite implements IAlgorithmSuite {
   }
 }
 immutableClass(AlgorithmSuite)
+
+export type RawAesWrappingSuiteIdentifier = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16 |
+  AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16 |
+  AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16
+
+const AES128_GCM_IV12_TAG16_NO_PADDING: AlgorithmSuiteIdentifier = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+const AES192_GCM_IV12_TAG16_NO_PADDING: AlgorithmSuiteIdentifier = AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16
+const AES256_GCM_IV12_TAG16_NO_PADDING: AlgorithmSuiteIdentifier = AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16
+export const RawAesWrappingSuiteIdentifier: {[key: string]: RawAesWrappingSuiteIdentifier} = Object.freeze({
+  AES128_GCM_IV12_TAG16_NO_PADDING,
+  AES192_GCM_IV12_TAG16_NO_PADDING,
+  AES256_GCM_IV12_TAG16_NO_PADDING
+})
