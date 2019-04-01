@@ -63,7 +63,7 @@ export const getEncryptHelper: GetEncryptHelper = async (material: WebCryptoEncr
   needs(material.hasCryptoKey, 'Material has no CryptoKey.')
 
   const { signatureHash } = material.suite
-  const kdfGetSubtleEncrypt = getSubtleFunction(material, backend)
+  const kdfGetSubtleEncrypt = <KdfGetSubtleEncrypt>getSubtleFunction(material, backend, 'encrypt')
   return Object.freeze({
     kdfGetSubtleEncrypt,
     subtleSign: signatureHash ? getSubtleSign : undefined,
@@ -113,7 +113,7 @@ export const getDecryptionHelper: GetDecryptionHelper = async (material: WebCryp
 
   const { signatureHash } = material.suite
 
-  const kdfGetSubtleDecrypt = getSubtleFunction(material, backend)
+  const kdfGetSubtleDecrypt = <KdfGetSubtleDecrypt>getSubtleFunction(material, backend, 'decrypt')
   return Object.freeze({
     kdfGetSubtleDecrypt,
     subtleVerify: signatureHash ? subtleVerify : undefined,
@@ -138,9 +138,11 @@ export const getDecryptionHelper: GetDecryptionHelper = async (material: WebCryp
 type SubtleFunction = 'encrypt'|'decrypt'
 type Material = WebCryptoEncryptionMaterial|WebCryptoDecryptionMaterial
 
-function getSubtleFunction(material: WebCryptoEncryptionMaterial, backend: WebCryptoBackend): KdfGetSubtleEncrypt
-function getSubtleFunction(material: WebCryptoDecryptionMaterial, backend: WebCryptoBackend): KdfGetSubtleDecrypt
-function getSubtleFunction (material: Material, backend: WebCryptoBackend) {
+export function getSubtleFunction (
+  material: Material,
+  backend: WebCryptoBackend,
+  subtleFunction: SubtleFunction = subtleFunctionForMaterial(material)
+): KdfGetSubtleEncrypt|KdfGetSubtleDecrypt {
   needs(material.hasCryptoKey, '')
 
   const cryptoKey = material.getCryptoKey()
@@ -149,8 +151,6 @@ function getSubtleFunction (material: Material, backend: WebCryptoBackend) {
   needs(isCryptoKey(cryptoKey) !== isFullSupportWebCryptoBackend(backend), 'CryptoKey vs WebCrypto backend mismatch.')
   const { suite } = material
   const { encryption: cipherName, ivLength, tagLength } = suite
-
-  const subtleFunction = subtleFunctionForMaterial(material)
 
   return (info: Uint8Array) => {
     const derivedKeyPromise: Promise<CryptoKey|MixedBackendCryptoKey> = isCryptoKey(cryptoKey)
@@ -227,9 +227,7 @@ export async function importCryptoKey (backend: WebCryptoBackend, material: Mate
   }
 }
 
-export function _importCryptoKey (subtle: SubtleCrypto, material: Material) {
-  const keyUsages = [keyUsageForMaterial(material)]
-
+export function _importCryptoKey (subtle: SubtleCrypto, material: Material, keyUsages: KeyUsage[] = [keyUsageForMaterial(material)]) {
   const jwk = bytes2JWK(material.getUnencryptedDataKey())
   const { suite } = material
   const extractable = false
