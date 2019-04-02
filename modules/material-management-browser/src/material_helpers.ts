@@ -59,8 +59,8 @@ export interface GetEncryptHelper {
 export const getEncryptHelper: GetEncryptHelper = async (material: WebCryptoEncryptionMaterial) => {
   const backend = await getWebCryptoBackend()
 
-  /* Precondition: There must be a CryptoKey. */
-  needs(material.hasCryptoKey, 'Material has no CryptoKey.')
+  /* Precondition: WebCryptoEncryptionMaterial must have a valid data key. */
+  needs(material.hasValidKey(), 'Material has no CryptoKey.')
 
   const { signatureHash } = material.suite
   const kdfGetSubtleEncrypt = <KdfGetSubtleEncrypt>getSubtleFunction(material, backend, 'encrypt')
@@ -108,8 +108,8 @@ export interface GetDecryptionHelper {
 export const getDecryptionHelper: GetDecryptionHelper = async (material: WebCryptoDecryptionMaterial) => {
   const backend = await getWebCryptoBackend()
 
-  /* Precondition: There must be an unencrypted data key. */
-  needs(material.hasUnencryptedDataKey, 'Material has no unencrypted data key.')
+  /* Precondition: WebCryptoDecryptionMaterial must have a valid data key. */
+  needs(material.hasValidKey(), 'Material has no valid data key.')
 
   const { signatureHash } = material.suite
 

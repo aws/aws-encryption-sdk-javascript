@@ -46,11 +46,10 @@ export class WebCryptoCryptographicMaterialsManager implements WebCryptoMaterial
 
     await this.keyring.onEncrypt(material, context)
 
-    /* Postcondition: The material must contain a valid unencrypted dataKey. */
-    needs(material.getUnencryptedDataKey(), 'Unencrypted data key is invalid.')
-    needs(material.hasCryptoKey, 'Unencrypted data key is invalid.')
+    /* Postcondition: The WebCryptoEncryptionMaterial must contain a valid dataKey. */
+    needs(material.hasValidKey(), 'Unencrypted data key is invalid.')
 
-    /* Postcondition: The material must contain at least 1 EncryptedDataKey. */
+    /* Postcondition: The WebCryptoEncryptionMaterial must contain at least 1 EncryptedDataKey. */
     needs(material.encryptedDataKeys.length, 'No EncryptedDataKeys: the ciphertext can never be decrypted.')
 
     return { material, context }
@@ -61,9 +60,8 @@ export class WebCryptoCryptographicMaterialsManager implements WebCryptoMaterial
 
     await this.keyring.onDecrypt(material, encryptedDataKeys.slice(), encryptionContext)
 
-    /* Postcondition: The material must contain a valid unencrypted dataKey. */
-    needs(material.getUnencryptedDataKey(), 'Unencrypted data key is invalid.')
-    needs(material.hasCryptoKey, 'Unencrypted data key is invalid.')
+    /* Postcondition: The WebCryptoDecryptionMaterial must contain a valid dataKey. */
+    needs(material.hasValidKey(), 'Unencrypted data key is invalid.')
 
     return { material, context: encryptionContext || {} }
   }
@@ -71,7 +69,7 @@ export class WebCryptoCryptographicMaterialsManager implements WebCryptoMaterial
   async _generateSigningKeyAndUpdateEncryptionContext (material: WebCryptoEncryptionMaterial, context?: EncryptionContext) {
     const { signatureCurve: namedCurve } = material.suite
 
-    /* Precondition: The algorithm suite specification must support a signatureCurve. */
+    /* Precondition: The algorithm suite specification must support a signatureCurve to generate a signing key. */
     if (!namedCurve) return { ...context }
 
     const backend = await getWebCryptoBackend()
@@ -93,15 +91,15 @@ export class WebCryptoCryptographicMaterialsManager implements WebCryptoMaterial
   async _loadVerificationKeyFromEncryptionContext (material: WebCryptoDecryptionMaterial, context?: EncryptionContext) {
     const { signatureCurve: namedCurve } = material.suite
 
-    /* Precondition: The algorithm suite specification must support a signatureCurve. */
+    /* Precondition: The algorithm suite specification must support a signatureCurve to extract a verification key. */
     if (!namedCurve) return material
 
-    /* Precondition: If the algorithm suite specification requires a signatureCurve a context must exist. */
+    /* Precondition: WebCryptoCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist. */
     if (!context) throw new Error('Context does not contain required public key.')
 
     const { [ENCODED_SIGNER_KEY]: compressPoint } = context
 
-    /* Precondition: The context must contain the public key. */
+    /* Precondition: WebCryptoCryptographicMaterialsManager The context must contain the public key. */
     needs(compressPoint, 'Context does not contain required public key.')
 
     const backend = await getWebCryptoBackend()

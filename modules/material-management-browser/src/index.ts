@@ -21,5 +21,5 @@ export {
   AlgorithmSuiteIdentifier, EncryptionContext, EncryptedDataKey, KeyringWebCrypto,
   KeyringTrace, KeyringTraceFlag, needs, MixedBackendCryptoKey, MultiKeyringWebCrypto,
   immutableBaseClass, immutableClass, frozenClass, readOnlyProperty, keyUsageForMaterial,
-  RawAesWrappingSuiteIdentifier, isValidCryptoKey
+  RawAesWrappingSuiteIdentifier, WrappingSuiteIdentifier, isValidCryptoKey, isCryptoKey
 } from '@aws-crypto/material-management'
