@@ -61,7 +61,7 @@ export function getDecipherStream () {
     constructor () {
       super()
       this.on('pipe', (source: VerifyStream) => {
-        /* Precondition: The source must emit the required events. */
+        /* Precondition: The source must be a VerifyStream to emit the required events. */
         needs(source instanceof VerifyStream, 'Unsupported source')
         source
           .once('DecipherInfo', (info: DecipherInfo) => {

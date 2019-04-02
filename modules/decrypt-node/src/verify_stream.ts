@@ -57,7 +57,7 @@ export class VerifyStream extends PortableTransformWithType {
   constructor () {
     super()
     this.on('pipe', (source: ParseHeaderStream) => {
-      /* Precondition: The source must emit the required events. */
+      /* Precondition: The source must a ParseHeaderStream emit the required events. */
       needs(source instanceof ParseHeaderStream, 'Unsupported source')
       source.once('VerifyInfo', (verifyInfo: VerifyInfo) => {
         const { getDecipher, verify, headerInfo, dispose } = verifyInfo
