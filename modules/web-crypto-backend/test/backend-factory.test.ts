@@ -101,7 +101,7 @@ describe('webCryptoBackendFactory', () => {
       browserWindow.locateWindow = locateWindow
     })
 
-    it('Postcondition: The fallback must specifically support ZeroByteGCM', async () => {
+    it('Postcondition: The fallback must specifically support ZeroByteGCM.', async () => {
       const { locateWindow } = browserWindow
       sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowWebCryptoOnlyRandomSource)
 
@@ -128,7 +128,7 @@ describe('webCryptoBackendFactory', () => {
       expect(test).to.have.property('randomValues')
     })
 
-    it('Precondition: access to a secure random source.', async () => {
+    it('Precondition: Access to a secure random source is required.', async () => {
       const { locateWindow } = browserWindow
       sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowNoWebCrypto)
 
@@ -139,7 +139,7 @@ describe('webCryptoBackendFactory', () => {
       browserWindow.locateWindow = locateWindow
     })
 
-    it('Postcondition: If no SubtleCrypto exists, a fallback must configured', async () => {
+    it('Postcondition: If no SubtleCrypto exists, a fallback must configured.', async () => {
       const { locateWindow } = browserWindow
       sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowWebCryptoOnlyRandomSource)
 

@@ -104,14 +104,14 @@ export function webCryptoBackendFactory (window: Window) {
 }
 
 export function getNonZeroByteBackend (backend: WebCryptoBackend|false) {
-  /* Precondition: A backend must be passed. */
+  /* Precondition: A backend must be passed to get a non zero byte backend. */
   if (!backend) throw new Error('No supported backend.')
   return (<FullSupportWebCryptoBackend>backend).subtle ||
     (<MixedSupportWebCryptoBackend>backend).nonZeroByteSubtle
 }
 
 export function getZeroByteSubtle (backend: WebCryptoBackend|false) {
-  /* Precondition: A backend must be passed. */
+  /* Precondition: A backend must be passed to get a zero byte backend. */
   if (!backend) throw new Error('No supported backend.')
   return (<FullSupportWebCryptoBackend>backend).subtle ||
     (<MixedSupportWebCryptoBackend>backend).zeroByteSubtle
