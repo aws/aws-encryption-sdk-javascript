@@ -48,8 +48,8 @@ export interface GetEncryptHelper {
 }
 
 export const getEncryptHelper: GetEncryptHelper = (material: NodeEncryptionMaterial) => {
-  /* Precondition: There must be an unencrypted data key. */
-  needs(material.hasUnencryptedDataKey, 'Material has no unencrypted data key.')
+  /* Precondition: NodeEncryptionMaterial must have a valid data key. */
+  needs(material.hasValidKey(), 'Material has no unencrypted data key.')
 
   const { signatureHash } = material.suite
   /* Conditional types can not narrow the return type :(
@@ -64,7 +64,7 @@ export const getEncryptHelper: GetEncryptHelper = (material: NodeEncryptionMater
   })
 
   function getSigner () {
-    /* Precondition: The material must have not been zeroed.
+    /* Precondition: The NodeEncryptionMaterial must have not been zeroed.
      * hasUnencryptedDataKey will check that the unencrypted data key has been set
      * *and* that it has not been zeroed.  At this point it must have been set
      * because the KDF function operated on it.  So at this point
@@ -110,8 +110,8 @@ export interface GetDecryptionHelper {
 }
 
 export const getDecryptionHelper: GetDecryptionHelper = (material: NodeDecryptionMaterial) => {
-  /* Precondition: There must be an unencrypted data key. */
-  needs(material.hasUnencryptedDataKey, 'Material has no unencrypted data key.')
+  /* Precondition: NodeDecryptionMaterial must have a valid data key. */
+  needs(material.hasValidKey(), 'Material has no unencrypted data key.')
 
   const { signatureHash } = material.suite
 

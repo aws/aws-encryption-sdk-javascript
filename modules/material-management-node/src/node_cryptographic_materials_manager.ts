@@ -33,7 +33,7 @@ export type NodeDecryptionResponse = DecryptionResponse<NodeAlgorithmSuite>
 export class NodeCryptographicMaterialsManager implements NodeMaterialsManager {
   readonly keyring!: KeyringNode
   constructor (keyring: KeyringNode) {
-    /* Precondition: keyrings must be a NodeKeyring. */
+    /* Precondition: keyrings must be a KeyringNode. */
     needs(keyring instanceof KeyringNode, 'Unsupported type.')
     readOnlyProperty(this, 'keyring', keyring)
   }
@@ -46,10 +46,10 @@ export class NodeCryptographicMaterialsManager implements NodeMaterialsManager {
 
     await this.keyring.onEncrypt(material, context)
 
-    /* Postcondition: The material must contain a valid unencrypted dataKey. */
+    /* Postcondition: The NodeEncryptionMaterial must contain a valid dataKey. */
     needs(material.getUnencryptedDataKey(), 'Unencrypted data key is invalid.')
 
-    /* Postcondition: The material must contain at least 1 EncryptedDataKey. */
+    /* Postcondition: The NodeEncryptionMaterial must contain at least 1 EncryptedDataKey. */
     needs(material.encryptedDataKeys.length, 'No EncryptedDataKeys: the ciphertext can never be decrypted.')
 
     return { material, context }
@@ -60,7 +60,7 @@ export class NodeCryptographicMaterialsManager implements NodeMaterialsManager {
 
     await this.keyring.onDecrypt(material, encryptedDataKeys.slice(), encryptionContext)
 
-    /* Postcondition: The material must contain a valid unencrypted dataKey.
+    /* Postcondition: The NodeDecryptionMaterial must contain a valid dataKey.
      * See: cryptographic_materials.ts, `getUnencryptedDataKey` also verifies
      * that the unencrypted data key has not been manipulated.
      */
@@ -72,7 +72,7 @@ export class NodeCryptographicMaterialsManager implements NodeMaterialsManager {
   async _generateSigningKeyAndUpdateEncryptionContext (material: NodeEncryptionMaterial, context?: EncryptionContext) {
     const { signatureCurve: namedCurve } = material.suite
 
-    /* Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve. */
+    /* Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve to generate a ECDH key. */
     if (!namedCurve) return Object.freeze({ ...context })
 
     const ecdh = createECDH(namedCurve)
@@ -93,15 +93,15 @@ export class NodeCryptographicMaterialsManager implements NodeMaterialsManager {
   async _loadVerificationKeyFromEncryptionContext (material: NodeDecryptionMaterial, context?: EncryptionContext) {
     const { signatureCurve: namedCurve } = material.suite
 
-    /* Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve. */
+    /* Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve to load a signature key. */
     if (!namedCurve) return material
 
-    /* Precondition: If the algorithm suite specification requires a signatureCurve a context must exist. */
+    /* Precondition: NodeCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist. */
     if (!context) throw new Error('Context does not contain required public key.')
 
     const { [ENCODED_SIGNER_KEY]: compressPoint } = context
 
-    /* Precondition: The context must contain the public key. */
+    /* Precondition: NodeCryptographicMaterialsManager The context must contain the public key. */
     needs(compressPoint, 'Context does not contain required public key.')
 
     const publicKeyBytes = VerificationKey.decodeCompressPoint(Buffer.from(compressPoint, 'base64'), material.suite)

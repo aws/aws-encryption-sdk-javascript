@@ -86,7 +86,7 @@ describe('nodeKdf', () => {
 })
 
 describe('getCryptoStream', () => {
-  it('asdf', () => {
+  it('return a Cipheriv', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const material = new NodeEncryptionMaterial(suite)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
@@ -99,7 +99,7 @@ describe('getCryptoStream', () => {
     expect(cipher).to.be.instanceOf(Cipheriv)
   })
 
-  it('qwer', () => {
+  it('return a Decipheriv', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const material = new NodeDecryptionMaterial(suite)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
@@ -112,7 +112,7 @@ describe('getCryptoStream', () => {
     expect(decipher).to.be.instanceOf(Decipheriv)
   })
 
-  it('Precondition: The length of the IV must match the algorithm suite specificatio.', () => {
+  it('Precondition: The length of the IV must match the algorithm suite specification.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const material = new NodeEncryptionMaterial(suite)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)

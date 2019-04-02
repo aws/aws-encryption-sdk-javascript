@@ -80,7 +80,7 @@ describe('NodeCryptographicMaterialsManager', () => {
     expect(test).to.have.ownProperty(ENCODED_SIGNER_KEY)
   })
 
-  it('Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve.', async () => {
+  it('Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve to generate a ECDH key.', async () => {
     class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
@@ -128,7 +128,7 @@ describe('NodeCryptographicMaterialsManager', () => {
     expect(material.verificationKey).to.have.ownProperty('publicKey')
   })
 
-  it('Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve.', async () => {
+  it('Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve to load a signature key.', async () => {
     class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
@@ -147,7 +147,7 @@ describe('NodeCryptographicMaterialsManager', () => {
     expect(test === material).to.equal(true)
   })
 
-  it('Precondition: If the algorithm suite specification requires a signatureCurve a context must exist.', async () => {
+  it('Precondition: NodeCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist.', async () => {
     class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
@@ -165,7 +165,7 @@ describe('NodeCryptographicMaterialsManager', () => {
     )).to.rejectedWith(Error)
   })
 
-  it('Precondition: The context must contain the public key.', async () => {
+  it('Precondition: NodeCryptographicMaterialsManager The context must contain the public key.', async () => {
     class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
@@ -184,7 +184,7 @@ describe('NodeCryptographicMaterialsManager', () => {
     )).to.rejectedWith(Error)
   })
 
-  it('Postcondition: The material must contain a valid unencrypted dataKey.', async () => {
+  it('Postcondition: The NodeEncryptionMaterial must contain a valid dataKey.', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
 
     class TestKeyring extends KeyringNode {
@@ -201,7 +201,7 @@ describe('NodeCryptographicMaterialsManager', () => {
     await expect(cmm.getEncryptionMaterials({ suite })).to.rejectedWith(Error)
   })
 
-  it('Postcondition: The material must contain at least 1 EncryptedDataKey.', async () => {
+  it('Postcondition: The NodeEncryptionMaterial must contain at least 1 EncryptedDataKey.', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
 
     class TestKeyring extends KeyringNode {
@@ -220,7 +220,7 @@ describe('NodeCryptographicMaterialsManager', () => {
     await expect(cmm.getEncryptionMaterials({ suite })).to.rejectedWith(Error)
   })
 
-  it('Postcondition: The material must contain a valid unencrypted dataKey.', async () => {
+  it('Postcondition: The NodeDecryptionMaterial must contain a valid dataKey.', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
     class TestKeyring extends KeyringNode {
