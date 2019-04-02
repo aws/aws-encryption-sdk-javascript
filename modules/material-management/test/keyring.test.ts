@@ -111,7 +111,7 @@ describe('Keyring: onEncrypt', () => {
     expect(assertCount).to.equal(0)
   })
 
-  it('Postcondition: The material objects must be the same.', async () => {
+  it('Postcondition: The EncryptionMaterial objects must be the same.', async () => {
     let assertCount = 0
     class TestKeyring extends Keyring<NodeAlgorithmSuite> {
       async _onEncrypt (material: NodeEncryptionMaterial) {
@@ -191,7 +191,7 @@ describe('Keyring: onDecrypt', () => {
     expect(assertCount).to.equal(0)
   })
 
-  it('Postcondition: The material objects must be the same.', async () => {
+  it('Postcondition: The DecryptionMaterial objects must be the same.', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const material = new NodeDecryptionMaterial(suite)
     const edk = new EncryptedDataKey({ providerId: 'p', providerInfo: 'i', encryptedDataKey: new Uint8Array(3) })

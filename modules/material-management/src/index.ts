@@ -24,7 +24,7 @@ export { AlgorithmSuiteTypeNode, AlgorithmSuiteTypeWebCrypto } from './algorithm
 export { NodeEncryption, WebCryptoEncryption } from './algorithm_suites'
 export { NodeHash, WebCryptoHash, NodeECDHCurve, WebCryptoECDHCurve } from './algorithm_suites'
 export { KDF, KeyLength, IvLength, TagLength } from './algorithm_suites'
-export { RawAesWrappingSuiteIdentifier } from './algorithm_suites'
+export { RawAesWrappingSuiteIdentifier, WrappingSuiteIdentifier } from './algorithm_suites'
 
 export { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 export { NodeAlgorithmSuite } from './node_algorithms'

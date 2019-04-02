@@ -157,7 +157,7 @@ describe('MultiKeyring: onEncrypt', () => {
     expect(test.getUnencryptedDataKey()).to.deep.equal(unencryptedDataKey)
   })
 
-  it('Precondition: A Generator Keyring *must* insure generated material.', async () => {
+  it('Precondition: A Generator Keyring *must* ensure generated material.', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const [, keyringTrace0] = makeEDKandTrace(0)
     const generator = keyRingFactory({

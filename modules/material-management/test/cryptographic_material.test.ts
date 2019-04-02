@@ -70,7 +70,7 @@ describe('decorateCryptographicMaterial', () => {
     expect(dataKey).to.deep.equal(new Uint8Array(suite.keyLengthBytes).fill(0))
   })
 
-  it('Precondition: The data key\'s length must agree with algorithm specification.', () => {
+  it('Precondition: The data key length must agree with algorithm specification.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
     const dataKey = new Uint8Array(suite.keyLengthBytes - 1).fill(1)
@@ -161,7 +161,7 @@ describe('decorateEncryptionMaterial', () => {
     expect(() => test.addEncryptedDataKey(edk, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)).to.throw()
   })
 
-  it('Precondition: All edk\'s must be EncryptedDataKey', () => {
+  it('Precondition: Edk must be EncryptedDataKey', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const edk: any = {}
     const test: any = decorateEncryptionMaterial((<any>{ suite, keyringTrace: [], hasUnencryptedDataKey: true }))
@@ -191,7 +191,7 @@ describe('decorateEncryptionMaterial', () => {
     expect(() => test.setSignatureKey(key)).to.throw()
   })
 
-  it('Precondition: The SignatureKey gotten must agree with the algorithm specification.', () => {
+  it('Precondition: The SignatureKey requested must agree with the algorithm specification.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const test: any = decorateEncryptionMaterial((<any>{ suite, keyringTrace: [], hasUnencryptedDataKey: true }))
     expect(() => test.signatureKey).to.throw()
@@ -237,7 +237,7 @@ describe('decorateDecryptionMaterial', () => {
     expect(() => test.setVerificationKey(key)).to.throw()
   })
 
-  it('Precondition: The VerificationKey gotten must agree with the algorithm specification.', () => {
+  it('Precondition: The VerificationKey requested must agree with the algorithm specification.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const test: any = decorateDecryptionMaterial((<any>{ suite, keyringTrace: [], hasUnencryptedDataKey: true }))
     expect(() => test.verificationKey).to.throw()
@@ -283,18 +283,13 @@ describe('decorateWebCryptoMaterial', () => {
     expect(() => test.setCryptoKey(key, trace)).to.throw()
   })
 
-  it('Precondition: The CryptoKey must match the algorithm suite specification. (extractable)', () => {
+  it('Precondition: The CryptoKey must match the algorithm suite specification.', () => {
     const test: any = decorateWebCryptoMaterial((<any>{}), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
     const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: true }
-    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
-    expect(() => test.setCryptoKey(key, trace)).to.throw()
-  })
-
-  it('Precondition: The CryptoKey\'s inside MixedBackendCryptoKey must must match the algorithm suite specification. (extractable)', () => {
-    const test: any = decorateWebCryptoMaterial((<any>{}), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
     const key1: any = { zeroByteCryptoKey: { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: true }, nonZeroByteCryptoKey: { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false } }
     const key2: any = { zeroByteCryptoKey: { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }, nonZeroByteCryptoKey: { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: true } }
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    expect(() => test.setCryptoKey(key, trace)).to.throw()
     expect(() => test.setCryptoKey(key1, trace)).to.throw()
     expect(() => test.setCryptoKey(key2, trace)).to.throw()
   })
@@ -417,7 +412,7 @@ describe('NodeEncryptionMaterial', () => {
   it('has a suite', () => expect(test.suite === suite).to.equal(true))
   it('class is frozen', () => expect(Object.isFrozen(NodeAlgorithmSuite)).to.equal(true))
   it('class prototype is frozen', () => expect(Object.isFrozen(NodeAlgorithmSuite.prototype)).to.equal(true))
-  it('Precondition: suite is NodeAlgorithmSuite', () => {
+  it('Precondition: NodeEncryptionMaterial suite must be NodeAlgorithmSuite.', () => {
     const suite: any = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     expect(() => new NodeEncryptionMaterial(suite)).to.throw()
   })
@@ -430,7 +425,7 @@ describe('NodeDecryptionMaterial', () => {
   it('has a suite', () => expect(test.suite === suite).to.equal(true))
   it('class is frozen', () => expect(Object.isFrozen(NodeAlgorithmSuite)).to.equal(true))
   it('class prototype is frozen', () => expect(Object.isFrozen(NodeAlgorithmSuite.prototype)).to.equal(true))
-  it('Precondition: suite is NodeAlgorithmSuite', () => {
+  it('Precondition: NodeDecryptionMaterial suite must be NodeAlgorithmSuite.', () => {
     const suite: any = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     expect(() => new NodeDecryptionMaterial(suite)).to.throw()
   })
@@ -443,7 +438,7 @@ describe('WebCryptoEncryptionMaterial', () => {
   it('has a suite', () => expect(test.suite === suite).to.equal(true))
   it('class is frozen', () => expect(Object.isFrozen(WebCryptoAlgorithmSuite)).to.equal(true))
   it('class prototype is frozen', () => expect(Object.isFrozen(WebCryptoAlgorithmSuite.prototype)).to.equal(true))
-  it('Precondition: suite is NodeAlgorithmSuite', () => {
+  it('Precondition: WebCryptoEncryptionMaterial suite must be WebCryptoAlgorithmSuite.', () => {
     const suite: any = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     expect(() => new WebCryptoEncryptionMaterial(suite)).to.throw()
   })
@@ -456,7 +451,7 @@ describe('WebCryptoDecryptionMaterial', () => {
   it('has a suite', () => expect(test.suite === suite).to.equal(true))
   it('class is frozen', () => expect(Object.isFrozen(WebCryptoAlgorithmSuite)).to.equal(true))
   it('class prototype is frozen', () => expect(Object.isFrozen(WebCryptoAlgorithmSuite.prototype)).to.equal(true))
-  it('Precondition: suite is NodeAlgorithmSuite', () => {
+  it('Precondition: WebCryptoDecryptionMaterial suite must be WebCryptoAlgorithmSuite.', () => {
     const suite: any = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     expect(() => new WebCryptoDecryptionMaterial(suite)).to.throw()
   })

@@ -106,7 +106,7 @@ export class NodeEncryptionMaterial implements
   setSignatureKey!: (key: SignatureKey) => NodeEncryptionMaterial
   signatureKey?: SignatureKey
   constructor (suite: NodeAlgorithmSuite) {
-    /* Precondition: suite is NodeAlgorithmSuite */
+    /* Precondition: NodeEncryptionMaterial suite must be NodeAlgorithmSuite. */
     needs(suite instanceof NodeAlgorithmSuite, 'Suite must be a NodeAlgorithmSuite')
     this.suite = suite
     // EncryptionMaterial have generated a data key on setUnencryptedDataKey
@@ -135,7 +135,7 @@ export class NodeDecryptionMaterial implements
   setVerificationKey!: (key: VerificationKey) => NodeDecryptionMaterial
   verificationKey?: VerificationKey
   constructor (suite: NodeAlgorithmSuite) {
-    /* Precondition: suite is NodeAlgorithmSuite */
+    /* Precondition: NodeDecryptionMaterial suite must be NodeAlgorithmSuite. */
     needs(suite instanceof NodeAlgorithmSuite, 'Suite must be a NodeAlgorithmSuite')
     this.suite = suite
     // DecryptionMaterial have decrypted a data key on setUnencryptedDataKey
@@ -170,7 +170,7 @@ export class WebCryptoEncryptionMaterial implements
   getCryptoKey!: () => CryptoKey|MixedBackendCryptoKey
   hasCryptoKey!: boolean
   constructor (suite: WebCryptoAlgorithmSuite) {
-    /* Precondition: suite is WebCryptoAlgorithmSuite */
+    /* Precondition: WebCryptoEncryptionMaterial suite must be WebCryptoAlgorithmSuite. */
     needs(suite instanceof WebCryptoAlgorithmSuite, 'Suite must be a WebCryptoAlgorithmSuite')
     this.suite = suite
     // EncryptionMaterial have generated a data key on setUnencryptedDataKey
@@ -204,7 +204,7 @@ export class WebCryptoDecryptionMaterial implements
   getCryptoKey!: () => CryptoKey|MixedBackendCryptoKey
   hasCryptoKey!: boolean
   constructor (suite: WebCryptoAlgorithmSuite) {
-    /* Precondition: suite is WebCryptoAlgorithmSuite */
+    /* Precondition: WebCryptoDecryptionMaterial suite must be WebCryptoAlgorithmSuite. */
     needs(suite instanceof WebCryptoAlgorithmSuite, 'Suite must be a WebCryptoAlgorithmSuite')
     this.suite = suite
     // DecryptionMaterial have decrypted a data key on setUnencryptedDataKey
@@ -249,7 +249,7 @@ export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>
      * If this was the case, it may be possible to find or manipulate.
      */
     needs(dataKey.byteOffset === 0, 'Unencrypted Master Key must be an isolated buffer.')
-    /* Precondition: The data key's length must agree with algorithm specification.
+    /* Precondition: The data key length must agree with algorithm specification.
      * If this is not the case, it either means ciphertext was tampered
      * with or the keyring implementation is not setting the length properly.
      */
@@ -437,7 +437,7 @@ export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>> (mater
      * then we are setting the crypto key here and need a keyring trace .
      */
     if (!material.hasUnencryptedDataKey) {
-      /* Precondition: Trace must be set, and the flag must indicate that the data key was generated. */
+      /* Precondition: If the CryptoKey is the only version, the trace information must be set here. */
       needs(trace && trace.keyName && trace.keyNamespace, 'Malformed KeyringTrace')
       /* Precondition: On set the required KeyringTraceFlag must be set. */
       needs(trace.flags & setFlags, 'Required KeyringTraceFlag not set')

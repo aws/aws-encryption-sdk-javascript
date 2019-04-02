@@ -40,7 +40,7 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
 
     const _material = await this._onEncrypt(material, context)
 
-    /* Postcondition: The material objects must be the same.
+    /* Postcondition: The EncryptionMaterial objects must be the same.
      * See cryptographic_materials.ts.  The CryptographicMaterial objects
      * provide several security properties, including immutability of
      * the unencrypted data key and the ability to zero the data key.
@@ -81,7 +81,7 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
 
     const _material = await this._onDecrypt(material, encryptedDataKeys, context)
 
-    /* Postcondition: The material objects must be the same.
+    /* Postcondition: The DecryptionMaterial objects must be the same.
      * See cryptographic_materials.ts.  The CryptographicMaterial objects
      * provide several security properties, including immutability of
      * the unencrypted data key and the ability to zero the data key.
@@ -91,7 +91,7 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
 
     /* See cryptographic_materials.ts The length condition is handled there.
      * But the condition is important and so repeated here.
-     * Postcondition: If an EDK was decrypted, its length must agree with algorithm specification.
+     * The postcondition is "If an EDK was decrypted, its length must agree with algorithm specification."
      * If this is not the case, it either means ciphertext was tampered
      * with or the keyring implementation is not setting the length properly.
      */
