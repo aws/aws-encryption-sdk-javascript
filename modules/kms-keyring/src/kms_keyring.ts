@@ -109,7 +109,7 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
         const trace: KeyringTrace = { keyNamespace: KMS_PROVIDER_ID, keyName: dataKey.KeyId, flags }
 
         material
-          /* Postcondition: The unencryptedDataKey length must match the algorithm specification.
+          /* Postcondition: The generated unencryptedDataKey length must match the algorithm specification.
           * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
           */
           .setUnencryptedDataKey(dataKey.Plaintext, trace)
@@ -175,7 +175,7 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
         const flags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
         const trace: KeyringTrace = { keyNamespace: KMS_PROVIDER_ID, keyName: dataKey.KeyId, flags }
 
-        /* Postcondition: The unencryptedDataKey length must match the algorithm specification.
+        /* Postcondition: The decrypted unencryptedDataKey length must match the algorithm specification.
           * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
           */
         material.setUnencryptedDataKey(dataKey.Plaintext, trace)

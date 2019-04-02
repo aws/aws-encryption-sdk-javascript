@@ -82,7 +82,7 @@ describe('generateDataKey', () => {
     expect(test).to.equal(false)
   })
 
-  it('Postcondition: KMS must return serializable values.', async () => {
+  it('Postcondition: KMS must return serializable generate data key.', async () => {
     const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const GrantTokens = 'grantToken'
     const NumberOfBytes = 128
@@ -146,7 +146,7 @@ describe('encrypt', () => {
     expect(test).to.equal(false)
   })
 
-  it('Postcondition: KMS must return serializable values.', async () => {
+  it('Postcondition: KMS must return serializable encrypted data key.', async () => {
     const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const GrantTokens = 'grantToken'
     const Plaintext = new Uint8Array(5)
@@ -245,7 +245,7 @@ describe('decrypt', () => {
     expect(test).to.equal(false)
   })
 
-  it('Postcondition: KMS must return serializable values.', async () => {
+  it('Postcondition: KMS must return usable decrypted key.', async () => {
     const GrantTokens = 'grantToken'
     const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const edk = new EncryptedDataKey({

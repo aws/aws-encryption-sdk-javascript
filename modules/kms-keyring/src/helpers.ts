@@ -38,7 +38,7 @@ export async function generateDataKey<Client extends KMS> (
 
   const dataKey = await client.generateDataKey({ KeyId, GrantTokens, NumberOfBytes, EncryptionContext })
 
-  /* Postcondition: KMS must return serializable values. */
+  /* Postcondition: KMS must return serializable generate data key. */
   if (!isRequiredGenerateDataKeyOutput<typeof dataKey>(dataKey)) throw new Error('Malformed KMS response.')
   return dataKey
 }
@@ -58,7 +58,7 @@ export async function encrypt<Client extends KMS> (
 
   const kmsEDK = await client.encrypt({ KeyId, Plaintext, EncryptionContext, GrantTokens })
 
-  /* Postcondition: KMS must return serializable values. */
+  /* Postcondition: KMS must return serializable encrypted data key. */
   if (!isRequiredEncryptOutput(kmsEDK)) throw new Error('Malformed KMS response.')
   return kmsEDK
 }
@@ -78,7 +78,7 @@ export async function decrypt<Client extends KMS> (
 
   const dataKey = await client.decrypt({ CiphertextBlob: edk.encryptedDataKey, EncryptionContext, GrantTokens })
 
-  /* Postcondition: KMS must return usable values. */
+  /* Postcondition: KMS must return usable decrypted key. */
   if (!isRequiredDecryptOutput(dataKey)) throw new Error('Malformed KMS response.')
   return dataKey
 }
