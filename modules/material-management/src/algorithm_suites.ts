@@ -125,10 +125,12 @@ export type WrappingSuiteIdentifier = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV
   AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16 |
   AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16
 
+type RawAesWrappingNames = 'AES128_GCM_IV12_TAG16_NO_PADDING'| 'AES192_GCM_IV12_TAG16_NO_PADDING'| 'AES256_GCM_IV12_TAG16_NO_PADDING'
+
 const AES128_GCM_IV12_TAG16_NO_PADDING: AlgorithmSuiteIdentifier = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
 const AES192_GCM_IV12_TAG16_NO_PADDING: AlgorithmSuiteIdentifier = AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16
 const AES256_GCM_IV12_TAG16_NO_PADDING: AlgorithmSuiteIdentifier = AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16
-export const RawAesWrappingSuiteIdentifier: {[key: string]: WrappingSuiteIdentifier} = Object.freeze({
+export const RawAesWrappingSuiteIdentifier: {[K in RawAesWrappingNames]: WrappingSuiteIdentifier} = Object.freeze({
   AES128_GCM_IV12_TAG16_NO_PADDING,
   AES192_GCM_IV12_TAG16_NO_PADDING,
   AES256_GCM_IV12_TAG16_NO_PADDING
