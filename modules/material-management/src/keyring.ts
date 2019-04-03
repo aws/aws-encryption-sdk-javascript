@@ -14,11 +14,13 @@
  */
 
 import { EncryptedDataKey } from './encrypted_data_key'
-import { immutableBaseClass } from './immutable_class'
+import { immutableBaseClass, immutableClass } from './immutable_class'
 
 import { isEncryptionMaterial, isDecryptionMaterial } from './cryptographic_material'
 import { EncryptionContext, EncryptionMaterial, DecryptionMaterial, SupportedAlgorithmSuites } from './types' // eslint-disable-line no-unused-vars
 import { needs } from './needs'
+import { NodeAlgorithmSuite } from './node_algorithms' // eslint-disable-line no-unused-vars
+import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms' // eslint-disable-line no-unused-vars
 
 /*
  * This public interface to the Keyring object is provided for
@@ -103,3 +105,8 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
 }
 
 immutableBaseClass(Keyring)
+
+export abstract class KeyringNode extends Keyring<NodeAlgorithmSuite> {}
+immutableClass(KeyringNode)
+export abstract class KeyringWebCrypto extends Keyring<WebCryptoAlgorithmSuite> {}
+immutableClass(KeyringWebCrypto)
