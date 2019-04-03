@@ -30,6 +30,7 @@ export function HKDF (algorithm: string = 'sha256'): HKDFOutput {
     throw new UnsupportedAlgorithm(algorithm)
   }
 
+  // (<= 255*HashLen) from https://tools.ietf.org/html/rfc5869
   const maxLength = 255 * hashLength
 
   // decorate the return function
@@ -106,4 +107,4 @@ export interface HKDFOutput {
   expand: Expand
 }
 
-type Curry<T extends any[]> = ((...args: T) => void) extends (head: any, ...tail: infer U) => any ? U : never;
+type Curry<T extends any[]> = ((...args: T) => void) extends (head: any, ...tail: infer U) => any ? U : never
