@@ -76,9 +76,9 @@ export class KmsKeyringBrowser extends KmsKeyringClass(KeyringWebCrypto as KeyRi
     const _material = await super._onDecrypt(material, encryptedDataKeys, context)
 
     /* Check for early return (Postcondition): If a cryptoKey has already been imported for decrypt, return. */
-    if (_material.hasUnencryptedDataKey && _material.hasCryptoKey) {
-      return _material
-    }
+    if (_material.hasValidKey()) return _material
+    /* Check for early return (Postcondition): If no key was able to be decrypted, return. */
+    if (!_material.hasUnencryptedDataKey) return _material
 
     const backend = await getWebCryptoBackend()
     const cryptoKey = await importCryptoKey(backend, _material)
