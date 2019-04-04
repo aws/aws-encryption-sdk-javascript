@@ -55,7 +55,7 @@ export type AesKeyringNodeInput = {
   wrappingSuite: WrappingSuiteIdentifier
 }
 
-export class AesKeyringNode extends KeyringNode {
+export class AesGcmKeyringNode extends KeyringNode {
   public keyNamespace!: string
   public keyName!: string
   _wrapKey!: WrapKey<NodeAlgorithmSuite>
@@ -80,14 +80,14 @@ export class AesKeyringNode extends KeyringNode {
       const aad = Buffer.concat(encodeEncryptionContext(context || {}))
       const { keyNamespace, keyName } = this
 
-      return aesWrapKey(keyNamespace, keyName, material, aad, wrappingMaterial)
+      return aesGcmWrapKey(keyNamespace, keyName, material, aad, wrappingMaterial)
     }
 
     const _unwrapKey = async (material: NodeDecryptionMaterial, edk: EncryptedDataKey, context?: EncryptionContext) => {
       const { keyNamespace, keyName } = this
       const aad = Buffer.concat(encodeEncryptionContext(context || {}))
 
-      return aesUnwrapKey(keyNamespace, keyName, material, wrappingMaterial, edk, aad)
+      return aesGcmUnwrapKey(keyNamespace, keyName, material, wrappingMaterial, edk, aad)
     }
 
     readOnlyProperty(this, 'keyName', keyName)
@@ -101,15 +101,15 @@ export class AesKeyringNode extends KeyringNode {
     return providerId === keyNamespace && providerInfo.startsWith(keyName)
   }
 
-  _onEncrypt = _onEncrypt<NodeAlgorithmSuite, AesKeyringNode>(randomBytesAsync)
-  _onDecrypt = _onDecrypt<NodeAlgorithmSuite, AesKeyringNode>()
+  _onEncrypt = _onEncrypt<NodeAlgorithmSuite, AesGcmKeyringNode>(randomBytesAsync)
+  _onDecrypt = _onDecrypt<NodeAlgorithmSuite, AesGcmKeyringNode>()
 }
-immutableClass(AesKeyringNode)
+immutableClass(AesGcmKeyringNode)
 
 const encryptFlags = KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
 const decryptFlags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
 
-function aesWrapKey (
+function aesGcmWrapKey (
   keyNamespace: string,
   keyName: string,
   material: NodeEncryptionMaterial,
@@ -139,7 +139,16 @@ function aesWrapKey (
   return material.addEncryptedDataKey(edk, encryptFlags)
 }
 
-function aesUnwrapKey (
+/**
+ * 
+ * @param keyNamespace The keyring namespace (for KeyringTrace)
+ * @param keyName The keyring name (for KeyringTrace and to extract the extra info stored in providerInfo)
+ * @param material The target material to which the decrypted data key will be added
+ * @param wrappingMaterial The material used to decrypt the EncryptedDataKey
+ * @param edk The EncryptedDataKey on which to operate
+ * @param aad The serialized aad (EncryptionContext)
+ */
+function aesGcmUnwrapKey (
   keyNamespace: string,
   keyName: string,
   material: NodeDecryptionMaterial,
