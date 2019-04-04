@@ -31,7 +31,8 @@ import { randomBytes, createCipheriv, createDecipheriv } from 'crypto'
 import {
   serializeFactory,
   rawAesEncryptedDataKeyFactory,
-  rawAesEncryptedPartsFactory
+  rawAesEncryptedPartsFactory,
+  concatBuffers
 } from '@aws-crypto/serialize'
 import {
   _onEncrypt,
@@ -44,7 +45,7 @@ const toUtf8 = (input: Uint8Array) => Buffer
   .from(input.buffer, input.byteOffset, input.byteLength)
   .toString('utf8')
 const { encodeEncryptionContext } = serializeFactory(fromUtf8)
-const { rawAesEncryptedDataKey } = rawAesEncryptedDataKeyFactory(toUtf8)
+const { rawAesEncryptedDataKey } = rawAesEncryptedDataKeyFactory(toUtf8, fromUtf8)
 const { rawAesEncryptedParts } = rawAesEncryptedPartsFactory(fromUtf8)
 
 export type AesKeyringNodeInput = {
@@ -123,8 +124,8 @@ function aesWrapKey (
 
   const cipher = createCipheriv(encryption, wrappingDataKey, iv)
     .setAAD(aad)
-
-  const ciphertext = Buffer.concat([cipher.update(dataKey), cipher.final()])
+  // Buffer.concat will use the shared buffer space, and the resultant buffer will have a byteOffset...
+  const ciphertext = concatBuffers(cipher.update(dataKey), cipher.final())
   const authTag = cipher.getAuthTag()
 
   const edk = rawAesEncryptedDataKey(
@@ -146,17 +147,15 @@ function aesUnwrapKey (
   edk: EncryptedDataKey,
   aad: Buffer
 ): NodeDecryptionMaterial {
-  const { suite } = wrappingMaterial
-  const { authTag, ciphertext, iv } = rawAesEncryptedParts(suite, keyName, edk)
-  const { encryption } = suite
+  const { authTag, ciphertext, iv } = rawAesEncryptedParts(material.suite, keyName, edk)
+  const { encryption } = wrappingMaterial.suite
 
   const decipher = createDecipheriv(encryption, wrappingMaterial.getUnencryptedDataKey(), iv)
     .setAAD(aad)
     .setAuthTag(authTag)
-
-  const unencryptedDataKey = Buffer.concat([decipher.update(ciphertext), decipher.final()])
+  // Buffer.concat will use the shared buffer space, and the resultant buffer will have a byteOffset...
+  const unencryptedDataKey = concatBuffers(decipher.update(ciphertext), decipher.final())
   const trace = { keyNamespace, keyName, flags: decryptFlags }
-
   return material.setUnencryptedDataKey(unencryptedDataKey, trace)
 }
 
