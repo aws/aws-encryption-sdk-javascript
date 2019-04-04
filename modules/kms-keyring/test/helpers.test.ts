@@ -1,0 +1,272 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"). You may not use
+ * this file except in compliance with the License. A copy of the License is
+ * located at
+ *
+ *     http://aws.amazon.com/apache2.0/
+ *
+ * or in the "license" file accompanying this file. This file is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* eslint-env mocha */
+
+import { expect } from 'chai'
+import 'mocha'
+import { generateDataKey, encrypt, decrypt, kms2EncryptedDataKey } from '../src/helpers'
+import { EncryptedDataKey } from '@aws-crypto/material-management'
+import { GenerateDataKeyInput } from '../src/kms_types/GenerateDataKeyInput' // eslint-disable-line no-unused-vars
+import { EncryptInput } from '../src/kms_types/EncryptInput' // eslint-disable-line no-unused-vars
+import { DecryptInput } from '../src/kms_types/DecryptInput' // eslint-disable-line no-unused-vars
+
+describe('kms2EncryptedDataKey', () => {
+  it('return an EncryptedDataKey', () => {
+    const response = {
+      KeyId: 'asdf',
+      CiphertextBlob: new Uint8Array(5),
+      $metadata: {} as any
+    }
+    const test = kms2EncryptedDataKey(response)
+    expect(test).instanceOf(EncryptedDataKey)
+    expect(test.providerId).to.equal('aws-kms')
+    expect(test.providerInfo).to.equal('asdf')
+    expect(test.encryptedDataKey.byteLength).to.equal(5)
+  })
+})
+
+describe('generateDataKey', () => {
+  it('return', async () => {
+    const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const GrantTokens = 'grantToken'
+    const NumberOfBytes = 128
+    const EncryptionContext = { some: 'context' }
+
+    const clientProvider: any = (region: string) => {
+      expect(region).to.equal('us-east-1')
+      return { generateDataKey }
+      function generateDataKey (input: GenerateDataKeyInput) {
+        expect(input.KeyId).to.equal(KeyId)
+        expect(input.GrantTokens).to.equal(GrantTokens)
+        expect(input.NumberOfBytes).to.equal(NumberOfBytes)
+        expect(input.EncryptionContext).to.equal(EncryptionContext)
+        return {
+          Plaintext: 'Plaintext',
+          KeyId: 'KeyId',
+          CiphertextBlob: 'CiphertextBlob'
+        }
+      }
+    }
+
+    const test = await generateDataKey(clientProvider, NumberOfBytes, KeyId, EncryptionContext, GrantTokens)
+    if (!test) throw new Error('never')
+    expect(test.Plaintext).to.equal('Plaintext')
+    expect(test.KeyId).to.equal('KeyId')
+    expect(test.CiphertextBlob).to.equal('CiphertextBlob')
+  })
+
+  it('Check for early return (Postcondition): Client region was not provided.', async () => {
+    const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const GrantTokens = 'grantToken'
+    const NumberOfBytes = 128
+    const EncryptionContext = { some: 'context' }
+
+    const clientProvider: any = () => {
+      return false
+    }
+
+    const test = await generateDataKey(clientProvider, NumberOfBytes, KeyId, EncryptionContext, GrantTokens)
+    expect(test).to.equal(false)
+  })
+
+  it('Postcondition: KMS must return serializable generate data key.', async () => {
+    const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const GrantTokens = 'grantToken'
+    const NumberOfBytes = 128
+    const EncryptionContext = { some: 'context' }
+
+    const clientProvider: any = () => {
+      return { generateDataKey }
+      function generateDataKey () {
+        return {}
+      }
+    }
+
+    try {
+      await generateDataKey(clientProvider, NumberOfBytes, KeyId, EncryptionContext, GrantTokens)
+    } catch {
+      return
+    }
+    throw new Error('never')
+  })
+})
+
+describe('encrypt', () => {
+  it('return', async () => {
+    const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const GrantTokens = 'grantToken'
+    const Plaintext = new Uint8Array(5)
+    const EncryptionContext = { some: 'context' }
+
+    const clientProvider: any = (region: string) => {
+      expect(region).to.equal('us-east-1')
+      return { encrypt }
+      function encrypt (input: EncryptInput) {
+        expect(input.KeyId).to.equal(KeyId)
+        expect(input.GrantTokens).to.equal(GrantTokens)
+        expect(input.Plaintext).to.equal(Plaintext)
+        expect(input.EncryptionContext).to.equal(EncryptionContext)
+        return {
+          KeyId: 'KeyId',
+          CiphertextBlob: 'CiphertextBlob'
+        }
+      }
+    }
+
+    const test = await encrypt(clientProvider, Plaintext, KeyId, EncryptionContext, GrantTokens)
+    if (!test) throw new Error('never')
+    expect(test.KeyId).to.equal('KeyId')
+    expect(test.CiphertextBlob).to.equal('CiphertextBlob')
+  })
+
+  it('Check for early return (Postcondition): Client region was not provided.', async () => {
+    const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const GrantTokens = 'grantToken'
+    const Plaintext = new Uint8Array(5)
+    const EncryptionContext = { some: 'context' }
+
+    const clientProvider: any = () => {
+      return false
+    }
+
+    const test = await encrypt(clientProvider, Plaintext, KeyId, EncryptionContext, GrantTokens)
+    expect(test).to.equal(false)
+  })
+
+  it('Postcondition: KMS must return serializable encrypted data key.', async () => {
+    const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const GrantTokens = 'grantToken'
+    const Plaintext = new Uint8Array(5)
+    const EncryptionContext = { some: 'context' }
+
+    const clientProvider: any = () => {
+      return { encrypt }
+      function encrypt () {
+        return {}
+      }
+    }
+
+    try {
+      await encrypt(clientProvider, Plaintext, KeyId, EncryptionContext, GrantTokens)
+    } catch {
+      return
+    }
+    throw new Error('never')
+  })
+})
+
+describe('decrypt', () => {
+  it('return', async () => {
+    const GrantTokens = 'grantToken'
+    const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const edk = new EncryptedDataKey({
+      providerId: 'aws-kms',
+      providerInfo: KeyId,
+      encryptedDataKey: new Uint8Array(5)
+    })
+    const EncryptionContext = { some: 'context' }
+
+    const clientProvider: any = (region: string) => {
+      expect(region).to.equal('us-east-1')
+      return { decrypt }
+      function decrypt (input: DecryptInput) {
+        expect(input.GrantTokens).to.equal(GrantTokens)
+        expect(input.CiphertextBlob).lengthOf(5)
+        expect(input.EncryptionContext).to.equal(EncryptionContext)
+        return {
+          KeyId: 'KeyId',
+          Plaintext: 'Plaintext'
+        }
+      }
+    }
+
+    const test = await decrypt(clientProvider, edk, EncryptionContext, GrantTokens)
+    if (!test) throw new Error('never')
+    expect(test.KeyId).to.equal('KeyId')
+    expect(test.Plaintext).to.equal('Plaintext')
+  })
+
+  it('Precondition:  The EDK must be a KMS edk.', async () => {
+    const GrantTokens = 'grantToken'
+    const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const edk = new EncryptedDataKey({
+      providerId: 'NOTaws-kms',
+      providerInfo: KeyId,
+      encryptedDataKey: new Uint8Array(5)
+    })
+    const EncryptionContext = { some: 'context' }
+
+    const clientProvider: any = () => {
+      return { decrypt }
+      function decrypt () {
+        return {
+          KeyId: 'KeyId',
+          Plaintext: 'Plaintext'
+        }
+      }
+    }
+
+    try {
+      await decrypt(clientProvider, edk, EncryptionContext, GrantTokens)
+    } catch {
+      return
+    }
+    throw new Error('never')
+  })
+
+  it('Check for early return (Postcondition): Client region was not provided.', async () => {
+    const GrantTokens = 'grantToken'
+    const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const edk = new EncryptedDataKey({
+      providerId: 'aws-kms',
+      providerInfo: KeyId,
+      encryptedDataKey: new Uint8Array(5)
+    })
+    const EncryptionContext = { some: 'context' }
+
+    const clientProvider: any = () => {
+      return false
+    }
+
+    const test = await decrypt(clientProvider, edk, EncryptionContext, GrantTokens)
+    expect(test).to.equal(false)
+  })
+
+  it('Postcondition: KMS must return usable decrypted key.', async () => {
+    const GrantTokens = 'grantToken'
+    const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const edk = new EncryptedDataKey({
+      providerId: 'aws-kms',
+      providerInfo: KeyId,
+      encryptedDataKey: new Uint8Array(5)
+    })
+    const EncryptionContext = { some: 'context' }
+
+    const clientProvider: any = () => {
+      return { decrypt }
+      function decrypt () {
+        return {}
+      }
+    }
+
+    try {
+      await decrypt(clientProvider, edk, EncryptionContext, GrantTokens)
+    } catch {
+      return
+    }
+    throw new Error('never')
+  })
+})
