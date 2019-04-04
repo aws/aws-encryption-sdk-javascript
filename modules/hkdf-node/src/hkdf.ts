@@ -82,6 +82,9 @@ export function HKDF (algorithm: string = 'sha256'): HKDFOutput {
     var N = Math.ceil(length / hashLength)
     var memo: Buffer[] = []
 
+    /* L/length octets are returned from T(1)...T(N), and T(0) is definitionally empty/zero length.
+     * Elide T(0) into the Buffer.alloc(0) case and then return L octets of T indexed 0...L-1.
+     */
     for (var i = 0; i < N; i++) {
       memo[i] = createHmac(algorithm, prk)
         .update((memo[i - 1] || Buffer.alloc(0)))
