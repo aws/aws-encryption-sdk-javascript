@@ -179,9 +179,9 @@ export function getEncryptFrame (input: EncryptFrameInput): EncryptFrame {
     : frameHeader(sequenceNumber, frameIv))
   const { contentType, messageId } = messageHeader
   const contentString = aadUtility.messageAADContentString({ contentType, isFinalFrame })
-  const messageAAD = aadUtility.messageAAD(messageId, contentString, sequenceNumber, contentLength)
+  const {buffer, byteOffset, byteLength} = aadUtility.messageAAD(messageId, contentString, sequenceNumber, contentLength)
   const cipher = getCipher(frameIv)
-  cipher.setAAD(Buffer.from(messageAAD.buffer))
+  cipher.setAAD(Buffer.from(buffer, byteOffset, byteLength))
 
   return { content, cipher, bodyHeader, isFinalFrame }
 }
