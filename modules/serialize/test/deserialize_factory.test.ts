@@ -35,7 +35,7 @@ describe('deserializeFactory:decodeEncryptionContext', () => {
       .and.to.eql('\u00bd + \u00bc = \u00be')
   })
 
-  it('Precondition: The case of 0 length is defined as an empty object.', () => {
+  it('Check for early return (Postcondition): The case of 0 length is defined as an empty object.', () => {
     const { decodeEncryptionContext } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
     const test = decodeEncryptionContext(new Uint8Array(0))
     expect(test).to.be.deep.equal({})
@@ -107,7 +107,7 @@ describe('deserializeFactory:deserializeEncryptedDataKeys', () => {
       .to.deep.equal(new Uint8Array([6, 7, 8, 9, 0]))
   })
 
-  it('Precondition: readElement will return false if there is not enough data.', () => {
+  it('Check for early return (Postcondition): readElement will return false if there is not enough data.', () => {
     const { deserializeEncryptedDataKeys } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
     const buffer = fixtures.encryptedDataKey()
 
@@ -239,7 +239,7 @@ describe('deserializeFactory:deserializeMessageHeader', () => {
       .and.to.eql(4096)
   })
 
-  it('Precondition: Not Enough Data', () => {
+  it('Check for early return (Postcondition): Not Enough Data. Need to have at least 22 bytes of data to begin parsing. ; Check for early return (Postcondition): Not Enough Data. Need to have all of the context in bytes before we can parse the next section. ;Check for early return (Postcondition): Not Enough Data. deserializeEncryptedDataKeys will return false if it does not have enough data. ; Check for early return (Postcondition): Not Enough Data. Need to have the remaining fixed length data to parse. ', () => {
     const { deserializeMessageHeader } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
     const basicMessageHeader = fixtures.basicMessageHeader()
     const headerIv = new Uint8Array(12).fill(1)
@@ -321,7 +321,7 @@ describe('deserializeFactory:deserializeMessageHeader', () => {
       .and.to.eql(4096)
   })
 
-  it('Precondition: Not Enough Data.  For: header without context', () => {
+  it('Header without context should stream correctly i.e not return data when not enough is given.', () => {
     const { deserializeMessageHeader } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
     const zeroByteEncryptionContextMessageHeader = fixtures.zeroByteEncryptionContextMessageHeader()
     const headerIv = new Uint8Array(12).fill(1)

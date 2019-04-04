@@ -113,7 +113,7 @@ describe('readElements', () => {
     expect(info.readPos).to.eql(58)
   })
 
-  it('Precondition: Enough data must exist to read the Uin16 length value.; Precondition: Enough data must exist length of the value.', () => {
+  it('Check for early return (Postcondition): Enough data must exist to read the Uint16 length value.; Check for early return (Postcondition): Enough data must exist length of the value.', () => {
     const utf8DataStrings = [
       'some utf8 information', '\u00bd + \u00bc = \u00be', 'to encode'
     ]
@@ -144,13 +144,13 @@ describe('readElements', () => {
     expect(info.readPos).to.eql(48)
   })
 
-  it('Precondition: readPos must be within the byte length of the buffer given.', () => {
+  it('Precondition: readElements readPos must be within the byte length of the buffer given.', () => {
     const buff = new Uint8Array(32)
     const readPosBeyondBuff = buff.byteLength + 1
     expect(() => readElements(1, buff, readPosBeyondBuff)).to.throw()
   })
 
-  it('Precondition: There must be at least 1 element to find.', () => {
+  it('Precondition: elementCount must not be negative.', () => {
     const buff = new Uint8Array(32)
     expect(() => readElements(-1, buff)).to.throw()
   })

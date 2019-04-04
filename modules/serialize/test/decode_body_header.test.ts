@@ -116,7 +116,7 @@ describe('decodeFrameBodyHeader', () => {
     expect(test.contentType).to.eql(ContentType.FRAMED_DATA)
   })
 
-  it('Precondition: There must be enough data to parse. for partial basic frame', () => {
+  it('Check for early return (Postcondition): There must be enough data to decodeFrameBodyHeader.', () => {
     const frameHeader = fixtures.basicFrameHeader()
     const headerInfo = {
       messageHeader: {
@@ -135,7 +135,7 @@ describe('decodeFrameBodyHeader', () => {
     }
   })
 
-  it('Precondition: There must be enough data to parse. for partial final frame', () => {
+  it('Check for early return (Postcondition): There must be enough data to decodeFinalFrameBodyHeader.', () => {
     const frameHeader = fixtures.finalFrameHeader()
     const headerInfo = {
       messageHeader: {
@@ -247,7 +247,7 @@ describe('decodeFrameBodyHeader', () => {
     }
   })
 
-  it('Precondition: readPos must be within the byte length of the buffer given.', () => {
+  it('Precondition: decodeFrameBodyHeader readPos must be within the byte length of the buffer given.', () => {
     const headerInfo = {
       messageHeader: {
         frameLength: 99,
@@ -328,7 +328,7 @@ describe('decodeNonFrameBodyHeader', () => {
     expect(test.contentType).to.eql(ContentType.NO_FRAMING)
   })
 
-  it('Precondition: There must be enough data to parse. for partial non frame', () => {
+  it('Check for early return (Postcondition): There must be enough data to decodeNonFrameBodyHeader.', () => {
     const headerInfo = {
       messageHeader: {
         contentType: ContentType.NO_FRAMING
@@ -347,7 +347,7 @@ describe('decodeNonFrameBodyHeader', () => {
     }
   })
 
-  it('Precondition: readPos must be within the byte length of the buffer given.', () => {
+  it('Precondition: decodeNonFrameBodyHeader readPos must be within the byte length of the buffer given.', () => {
     const headerInfo = {
       messageHeader: {
         contentType: ContentType.NO_FRAMING

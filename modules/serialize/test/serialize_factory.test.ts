@@ -120,7 +120,7 @@ describe('serializeFactory:serializeEncryptionContext', () => {
     expect(test).to.deep.equal(fixtures.basicEncryptionContext())
   })
 
-  it('Precondition: If there is no context then the length of the _whole_ serialized portion is 00.', () => {
+  it('Check for early return (Postcondition): If there is no context then the length of the _whole_ serialized portion is 0.', () => {
     const fromUtf8 = (input: string) => Buffer.from(input)
     const { encodeEncryptionContext, serializeEncryptionContext } = serializeFactory(fromUtf8)
     const contextBytes = encodeEncryptionContext({})

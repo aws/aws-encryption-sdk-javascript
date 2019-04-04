@@ -59,7 +59,7 @@ export function readElements (
   )
   const elements = []
 
-  /* Precondition: readPos must be within the byte length of the buffer given. */
+  /* Precondition: readElements readPos must be within the byte length of the buffer given. */
   needs(readPos >= 0 && dataView.byteLength >= readPos, 'readPos out of bounds.')
 
   /* Precondition: elementCount must not be negative. */

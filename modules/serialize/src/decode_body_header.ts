@@ -62,7 +62,7 @@ export function decodeBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, re
  * @param readPos number
  */
 export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): FrameBodyHeader|false {
-  /* Precondition: The contentType must be a supported format. */
+  /* Precondition: The contentType must be FRAMED_DATA. */
   needs(ContentType.FRAMED_DATA === headerInfo.messageHeader.contentType, 'Unknown contentType')
 
   const { frameLength } = headerInfo.messageHeader
@@ -80,10 +80,10 @@ export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInf
     buffer.byteLength
   )
 
-  /* Precondition: readPos must be within the byte length of the buffer given. */
+  /* Precondition: decodeFrameBodyHeader readPos must be within the byte length of the buffer given. */
   needs(dataView.byteLength >= readPos && readPos >= 0, 'readPos out of bounds.')
 
-  /* Check for early return (Postcondition): There must be enough data to parse.
+  /* Check for early return (Postcondition): There must be enough data to decodeFrameBodyHeader.
    * The format expressed here is
    * SequenceIdentifier: Uint32
    * IVLength: Uint8
@@ -92,7 +92,7 @@ export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInf
   if (4 + ivLength + readPos > dataView.byteLength) return false
 
   const sequenceNumber = dataView.getUint32(readPos)
-  /* Postcondition: sequenceNumber must be greater than 0. */
+  /* Postcondition: decodeFrameBodyHeader sequenceNumber must be greater than 0. */
   needs(sequenceNumber > 0, 'Malformed sequenceNumber.')
   if (sequenceNumber === SequenceIdentifier.SEQUENCE_NUMBER_END) {
     return decodeFinalFrameBodyHeader(buffer, headerInfo, readPos)
@@ -117,7 +117,7 @@ export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInf
  * @param readPos number
  */
 export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): FrameBodyHeader|false {
-  /* Precondition: The contentType must be a supported format. */
+  /* Precondition: The contentType must be FRAMED_DATA to be a Final Frame. */
   needs(ContentType.FRAMED_DATA === headerInfo.messageHeader.contentType, 'Unknown contentType')
 
   const { ivLength, tagLength } = headerInfo.algorithmSuite
@@ -134,9 +134,9 @@ export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: Head
     buffer.byteLength
   )
 
-  /* Precondition: readPos must be within the byte length of the buffer given. */
+  /* Precondition: decodeFinalFrameBodyHeader readPos must be within the byte length of the buffer given. */
   needs(dataView.byteLength >= readPos && readPos >= 0, 'readPos out of bounds.')
-  /* Check for early return (Postcondition): There must be enough data to parse.
+  /* Check for early return (Postcondition): There must be enough data to decodeFinalFrameBodyHeader.
    * The format expressed here is
    * SEQUENCE_NUMBER_END: Uint32(FFFF)
    * SequenceIdentifier: Uint32
@@ -150,7 +150,7 @@ export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: Head
   const sequenceEnd = dataView.getUint32(readPos, false) // big endian
   needs(sequenceEnd === SequenceIdentifier.SEQUENCE_NUMBER_END, '')
   const sequenceNumber = dataView.getUint32(readPos += 4, false) // big endian
-  /* Postcondition: sequenceNumber must be greater than 0. */
+  /* Postcondition: decodeFinalFrameBodyHeader sequenceNumber must be greater than 0. */
   needs(sequenceNumber > 0, 'Malformed sequenceNumber.')
   const iv = buffer.slice(readPos += 4, readPos += ivLength)
   const contentLength = dataView.getUint32(readPos)
@@ -172,7 +172,7 @@ export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: Head
  * @param readPos number
  */
 export function decodeNonFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): NonFrameBodyHeader|false {
-  /* Precondition: The contentType must be a supported format. */
+  /* Precondition: The contentType must be NO_FRAMING. */
   needs(ContentType.NO_FRAMING === headerInfo.messageHeader.contentType, 'Unknown contentType')
 
   const { ivLength, tagLength } = headerInfo.algorithmSuite
@@ -189,10 +189,10 @@ export function decodeNonFrameBodyHeader (buffer: Uint8Array, headerInfo: Header
     buffer.byteLength
   )
 
-  /* Precondition: readPos must be within the byte length of the buffer given. */
+  /* Precondition: decodeNonFrameBodyHeader readPos must be within the byte length of the buffer given. */
   needs(dataView.byteLength >= readPos && readPos >= 0, 'readPos out of bounds.')
 
-  /* Check for early return (Postcondition): There must be enough data to parse.
+  /* Check for early return (Postcondition): There must be enough data to decodeNonFrameBodyHeader.
     * The format expressed here is
     * IVLength: Uint8
     * ContentLength: Uint64
