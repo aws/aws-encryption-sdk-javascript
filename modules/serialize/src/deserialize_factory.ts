@@ -77,11 +77,11 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
     const version = dataView.getUint8(0)
     const type = dataView.getUint8(1)
 
+    const suiteId = <AlgorithmSuiteIdentifier>dataView.getUint16(2, false) // big endian
     /* Precondition: suiteId must match supported algorithm suite */
-    needs(AlgorithmSuiteIdentifier[dataView.getUint16(2)], 'Unsupported algorithm suite.')
-    const suiteId = <AlgorithmSuiteIdentifier>dataView.getUint16(2)
+    needs(AlgorithmSuiteIdentifier[suiteId], 'Unsupported algorithm suite.')
     const messageId = messageBuffer.slice(4, 20)
-    const contextLength = dataView.getUint16(20)
+    const contextLength = dataView.getUint16(20, false) // big endian
 
     /* Check for early return (Postcondition): Not Enough Data. Need to have all of the context in bytes before we can parse the next section.
      * This is the first variable length section.
@@ -112,7 +112,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
     if (headerLength + ivLength + tagLengthBytes > dataView.byteLength) return false // not enough data
 
     const contentType = dataView.getUint8(readPos)
-    const reservedBytes = dataView.getUint32(readPos + 1)
+    const reservedBytes = dataView.getUint32(readPos + 1, false) // big endian
     /* Postcondition: reservedBytes are defined as 0,0,0,0
      * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-reserved
      */
@@ -120,7 +120,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
     const headerIvLength = <IvLength>dataView.getUint8(readPos + 1 + 4)
     /* Postcondition: The headerIvLength must match the algorithm suite specification. */
     needs(headerIvLength === ivLength, 'Malformed Header')
-    const frameLength = dataView.getUint32(readPos + 1 + 4 + 1)
+    const frameLength = dataView.getUint32(readPos + 1 + 4 + 1, false) // big endian
     const rawHeader = messageBuffer.slice(0, headerLength)
 
     const messageHeader: MessageHeader = {
@@ -171,7 +171,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
       buffer.byteOffset,
       buffer.byteLength
     )
-    const encryptedDataKeysCount = dataView.getUint16(startPos)
+    const encryptedDataKeysCount = dataView.getUint16(startPos, false) // big endian
 
     /* Precondition: There must be at least 1 EncryptedDataKey element. */
     needs(encryptedDataKeysCount, 'No EncryptedDataKey found.')
@@ -216,7 +216,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
       encodedEncryptionContext.byteOffset,
       encodedEncryptionContext.byteLength
     )
-    const pairsCount = dataView.getUint16(0)
+    const pairsCount = dataView.getUint16(0, false) // big endian
     const elementInfo = readElements(pairsCount * 2, encodedEncryptionContext, 2)
     /* Postcondition: Since the encryption context has a length, it must have pairs.
      * Unlike the encrypted data key section, the encryption context has a length

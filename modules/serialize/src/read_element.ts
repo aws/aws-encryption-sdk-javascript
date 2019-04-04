@@ -68,7 +68,7 @@ export function readElements (
   while (elementCount--) {
     /* Check for early return (Postcondition): Enough data must exist to read the Uint16 length value. */
     if (readPos + 2 > dataView.byteLength) return false
-    const length = dataView.getUint16(readPos, false)
+    const length = dataView.getUint16(readPos, false) // big endian
     readPos += 2
     /* Check for early return (Postcondition): Enough data must exist length of the value. */
     if (readPos + length > dataView.byteLength) return false

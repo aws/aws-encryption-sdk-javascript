@@ -91,13 +91,13 @@ export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInf
    */
   if (4 + ivLength + readPos > dataView.byteLength) return false
 
-  if (dataView.getUint32(readPos) === SequenceIdentifier.SEQUENCE_NUMBER_END) {
-    return decodeFinalFrameBodyHeader(buffer, headerInfo, readPos)
-  }
-
   const sequenceNumber = dataView.getUint32(readPos)
   /* Postcondition: sequenceNumber must be greater than 0. */
   needs(sequenceNumber > 0, 'Malformed sequenceNumber.')
+  if (sequenceNumber === SequenceIdentifier.SEQUENCE_NUMBER_END) {
+    return decodeFinalFrameBodyHeader(buffer, headerInfo, readPos)
+  }
+
   const iv = buffer.slice(readPos += 4, readPos += ivLength)
   return {
     sequenceNumber,
@@ -147,8 +147,9 @@ export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: Head
   if (4 + 4 + ivLength + 4 + readPos > dataView.byteLength) return false
 
   /* The precondition SEQUENCE_NUMBER_END: Uint32(FFFF) is handled above. */
-  needs(dataView.getUint32(readPos) === SequenceIdentifier.SEQUENCE_NUMBER_END, '')
-  const sequenceNumber = dataView.getUint32(readPos += 4)
+  const sequenceEnd = dataView.getUint32(readPos, false) // big endian
+  needs(sequenceEnd === SequenceIdentifier.SEQUENCE_NUMBER_END, '')
+  const sequenceNumber = dataView.getUint32(readPos += 4, false) // big endian
   /* Postcondition: sequenceNumber must be greater than 0. */
   needs(sequenceNumber > 0, 'Malformed sequenceNumber.')
   const iv = buffer.slice(readPos += 4, readPos += ivLength)
