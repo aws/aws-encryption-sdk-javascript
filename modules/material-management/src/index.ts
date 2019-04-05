@@ -24,7 +24,6 @@ export { AlgorithmSuiteTypeNode, AlgorithmSuiteTypeWebCrypto } from './algorithm
 export { NodeEncryption, WebCryptoEncryption } from './algorithm_suites'
 export { NodeHash, WebCryptoHash, NodeECDHCurve, WebCryptoECDHCurve } from './algorithm_suites'
 export { KDF, KeyLength, IvLength, TagLength } from './algorithm_suites'
-export { RawAesWrappingSuiteIdentifier, WrappingSuiteIdentifier } from './algorithm_suites'
 
 export { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 export { NodeAlgorithmSuite } from './node_algorithms'
@@ -37,6 +36,7 @@ export { NodeMaterialsManager, WebCryptoMaterialsManager } from './materials_man
 export { NodeEncryptionMaterial, NodeDecryptionMaterial, isValidCryptoKey, isCryptoKey, keyUsageForMaterial, subtleFunctionForMaterial } from './cryptographic_material'
 export { WebCryptoEncryptionMaterial, WebCryptoDecryptionMaterial } from './cryptographic_material'
 export { isEncryptionMaterial, isDecryptionMaterial } from './cryptographic_material'
+export { CryptographicMaterial, decorateCryptographicMaterial, decorateWebCryptoMaterial, WebCryptoMaterial } from './cryptographic_material'
 export { SignatureKey, VerificationKey } from './signature_key'
 export { EncryptedDataKey, IEncryptedDataKey } from './encrypted_data_key'
 

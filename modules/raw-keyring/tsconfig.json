@@ -7,6 +7,7 @@
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules/**"],
   "references": [
-    { "path": "../material-management" }
+    { "path": "../material-management" },
+    { "path": "../serialize" },
   ]
 }
