@@ -55,7 +55,7 @@ export interface RsaJsonWebKey extends JsonWebKey {
 
 export type RsaImportableKey = RsaJsonWebKey | BinaryKey
 
-export type RsaKeyringWebCryptoInput = {
+export type RawRsaKeyringWebCryptoInput = {
   keyNamespace: string
   keyName: string
   privateKey?: CryptoKey|MixedBackendCryptoKey

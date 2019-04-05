@@ -41,16 +41,16 @@ import {
   UnwrapKey // eslint-disable-line no-unused-vars
 } from '@aws-crypto/raw-keyring'
 import { randomValuesOnly } from '@aws-crypto/random-source-browser'
-import { RsaKeyringWebCryptoInput, RsaImportableKey } from './types' // eslint-disable-line no-unused-vars
+import { RawRsaKeyringWebCryptoInput, RsaImportableKey } from './types' // eslint-disable-line no-unused-vars
 import { getImportOptions, getWrappingAlgorithm, flattenMixedCryptoKey } from './get_import_options'
 
-export class RsaKeyringWebCrypto extends KeyringWebCrypto {
+export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
   public keyNamespace!: string
   public keyName!: string
   _wrapKey!: WrapKey<WebCryptoAlgorithmSuite>
   _unwrapKey!: UnwrapKey<WebCryptoAlgorithmSuite>
 
-  constructor (input: RsaKeyringWebCryptoInput) {
+  constructor (input: RawRsaKeyringWebCryptoInput) {
     super()
 
     const { publicKey, privateKey, keyName, keyNamespace } = input
@@ -147,8 +147,8 @@ export class RsaKeyringWebCrypto extends KeyringWebCrypto {
     return providerId === keyNamespace && providerInfo.startsWith(keyName)
   }
 
-  _onEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, RsaKeyringWebCrypto>(randomValuesOnly)
-  _onDecrypt = _onDecrypt<WebCryptoAlgorithmSuite, RsaKeyringWebCrypto>()
+  _onEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, RawRsaKeyringWebCrypto>(randomValuesOnly)
+  _onDecrypt = _onDecrypt<WebCryptoAlgorithmSuite, RawRsaKeyringWebCrypto>()
 
   static async importPublicKey (publicKey: RsaImportableKey): Promise<CryptoKey> {
     const { wrappingAlgorithm, format, key } = getImportOptions(publicKey)
@@ -171,4 +171,4 @@ export class RsaKeyringWebCrypto extends KeyringWebCrypto {
     }
   }
 }
-immutableClass(RsaKeyringWebCrypto)
+immutableClass(RawRsaKeyringWebCrypto)
