@@ -18,8 +18,8 @@
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import 'mocha'
-import { MultiKeyring } from '../src/multi_keyring'
-import { Keyring } from '../src/keyring'
+import { MultiKeyringNode } from '../src/multi_keyring'
+import { KeyringNode, KeyringWebCrypto } from '../src/keyring'
 import { NodeEncryptionMaterial, NodeDecryptionMaterial } from '../src/cryptographic_material'
 import { NodeAlgorithmSuite } from '../src/node_algorithms'
 import { AlgorithmSuiteIdentifier } from '../src/algorithm_suites'
@@ -32,16 +32,16 @@ const { expect } = chai
 const never = async () => { throw new Error('never') }
 
 describe('MultiKeyring: Creating', () => {
-  it('can not create a noop MultiKeyring', () => {
+  it('Precondition: MultiKeyring must have keyrings.', () => {
     // @ts-ignore trying to do something that I should not do...
-    expect(() => new MultiKeyring()).to.throw()
-    expect(() => new MultiKeyring({})).to.throw()
+    expect(() => new MultiKeyringNode()).to.throw()
+    expect(() => new MultiKeyringNode({})).to.throw()
   })
 
   it('create with generator', () => {
     const generator = keyRingFactory({ onEncrypt: never, onDecrypt: never })
 
-    const mkeyring = new MultiKeyring({ generator })
+    const mkeyring = new MultiKeyringNode({ generator })
     expect(mkeyring.children).to.be.an('Array').with.lengthOf(0)
     expect(mkeyring.generator).to.equal(generator)
   })
@@ -52,7 +52,7 @@ describe('MultiKeyring: Creating', () => {
     const child1 = keyRingFactory({ onEncrypt: never, onDecrypt: never })
     const children = [child0, child1]
 
-    const mkeyring = new MultiKeyring({ generator, children })
+    const mkeyring = new MultiKeyringNode({ generator, children })
     expect(mkeyring.children).to.be.an('Array').with.lengthOf(2)
     expect(mkeyring.generator).to.equal(generator)
     expect(mkeyring.children[0]).to.equal(child0)
@@ -64,30 +64,48 @@ describe('MultiKeyring: Creating', () => {
     const child1 = keyRingFactory({ onEncrypt: never, onDecrypt: never })
     const children = [child0, child1]
 
-    const mkeyring = new MultiKeyring({ children })
+    const mkeyring = new MultiKeyringNode({ children })
     expect(mkeyring.children).to.be.an('Array').with.lengthOf(2)
     expect(mkeyring.generator).to.equal(undefined)
     expect(mkeyring.children[0]).to.equal(child0)
     expect(mkeyring.children[1]).to.equal(child1)
   })
 
-  it('can not create with a generator that does not look like a KeyRing', () => {
-    const generator: any = {}
+  it('Precondition: generator must be a Keyring.', () => {
+    expect(() => new MultiKeyringNode({ generator: {} as any })).to.throw()
 
-    expect(() => new MultiKeyring({ generator })).to.throw()
+    const testClass = new (class extends KeyringWebCrypto {
+      _onEncrypt () {
+        return {} as any
+      }
+      _onDecrypt () {
+        return {} as any
+      }
+    })()
+
+    expect(() => new MultiKeyringNode({ generator: testClass as any })).to.throw()
   })
 
   it('can not create with a child that does not look like a KeyRing', () => {
     const generator = keyRingFactory({ onEncrypt: never, onDecrypt: never })
     const children = [{} as any]
 
-    expect(() => new MultiKeyring({ generator, children })).to.throw()
+    expect(() => new MultiKeyringNode({ generator, children })).to.throw()
   })
 
-  it('can not create with only a child that does not look like a KeyRing', () => {
-    const child0: any = {}
+  it('Precondition: All children must be Keyrings.', () => {
+    expect(() => new MultiKeyringNode({ children: [{} as any] })).to.throw()
 
-    expect(() => new MultiKeyring({ children: [child0] })).to.throw()
+    const testClass = new (class extends KeyringWebCrypto {
+      _onEncrypt () {
+        return {} as any
+      }
+      _onDecrypt () {
+        return {} as any
+      }
+    })()
+
+    expect(() => new MultiKeyringNode({ children: [testClass as any] })).to.throw()
   })
 })
 
@@ -105,7 +123,7 @@ describe('MultiKeyring: onEncrypt', () => {
       onDecrypt: never
     })
 
-    const mkeyring = new MultiKeyring({ generator })
+    const mkeyring = new MultiKeyringNode({ generator })
     const material = new NodeEncryptionMaterial(suite)
     const test: any = await mkeyring.onEncrypt(material)
     expect(test === material).to.equal(true)
@@ -142,7 +160,7 @@ describe('MultiKeyring: onEncrypt', () => {
       })
     ]
 
-    const mkeyring = new MultiKeyring({ generator, children })
+    const mkeyring = new MultiKeyringNode({ generator, children })
     const material = new NodeEncryptionMaterial(suite)
     const test: any = await mkeyring.onEncrypt(material)
     expect(test === material).to.equal(true)
@@ -168,7 +186,7 @@ describe('MultiKeyring: onEncrypt', () => {
       onDecrypt: never
     })
 
-    const mkeyring = new MultiKeyring({ generator })
+    const mkeyring = new MultiKeyringNode({ generator })
     const material = new NodeEncryptionMaterial(suite)
 
     await expect(mkeyring.onEncrypt(material)).to.rejectedWith(Error)
@@ -185,7 +203,7 @@ describe('MultiKeyring: onEncrypt', () => {
       onDecrypt: never
     })
 
-    const mkeyring = new MultiKeyring({ generator })
+    const mkeyring = new MultiKeyringNode({ generator })
     const material = new NodeEncryptionMaterial(suite).setUnencryptedDataKey(unencryptedDataKey, keyringTrace0)
 
     await mkeyring.onEncrypt(material)
@@ -206,7 +224,7 @@ describe('MultiKeyring: onDecrypt', () => {
       onEncrypt: never
     })
 
-    const mkeyring = new MultiKeyring({ generator })
+    const mkeyring = new MultiKeyringNode({ generator })
 
     const test: any = await mkeyring.onDecrypt(material, [edk0])
     expect(test === material).to.equal(true)
@@ -230,7 +248,7 @@ describe('MultiKeyring: onDecrypt', () => {
       onEncrypt: never
     })
 
-    const mkeyring = new MultiKeyring({ children: [child] })
+    const mkeyring = new MultiKeyringNode({ children: [child] })
 
     const test: any = await mkeyring.onDecrypt(material, [edk0])
     expect(test === material).to.equal(true)
@@ -263,7 +281,7 @@ describe('MultiKeyring: onDecrypt', () => {
     })
     const children = [child, childNotCalled]
 
-    const mkeyring = new MultiKeyring({ children })
+    const mkeyring = new MultiKeyringNode({ children })
 
     const test: any = await mkeyring.onDecrypt(material, [edk0])
     expect(test === material).to.equal(true)
@@ -297,7 +315,7 @@ describe('MultiKeyring: onDecrypt', () => {
     })
     const children = [childNotSucceded, child]
 
-    const mkeyring = new MultiKeyring({ children })
+    const mkeyring = new MultiKeyringNode({ children })
 
     const test: any = await mkeyring.onDecrypt(material, [edk0])
     expect(test === material).to.equal(true)
@@ -325,8 +343,8 @@ function makeEDKandTrace (num: number): [EncryptedDataKey, KeyringTrace] {
 }
 
 type factoryOp = {onEncrypt: any, onDecrypt: any}
-function keyRingFactory ({ onEncrypt, onDecrypt }: factoryOp): Keyring<NodeAlgorithmSuite> {
-  return new (class extends Keyring<NodeAlgorithmSuite> {
+function keyRingFactory ({ onEncrypt, onDecrypt }: factoryOp): KeyringNode {
+  return new (class extends KeyringNode {
     _onEncrypt (...args: any[]) {
       return onEncrypt.call(this, ...args)
     }
