@@ -17,26 +17,26 @@ import {
   KeyringNode,
   needs,
   NodeEncryptionMaterial, // eslint-disable-line no-unused-vars
-  NodeDecryptionMaterial,
+  NodeDecryptionMaterial, // eslint-disable-line no-unused-vars
   EncryptedDataKey, // eslint-disable-line no-unused-vars
   KeyringTraceFlag,
   immutableClass,
   readOnlyProperty,
-  NodeAlgorithmSuite,
-  EncryptionContext, // eslint-disable-line no-unused-vars
-  WrappingSuiteIdentifier, // eslint-disable-line no-unused-vars
-  RawAesWrappingSuiteIdentifier
+  NodeAlgorithmSuite, // eslint-disable-line no-unused-vars
+  EncryptionContext // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 import { randomBytes, createCipheriv, createDecipheriv } from 'crypto'
 import {
   serializeFactory,
-  rawAesEncryptedDataKeyFactory,
-  rawAesEncryptedPartsFactory,
   concatBuffers
 } from '@aws-crypto/serialize'
 import {
   _onEncrypt,
   _onDecrypt,
+  NodeRawAesMaterial,
+  rawAesEncryptedDataKeyFactory,
+  rawAesEncryptedPartsFactory,
+  WrappingSuiteIdentifier, // eslint-disable-line no-unused-vars
   WrapKey, // eslint-disable-line no-unused-vars
   UnwrapKey // eslint-disable-line no-unused-vars
 } from '@aws-crypto/raw-keyring'
@@ -55,7 +55,7 @@ export type RawAesKeyringNodeInput = {
   wrappingSuite: WrappingSuiteIdentifier
 }
 
-export class RawAesGcmKeyringNode extends KeyringNode {
+export class RawAesKeyringNode extends KeyringNode {
   public keyNamespace!: string
   public keyName!: string
   _wrapKey!: WrapKey<NodeAlgorithmSuite>
@@ -68,13 +68,9 @@ export class RawAesGcmKeyringNode extends KeyringNode {
     /* Precondition: AesKeyringNode needs identifying information for encrypt and decrypt. */
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
     /* Precondition: wrappingSuite must be a valid RawAesWrappingSuite. */
-    needs(RawAesWrappingSuiteIdentifier[wrappingSuite], 'wrappingSuite not supported.')
-    const suite = new NodeAlgorithmSuite(wrappingSuite)
-
-    const trace = { keyNamespace, keyName, flags: decryptFlags }
-    const wrappingMaterial = new NodeDecryptionMaterial(suite)
+    const wrappingMaterial = new NodeRawAesMaterial(wrappingSuite)
       /* Precondition: unencryptedMasterKey must correspond to the algorithm suite specification. */
-      .setUnencryptedDataKey(unencryptedMasterKey, trace)
+      .setUnencryptedDataKey(unencryptedMasterKey, { keyNamespace, keyName, flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
 
     const _wrapKey = async (material: NodeEncryptionMaterial, context?: EncryptionContext) => {
       const aad = Buffer.concat(encodeEncryptionContext(context || {}))
@@ -101,10 +97,10 @@ export class RawAesGcmKeyringNode extends KeyringNode {
     return providerId === keyNamespace && providerInfo.startsWith(keyName)
   }
 
-  _onEncrypt = _onEncrypt<NodeAlgorithmSuite, RawAesGcmKeyringNode>(randomBytesAsync)
-  _onDecrypt = _onDecrypt<NodeAlgorithmSuite, RawAesGcmKeyringNode>()
+  _onEncrypt = _onEncrypt<NodeAlgorithmSuite, RawAesKeyringNode>(randomBytesAsync)
+  _onDecrypt = _onDecrypt<NodeAlgorithmSuite, RawAesKeyringNode>()
 }
-immutableClass(RawAesGcmKeyringNode)
+immutableClass(RawAesKeyringNode)
 
 const encryptFlags = KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
 const decryptFlags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
@@ -114,7 +110,7 @@ function aesGcmWrapKey (
   keyName: string,
   material: NodeEncryptionMaterial,
   aad: Buffer,
-  wrappingMaterial: NodeDecryptionMaterial
+  wrappingMaterial: NodeRawAesMaterial
 ): NodeEncryptionMaterial {
   const { encryption, ivLength } = wrappingMaterial.suite
   const iv = randomBytes(ivLength)
@@ -140,7 +136,7 @@ function aesGcmWrapKey (
 }
 
 /**
- * 
+ *
  * @param keyNamespace The keyring namespace (for KeyringTrace)
  * @param keyName The keyring name (for KeyringTrace and to extract the extra info stored in providerInfo)
  * @param material The target material to which the decrypted data key will be added
@@ -152,7 +148,7 @@ function aesGcmUnwrapKey (
   keyNamespace: string,
   keyName: string,
   material: NodeDecryptionMaterial,
-  wrappingMaterial: NodeDecryptionMaterial,
+  wrappingMaterial: NodeRawAesMaterial,
   edk: EncryptedDataKey,
   aad: Buffer
 ): NodeDecryptionMaterial {

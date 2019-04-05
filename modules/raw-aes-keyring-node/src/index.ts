@@ -13,5 +13,5 @@
  * limitations under the License.
  */
 
-export { RawAesWrappingSuiteIdentifier } from '@aws-crypto/material-management-node'
-export * from './aes_keyring_node'
+export { RawAesWrappingSuiteIdentifier, WrappingSuiteIdentifier } from '@aws-crypto/raw-keyring'
+export * from './raw_aes_keyring_node'
