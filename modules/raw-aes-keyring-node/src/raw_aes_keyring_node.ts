@@ -113,9 +113,9 @@ const decryptFlags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringT
  * an EncryptedDataKey added.
  * @param keyNamespace [String] The keyring namespace (for KeyringTrace)
  * @param keyName [String] The keyring name (for KeyringTrace and to extract the extra info stored in providerInfo)
- * @param material [NodeEncryptionMaterial] The target material to which the decrypted data key will be added
+ * @param material [NodeEncryptionMaterial] The target material to which the EncryptedDataKey will be added
  * @param aad [Buffer] The serialized aad (EncryptionContext)
- * @param wrappingMaterial [NodeRawAesMaterial] The material used to decrypt the EncryptedDataKey 
+ * @param wrappingMaterial [NodeRawAesMaterial] The material used to decrypt the EncryptedDataKey
  * @returns [NodeEncryptionMaterial] Mutates and returns the same NodeEncryptionMaterial that was passed but with an EncryptedDataKey added
  */
 function aesGcmWrapKey (
@@ -155,7 +155,7 @@ function aesGcmWrapKey (
  * @param keyName [String] The keyring name (for KeyringTrace and to extract the extra info stored in providerInfo)
  * @param material [NodeDecryptionMaterial] The target material to which the decrypted data key will be added
  * @param wrappingMaterial [NodeRawAesMaterial] The material used to decrypt the EncryptedDataKey
- * @param edk [EncryptedDataKey]The EncryptedDataKey on which to operate
+ * @param edk [EncryptedDataKey] The EncryptedDataKey on which to operate
  * @param aad [Buffer] The serialized aad (EncryptionContext)
  * @returns [NodeDecryptionMaterial] Mutates and returns the same NodeDecryptionMaterial that was passed but with the unencrypted data key set
  */
