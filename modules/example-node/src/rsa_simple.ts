@@ -29,7 +29,7 @@
  */
 
 import { NodeCryptographicMaterialsManager } from '@aws-crypto/material-management-node'
-import { RsaKeyringNode } from '@aws-crypto/rsa-keyring-node'
+import { RawRsaKeyringNode } from '@aws-crypto/raw-rsa-keyring-node'
 import { encrypt } from '@aws-crypto/encrypt-node'
 import { decrypt } from '@aws-crypto/decrypt-node'
 
@@ -47,7 +47,7 @@ export async function rsaTest () {
   // You should get your key pairs from wherever you are storing them.
   const rsaKey = await generateRsaKeys()
 
-  const keyring = new RsaKeyringNode({ keyName, keyNamespace, rsaKey })
+  const keyring = new RawRsaKeyringNode({ keyName, keyNamespace, rsaKey })
 
   const cmm = new NodeCryptographicMaterialsManager(keyring)
 

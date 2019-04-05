@@ -10,7 +10,7 @@
     { "path": "../encrypt-node" },
     { "path": "../decrypt-node" },
     { "path": "../material-management-node" },
-    { "path": "../rsa-keyring-node" },
+    { "path": "../raw-rsa-keyring-node" },
     { "path": "../kms-keyring-node" },
   ]
 }
