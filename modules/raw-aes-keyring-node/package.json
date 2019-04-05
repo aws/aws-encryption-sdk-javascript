@@ -1,5 +1,5 @@
 {
-  "name": "@aws-crypto/aes-keyring-node",
+  "name": "@aws-crypto/raw-aes-keyring-node",
   "private": true,
   "version": "0.0.1",
   "scripts": {
@@ -12,7 +12,7 @@
   },
   "author": {
     "name": "AWS Crypto Tools Team",
-    "email": "aws-crypto-tools-team@amazon.com",
+    "email": "aws-cryptools@amazon.coms",
     "url": "https://github.com/awslabs/aws-encryption-sdk-javascript"
   },
   "license": "Apache-2.0",

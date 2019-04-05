@@ -48,20 +48,20 @@ const { encodeEncryptionContext } = serializeFactory(fromUtf8)
 const { rawAesEncryptedDataKey } = rawAesEncryptedDataKeyFactory(toUtf8, fromUtf8)
 const { rawAesEncryptedParts } = rawAesEncryptedPartsFactory(fromUtf8)
 
-export type AesKeyringNodeInput = {
+export type RawAesKeyringNodeInput = {
   keyNamespace: string
   keyName: string
   unencryptedMasterKey: Uint8Array,
   wrappingSuite: WrappingSuiteIdentifier
 }
 
-export class AesGcmKeyringNode extends KeyringNode {
+export class RawAesGcmKeyringNode extends KeyringNode {
   public keyNamespace!: string
   public keyName!: string
   _wrapKey!: WrapKey<NodeAlgorithmSuite>
   _unwrapKey!: UnwrapKey<NodeAlgorithmSuite>
 
-  constructor (input: AesKeyringNodeInput) {
+  constructor (input: RawAesKeyringNodeInput) {
     super()
 
     const { keyName, keyNamespace, unencryptedMasterKey, wrappingSuite } = input
@@ -101,10 +101,10 @@ export class AesGcmKeyringNode extends KeyringNode {
     return providerId === keyNamespace && providerInfo.startsWith(keyName)
   }
 
-  _onEncrypt = _onEncrypt<NodeAlgorithmSuite, AesGcmKeyringNode>(randomBytesAsync)
-  _onDecrypt = _onDecrypt<NodeAlgorithmSuite, AesGcmKeyringNode>()
+  _onEncrypt = _onEncrypt<NodeAlgorithmSuite, RawAesGcmKeyringNode>(randomBytesAsync)
+  _onDecrypt = _onDecrypt<NodeAlgorithmSuite, RawAesGcmKeyringNode>()
 }
-immutableClass(AesGcmKeyringNode)
+immutableClass(RawAesGcmKeyringNode)
 
 const encryptFlags = KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
 const decryptFlags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
