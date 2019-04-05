@@ -51,20 +51,20 @@ const { rawAesEncryptedParts } = rawAesEncryptedPartsFactory(fromUtf8)
 const encryptFlags = KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
 const decryptFlags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
 
-export type AesKeyringWebCryptoInput = {
+export type RawAesKeyringWebCryptoInput = {
   keyNamespace: string
   keyName: string
   masterKey: CryptoKey,
   wrappingSuite: WrappingSuiteIdentifier
 }
 
-export class AesKeyringWebCrypto extends KeyringWebCrypto {
+export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
   public keyNamespace!: string
   public keyName!: string
   _wrapKey!: WrapKey<WebCryptoAlgorithmSuite>
   _unwrapKey!: UnwrapKey<WebCryptoAlgorithmSuite>
 
-  constructor (input: AesKeyringWebCryptoInput) {
+  constructor (input: RawAesKeyringWebCryptoInput) {
     super()
     const { keyName, keyNamespace, masterKey, wrappingSuite } = input
     /* Precondition: AesKeyringWebCrypto needs identifying information for encrypt and decrypt. */
@@ -102,8 +102,8 @@ export class AesKeyringWebCrypto extends KeyringWebCrypto {
     return providerId === keyNamespace && providerInfo.startsWith(keyName)
   }
 
-  _onEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, AesKeyringWebCrypto>(randomValuesOnly)
-  _onDecrypt = _onDecrypt<WebCryptoAlgorithmSuite, AesKeyringWebCrypto>()
+  _onEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, RawAesKeyringWebCrypto>(randomValuesOnly)
+  _onDecrypt = _onDecrypt<WebCryptoAlgorithmSuite, RawAesKeyringWebCrypto>()
 
   static importCryptoKey (masterKey: Uint8Array, wrappingSuite: WrappingSuiteIdentifier) {
     needs(masterKey instanceof Uint8Array, '')
@@ -117,7 +117,7 @@ export class AesKeyringWebCrypto extends KeyringWebCrypto {
       .then(backend => _importCryptoKey(backend, material, ['encrypt', 'decrypt']))
   }
 }
-immutableClass(AesKeyringWebCrypto)
+immutableClass(RawAesKeyringWebCrypto)
 
 async function aesWrapKey(
   keyNamespace: string,
