@@ -105,6 +105,16 @@ immutableClass(RawAesKeyringNode)
 const encryptFlags = KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
 const decryptFlags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
 
+/**
+ * Uses aes-gcm to encrypt the data key and return the passed NodeEncryptionMaterial with
+ * an EncryptedDataKey added.
+ * @param keyNamespace [String] The keyring namespace (for KeyringTrace)
+ * @param keyName [String] The keyring name (for KeyringTrace and to extract the extra info stored in providerInfo)
+ * @param material [NodeEncryptionMaterial] The target material to which the decrypted data key will be added
+ * @param aad [Buffer] The serialized aad (EncryptionContext)
+ * @param wrappingMaterial [NodeRawAesMaterial] The material used to decrypt the EncryptedDataKey 
+ * @returns [NodeEncryptionMaterial] Mutates and returns the same NodeEncryptionMaterial that was passed but with an EncryptedDataKey added
+ */
 function aesGcmWrapKey (
   keyNamespace: string,
   keyName: string,
@@ -136,13 +146,15 @@ function aesGcmWrapKey (
 }
 
 /**
- *
- * @param keyNamespace The keyring namespace (for KeyringTrace)
- * @param keyName The keyring name (for KeyringTrace and to extract the extra info stored in providerInfo)
- * @param material The target material to which the decrypted data key will be added
- * @param wrappingMaterial The material used to decrypt the EncryptedDataKey
- * @param edk The EncryptedDataKey on which to operate
- * @param aad The serialized aad (EncryptionContext)
+ * Uses aes-gcm to decrypt the encrypted data key and return the passed NodeDecryptionMaterial with
+ * the unencrypted data key set.
+ * @param keyNamespace [String] The keyring namespace (for KeyringTrace)
+ * @param keyName [String] The keyring name (for KeyringTrace and to extract the extra info stored in providerInfo)
+ * @param material [NodeDecryptionMaterial] The target material to which the decrypted data key will be added
+ * @param wrappingMaterial [NodeRawAesMaterial] The material used to decrypt the EncryptedDataKey
+ * @param edk [EncryptedDataKey]The EncryptedDataKey on which to operate
+ * @param aad [Buffer] The serialized aad (EncryptionContext)
+ * @returns [NodeDecryptionMaterial] Mutates and returns the same NodeDecryptionMaterial that was passed but with the unencrypted data key set
  */
 function aesGcmUnwrapKey (
   keyNamespace: string,
