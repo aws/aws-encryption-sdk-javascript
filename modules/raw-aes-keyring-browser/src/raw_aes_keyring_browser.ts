@@ -17,28 +17,28 @@ import {
   KeyringWebCrypto,
   needs,
   WebCryptoEncryptionMaterial, // eslint-disable-line no-unused-vars
-  WebCryptoDecryptionMaterial,
+  WebCryptoDecryptionMaterial, // eslint-disable-line no-unused-vars
   EncryptedDataKey, // eslint-disable-line no-unused-vars
   KeyringTraceFlag,
   immutableClass,
   readOnlyProperty,
-  WebCryptoAlgorithmSuite,
+  WebCryptoAlgorithmSuite, // eslint-disable-line no-unused-vars
   EncryptionContext, // eslint-disable-line no-unused-vars
-  WrappingSuiteIdentifier, // eslint-disable-line no-unused-vars
-  RawAesWrappingSuiteIdentifier,
   getSubtleFunction,
   _importCryptoKey,
   importCryptoKey
 } from '@aws-crypto/material-management-browser'
 import {
   serializeFactory,
-  rawAesEncryptedDataKeyFactory,
-  rawAesEncryptedPartsFactory,
   concatBuffers
 } from '@aws-crypto/serialize'
 import {
   _onEncrypt,
   _onDecrypt,
+  WebCryptoRawAesMaterial,
+  rawAesEncryptedDataKeyFactory,
+  rawAesEncryptedPartsFactory,
+  WrappingSuiteIdentifier, // eslint-disable-line no-unused-vars
   WrapKey, // eslint-disable-line no-unused-vars
   UnwrapKey // eslint-disable-line no-unused-vars
 } from '@aws-crypto/raw-keyring'
@@ -70,12 +70,9 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
     /* Precondition: AesKeyringWebCrypto needs identifying information for encrypt and decrypt. */
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
     /* Precondition: wrappingSuite must be a valid RawAesWrappingSuite. */
-    needs(RawAesWrappingSuiteIdentifier[wrappingSuite], 'wrappingSuite not supported.')
-    const suite = new WebCryptoAlgorithmSuite(wrappingSuite)
-    const trace = { keyNamespace, keyName, flags: decryptFlags }
-    const wrappingMaterial = new WebCryptoDecryptionMaterial(suite)
+    const wrappingMaterial = new WebCryptoRawAesMaterial(wrappingSuite)
       /* Precondition: unencryptedMasterKey must correspond to the algorithm suite specification. */
-      .setCryptoKey(masterKey, trace)
+      .setCryptoKey(masterKey, { keyNamespace, keyName, flags: 0 })
 
     const _wrapKey = async (material: WebCryptoEncryptionMaterial, context?: EncryptionContext) => {
       const aad = concatBuffers(...encodeEncryptionContext(context || {}))
@@ -107,9 +104,8 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
 
   static importCryptoKey (masterKey: Uint8Array, wrappingSuite: WrappingSuiteIdentifier) {
     needs(masterKey instanceof Uint8Array, '')
-    const suite = new WebCryptoAlgorithmSuite(wrappingSuite)
-    const material = new WebCryptoDecryptionMaterial(suite)
-    const trace = { keyNamespace: '', keyName: '', flags: decryptFlags }
+    const material = new WebCryptoRawAesMaterial(wrappingSuite)
+    const trace = { keyNamespace: '', keyName: '', flags: 0 }
     /* Precondition: masterKey must correspond to the algorithm suite specification. */
     material.setUnencryptedDataKey(masterKey, trace)
     return getWebCryptoBackend()
@@ -119,12 +115,12 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
 }
 immutableClass(RawAesKeyringWebCrypto)
 
-async function aesWrapKey(
+async function aesWrapKey (
   keyNamespace: string,
   keyName: string,
   material: WebCryptoEncryptionMaterial,
   aad: Uint8Array,
-  wrappingMaterial: WebCryptoDecryptionMaterial
+  wrappingMaterial: WebCryptoRawAesMaterial
 ) {
   const backend = await getWebCryptoBackend()
   const iv = await backend.randomValues(material.suite.ivLength)
@@ -142,7 +138,7 @@ async function aesUnwrapKey (
   keyNamespace: string,
   keyName: string,
   material: WebCryptoDecryptionMaterial,
-  wrappingMaterial: WebCryptoDecryptionMaterial,
+  wrappingMaterial: WebCryptoRawAesMaterial,
   edk: EncryptedDataKey,
   aad: Uint8Array
 ) {
