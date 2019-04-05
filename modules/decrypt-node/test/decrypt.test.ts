@@ -29,8 +29,8 @@ import {
 import { encrypt } from '@aws-crypto/encrypt-node'
 import { decrypt } from '../src/decrypt'
 
-describe('asdf', () => {
-  it.skip('qwerasdf', async () => {
+describe('simple', () => {
+  it('decrypt what I encrypt', async () => {
     class TestKeyring extends KeyringNode {
       async _onEncrypt (material: NodeEncryptionMaterial) {
         const unencryptedDataKey = new Uint8Array(material.suite.keyLengthBytes).fill(1)
