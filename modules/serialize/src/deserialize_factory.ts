@@ -186,9 +186,11 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
     let remainingKeyCount = encryptedDataKeysCount
     const encryptedDataKeys = []
     while (remainingKeyCount--) {
-      const [providerId, providerInfo] = elements.splice(0, 2).map(toUtf8)
+      const [rawId, rawInfo] = elements.splice(0, 2)
+      const [providerId, providerInfo] = [rawId, rawInfo].map(toUtf8)
       const [encryptedDataKey] = elements.splice(0, 1)
-      const edk = new EncryptedDataKey({ providerInfo, providerId, encryptedDataKey })
+      // The providerInfo is technically a binary field, so I must pass rawInfo
+      const edk = new EncryptedDataKey({ providerInfo, providerId, encryptedDataKey, rawInfo })
       encryptedDataKeys.push(edk)
     }
     Object.freeze(encryptedDataKeys)
