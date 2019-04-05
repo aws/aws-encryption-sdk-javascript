@@ -63,17 +63,20 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
 
     const _wrapKey = async (material: WebCryptoEncryptionMaterial) => {
       /* Precondition: I must have a publicKey to wrap. */
-      if (!publicKey) throw new Error('No publicKey configured, encrypt no supported.')
+      if (!publicKey) throw new Error('No publicKey configured, encrypt not supported.')
 
       // The nonZero backend is used because some browsers support Subtle Crypto
       // but do not support Zero Byte AES-GCM. I want to use the native
       // browser implementation of wrapKey
       const subtle = getNonZeroByteBackend(await getWebCryptoBackend())
-      // Can not use importCryptoKey as `wrapKey` requires extractable = true
+      /* Can not use importCryptoKey as `wrapKey` requires extractable = true
+       * In web crypto `wrapKey` is a composition of `export` and `encrypt` and
+       * so the cryptoKey must have `extractable = true`.
+       */
       const extractable = true
       const { encryption } = material.suite
       const importFormat = 'jwk'
-      const keyUsages = ['unwrapKey'] // limit the use of this key (*not* decrypt, encrypt, deriveKey)
+      const keyUsages: KeyUsage[] = [] // limit the use of this key (*not* decrypt, encrypt, deriveKey)
       const jwk = bytes2JWK(material.getUnencryptedDataKey())
       const cryptoKey = await subtle.importKey(importFormat, jwk, encryption, extractable, keyUsages)
 
@@ -90,7 +93,7 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
       return material.addEncryptedDataKey(edk, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
     }
 
-    /* returns either an array of 1 CryptoKey an array of both from MixedBackendCryptoKey e.g.
+    /* returns either an array of 1 CryptoKey or an array of both from MixedBackendCryptoKey e.g.
      * [privateKey] || [nonZeroByteCryptoKey, zeroByteCryptoKey]
      */
     const privateKeys = flattenMixedCryptoKey(privateKey)
