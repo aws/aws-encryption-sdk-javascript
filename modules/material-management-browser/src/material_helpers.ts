@@ -21,7 +21,8 @@ import {
   isCryptoKey,
   isValidCryptoKey,
   keyUsageForMaterial,
-  subtleFunctionForMaterial
+  subtleFunctionForMaterial,
+  WebCryptoMaterial // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 
 import {
@@ -136,10 +137,9 @@ export const getDecryptionHelper: GetDecryptionHelper = async (material: WebCryp
 }
 
 type SubtleFunction = 'encrypt'|'decrypt'
-type Material = WebCryptoEncryptionMaterial|WebCryptoDecryptionMaterial
 
-export function getSubtleFunction (
-  material: Material,
+export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
+  material: T,
   backend: WebCryptoBackend,
   subtleFunction: SubtleFunction = subtleFunctionForMaterial(material)
 ): KdfGetSubtleEncrypt|KdfGetSubtleDecrypt {
@@ -184,9 +184,9 @@ export function getSubtleFunction (
   }
 }
 
-export async function WebCryptoKdf (
+export async function WebCryptoKdf<T extends WebCryptoMaterial<T>> (
   subtle: SubtleCrypto,
-  material: Material,
+  material: T,
   cryptoKey: CryptoKey,
   keyUsages: SubtleFunction[],
   info: Uint8Array
@@ -216,18 +216,26 @@ export async function WebCryptoKdf (
   }
 }
 
-export async function importCryptoKey (backend: WebCryptoBackend, material: Material) {
+export async function importCryptoKey<T extends WebCryptoMaterial<T>> (
+  backend: WebCryptoBackend,
+  material: T,
+  keyUsages: KeyUsage[] = [keyUsageForMaterial(material)]
+) {
   if (isFullSupportWebCryptoBackend(backend)) {
-    return _importCryptoKey(backend.subtle, material)
+    return _importCryptoKey(backend.subtle, material, keyUsages)
   } else {
     return Promise.all([
-      _importCryptoKey(getNonZeroByteBackend(backend), material),
-      _importCryptoKey(getZeroByteSubtle(backend), material)
+      _importCryptoKey(getNonZeroByteBackend(backend), material, keyUsages),
+      _importCryptoKey(getZeroByteSubtle(backend), material, keyUsages)
     ]).then(([nonZeroByteCryptoKey, zeroByteCryptoKey]) => ({ nonZeroByteCryptoKey, zeroByteCryptoKey }))
   }
 }
 
-export function _importCryptoKey (subtle: SubtleCrypto, material: Material, keyUsages: KeyUsage[] = [keyUsageForMaterial(material)]) {
+export function _importCryptoKey<T extends WebCryptoMaterial<T>> (
+  subtle: SubtleCrypto,
+  material: T,
+  keyUsages: KeyUsage[] = [keyUsageForMaterial(material)]
+) {
   const jwk = bytes2JWK(material.getUnencryptedDataKey())
   const { suite } = material
   const extractable = false
