@@ -56,7 +56,7 @@ interface RsaKey {
   privateKey?: string | Buffer | KeyObject
 }
 
-export type RsaKeyringNodeInput = {
+export type RawRsaKeyringNodeInput = {
   keyNamespace: string
   keyName: string
   rsaKey: RsaKey
@@ -68,13 +68,13 @@ export type RsaKeyringNodeInput = {
  * Passing RSA_PKCS1_OAEP_PADDING implies RSA_OAEP_SHA1_MFG1.
  */
 
-export class RsaKeyringNode extends KeyringNode {
+export class RawRsaKeyringNode extends KeyringNode {
   public keyNamespace!: string
   public keyName!: string
   _wrapKey!: WrapKey<NodeAlgorithmSuite>
   _unwrapKey!: UnwrapKey<NodeAlgorithmSuite>
 
-  constructor (input: RsaKeyringNodeInput) {
+  constructor (input: RawRsaKeyringNodeInput) {
     super()
 
     const { rsaKey, keyName, keyNamespace, padding = constants.RSA_PKCS1_OAEP_PADDING } = input
@@ -127,10 +127,10 @@ export class RsaKeyringNode extends KeyringNode {
     return providerId === keyNamespace && providerInfo === keyName
   }
 
-  _onEncrypt = _onEncrypt<NodeAlgorithmSuite, RsaKeyringNode>(randomBytesAsync)
-  _onDecrypt = _onDecrypt<NodeAlgorithmSuite, RsaKeyringNode>()
+  _onEncrypt = _onEncrypt<NodeAlgorithmSuite, RawRsaKeyringNode>(randomBytesAsync)
+  _onDecrypt = _onDecrypt<NodeAlgorithmSuite, RawRsaKeyringNode>()
 }
-immutableClass(RsaKeyringNode)
+immutableClass(RawRsaKeyringNode)
 
 function randomBytesAsync (size: number): Promise<Buffer> {
   return new Promise((resolve, reject) => {

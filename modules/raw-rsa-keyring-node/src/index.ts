@@ -13,4 +13,4 @@
  * limitations under the License.
  */
 
-export * from './rsa_keyring_node'
+export * from './raw_rsa_keyring_node'
