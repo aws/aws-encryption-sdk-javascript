@@ -14,4 +14,4 @@
  */
 
 export { RawAesWrappingSuiteIdentifier } from '@aws-crypto/material-management-browser'
-export * from './aes_keyring_browser'
+export * from './raw_aes_keyring_browser'
