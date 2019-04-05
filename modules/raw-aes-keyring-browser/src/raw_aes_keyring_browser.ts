@@ -71,21 +71,24 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
     /* Precondition: wrappingSuite must be a valid RawAesWrappingSuite. */
     const wrappingMaterial = new WebCryptoRawAesMaterial(wrappingSuite)
-      /* Precondition: unencryptedMasterKey must correspond to the algorithm suite specification. */
+      /* Precondition: unencryptedMasterKey must correspond to the algorithm suite specification.
+       * Note: the KeyringTrace and flag are _only_ set because I am reusing an existing implementation.
+       * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
+       */
       .setCryptoKey(masterKey, { keyNamespace, keyName, flags: 0 })
 
     const _wrapKey = async (material: WebCryptoEncryptionMaterial, context?: EncryptionContext) => {
       const aad = concatBuffers(...encodeEncryptionContext(context || {}))
       const { keyNamespace, keyName } = this
 
-      return aesWrapKey(keyNamespace, keyName, material, aad, wrappingMaterial)
+      return aesGcmWrapKey(keyNamespace, keyName, material, aad, wrappingMaterial)
     }
 
     const _unwrapKey = async (material: WebCryptoDecryptionMaterial, edk: EncryptedDataKey, context?: EncryptionContext) => {
       const aad = concatBuffers(...encodeEncryptionContext(context || {}))
       const { keyNamespace, keyName } = this
 
-      return aesUnwrapKey(keyNamespace, keyName, material, wrappingMaterial, edk, aad)
+      return aesGcmUnwrapKey(keyNamespace, keyName, material, wrappingMaterial, edk, aad)
     }
 
     readOnlyProperty(this, 'keyName', keyName)
@@ -115,13 +118,23 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
 }
 immutableClass(RawAesKeyringWebCrypto)
 
-async function aesWrapKey (
+/**
+ * Uses aes-gcm to encrypt the data key and return the passed WebCryptoEncryptionMaterial with
+ * an EncryptedDataKey added.
+ * @param keyNamespace [String] The keyring namespace (for KeyringTrace)
+ * @param keyName [String] The keyring name (for KeyringTrace and to extract the extra info stored in providerInfo)
+ * @param material [WebCryptoEncryptionMaterial] The target material to which the EncryptedDataKey will be added
+ * @param aad [Uint8Array] The serialized aad (EncryptionContext)
+ * @param wrappingMaterial [WebCryptoRawAesMaterial] The material used to decrypt the EncryptedDataKey
+ * @returns [WebCryptoEncryptionMaterial] Mutates and returns the same WebCryptoEncryptionMaterial that was passed but with an EncryptedDataKey added
+ */
+async function aesGcmWrapKey (
   keyNamespace: string,
   keyName: string,
   material: WebCryptoEncryptionMaterial,
   aad: Uint8Array,
   wrappingMaterial: WebCryptoRawAesMaterial
-) {
+): WebCryptoEncryptionMaterial {
   const backend = await getWebCryptoBackend()
   const iv = await backend.randomValues(material.suite.ivLength)
 
@@ -134,14 +147,25 @@ async function aesWrapKey (
   return material.addEncryptedDataKey(edk, encryptFlags)
 }
 
-async function aesUnwrapKey (
+/**
+ * Uses aes-gcm to decrypt the encrypted data key and return the passed WebCryptoDecryptionMaterial with
+ * the unencrypted data key set.
+ * @param keyNamespace [String] The keyring namespace (for KeyringTrace)
+ * @param keyName [String] The keyring name (for KeyringTrace and to extract the extra info stored in providerInfo)
+ * @param material [WebCryptoDecryptionMaterial] The target material to which the decrypted data key will be added
+ * @param wrappingMaterial [WebCryptoRawAesMaterial] The material used to decrypt the EncryptedDataKey
+ * @param edk [EncryptedDataKey] The EncryptedDataKey on which to operate
+ * @param aad [Uint8Array] The serialized aad (EncryptionContext)
+ * @returns [WebCryptoDecryptionMaterial] Mutates and returns the same WebCryptoDecryptionMaterial that was passed but with the unencrypted data key set
+ */
+async function aesGcmUnwrapKey (
   keyNamespace: string,
   keyName: string,
   material: WebCryptoDecryptionMaterial,
   wrappingMaterial: WebCryptoRawAesMaterial,
   edk: EncryptedDataKey,
   aad: Uint8Array
-) {
+): WebCryptoDecryptionMaterial {
   const { suite } = material
   const { iv, ciphertext, authTag } = rawAesEncryptedParts(suite, keyName, edk)
 
