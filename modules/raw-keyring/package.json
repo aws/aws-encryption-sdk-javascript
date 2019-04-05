@@ -18,7 +18,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/material-management": "^0.1.0",
-    "@aws-sdk/types": "0.1.0-preview.1",
+    "@aws-crypto/serialize": "^0.0.1",
     "tslib": "^1.9.3"
   },
   "devDependencies": {

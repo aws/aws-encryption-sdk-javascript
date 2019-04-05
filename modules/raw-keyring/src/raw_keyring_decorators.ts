@@ -67,8 +67,8 @@ export function _onDecrypt<S extends SupportedAlgorithmSuites, K extends RawKeyR
 
     for (const edk of edks) {
       try {
-        return this._unwrapKey(material, edk, context)
-      } catch {
+        return await this._unwrapKey(material, edk, context)
+      } catch (e) {
         // there should be some debug here?  or wrap?
         // Failures decrypt should not short-circuit the process
         // If the caller does not have access they may have access
