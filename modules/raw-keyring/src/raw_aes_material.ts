@@ -13,6 +13,13 @@
  * limitations under the License.
  */
 
+/* Here I am reusing the Material implementation and interface from material-management. 
+ * This is because there are many security guarantees that this implementations offer
+ * that map to the current implementation of raw AES keyrings.
+ * The KeyringTrace is an unfortunate case because there is no mapping.
+ * However the trade off seems worth it and the convolutions to make it work seem minimal.
+ */
+
 import {
   CryptographicMaterial, // eslint-disable-line no-unused-vars
   WebCryptoMaterial, // eslint-disable-line no-unused-vars
@@ -45,7 +52,10 @@ export class NodeRawAesMaterial implements
     /* Precondition: NodeRawAesMaterial suiteId must be RawAesWrappingSuiteIdentifier. */
     needs(RawAesWrappingSuiteIdentifier[suiteId], 'suiteId not supported.')
     this.suite = new NodeAlgorithmSuite(suiteId)
-    // // EncryptionMaterial have generated a data key on setUnencryptedDataKey
+    /* NodeRawAesMaterial need to set a flag, this is an abuse of TraceFlags
+     * because the material is not generated.
+     * but CryptographicMaterial force a flag to be set.
+     */ 
     const setFlags = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
     decorateCryptographicMaterial<NodeRawAesMaterial>(this, setFlags)
     Object.setPrototypeOf(this, NodeRawAesMaterial.prototype)
@@ -74,7 +84,10 @@ export class WebCryptoRawAesMaterial implements
     /* Precondition: WebCryptoAlgorithmSuite suiteId must be RawAesWrappingSuiteIdentifier. */
     needs(RawAesWrappingSuiteIdentifier[suiteId], 'suiteId not supported.')
     this.suite = new WebCryptoAlgorithmSuite(suiteId)
-    // // EncryptionMaterial have generated a data key on setUnencryptedDataKey
+    /* WebCryptoRawAesMaterial need to set a flag, this is an abuse of TraceFlags
+     * because the material is not generated.
+     * but CryptographicMaterial force a flag to be set.
+     */ 
     const setFlag = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
     decorateCryptographicMaterial<WebCryptoRawAesMaterial>(this, setFlag)
     decorateWebCryptoMaterial<WebCryptoRawAesMaterial>(this, 0)
