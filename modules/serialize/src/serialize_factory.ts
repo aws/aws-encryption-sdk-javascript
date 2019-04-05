@@ -94,11 +94,13 @@ export function serializeFactory (fromUtf8: (input: any) => Uint8Array) {
 
   function serializeEncryptedDataKeys (encryptedDataKeys: ReadonlyArray<EncryptedDataKey>) {
     const encryptedKeyInfo = encryptedDataKeys
-      .map(({ providerId, providerInfo, encryptedDataKey }) => {
-        const [providerIdBytes, keyInfoBytes] = [providerId, providerInfo].map(fromUtf8)
+      .map(({ providerId, providerInfo, encryptedDataKey, rawInfo }) => {
+        const providerIdBytes = fromUtf8(providerId)
+        // The providerInfo is technically a binary field, so I prefer rawInfo
+        const providerInfoBytes = rawInfo || fromUtf8(providerInfo)
         return concatBuffers(
           uInt16BE(providerIdBytes.byteLength), providerIdBytes,
-          uInt16BE(keyInfoBytes.byteLength), keyInfoBytes,
+          uInt16BE(providerInfoBytes.byteLength), providerInfoBytes,
           uInt16BE(encryptedDataKey.byteLength), encryptedDataKey
         )
       })
