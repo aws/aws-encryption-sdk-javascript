@@ -107,7 +107,7 @@ export function getEncryptionInfo (material : NodeEncryptionMaterial, frameLengt
     frameLength
   })
 
-  const {buffer, byteOffset, byteLength} = serializeMessageHeader(messageHeader)
+  const { buffer, byteOffset, byteLength } = serializeMessageHeader(messageHeader)
   const headerBuffer = Buffer.from(buffer, byteOffset, byteLength)
   const info = kdfInfo(messageHeader.suiteId, messageHeader.messageId)
   const getCipher = kdfGetCipher(info)
