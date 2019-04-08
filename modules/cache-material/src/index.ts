@@ -13,17 +13,6 @@
  * limitations under the License.
  */
 
-export * from './node_cryptographic_materials_manager'
-export {
-  getEncryptHelper,
-  getDecryptionHelper,
-  GetSigner,
-  GetVerify
-} from './material_helpers'
-export {
-  NodeDecryptionMaterial, NodeEncryptionMaterial, NodeAlgorithmSuite,
-  AlgorithmSuiteIdentifier, EncryptionContext, EncryptedDataKey,
-  KeyringTrace, KeyringTraceFlag, needs, KeyringNode, MultiKeyringNode,
-  immutableBaseClass, immutableClass, frozenClass, readOnlyProperty,
-  MaterialsManager, GetEncryptionMaterials, GetDecryptMaterials
-} from '@aws-crypto/material-management'
+export * from './cache'
+export * from './cache_decorators'
+export * from './cache_key'
