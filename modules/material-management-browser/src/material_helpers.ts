@@ -72,11 +72,11 @@ export const getEncryptHelper: GetEncryptHelper = async (material: WebCryptoEncr
   })
 
   function getSubtleSign (data: Uint8Array) {
-    if (!signatureHash) throw new Error('')
+    if (!signatureHash) throw new Error('Algorithm suite does not support signing.')
     const { signatureKey } = material
-    if (!signatureKey) throw new Error('')
+    if (!signatureKey) throw new Error('Malformed Material.')
     const { privateKey } = signatureKey
-    if (!isCryptoKey(privateKey)) throw new Error('')
+    if (!isCryptoKey(privateKey)) throw new Error('Malformed Material.')
     const algorithm = { name: 'ECDSA', hash: { name: signatureHash } }
     return getNonZeroByteBackend(backend).sign(algorithm, privateKey, data)
   }
@@ -122,11 +122,11 @@ export const getDecryptionHelper: GetDecryptionHelper = async (material: WebCryp
   })
 
   function subtleVerify (signature: Uint8Array, data: Uint8Array) {
-    if (!signatureHash) throw new Error('')
+    if (!signatureHash) throw new Error('Algorithm suite does not support signing.')
     const { verificationKey } = material
-    if (!verificationKey) throw new Error('')
+    if (!verificationKey) throw new Error('Malformed Material.')
     const { publicKey } = verificationKey
-    if (!isCryptoKey(publicKey)) throw new Error('')
+    if (!isCryptoKey(publicKey)) throw new Error('Malformed Material.')
     const algorithm = { name: 'ECDSA', hash: { name: signatureHash } }
     return getNonZeroByteBackend(backend).verify(algorithm, publicKey, signature, data)
   }
@@ -143,7 +143,7 @@ export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
   backend: WebCryptoBackend,
   subtleFunction: SubtleFunction = subtleFunctionForMaterial(material)
 ): KdfGetSubtleEncrypt|KdfGetSubtleDecrypt {
-  needs(material.hasCryptoKey, '')
+  needs(material.hasCryptoKey, 'Material must have a CryptoKey.')
 
   const cryptoKey = material.getCryptoKey()
 
@@ -178,7 +178,8 @@ export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
             return zeroByteSubtle[subtleFunction](algorithm, zeroByteCryptoKey, data)
           }
         }
-        throw new Error('')
+        // This should be impossible
+        throw new Error('Unknown Error')
       }
     }
   }
@@ -194,7 +195,7 @@ export async function WebCryptoKdf<T extends WebCryptoMaterial<T>> (
   const { kdf, kdfHash, keyLength, encryption } = material.suite
 
   if (kdf === 'HKDF' && kdfHash) {
-    needs(info && info.byteLength, '')
+    needs(info && info.byteLength, 'HKDF requires info.')
     // https://developer.mozilla.org/en-US/docs/Web/API/HkdfParams
     const kdfAlgorithm = { name: kdf, hash: { name: kdfHash }, info, salt: new Uint8Array() }
     const derivedKeyAlgorithm = { name: encryption, length: keyLength }
