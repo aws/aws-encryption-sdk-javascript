@@ -78,7 +78,7 @@ export class ParseHeaderStream extends PortableTransformWithType {
         const verify = getVerify ? getVerify() : void 0
         const verifyInfo: VerifyInfo = { headerInfo, getDecipher, verify, dispose }
         this.emit('VerifyInfo', verifyInfo)
-        this.emit('MessageHeader', headerInfo)
+        this.emit('MessageHeader', headerInfo.messageHeader)
 
         // The header is parsed, pass control
         const readPos = rawHeader.byteLength + headerIv.byteLength + headerAuthTag.byteLength

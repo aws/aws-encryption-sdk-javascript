@@ -16,19 +16,19 @@
 /* eslint-env mocha */
 
 // import { expect } from 'chai'
-import 'mocha'
-import {
-  NodeDecryptionMaterial, // eslint-disable-line no-unused-vars
-  NodeAlgorithmSuite, NodeEncryptionMaterial, NodeCryptographicMaterialsManager, KeyringNode, EncryptedDataKey,
-  KeyringTraceFlag, AlgorithmSuiteIdentifier
-} from '@aws-crypto/material-management-node'
+// import 'mocha'
+// import {
+//   NodeDecryptionMaterial, // eslint-disable-line no-unused-vars
+//   NodeAlgorithmSuite, NodeEncryptionMaterial, NodeCryptographicMaterialsManager, KeyringNode, EncryptedDataKey,
+//   KeyringTraceFlag, AlgorithmSuiteIdentifier
+// } from '@aws-crypto/material-management-node'
 
-import * as fs from 'fs'
+// import * as fs from 'fs'
 
-import { encryptStream, getEncryptionInfo } from '../src/encrypt_stream'
+// import { encryptStream, getEncryptionInfo } from '../src/encrypt_stream'
 
-import { getFramedEncryptStream } from '../src/framed_encrypt_stream'
-import { SignatureStream } from '../src/signature_stream'
-import { encrypt } from '../src/encrypt'
+// import { getFramedEncryptStream } from '../src/framed_encrypt_stream'
+// import { SignatureStream } from '../src/signature_stream'
+// import { encrypt } from '../src/encrypt'
 
-const never = () => { throw new Error('never') }
+// const never = () => { throw new Error('never') }
