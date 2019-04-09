@@ -95,7 +95,10 @@ async function bodyDecrypt ({ buffer, getSubtleDecrypt, headerInfo }: BodyDecryp
   }
 }
 
-// This will work for nonFramed content as well.  It simply treats it as a single frame.
+/* As we move to deprecate non-framed encrypt it is important to continue to support
+ * non-framed decrypt.  The names not-withstanding, this supports non-framed decrypt
+ * See decodeBodyHeader (it abstracts framed and non-framed body headers)
+ */
 async function framedDecrypt ({ buffer, getSubtleDecrypt, headerInfo, readPos }: FramedDecryptOptions) {
   const { messageHeader: { messageId } } = headerInfo
   const frameInfo = decodeBodyHeader(buffer, headerInfo, readPos)
