@@ -69,6 +69,8 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>(
     /* Check for early return (Postcondition): If I have a valid EncryptionResponse, return it. */
     if (entry && !this._cacheEntryHasExceededLimits(entry)) {
       return entry.response
+    } else {
+      this._cache.del(cacheKey)
     }
 
     const response = await this
@@ -81,7 +83,21 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>(
     /* Check for early return (Postcondition): If I can not cache the EncryptionResponse, just return it. */
     if (!response.material.suite.cacheSafe) return response
 
-    this._cache.putEncryptionResponse(cacheKey, response, plaintextLength, this._maxAge)
+    /* It is possible for an entry to exceed limits immediately.
+     * The simplest case is to need to encrypt more than then maxBytesEncrypted.
+     * In this case, I return the response to encrypt the data,
+     * but do not put a know invalid item into the cache.
+     */
+    const testEntry = {
+      response,
+      now: Date.now(),
+      messagesEncrypted: 1,
+      bytesEncrypted: plaintextLength
+    }
+    if (!this._cacheEntryHasExceededLimits(testEntry)) {
+      this._cache.putEncryptionResponse(cacheKey, response, plaintextLength, this._maxAge)
+    }
+    
     return response
   }
 }
@@ -107,6 +123,8 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>(
     /* Check for early return (Postcondition): If I have a valid DecryptionResponse, return it. */
     if (entry && !this._cacheEntryHasExceededLimits(entry)) {
       return entry.response
+    } else {
+      this._cache.del(cacheKey)
     }
 
     const response = await this
