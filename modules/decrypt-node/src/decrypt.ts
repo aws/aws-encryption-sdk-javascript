@@ -50,7 +50,7 @@ export async function decrypt (
   } else if (ciphertext.readable) {
     ciphertext.pipe(stream)
   } else {
-    throw new Error('Unsupported plaintext')
+    throw new Error('Unsupported ciphertext format')
   }
 
   await finishedAsync(stream)
