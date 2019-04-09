@@ -13,95 +13,11 @@
  * limitations under the License.
  */
 
-import LRU from 'lru-cache'
 import {
-  EncryptionResponse,
-  DecryptionResponse,
-  SupportedAlgorithmSuites,
-  needs,
-  isEncryptionMaterial,
-  isDecryptionMaterial
+  EncryptionResponse, // eslint-disable-line no-unused-vars
+  DecryptionResponse, // eslint-disable-line no-unused-vars
+  SupportedAlgorithmSuites // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
-
-export function getCache<S extends SupportedAlgorithmSuites>(
-  maxSize: number
-): Cache<S> {
-  const cache = new LRU<string, Entry<S>>({
-    max: maxSize,
-    dispose(_key, value) {
-      /* Zero out the unencrypted dataKey, when the material is removed from the cache. */
-      value.response.material.zeroUnencryptedDataKey()
-    }
-  })
-
-  return {
-    putEncryptionResponse(
-      key: string,
-      response: EncryptionResponse<S>,
-      plaintextLength: number,
-      maxAge?: number
-    ) {
-      /* Precondition: plaintextLength can not be negative */
-      needs(plaintextLength > 0, '')
-      /* Precondition: Only cache EncryptionMaterial. */
-      needs(isEncryptionMaterial(response.material), '')
-      /* Precondition: Only cache EncryptionMaterial that is cacheSafe. */
-      needs(response.material.suite.cacheSafe, '')      
-      const entry = Object.seal({
-        response: Object.freeze(response),
-        bytesEncrypted: plaintextLength,
-        messagesEncrypted: 1,
-        now: Date.now()
-      })
-
-      cache.set(key, entry, maxAge)
-    },
-    putDecryptionResponse(
-      key: string,
-      response: DecryptionResponse<S>,
-      maxAge?: number
-    ) {
-      /* Precondition: Only cache DecryptionMaterial. */  
-      needs(isDecryptionMaterial(response.material), '')
-      /* Precondition: Only cache DecryptionMaterial that is cacheSafe. */  
-      needs(response.material.suite.cacheSafe, '')
-      const entry = Object.seal({
-        response: Object.freeze(response),
-        bytesEncrypted: 0,
-        messagesEncrypted: 0,
-        now: Date.now()
-      })
-
-      cache.set(key, entry, maxAge)
-    },
-    getEncryptionResponse(key: string, plaintextLength: number) {
-      /* Precondition: plaintextLength can not be negative */
-      needs(plaintextLength > 0, '')
-      const entry = cache.get(key)
-      /* Check for early return (Postcondition): If this key does have EncryptionMaterial, return false. */
-      if (!entry) return false
-      /* Postcondition: Only return EncryptionMaterial. */
-      needs(isEncryptionMaterial(entry.response.material), '')
-
-      entry.bytesEncrypted += plaintextLength
-      entry.messagesEncrypted += 1
-
-      return <EncryptionResponseEntry<S>>entry
-    },
-    getDecryptionResponse(key: string){
-      const entry = cache.get(key)
-      /* Check for early return (Postcondition): If this key does have DecryptionMaterial, return false. */
-      if (!entry) return false
-      /* Postcondition: Only return DecryptionMaterial. */
-      needs(isDecryptionMaterial(entry.response.material), '')
-
-      return <DecryptionResponseEntry<S>>entry
-    },
-    del(key: string) {
-      cache.del(key)
-    }
-  }
-}
 
 export interface Cache<S extends SupportedAlgorithmSuites> {
   putEncryptionResponse(
