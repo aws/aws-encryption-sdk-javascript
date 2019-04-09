@@ -43,13 +43,19 @@ interface EncryptFrame {
 }
 
 const ioTick = () => new Promise(resolve => setImmediate(resolve))
+const noop = () => {}
 type ErrBack = (err?: Error) => void
 
 export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: MessageHeader, dispose: Function) {
   let accumulatingFrame: AccumulatingFrame = { contentLength: 0, content: [], sequenceNumber: 1 }
-  let pathologicalDrain: Function|false = false
+  let pathologicalDrain: Function = noop
   const { frameLength } = messageHeader
 
+  /* Keeping the messageHeader, accumulatingFrame and pathologicalDrain private is the intention here.
+   * It is already unlikely that these values could be touched in the current composition of streams,
+   * but a different composition may change this.
+   * Since we are handling the plain text here, it seems prudent to take extra measures.
+   */
   return new (class FramedEncryptStream extends (<new (...args: any[]) => Transform>PortableTransform) {
     _transform (chunk: Buffer, encoding: string, callback: ErrBack) {
       const contentLeft = frameLength - accumulatingFrame.contentLength
@@ -118,10 +124,8 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
        * if a frame is being pushed, we can release
        * it.
        */
-      if (pathologicalDrain) {
-        pathologicalDrain()
-        pathologicalDrain = false
-      }
+      pathologicalDrain()
+      pathologicalDrain = noop
     }
 
     async _flushEncryptFrame (encryptingFrame: EncryptFrame) {
