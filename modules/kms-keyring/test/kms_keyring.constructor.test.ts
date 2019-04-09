@@ -54,11 +54,15 @@ describe('KmsKeyring: constructor', () => {
     expect(test.isDiscovery).to.equal(true)
   })
 
-  it('Precondition: A noop KmsKeyring is not allowed.  You must explicitly set discovery or keyIds.', () => {
+  it('Precondition: A noop KmsKeyring is not allowed.', () => {
     class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
     const clientProvider: any = () => {}
     expect(() => new TestKmsKeyring({ clientProvider })).to.throw()
+  })
 
+  it('Precondition: A keyring can be either a Discovery or have keyIds configured.', () => {
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
+    const clientProvider: any = () => {}
     const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const keyIds = ['arn:aws:kms:us-east-1:123456789012:alias/example-alias']
     const discovery = true

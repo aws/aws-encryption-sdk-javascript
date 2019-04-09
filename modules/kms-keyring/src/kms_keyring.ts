@@ -73,9 +73,9 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
       /* Precondition: This is an abstract class. (But TypeScript does not have a clean way to model this) */
       needs(this.constructor !== KmsKeyring, 'new KmsKeyring is not allowed')
       /* Precondition: A noop KmsKeyring is not allowed. */
-      needs(!discovery && !generatorKeyId && !keyIds.length, 'Noop keyring is not allowed: Set a keyId or discovery')
+      needs(!(!discovery && !generatorKeyId && !keyIds.length), 'Noop keyring is not allowed: Set a keyId or discovery')
       /* Precondition: A keyring can be either a Discovery or have keyIds configured. */
-      needs(discovery && (generatorKeyId || keyIds.length), 'A keyring can be either a Discovery or have keyIds configured.')
+      needs(!(discovery && (generatorKeyId || keyIds.length)), 'A keyring can be either a Discovery or have keyIds configured.')
       /* Precondition: All KMS key arns must be valid. */
       needs(!generatorKeyId || !!regionFromKmsKeyArn(generatorKeyId), 'Malformed arn.')
       needs(keyIds.every(keyarn => !!regionFromKmsKeyArn(keyarn)), 'Malformed arn.')
