@@ -104,7 +104,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>(
 
     const cacheKey = await buildDecryptionResponseCacheKey(this._partition, request)
     const entry = this._cache.getDecryptionResponse(cacheKey)
-    /* Check for early return (Postcondition): If I have a valid EncryptionResponse, return it. */
+    /* Check for early return (Postcondition): If I have a valid DecryptionResponse, return it. */
     if (entry && !this._cacheEntryHasExceededLimits(entry)) {
       return entry.response
     }
