@@ -1,0 +1,49 @@
+{
+  "name": "@aws-crypto/encrypt-browser",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "prepublishOnly": "tsc -p tsconfig.json && tsc -p tsconfig.module.json",
+    "lint": "standard src/*.ts test/**/*.ts",
+    "mocha": "mocha --require ts-node/register test/**/*test.ts",
+    "test": "npm run lint && npm run coverage",
+    "coverage": "nyc -e .ts npm run mocha"
+  },
+  "author": {
+    "name": "AWS Crypto Tools Team",
+    "email": "aws-cryptools@amazon.com",
+    "url": "https://github.com/awslabs/aws-encryption-sdk-javascript"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@aws-crypto/material-management-browser": "^0.0.1",
+    "@aws-crypto/serialize": "^0.0.1",
+    "@aws-crypto/web-crypto-backend": "^0.0.1",
+    "@aws-sdk/util-utf8-browser": "0.1.0-preview.1",
+    "tslib": "^1.9.3"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.4",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^11.11.4",
+    "@typescript-eslint/eslint-plugin": "^1.4.2",
+    "@typescript-eslint/parser": "^1.4.2",
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "nyc": "^12.0.2",
+    "standard": "^12.0.1",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.2.0"
+  },
+  "sideEffects": false,
+  "main": "./build/main/index.js",
+  "module": "./build/module/index.js",
+  "types": "./build/main/index.d.ts",
+  "files": ["./build/**/*"],
+  "standard": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ]
+  }
+}
