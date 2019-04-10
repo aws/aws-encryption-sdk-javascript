@@ -85,7 +85,7 @@ export function getLocalCache<S extends SupportedAlgorithmSuites>(
       /* Precondition: plaintextLength can not be negative */
       needs(plaintextLength > 0, '')
       const entry = cache.get(key)
-      /* Check for early return (Postcondition): If this key does have EncryptionMaterial, return false. */
+      /* Check for early return (Postcondition): If this key does not have an EncryptionMaterial, return false. */
       if (!entry) return false
       /* Postcondition: Only return EncryptionMaterial. */
       needs(isEncryptionMaterial(entry.response.material), '')
@@ -97,7 +97,7 @@ export function getLocalCache<S extends SupportedAlgorithmSuites>(
     },
     getDecryptionResponse(key: string){
       const entry = cache.get(key)
-      /* Check for early return (Postcondition): If this key does have DecryptionMaterial, return false. */
+      /* Check for early return (Postcondition): If this key does not have a DecryptionMaterial, return false. */
       if (!entry) return false
       /* Postcondition: Only return DecryptionMaterial. */
       needs(isDecryptionMaterial(entry.response.material), '')

@@ -67,7 +67,7 @@ export enum Maximum {
   //Maximum number of frames allowed in one message as defined in specification
   FRAME_COUNT = 4294967295, // 2 ** 32 - 1
   //Maximum bytes allowed in a single frame as defined in specification
-  FRAME_SIZE = 2147483647, // 2 ** 31 - 1
+  FRAME_SIZE = 4294967295, // 2 ** 32 - 1
   //Maximum bytes allowed in a non-framed message ciphertext as defined in specification
   GCM_CONTENT_SIZE  = 68719476704, // 2 ** 36 - 32
   NON_FRAMED_SIZE = 68719476704,  // 2 ** 36 - 32
