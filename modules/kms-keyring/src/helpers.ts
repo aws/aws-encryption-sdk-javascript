@@ -86,13 +86,12 @@ export async function decrypt<Client extends KMS> (
    * This means that the unencrypted data key is possibly accessible to someone else.
    * If this is the node shared Buffer, then other code within this process _could_ find this secret.
    * Copy Plaintext to an isolated ArrayBuffer and zero the Plaintext.
-   * Fix this here, as well as upstream.
+   * This means that this function will *always* zero out the value returned to it from the KMS client.
+   * While this is safe to do here, copying this code somewhere else may produce unexpected results.
    */
-  if (dataKey.Plaintext.byteOffset > 0) {
-    const {Plaintext} = dataKey
-    dataKey.Plaintext = new Uint8Array(Plaintext)
-    Plaintext.fill(0)
-  }
+  const {Plaintext} = dataKey
+  dataKey.Plaintext = new Uint8Array(Plaintext)
+  Plaintext.fill(0)
   return dataKey
 }
 
