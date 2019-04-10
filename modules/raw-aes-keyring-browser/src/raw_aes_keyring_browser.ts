@@ -134,7 +134,7 @@ async function aesGcmWrapKey (
   material: WebCryptoEncryptionMaterial,
   aad: Uint8Array,
   wrappingMaterial: WebCryptoRawAesMaterial
-): WebCryptoEncryptionMaterial {
+): Promise<WebCryptoEncryptionMaterial> {
   const backend = await getWebCryptoBackend()
   const iv = await backend.randomValues(material.suite.ivLength)
 
@@ -165,7 +165,7 @@ async function aesGcmUnwrapKey (
   wrappingMaterial: WebCryptoRawAesMaterial,
   edk: EncryptedDataKey,
   aad: Uint8Array
-): WebCryptoDecryptionMaterial {
+): Promise<WebCryptoDecryptionMaterial> {
   const { suite } = material
   const { iv, ciphertext, authTag } = rawAesEncryptedParts(suite, keyName, edk)
 
