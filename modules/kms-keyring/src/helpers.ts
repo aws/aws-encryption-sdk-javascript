@@ -80,6 +80,19 @@ export async function decrypt<Client extends KMS> (
 
   /* Postcondition: KMS must return usable decrypted key. */
   if (!isRequiredDecryptOutput(dataKey)) throw new Error('Malformed KMS response.')
+  
+  /* The KMS Client *may* return a Buffer that is not isolated.
+   * i.e. the byteOffset !== 0.
+   * This means that the unencrypted data key is possibly accessible to someone else.
+   * If this is the node shared Buffer, then other code within this process _could_ find this secret.
+   * Copy Plaintext to an isolated ArrayBuffer and zero the Plaintext.
+   * Fix this here, as well as upstream.
+   */
+  if (dataKey.Plaintext.byteOffset > 0) {
+    const {Plaintext} = dataKey
+    dataKey.Plaintext = new Uint8Array(Plaintext)
+    Plaintext.fill(0)
+  }
   return dataKey
 }
 
