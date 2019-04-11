@@ -18,10 +18,14 @@ import {
   NodeHash // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 import {
-  CipherGCM, DecipherGCM, Signer, Verify, // eslint-disable-line no-unused-vars
-  createCipheriv, createDecipheriv, createSign, createVerify
+  CipherGCM, DecipherGCM, Verify, // eslint-disable-line no-unused-vars
+  createCipheriv, createDecipheriv, createVerify
 } from 'crypto'
 import { HKDF } from '@aws-crypto/hkdf-node'
+import {
+  createFixedLengthECDHSign,
+  FixedLengthECDSASign // eslint-disable-line no-unused-vars
+} from './fixed_length_ecdsa_sign'
 
 type KDFIndex = Readonly<{[K in NodeHash]: ReturnType<typeof HKDF>}>
 const kdfIndex: KDFIndex = Object.freeze({
@@ -34,7 +38,7 @@ export interface GetCipher {
 }
 
 export interface GetSigner {
-  () : Signer & {awsCryptoSign: () => Buffer}
+  () : FixedLengthECDSASign & {awsCryptoSign: () => Buffer}
 }
 
 export interface NodeEncryptionMaterialHelper {
@@ -51,7 +55,7 @@ export const getEncryptHelper: GetEncryptHelper = (material: NodeEncryptionMater
   /* Precondition: NodeEncryptionMaterial must have a valid data key. */
   needs(material.hasValidKey(), 'Material has no unencrypted data key.')
 
-  const { signatureHash } = material.suite
+  const { signatureCurve } = material.suite
   /* Conditional types can not narrow the return type :(
    * Function overloads "works" but then I can not export
    * the function and have eslint be happy (Multiple exports of name)
@@ -59,7 +63,7 @@ export const getEncryptHelper: GetEncryptHelper = (material: NodeEncryptionMater
   const kdfGetCipher = <GetCipher>getCryptoStream(material)
   return Object.freeze({
     kdfGetCipher,
-    getSigner: signatureHash ? getSigner : undefined,
+    getSigner: signatureCurve ? getSigner : undefined,
     dispose
   })
 
@@ -73,14 +77,14 @@ export const getEncryptHelper: GetEncryptHelper = (material: NodeEncryptionMater
      */
     needs(material.hasUnencryptedDataKey, 'Unencrypted data key has been zeroed.')
 
-    if (!signatureHash) throw new Error('Material does not support signature.')
+    if (!signatureCurve) throw new Error('Material does not support signature.')
     const { signatureKey } = material
     if (!signatureKey) throw new Error('Material does not support signature.')
     const { privateKey } = signatureKey
     if (typeof privateKey !== 'string') throw new Error('Material does not support signature.')
 
     const signer = Object.assign(
-      createSign(signatureHash),
+      createFixedLengthECDHSign(signatureCurve),
       // don't export the private key if we don't have to
       { awsCryptoSign: () => signer.sign(privateKey) })
 
