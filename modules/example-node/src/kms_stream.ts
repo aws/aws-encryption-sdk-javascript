@@ -39,7 +39,7 @@ const finishedAsync = promisify(finished)
 
 export async function kmsStreamTest () {
   const clientProvider = getKmsClient
-  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+  const generatorKeyId = 'arn:aws:kms:us-west-2:111122223333:alias/EncryptDecrypt'
   const keyring = new KmsKeyringNode({ clientProvider, generatorKeyId })
 
   const cmm = new NodeCryptographicMaterialsManager(keyring)
