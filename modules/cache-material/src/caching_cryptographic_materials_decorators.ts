@@ -29,6 +29,7 @@ import {
 import {Maximum} from '@aws-crypto/serialize'
 import {CryptographicMaterialsCache, Entry} from './cryptographic_materials_cache'
 import {CryptographicMaterialsCacheKeyHelpersInterface} from './build_cryptographic_materials_cache_key_helpers'
+import {cloneMaterial} from './clone_cryptographic_material'
 
 export function decorateProperties<S extends SupportedAlgorithmSuites>(
   obj: CachingMaterialsManager<S>,
@@ -68,7 +69,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>(
     const entry = this._cache.getEncryptionResponse(cacheKey, plaintextLength)
     /* Check for early return (Postcondition): If I have a valid EncryptionResponse, return it. */
     if (entry && !this._cacheEntryHasExceededLimits(entry)) {
-      return entry.response
+      return cloneResponse(entry.response)
     } else {
       this._cache.del(cacheKey)
     }
@@ -98,7 +99,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>(
       this._cache.putEncryptionResponse(cacheKey, response, plaintextLength, this._maxAge)
     }
     
-    return response
+    return cloneResponse(response)
   }
 }
 
@@ -122,7 +123,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>(
     const entry = this._cache.getDecryptionResponse(cacheKey)
     /* Check for early return (Postcondition): If I have a valid DecryptionResponse, return it. */
     if (entry && !this._cacheEntryHasExceededLimits(entry)) {
-      return entry.response
+      return cloneResponse(entry.response)
     } else {
       this._cache.del(cacheKey)
     }
@@ -132,7 +133,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>(
       .decryptMaterials(request)
 
     this._cache.putDecryptionResponse(cacheKey, response, this._maxAge)
-    return response
+    return cloneResponse(response)
   }
 }
 
@@ -146,6 +147,13 @@ export function cacheEntryHasExceededLimits<S extends SupportedAlgorithmSuites>(
       messagesEncrypted > this._maxMessagesEncrypted ||
       bytesEncrypted > this._maxBytesEncrypted
   }
+}
+
+function cloneResponse<S extends SupportedAlgorithmSuites, R extends EncryptionResponse<S>|DecryptionResponse<S>>(
+  response: R
+): R {
+  const {material} = response
+  return {...response, material: cloneMaterial(material)}
 }
 
 export interface CachingMaterialsManagerInput<S extends SupportedAlgorithmSuites> extends Readonly<{

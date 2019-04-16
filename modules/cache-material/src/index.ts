@@ -14,6 +14,6 @@
  */
 
 export * from './cryptographic_materials_cache'
-export * from './caching_cryptographic_materials'
+export * from './caching_cryptographic_materials_decorators'
 export * from './build_cryptographic_materials_cache_key_helpers'
 export * from './clone_cryptographic_material'

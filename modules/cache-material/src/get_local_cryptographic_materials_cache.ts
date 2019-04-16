@@ -49,7 +49,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
       maxAge?: number
     ) {
       /* Precondition: plaintextLength can not be negative */
-      needs(plaintextLength > 0, '')
+      needs(plaintextLength >= 0, '')
       /* Precondition: Only cache EncryptionMaterial. */
       needs(isEncryptionMaterial(response.material), '')
       /* Precondition: Only cache EncryptionMaterial that is cacheSafe. */
@@ -83,7 +83,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
     },
     getEncryptionResponse(key: string, plaintextLength: number) {
       /* Precondition: plaintextLength can not be negative */
-      needs(plaintextLength > 0, '')
+      needs(plaintextLength >= 0, '')
       const entry = cache.get(key)
       /* Check for early return (Postcondition): If this key does not have an EncryptionMaterial, return false. */
       if (!entry) return false

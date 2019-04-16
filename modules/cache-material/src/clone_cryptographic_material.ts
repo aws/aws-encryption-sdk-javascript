@@ -26,7 +26,7 @@ import {
 
 type Material = NodeEncryptionMaterial|NodeDecryptionMaterial|WebCryptoEncryptionMaterial|WebCryptoDecryptionMaterial
 
-export function cloneMaterial(source: Material) {
+export function cloneMaterial<M extends Material>(source: M): M {
 
   const clone = source instanceof NodeEncryptionMaterial
     ? new NodeEncryptionMaterial(source.suite)
@@ -62,7 +62,5 @@ export function cloneMaterial(source: Material) {
     }
   }
 
-
-  
-  return clone
+  return <M>clone
 }
