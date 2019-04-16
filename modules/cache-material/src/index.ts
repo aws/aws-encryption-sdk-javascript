@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
-export * from './cache'
-export * from './cache_decorators'
-export * from './cache_key'
+export * from './cryptographic_materials_cache'
+export * from './caching_cryptographic_materials'
+export * from './build_cryptographic_materials_cache_key_helpers'
+export * from './clone_cryptographic_material'

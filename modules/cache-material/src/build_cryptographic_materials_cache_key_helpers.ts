@@ -19,10 +19,10 @@ import { serializeFactory, uInt16BE } from '@aws-crypto/serialize'
 //  512 bits of 0 for padding between hashes in decryption materials cache ID generation.
 const BIT_PAD_512 = Buffer.alloc(64)
 
-export function build<S extends SupportedAlgorithmSuites>(
+export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAlgorithmSuites>(
   fromUtf8: (input: string) => Uint8Array,
   sha512Hex: (...data: ((Uint8Array|string))[]) => Promise<string>
-): Build<S> {
+): CryptographicMaterialsCacheKeyHelpersInterface<S> {
   const {
     serializeEncryptionContext,
     encodeEncryptionContext,
@@ -84,7 +84,7 @@ export function build<S extends SupportedAlgorithmSuites>(
   }
 }
 
-export interface Build<S extends SupportedAlgorithmSuites> {
+export interface CryptographicMaterialsCacheKeyHelpersInterface<S extends SupportedAlgorithmSuites> {
   buildEncryptionResponseCacheKey(
     partition: string,
     {suite, encryptionContext}: EncryptionRequest<S>

@@ -19,9 +19,9 @@ import {
   getEncryptionMaterials,
   decryptMaterials,
   cacheEntryHasExceededLimits,
-  build,
+  buildCryptographicMaterialsCacheKeyHelpers,
   CachingMaterialsManagerInput,
-  Cache
+  CryptographicMaterialsCache
 } from '@aws-crypto/cache-material'
 import {
   MaterialsManager,
@@ -37,10 +37,10 @@ const sha512Hex = async (...data: (Uint8Array|string)[]) => data
   .reduce((hash, item) => hash.update(item), createHash('sha512'))
   .digest('hex')
 
-const buildCacheKey = build(fromUtf8, sha512Hex)
+const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(fromUtf8, sha512Hex)
 
 export class NodeCachingMaterialsManager implements CachingMaterialsManager<NodeAlgorithmSuite> {
-  readonly _cache!: Cache<NodeAlgorithmSuite>
+  readonly _cache!: CryptographicMaterialsCache<NodeAlgorithmSuite>
   readonly _backingMaterialsManager!: MaterialsManager<NodeAlgorithmSuite>
   readonly _partition!: string
   readonly _maxBytesEncrypted!: number
@@ -55,7 +55,7 @@ export class NodeCachingMaterialsManager implements CachingMaterialsManager<Node
     decorateProperties(this, {backingMaterialsManager, ...input})
   }
 
-  getEncryptionMaterials = getEncryptionMaterials<NodeAlgorithmSuite>(buildCacheKey)
-  decryptMaterials = decryptMaterials<NodeAlgorithmSuite>(buildCacheKey)
+  getEncryptionMaterials = getEncryptionMaterials<NodeAlgorithmSuite>(cacheKeyHelpers)
+  decryptMaterials = decryptMaterials<NodeAlgorithmSuite>(cacheKeyHelpers)
   _cacheEntryHasExceededLimits = cacheEntryHasExceededLimits<NodeAlgorithmSuite>()
 }

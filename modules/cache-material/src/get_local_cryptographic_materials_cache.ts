@@ -24,15 +24,15 @@ import {
 } from '@aws-crypto/material-management'
 
 import {
-  Cache, // eslint-disable-line no-unused-vars
+  CryptographicMaterialsCache, // eslint-disable-line no-unused-vars
   Entry, // eslint-disable-line no-unused-vars
   EncryptionResponseEntry, // eslint-disable-line no-unused-vars
   DecryptionResponseEntry // eslint-disable-line no-unused-vars
-} from './cache'
+} from './cryptographic_materials_cache'
 
-export function getLocalCache<S extends SupportedAlgorithmSuites>(
+export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithmSuites>(
   maxSize: number
-): Cache<S> {
+): CryptographicMaterialsCache<S> {
   const cache = new LRU<string, Entry<S>>({
     max: maxSize,
     dispose(_key, value) {

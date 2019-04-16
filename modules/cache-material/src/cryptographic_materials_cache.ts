@@ -19,7 +19,7 @@ import {
   SupportedAlgorithmSuites // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 
-export interface Cache<S extends SupportedAlgorithmSuites> {
+export interface CryptographicMaterialsCache<S extends SupportedAlgorithmSuites> {
   putEncryptionResponse(
     key: string,
     response: EncryptionResponse<S>,

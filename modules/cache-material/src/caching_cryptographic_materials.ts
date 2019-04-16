@@ -27,8 +27,8 @@ import {
   Keyring
 } from '@aws-crypto/material-management'
 import {Maximum} from '@aws-crypto/serialize'
-import {Cache, Entry} from './cache'
-import {Build} from './cache_key'
+import {CryptographicMaterialsCache, Entry} from './cryptographic_materials_cache'
+import {CryptographicMaterialsCacheKeyHelpersInterface} from './build_cryptographic_materials_cache_key_helpers'
 
 export function decorateProperties<S extends SupportedAlgorithmSuites>(
   obj: CachingMaterialsManager<S>,
@@ -50,7 +50,7 @@ export function decorateProperties<S extends SupportedAlgorithmSuites>(
 }
 
 export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>(
-  {buildEncryptionResponseCacheKey}: Build<S>
+  {buildEncryptionResponseCacheKey}: CryptographicMaterialsCacheKeyHelpersInterface<S>
 ): GetEncryptionMaterials<S> {
   return async function getEncryptionMaterials(
     this: CachingMaterialsManager<S>,
@@ -103,7 +103,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>(
 }
 
 export function decryptMaterials<S extends SupportedAlgorithmSuites>(
-  {buildDecryptionResponseCacheKey}: Build<S>
+  {buildDecryptionResponseCacheKey}: CryptographicMaterialsCacheKeyHelpersInterface<S>
 ): GetDecryptMaterials<S> {
   return async function decryptMaterials(
     this: CachingMaterialsManager<S>,
@@ -149,7 +149,7 @@ export function cacheEntryHasExceededLimits<S extends SupportedAlgorithmSuites>(
 }
 
 export interface CachingMaterialsManagerInput<S extends SupportedAlgorithmSuites> extends Readonly<{
-  cache: Cache<S>
+  cache: CryptographicMaterialsCache<S>
   backingMaterials: MaterialsManager<S>|Keyring<S>
   partition?: string
   maxBytesEncrypted?: number
@@ -163,7 +163,7 @@ export interface CachingMaterialsManagerDecorateInput<S extends SupportedAlgorit
 
 export interface CachingMaterialsManager<S extends SupportedAlgorithmSuites> extends MaterialsManager<S> {
   readonly _partition: string
-  readonly _cache: Cache<S>
+  readonly _cache: CryptographicMaterialsCache<S>
   readonly _backingMaterialsManager: MaterialsManager<S>
   readonly _maxBytesEncrypted: number
   readonly _maxMessagesEncrypted: number
