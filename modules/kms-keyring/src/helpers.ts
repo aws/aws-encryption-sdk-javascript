@@ -40,6 +40,18 @@ export async function generateDataKey<Client extends KMS> (
 
   /* Postcondition: KMS must return serializable generate data key. */
   if (!isRequiredGenerateDataKeyOutput<typeof dataKey>(dataKey)) throw new Error('Malformed KMS response.')
+
+  /* The KMS Client *may* return a Buffer that is not isolated.
+   * i.e. the byteOffset !== 0.
+   * This means that the unencrypted data key is possibly accessible to someone else.
+   * If this is the node shared Buffer, then other code within this process _could_ find this secret.
+   * Copy Plaintext to an isolated ArrayBuffer and zero the Plaintext.
+   * This means that this function will *always* zero out the value returned to it from the KMS client.
+   * While this is safe to do here, copying this code somewhere else may produce unexpected results.
+   */
+  const {Plaintext} = dataKey
+  dataKey.Plaintext = new Uint8Array(Plaintext)
+  Plaintext.fill(0)
   return dataKey
 }
 
