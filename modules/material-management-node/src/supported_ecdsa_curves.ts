@@ -71,9 +71,9 @@ function ecdsaSignComponents ({ curve, hash, length }: ECDSAInput): SignComponen
     const { parameters, privateKey } = Rfc5915Key.decode(pem, 'pem', { label: 'EC PRIVATE KEY' })
     if (parameters !== curve) throw new Error(`Curve ${parameters} in pem does not match ${curve}`)
 
-    const msg = _hash
+    const msg = _hash.digest()
     let sig: EC.Signature
-    let signature: Uint8Array = new Uint8Array()
+    let signature: number[] = []
 
     while (signature.length !== length) {
       // @ts-ignore The current types require `pers` and think `k` is a value, not a function.
@@ -91,7 +91,7 @@ function ecdsaSignComponents ({ curve, hash, length }: ECDSAInput): SignComponen
         })
       }
     }
-    const { buffer, byteOffset, byteLength } = signature
+    const { buffer, byteOffset, byteLength } = new Uint8Array(signature)
     return Buffer.from(buffer, byteOffset, byteLength)
   }
 }

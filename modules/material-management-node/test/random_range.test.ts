@@ -39,7 +39,7 @@ describe('randomRangeBNjs preconditions', () => {
 
 const number = 5000
 
-function bruteForceMassiveIgnorance(bound: number) {
+function bruteForceMassiveIgnorance (bound: number) {
   const range = Array(bound).fill(-1).map((_n, i) => i)
   const max = Math.max(...range)
   const test = fill(new BN(bound))
@@ -49,7 +49,7 @@ function bruteForceMassiveIgnorance(bound: number) {
   expect(range.map(n => test.includes(n)).includes(false)).to.equal(false)
 }
 
-function fill(bound: BN) {
+function fill (bound: BN) {
   return Array(number)
     .fill(-1)
     .map(() => randomRangeBNjs(bound))
