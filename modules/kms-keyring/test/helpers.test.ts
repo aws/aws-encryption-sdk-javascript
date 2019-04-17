@@ -40,6 +40,9 @@ describe('kms2EncryptedDataKey', () => {
 
 describe('generateDataKey', () => {
   it('return', async () => {
+    // the string Plaintext as bytes
+    const key = [ 80, 108, 97, 105, 110, 116, 101, 120, 116 ]
+    const Plaintext = new Uint8Array(key)
     const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const GrantTokens = 'grantToken'
     const NumberOfBytes = 128
@@ -54,7 +57,7 @@ describe('generateDataKey', () => {
         expect(input.NumberOfBytes).to.equal(NumberOfBytes)
         expect(input.EncryptionContext).to.equal(EncryptionContext)
         return {
-          Plaintext: 'Plaintext',
+          Plaintext,
           KeyId: 'KeyId',
           CiphertextBlob: 'CiphertextBlob'
         }
@@ -63,7 +66,7 @@ describe('generateDataKey', () => {
 
     const test = await generateDataKey(clientProvider, NumberOfBytes, KeyId, EncryptionContext, GrantTokens)
     if (!test) throw new Error('never')
-    expect(test.Plaintext).to.equal('Plaintext')
+    expect(test.Plaintext).to.deep.equal(new Uint8Array(key))
     expect(test.KeyId).to.equal('KeyId')
     expect(test.CiphertextBlob).to.equal('CiphertextBlob')
   })
@@ -170,6 +173,9 @@ describe('encrypt', () => {
 
 describe('decrypt', () => {
   it('return', async () => {
+    // the string Plaintext as bytes
+    const key = [ 80, 108, 97, 105, 110, 116, 101, 120, 116 ]
+    const Plaintext = new Uint8Array(key)
     const GrantTokens = 'grantToken'
     const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const edk = new EncryptedDataKey({
@@ -188,7 +194,7 @@ describe('decrypt', () => {
         expect(input.EncryptionContext).to.equal(EncryptionContext)
         return {
           KeyId: 'KeyId',
-          Plaintext: 'Plaintext'
+          Plaintext
         }
       }
     }
@@ -196,7 +202,7 @@ describe('decrypt', () => {
     const test = await decrypt(clientProvider, edk, EncryptionContext, GrantTokens)
     if (!test) throw new Error('never')
     expect(test.KeyId).to.equal('KeyId')
-    expect(test.Plaintext).to.equal('Plaintext')
+    expect(test.Plaintext).to.deep.equal(new Uint8Array(key))
   })
 
   it('Precondition:  The EDK must be a KMS edk.', async () => {
