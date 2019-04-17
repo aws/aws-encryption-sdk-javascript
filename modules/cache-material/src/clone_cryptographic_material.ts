@@ -38,7 +38,7 @@ export function cloneMaterial<M extends Material>(source: M): M {
     ? new WebCryptoDecryptionMaterial(source.suite)
     : false
 
-  if (!clone) throw new Error('')
+  if (!clone) throw new Error('Unsupported material type')
 
   const udk = new Uint8Array(source.getUnencryptedDataKey())
   clone.setUnencryptedDataKey(udk, clone.keyringTrace[0])

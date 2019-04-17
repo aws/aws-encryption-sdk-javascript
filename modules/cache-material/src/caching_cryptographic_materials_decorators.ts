@@ -59,7 +59,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>(
   ): Promise<EncryptionResponse<S>> {
     const {suite, encryptionContext, frameLength, plaintextLength} = request
     /* Check for early return (Postcondition): If I can not cache the EncryptionResponse, do not even look. */
-    if ((suite && !suite.cacheSafe) || !plaintextLength) {
+    if ((suite && !suite.cacheSafe) || typeof plaintextLength !== 'number') {
       return this
         ._backingMaterialsManager
         .getEncryptionMaterials(request)
@@ -149,6 +149,14 @@ export function cacheEntryHasExceededLimits<S extends SupportedAlgorithmSuites>(
   }
 }
 
+/**
+ * I need to clone the underlying material.
+ * Because when the SDK is done with material, it will zero it out.
+ * Plucking off the material and cloning just that and then returning the rest of the response
+ * can just be handled in one place.
+ * @param response EncryptionResponse|DecryptionResponse
+ * @return EncryptionResponse|DecryptionResponse
+ */
 function cloneResponse<S extends SupportedAlgorithmSuites, R extends EncryptionResponse<S>|DecryptionResponse<S>>(
   response: R
 ): R {
