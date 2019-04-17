@@ -14,23 +14,23 @@
  */
 
 import {
-  CachingMaterialsManager,
+  CachingMaterialsManager, // eslint-disable-line no-unused-vars
   decorateProperties,
   getEncryptionMaterials,
   decryptMaterials,
   cacheEntryHasExceededLimits,
   buildCryptographicMaterialsCacheKeyHelpers,
-  CachingMaterialsManagerInput,
-  CryptographicMaterialsCache
+  CachingMaterialsManagerInput, // eslint-disable-line no-unused-vars
+  CryptographicMaterialsCache // eslint-disable-line no-unused-vars
 } from '@aws-crypto/cache-material'
 import {
-  MaterialsManager,
+  MaterialsManager, // eslint-disable-line no-unused-vars
   NodeCryptographicMaterialsManager,
-  NodeAlgorithmSuite,
-  KeyringNode,
+  NodeAlgorithmSuite, // eslint-disable-line no-unused-vars
+  KeyringNode
 } from '@aws-crypto/material-management-node'
 
-import {createHash} from 'crypto'
+import { createHash } from 'crypto'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const sha512Hex = async (...data: (Uint8Array|string)[]) => data
@@ -47,12 +47,12 @@ export class NodeCachingMaterialsManager implements CachingMaterialsManager<Node
   readonly _maxMessagesEncrypted!: number
   readonly _maxAge?: number
 
-  constructor(input: CachingMaterialsManagerInput<NodeAlgorithmSuite>) {
+  constructor (input: CachingMaterialsManagerInput<NodeAlgorithmSuite>) {
     const backingMaterialsManager = input.backingMaterials instanceof KeyringNode
       ? new NodeCryptographicMaterialsManager(input.backingMaterials)
       : <NodeCryptographicMaterialsManager>input.backingMaterials
-      
-    decorateProperties(this, {backingMaterialsManager, ...input})
+
+    decorateProperties(this, { backingMaterialsManager, ...input })
   }
 
   getEncryptionMaterials = getEncryptionMaterials<NodeAlgorithmSuite>(cacheKeyHelpers)

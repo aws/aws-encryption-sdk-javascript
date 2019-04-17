@@ -103,7 +103,7 @@ export function serializeFactory (fromUtf8: (input: any) => Uint8Array) {
     )
   }
 
-  function serializeEncryptedDataKey(edk: EncryptedDataKey) {
+  function serializeEncryptedDataKey (edk: EncryptedDataKey) {
     const { providerId, providerInfo, encryptedDataKey, rawInfo } = edk
     const providerIdBytes = fromUtf8(providerId)
     // The providerInfo is technically a binary field, so I prefer rawInfo

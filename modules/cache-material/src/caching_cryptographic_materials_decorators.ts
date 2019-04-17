@@ -14,28 +14,33 @@
  */
 
 import {
-  GetEncryptionMaterials,
-  GetDecryptMaterials,
-  DecryptionResponse,
-  SupportedAlgorithmSuites,
-  EncryptionRequest,
-  EncryptionResponse,
-  MaterialsManager,
-  DecryptionRequest,
+  GetEncryptionMaterials, // eslint-disable-line no-unused-vars
+  GetDecryptMaterials, // eslint-disable-line no-unused-vars
+  DecryptionResponse, // eslint-disable-line no-unused-vars
+  SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
+  EncryptionRequest, // eslint-disable-line no-unused-vars
+  EncryptionResponse, // eslint-disable-line no-unused-vars
+  MaterialsManager, // eslint-disable-line no-unused-vars
+  DecryptionRequest, // eslint-disable-line no-unused-vars
   needs,
   readOnlyProperty,
-  Keyring
+  Keyring // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
-import {Maximum} from '@aws-crypto/serialize'
-import {CryptographicMaterialsCache, Entry} from './cryptographic_materials_cache'
-import {CryptographicMaterialsCacheKeyHelpersInterface} from './build_cryptographic_materials_cache_key_helpers'
-import {cloneMaterial} from './clone_cryptographic_material'
+import { Maximum } from '@aws-crypto/serialize'
+import {
+  CryptographicMaterialsCache, // eslint-disable-line no-unused-vars
+  Entry // eslint-disable-line no-unused-vars
+} from './cryptographic_materials_cache'
+import {
+  CryptographicMaterialsCacheKeyHelpersInterface // eslint-disable-line no-unused-vars
+} from './build_cryptographic_materials_cache_key_helpers'
+import { cloneMaterial } from './clone_cryptographic_material'
 
-export function decorateProperties<S extends SupportedAlgorithmSuites>(
+export function decorateProperties<S extends SupportedAlgorithmSuites> (
   obj: CachingMaterialsManager<S>,
   input: CachingMaterialsManagerDecorateInput<S>
 ) {
-  const {cache, backingMaterialsManager, maxAge, maxBytesEncrypted, maxMessagesEncrypted} = input
+  const { cache, backingMaterialsManager, maxAge, maxBytesEncrypted, maxMessagesEncrypted } = input
 
   needs(cache, '')
   needs(backingMaterialsManager, '')
@@ -50,22 +55,22 @@ export function decorateProperties<S extends SupportedAlgorithmSuites>(
   readOnlyProperty(obj, '_maxMessagesEncrypted', maxMessagesEncrypted || Maximum.MESSAGES_PER_KEY)
 }
 
-export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>(
-  {buildEncryptionResponseCacheKey}: CryptographicMaterialsCacheKeyHelpersInterface<S>
+export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
+  { buildEncryptionResponseCacheKey }: CryptographicMaterialsCacheKeyHelpersInterface<S>
 ): GetEncryptionMaterials<S> {
-  return async function getEncryptionMaterials(
+  return async function getEncryptionMaterials (
     this: CachingMaterialsManager<S>,
     request: EncryptionRequest<S>
   ): Promise<EncryptionResponse<S>> {
-    const {suite, encryptionContext, frameLength, plaintextLength} = request
+    const { suite, encryptionContext, frameLength, plaintextLength } = request
     /* Check for early return (Postcondition): If I can not cache the EncryptionResponse, do not even look. */
-    if ((suite && !suite.cacheSafe) || typeof plaintextLength !== 'number' || 0 > plaintextLength) {
+    if ((suite && !suite.cacheSafe) || typeof plaintextLength !== 'number' || plaintextLength < 0) {
       return this
         ._backingMaterialsManager
         .getEncryptionMaterials(request)
     }
 
-    const cacheKey = await buildEncryptionResponseCacheKey(this._partition, {suite, encryptionContext})
+    const cacheKey = await buildEncryptionResponseCacheKey(this._partition, { suite, encryptionContext })
     const entry = this._cache.getEncryptionResponse(cacheKey, plaintextLength)
     /* Check for early return (Postcondition): If I have a valid EncryptionResponse, return it. */
     if (entry && !this._cacheEntryHasExceededLimits(entry)) {
@@ -79,7 +84,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>(
       /* Strip any information about the plaintext from the backing request,
        * because the resulting response may be used to encrypt multiple plaintexts.
        */
-      .getEncryptionMaterials({suite, encryptionContext, frameLength})
+      .getEncryptionMaterials({ suite, encryptionContext, frameLength })
 
     /* Check for early return (Postcondition): If I can not cache the EncryptionResponse, just return it. */
     if (!response.material.suite.cacheSafe) return response
@@ -98,20 +103,19 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>(
     if (!this._cacheEntryHasExceededLimits(testEntry)) {
       this._cache.putEncryptionResponse(cacheKey, response, plaintextLength, this._maxAge)
     }
-    
+
     return cloneResponse(response)
   }
 }
 
-export function decryptMaterials<S extends SupportedAlgorithmSuites>(
-  {buildDecryptionResponseCacheKey}: CryptographicMaterialsCacheKeyHelpersInterface<S>
+export function decryptMaterials<S extends SupportedAlgorithmSuites> (
+  { buildDecryptionResponseCacheKey }: CryptographicMaterialsCacheKeyHelpersInterface<S>
 ): GetDecryptMaterials<S> {
-  return async function decryptMaterials(
+  return async function decryptMaterials (
     this: CachingMaterialsManager<S>,
     request: DecryptionRequest<S>
   ): Promise<DecryptionResponse<S>> {
-
-    const {suite} = request
+    const { suite } = request
     /* Check for early return (Postcondition): If I can not cache the DecryptionResponse, do not even look. */
     if (!suite.cacheSafe) {
       return this
@@ -137,10 +141,10 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>(
   }
 }
 
-export function cacheEntryHasExceededLimits<S extends SupportedAlgorithmSuites>(): CacheEntryHasExceededLimits<S> {
-  return function cacheEntryHasExceededLimits(
+export function cacheEntryHasExceededLimits<S extends SupportedAlgorithmSuites> (): CacheEntryHasExceededLimits<S> {
+  return function cacheEntryHasExceededLimits (
     this: CachingMaterialsManager<S>,
-    {now, messagesEncrypted, bytesEncrypted}: Entry<S>
+    { now, messagesEncrypted, bytesEncrypted }: Entry<S>
   ): boolean {
     const age = Date.now() - now
     return (!this._maxAge || age > this._maxAge) ||
@@ -157,11 +161,11 @@ export function cacheEntryHasExceededLimits<S extends SupportedAlgorithmSuites>(
  * @param response EncryptionResponse|DecryptionResponse
  * @return EncryptionResponse|DecryptionResponse
  */
-function cloneResponse<S extends SupportedAlgorithmSuites, R extends EncryptionResponse<S>|DecryptionResponse<S>>(
+function cloneResponse<S extends SupportedAlgorithmSuites, R extends EncryptionResponse<S>|DecryptionResponse<S>> (
   response: R
 ): R {
-  const {material} = response
-  return {...response, material: cloneMaterial(material)}
+  const { material } = response
+  return { ...response, material: cloneMaterial(material) }
 }
 
 export interface CachingMaterialsManagerInput<S extends SupportedAlgorithmSuites> extends Readonly<{

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-/* Here I am reusing the Material implementation and interface from material-management. 
+/* Here I am reusing the Material implementation and interface from material-management.
  * This is because there are many security guarantees that this implementations offer
  * that map to the current implementation of raw AES keyrings.
  * The KeyringTrace is an unfortunate case because there is no mapping.
@@ -55,7 +55,7 @@ export class NodeRawAesMaterial implements
     /* NodeRawAesMaterial need to set a flag, this is an abuse of TraceFlags
      * because the material is not generated.
      * but CryptographicMaterial force a flag to be set.
-     */ 
+     */
     const setFlags = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
     decorateCryptographicMaterial<NodeRawAesMaterial>(this, setFlags)
     Object.setPrototypeOf(this, NodeRawAesMaterial.prototype)
@@ -87,7 +87,7 @@ export class WebCryptoRawAesMaterial implements
     /* WebCryptoRawAesMaterial need to set a flag, this is an abuse of TraceFlags
      * because the material is not generated.
      * but CryptographicMaterial force a flag to be set.
-     */ 
+     */
     const setFlag = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
     decorateCryptographicMaterial<WebCryptoRawAesMaterial>(this, setFlag)
     decorateWebCryptoMaterial<WebCryptoRawAesMaterial>(this, 0)

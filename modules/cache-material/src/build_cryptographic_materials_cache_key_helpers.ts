@@ -13,13 +13,19 @@
  * limitations under the License.
  */
 
-import {SupportedAlgorithmSuites, DecryptionRequest, EncryptionRequest, EncryptedDataKey, EncryptionContext} from '@aws-crypto/material-management'
+import {
+  SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
+  DecryptionRequest, // eslint-disable-line no-unused-vars
+  EncryptionRequest, // eslint-disable-line no-unused-vars
+  EncryptedDataKey, // eslint-disable-line no-unused-vars
+  EncryptionContext // eslint-disable-line no-unused-vars
+} from '@aws-crypto/material-management'
 import { serializeFactory, uInt16BE } from '@aws-crypto/serialize'
 
 //  512 bits of 0 for padding between hashes in decryption materials cache ID generation.
 const BIT_PAD_512 = Buffer.alloc(64)
 
-export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAlgorithmSuites>(
+export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAlgorithmSuites> (
   fromUtf8: (input: string) => Uint8Array,
   sha512Hex: (...data: ((Uint8Array|string))[]) => Promise<string>
 ): CryptographicMaterialsCacheKeyHelpersInterface<S> {
@@ -35,28 +41,28 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
     encryptedDataKeysHash,
     encryptionContextHash
   }
-  
-  async function buildEncryptionResponseCacheKey(
+
+  async function buildEncryptionResponseCacheKey (
     partition: string,
-    {suite, encryptionContext}: EncryptionRequest<S>
+    { suite, encryptionContext }: EncryptionRequest<S>
   ) {
     const algorithmInfo = suite
       ? [Buffer.from([1]), uInt16BE(suite.id)]
-      : [Buffer.alloc(0)] 
-  
+      : [Buffer.alloc(0)]
+
     return sha512Hex(
       await sha512Hex(partition),
       ...algorithmInfo,
       await encryptionContextHash(encryptionContext)
     )
   }
-  
-  async function buildDecryptionResponseCacheKey(
+
+  async function buildDecryptionResponseCacheKey (
     partition: string,
-    {suite, encryptedDataKeys, encryptionContext}: DecryptionRequest<S>
+    { suite, encryptedDataKeys, encryptionContext }: DecryptionRequest<S>
   ) {
     const { id } = suite
-  
+
     return sha512Hex(
       await sha512Hex(partition),
       uInt16BE(id),
@@ -65,19 +71,19 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
       await encryptionContextHash(encryptionContext)
     )
   }
-  
-  async function encryptedDataKeysHash(encryptedDataKeys: ReadonlyArray<EncryptedDataKey>) {
+
+  async function encryptedDataKeysHash (encryptedDataKeys: ReadonlyArray<EncryptedDataKey>) {
     const hashes = await Promise.all(
       encryptedDataKeys
         .map(serializeEncryptedDataKey)
         .map(edk => sha512Hex(edk))
-      )
+    )
     return hashes
       // is this sort valid?  locally, it should be fine
       .sort((a, b) => a.localeCompare(b))
   }
-  
-  function encryptionContextHash(context?: EncryptionContext) {
+
+  function encryptionContextHash (context?: EncryptionContext) {
     const encodedContext = encodeEncryptionContext(context || {})
     const serializedContext = serializeEncryptionContext(encodedContext)
     return sha512Hex(serializedContext)
@@ -87,11 +93,11 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
 export interface CryptographicMaterialsCacheKeyHelpersInterface<S extends SupportedAlgorithmSuites> {
   buildEncryptionResponseCacheKey(
     partition: string,
-    {suite, encryptionContext}: EncryptionRequest<S>
+    { suite, encryptionContext }: EncryptionRequest<S>
   ): Promise<string>
   buildDecryptionResponseCacheKey(
     partition: string,
-    {suite, encryptedDataKeys, encryptionContext}: DecryptionRequest<S>
+    { suite, encryptedDataKeys, encryptionContext }: DecryptionRequest<S>
   ): Promise<string>
   encryptedDataKeysHash(encryptedDataKeys: ReadonlyArray<EncryptedDataKey>): Promise<string[]>
   encryptionContextHash(context?: EncryptionContext): Promise<string>

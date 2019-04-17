@@ -15,9 +15,9 @@
 
 import LRU from 'lru-cache'
 import {
-  EncryptionResponse,
-  DecryptionResponse,
-  SupportedAlgorithmSuites,
+  EncryptionResponse, // eslint-disable-line no-unused-vars
+  DecryptionResponse, // eslint-disable-line no-unused-vars
+  SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
   needs,
   isEncryptionMaterial,
   isDecryptionMaterial
@@ -30,13 +30,13 @@ import {
   DecryptionResponseEntry // eslint-disable-line no-unused-vars
 } from './cryptographic_materials_cache'
 
-export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithmSuites>(
+export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithmSuites> (
   maxSize: number,
-  proactiveFrequency: number = 1000*60
+  proactiveFrequency: number = 1000 * 60
 ): CryptographicMaterialsCache<S> {
   const cache = new LRU<string, Entry<S>>({
     max: maxSize,
-    dispose(_key, value) {
+    dispose (_key, value) {
       /* Zero out the unencrypted dataKey, when the material is removed from the cache. */
       value.response.material.zeroUnencryptedDataKey()
     }
@@ -46,7 +46,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
    * But such degenerative cases are not my concern.
    * The LRU will not return things that are too old,
    * so all this is just to try and proactively dispose material.
-   * 
+   *
    * To be clear, as an example say I add 9 items at T=0.
    * If the MaxAge is 60 minutes, and at T=59 I add a 10th item.
    * Then get each of the other 9 items.
@@ -55,7 +55,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
    * If there is no get activity,
    * it will take until T=120 before I again begin evicting items.
    */
-  ;(function proactivelyTryAndEvictTail() {
+  ;(function proactivelyTryAndEvictTail () {
     const timeout = setTimeout(() => {
       mayEvictTail()
       proactivelyTryAndEvictTail()
@@ -65,7 +65,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
   })()
 
   return {
-    putEncryptionResponse(
+    putEncryptionResponse (
       key: string,
       response: EncryptionResponse<S>,
       plaintextLength: number,
@@ -76,7 +76,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
       /* Precondition: Only cache EncryptionMaterial. */
       needs(isEncryptionMaterial(response.material), '')
       /* Precondition: Only cache EncryptionMaterial that is cacheSafe. */
-      needs(response.material.suite.cacheSafe, '')      
+      needs(response.material.suite.cacheSafe, '')
       const entry = Object.seal({
         response: Object.freeze(response),
         bytesEncrypted: plaintextLength,
@@ -86,14 +86,14 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
 
       cache.set(key, entry, maxAge)
     },
-    putDecryptionResponse(
+    putDecryptionResponse (
       key: string,
       response: DecryptionResponse<S>,
       maxAge?: number
     ) {
-      /* Precondition: Only cache DecryptionMaterial. */  
+      /* Precondition: Only cache DecryptionMaterial. */
       needs(isDecryptionMaterial(response.material), '')
-      /* Precondition: Only cache DecryptionMaterial that is cacheSafe. */  
+      /* Precondition: Only cache DecryptionMaterial that is cacheSafe. */
       needs(response.material.suite.cacheSafe, '')
       const entry = Object.seal({
         response: Object.freeze(response),
@@ -104,7 +104,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
 
       cache.set(key, entry, maxAge)
     },
-    getEncryptionResponse(key: string, plaintextLength: number) {
+    getEncryptionResponse (key: string, plaintextLength: number) {
       /* Precondition: plaintextLength can not be negative */
       needs(plaintextLength >= 0, '')
       const entry = cache.get(key)
@@ -118,7 +118,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
 
       return <EncryptionResponseEntry<S>>entry
     },
-    getDecryptionResponse(key: string){
+    getDecryptionResponse (key: string) {
       const entry = cache.get(key)
       /* Check for early return (Postcondition): If this key does not have a DecryptionMaterial, return false. */
       if (!entry) return false
@@ -127,14 +127,14 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
 
       return <DecryptionResponseEntry<S>>entry
     },
-    del(key: string) {
+    del (key: string) {
       cache.del(key)
     }
   }
 
-  function mayEvictTail() {
+  function mayEvictTail () {
     // @ts-ignore
-    const {tail} = cache.dumpLru()
+    const { tail } = cache.dumpLru()
     /* Check for early return (Postcondition): If there is no tail, then the cache is empty. */
     if (!tail) return
     /* The underlying Yallist tail Node has a `value`.

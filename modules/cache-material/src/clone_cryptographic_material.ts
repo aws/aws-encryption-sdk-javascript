@@ -13,30 +13,28 @@
  * limitations under the License.
  */
 
-
 import {
   NodeEncryptionMaterial,
   NodeDecryptionMaterial,
   WebCryptoEncryptionMaterial,
   WebCryptoDecryptionMaterial,
   isEncryptionMaterial,
-  isDecryptionMaterial,
-  
+  isDecryptionMaterial
+
 } from '@aws-crypto/material-management'
 
 type Material = NodeEncryptionMaterial|NodeDecryptionMaterial|WebCryptoEncryptionMaterial|WebCryptoDecryptionMaterial
 
-export function cloneMaterial<M extends Material>(source: M): M {
-
+export function cloneMaterial<M extends Material> (source: M): M {
   const clone = source instanceof NodeEncryptionMaterial
     ? new NodeEncryptionMaterial(source.suite)
     : source instanceof NodeDecryptionMaterial
-    ? new NodeDecryptionMaterial(source.suite)
-    : source instanceof WebCryptoEncryptionMaterial
-    ? new WebCryptoEncryptionMaterial(source.suite)
-    : source instanceof WebCryptoDecryptionMaterial
-    ? new WebCryptoDecryptionMaterial(source.suite)
-    : false
+      ? new NodeDecryptionMaterial(source.suite)
+      : source instanceof WebCryptoEncryptionMaterial
+        ? new WebCryptoEncryptionMaterial(source.suite)
+        : source instanceof WebCryptoDecryptionMaterial
+          ? new WebCryptoDecryptionMaterial(source.suite)
+          : false
 
   if (!clone) throw new Error('Unsupported material type')
 
@@ -52,11 +50,11 @@ export function cloneMaterial<M extends Material>(source: M): M {
     source.encryptedDataKeys.forEach((edk, i) => {
       clone.addEncryptedDataKey(edk, clone.keyringTrace[i].flags)
     })
-  
+
     if (source.suite.signatureCurve && source.signatureKey) {
       clone.setSignatureKey(source.signatureKey)
     }
-  } else if (isDecryptionMaterial(source) && isDecryptionMaterial(clone))  {
+  } else if (isDecryptionMaterial(source) && isDecryptionMaterial(clone)) {
     if (source.suite.signatureCurve && source.verificationKey) {
       clone.setVerificationKey(source.verificationKey)
     }
