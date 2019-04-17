@@ -35,7 +35,7 @@ import { randomBytes } from 'crypto'
 export function randomRangeBNjs (bound: BN) {
   /* Precondition: Needs to be a BN.js or I can not parse it. */
   needs(BN.isBN(bound), 'Must be a BN')
-  /* Precondition: bound must be positive, 0 is negative... */
+  /* Precondition: bound must be positive, 0 is neither positive nor negative */
   needs(bound.gtn(0), 'Must be positive')
 
   const boundBitLength = bound.bitLength()

@@ -54,7 +54,9 @@ function ecdsaSignComponents ({ curve, hash, length }: ECDSAInput): SignComponen
   /* randomRange does returns a value from 0 - bound
    * but I need:
    * Select a cryptographically secure random integer k from [1,n-1].
-   * See:
+   * See:https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.186-4.pdf
+   * Specifically Appendix
+   * B.5.2 Per-Message Secret Number Generation by Testing Candidates
    * So use use n - 1 and then add 1 back on.
    */
   const nMinus1 = n.subn(1)
