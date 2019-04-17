@@ -42,11 +42,16 @@ export function decorateProperties<S extends SupportedAlgorithmSuites> (
 ) {
   const { cache, backingMaterialsManager, maxAge, maxBytesEncrypted, maxMessagesEncrypted } = input
 
-  needs(cache, '')
-  needs(backingMaterialsManager, '')
-  needs(!maxAge || maxAge > 0, '')
-  needs(!maxBytesEncrypted || (maxBytesEncrypted > 0 && Maximum.BYTES_PER_KEY > maxBytesEncrypted), '')
-  needs(!maxMessagesEncrypted || (maxMessagesEncrypted > 0 && Maximum.MESSAGES_PER_KEY > maxMessagesEncrypted), '')
+  /* Precondition: A caching material manager needs a cache. */
+  needs(cache, 'You must provide a cache.')
+  /* Precondition: A caching material manager needs a way to get material. */
+  needs(backingMaterialsManager, 'You must provide a backing material source.')
+  /* Precondition: You *can not* cache something forever. */
+  needs(maxAge > 0, 'You must configure a maxAge')
+  /* Precondition: maxBytesEncrypted must be inside bounds.  i.e. positive and not more than the maximum. */
+  needs(!maxBytesEncrypted || (maxBytesEncrypted > 0 && Maximum.BYTES_PER_KEY >= maxBytesEncrypted), 'maxBytesEncrypted is outside of bounds.')
+  /* Precondition: maxMessagesEncrypted must be inside bounds.  i.e. positive and not more than the maximum. */
+  needs(!maxMessagesEncrypted || (maxMessagesEncrypted > 0 && Maximum.MESSAGES_PER_KEY >= maxMessagesEncrypted), 'maxMessagesEncrypted is outside of bounds.')
 
   readOnlyProperty(obj, '_cache', cache)
   readOnlyProperty(obj, '_backingMaterialsManager', backingMaterialsManager)
@@ -174,7 +179,7 @@ export interface CachingMaterialsManagerInput<S extends SupportedAlgorithmSuites
   partition?: string
   maxBytesEncrypted?: number
   maxMessagesEncrypted?: number
-  maxAge?: number
+  maxAge: number
 }>{}
 
 export interface CachingMaterialsManagerDecorateInput<S extends SupportedAlgorithmSuites> extends CachingMaterialsManagerInput<S> {
@@ -187,7 +192,7 @@ export interface CachingMaterialsManager<S extends SupportedAlgorithmSuites> ext
   readonly _backingMaterialsManager: MaterialsManager<S>
   readonly _maxBytesEncrypted: number
   readonly _maxMessagesEncrypted: number
-  readonly _maxAge?: number
+  readonly _maxAge: number
 
   _cacheEntryHasExceededLimits: CacheEntryHasExceededLimits<S>
 }
