@@ -23,7 +23,7 @@ import {
 } from 'crypto'
 import { HKDF } from '@aws-crypto/hkdf-node'
 import {
-  createFixedLengthECDHSign,
+  createFixedLengthECDSASign,
   FixedLengthECDSASign // eslint-disable-line no-unused-vars
 } from './fixed_length_ecdsa_sign'
 
@@ -84,7 +84,7 @@ export const getEncryptHelper: GetEncryptHelper = (material: NodeEncryptionMater
     if (typeof privateKey !== 'string') throw new Error('Material does not support signature.')
 
     const signer = Object.assign(
-      createFixedLengthECDHSign(signatureCurve),
+      createFixedLengthECDSASign(signatureCurve),
       // don't export the private key if we don't have to
       { awsCryptoSign: () => signer.sign(privateKey) })
 

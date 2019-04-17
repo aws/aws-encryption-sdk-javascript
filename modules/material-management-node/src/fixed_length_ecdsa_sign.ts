@@ -26,7 +26,7 @@ import {
 } from './supported_ecdsa_curves'
 const PortableTransformWithType = (<new (...args: any[]) => Transform>PortableTransform)
 
-export function createFixedLengthECDHSign (curve: NodeECDSACurve) {
+export function createFixedLengthECDSASign (curve: NodeECDSACurve) {
   if (!supported[curve]) throw new Error(`${curve} not supported.`)
   return new FixedLengthECDSASign(curve)
 }
