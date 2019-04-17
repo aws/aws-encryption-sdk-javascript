@@ -59,7 +59,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>(
   ): Promise<EncryptionResponse<S>> {
     const {suite, encryptionContext, frameLength, plaintextLength} = request
     /* Check for early return (Postcondition): If I can not cache the EncryptionResponse, do not even look. */
-    if ((suite && !suite.cacheSafe) || typeof plaintextLength !== 'number') {
+    if ((suite && !suite.cacheSafe) || typeof plaintextLength !== 'number' || 0 > plaintextLength) {
       return this
         ._backingMaterialsManager
         .getEncryptionMaterials(request)
