@@ -60,6 +60,12 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
       mayEvictTail()
       proactivelyTryAndEvictTail()
     }, proactiveFrequency)
+    /* In Node.js the event loop will _only_ exit if there are no outstanding events.
+     * This means that if I did nothing the event loop would *always* be blocked.
+     * This is unfortunate and very bad for things like Lambda.
+     * So, I tell Node.js to not wait for this timer.
+     * See: https://nodejs.org/api/timers.html#timers_timeout_unref
+     */
     // @ts-ignore
     timeout.unref && timeout.unref()
   })()
