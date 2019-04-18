@@ -88,7 +88,7 @@ export function serializeFactory (fromUtf8: (input: any) => Uint8Array) {
      * This is part of the specification of the AWS Encryption SDK Message Format.
      * It is not 0 for length and 0 for count.  The count element is omitted.
      */
-    if (!contextElements.length) return uInt16BE(0)
+    if (!encryptionContextElements.length) return uInt16BE(0)
 
     const aadData = concatBuffers(uInt16BE(contextElements.length), ...contextElements)
     const aadLength = uInt16BE(aadData.byteLength)
