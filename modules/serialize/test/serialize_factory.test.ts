@@ -111,9 +111,8 @@ describe('serializeFactory:encodeEncryptionContext', () => {
 describe('serializeFactory:serializeEncryptionContext', () => {
   it('should return rational context bytes', () => {
     const fromUtf8 = (input: string) => Buffer.from(input)
-    const { encodeEncryptionContext, serializeEncryptionContext } = serializeFactory(fromUtf8)
-    const contextBytes = encodeEncryptionContext({ some: 'public', information: '\u00bd + \u00bc = \u00be' })
-    const test = serializeEncryptionContext(contextBytes)
+    const { serializeEncryptionContext } = serializeFactory(fromUtf8)
+    const test = serializeEncryptionContext({ some: 'public', information: '\u00bd + \u00bc = \u00be' })
 
     expect(test).to.be.instanceof(Uint8Array)
     expect(test.byteLength).to.eql(45)
@@ -122,9 +121,8 @@ describe('serializeFactory:serializeEncryptionContext', () => {
 
   it('Check for early return (Postcondition): If there is no context then the length of the _whole_ serialized portion is 0.', () => {
     const fromUtf8 = (input: string) => Buffer.from(input)
-    const { encodeEncryptionContext, serializeEncryptionContext } = serializeFactory(fromUtf8)
-    const contextBytes = encodeEncryptionContext({})
-    const test = serializeEncryptionContext(contextBytes)
+    const { serializeEncryptionContext } = serializeFactory(fromUtf8)
+    const test = serializeEncryptionContext({})
 
     expect(test).to.be.instanceof(Uint8Array)
     expect(test.byteLength).to.eql(2)

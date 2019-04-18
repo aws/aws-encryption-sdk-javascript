@@ -81,14 +81,16 @@ export function serializeFactory (fromUtf8: (input: any) => Uint8Array) {
       .map(([key, value]) => concatBuffers(uInt16BE(key.byteLength), key, uInt16BE(value.byteLength), value))
   }
 
-  function serializeEncryptionContext (encodedEncryptionContext: Uint8Array[]) {
+  function serializeEncryptionContext (encryptionContext: EncryptionContext) {
+    const encryptionContextElements = encodeEncryptionContext(encryptionContext)
+
     /* Check for early return (Postcondition): If there is no context then the length of the _whole_ serialized portion is 0.
      * This is part of the specification of the AWS Encryption SDK Message Format.
      * It is not 0 for length and 0 for count.  The count element is omitted.
      */
-    if (!encodedEncryptionContext.length) return uInt16BE(0)
+    if (!encryptionContextElements.length) return uInt16BE(0)
 
-    const aadData = concatBuffers(uInt16BE(encodedEncryptionContext.length), ...encodedEncryptionContext)
+    const aadData = concatBuffers(uInt16BE(encryptionContextElements.length), ...encryptionContextElements)
     const aadLength = uInt16BE(aadData.byteLength)
     return concatBuffers(aadLength, aadData)
   }
@@ -121,7 +123,7 @@ export function serializeFactory (fromUtf8: (input: any) => Uint8Array) {
       uInt8(messageHeader.type),
       uInt16BE(messageHeader.suiteId),
       messageHeader.messageId,
-      serializeEncryptionContext(encodeEncryptionContext(messageHeader.encryptionContext)),
+      serializeEncryptionContext(messageHeader.encryptionContext),
       serializeEncryptedDataKeys(messageHeader.encryptedDataKeys),
       new Uint8Array([messageHeader.contentType]),
       new Uint8Array([0, 0, 0, 0]),
