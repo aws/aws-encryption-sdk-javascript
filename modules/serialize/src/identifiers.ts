@@ -58,3 +58,20 @@ export enum SequenceIdentifier {
   SEQUENCE_NUMBER_END = 0xFFFFFFFF // eslint-disable-line no-unused-vars
 }
 Object.freeze(SequenceIdentifier)
+
+export enum Maximum {
+  // Maximum number of messages which are allowed to be encrypted under a single cached data key
+  MESSAGES_PER_KEY = 2 ** 32, // eslint-disable-line no-unused-vars
+  // Maximum number of bytes which are allowed to be encrypted under a single cached data key
+  BYTES_PER_KEY = 2 ** 63 - 1, // eslint-disable-line no-unused-vars
+  // Maximum number of frames allowed in one message as defined in specification
+  FRAME_COUNT = 2 ** 32 - 1, // eslint-disable-line no-unused-vars
+  // Maximum bytes allowed in a single frame as defined in specification
+  FRAME_SIZE = 2 ** 32 - 1, // eslint-disable-line no-unused-vars
+  // Maximum bytes allowed in a non-framed message ciphertext as defined in specification
+  GCM_CONTENT_SIZE = 2 ** 32 - 1, // eslint-disable-line no-unused-vars
+  NON_FRAMED_SIZE = 2 ** 32 - 1, // eslint-disable-line no-unused-vars
+  // Maximum number of AAD bytes allowed as defined in specification
+  AAD_BYTE_SIZE = 2 ** 16 - 1, // eslint-disable-line no-unused-vars
+}
+Object.freeze(Maximum)

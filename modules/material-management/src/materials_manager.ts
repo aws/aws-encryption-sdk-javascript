@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { Keyring, EncryptionRequest, DecryptionRequest } from '.' // eslint-disable-line no-unused-vars
+import { EncryptionRequest, DecryptionRequest } from '.' // eslint-disable-line no-unused-vars
 import { EncryptionResponse, DecryptionResponse, SupportedAlgorithmSuites } from './types' // eslint-disable-line no-unused-vars
 import { NodeAlgorithmSuite } from './node_algorithms' // eslint-disable-line no-unused-vars
 import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms' // eslint-disable-line no-unused-vars
@@ -25,10 +25,17 @@ import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms' // eslint-disa
  * need to use it and you should not do so.
  */
 
-interface MaterialsManager<S extends SupportedAlgorithmSuites> {
-  readonly keyring: Keyring<S>
-  getEncryptionMaterials(request: EncryptionRequest<S>): Promise<EncryptionResponse<S>>
-  decryptMaterials(request: DecryptionRequest<S>): Promise<DecryptionResponse<S>>
+export interface GetEncryptionMaterials<S extends SupportedAlgorithmSuites> {
+  (request: EncryptionRequest<S>): Promise<EncryptionResponse<S>>
+}
+
+export interface GetDecryptMaterials<S extends SupportedAlgorithmSuites> {
+  (request: DecryptionRequest<S>): Promise<DecryptionResponse<S>>
+}
+
+export interface MaterialsManager<S extends SupportedAlgorithmSuites> {
+  getEncryptionMaterials: GetEncryptionMaterials<S>
+  decryptMaterials: GetDecryptMaterials<S>
 }
 
 export interface NodeMaterialsManager extends MaterialsManager<NodeAlgorithmSuite> {}

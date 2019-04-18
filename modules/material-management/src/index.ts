@@ -25,7 +25,7 @@ export { NodeAlgorithmSuite } from './node_algorithms'
 export { Keyring, KeyringNode, KeyringWebCrypto } from './keyring'
 export { KeyringTrace, KeyringTraceFlag } from './keyring_trace'
 export { MultiKeyringNode, MultiKeyringWebCrypto } from './multi_keyring'
-export { NodeMaterialsManager, WebCryptoMaterialsManager } from './materials_manager'
+export * from './materials_manager'
 
 export { NodeEncryptionMaterial, NodeDecryptionMaterial } from './cryptographic_material'
 export { isValidCryptoKey, isCryptoKey, keyUsageForMaterial, subtleFunctionForMaterial } from './cryptographic_material'
