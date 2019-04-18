@@ -90,7 +90,7 @@ export function serializeFactory (fromUtf8: (input: any) => Uint8Array) {
      */
     if (!encryptionContextElements.length) return uInt16BE(0)
 
-    const aadData = concatBuffers(uInt16BE(contextElements.length), ...contextElements)
+    const aadData = concatBuffers(uInt16BE(encryptionContextElements.length), ...encryptionContextElements)
     const aadLength = uInt16BE(aadData.byteLength)
     return concatBuffers(aadLength, aadData)
   }
