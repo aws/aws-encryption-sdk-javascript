@@ -44,7 +44,7 @@ const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const toUtf8 = (input: Uint8Array) => Buffer
   .from(input.buffer, input.byteOffset, input.byteLength)
   .toString('utf8')
-const { encodeEncryptionContext } = serializeFactory(fromUtf8)
+const { serializeEncryptionContext } = serializeFactory(fromUtf8)
 const { rawAesEncryptedDataKey } = rawAesEncryptedDataKeyFactory(toUtf8, fromUtf8)
 const { rawAesEncryptedParts } = rawAesEncryptedPartsFactory(fromUtf8)
 
@@ -76,7 +76,13 @@ export class RawAesKeyringNode extends KeyringNode {
       .setUnencryptedDataKey(unencryptedMasterKey, { keyNamespace, keyName, flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
 
     const _wrapKey = async (material: NodeEncryptionMaterial, context?: EncryptionContext) => {
-      const aad = Buffer.concat(encodeEncryptionContext(context || {}))
+      /* The AAD section is uInt16BE(length) + AAD
+       * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
+       * However, the RAW Keyring wants _only_ the ADD.
+       * So, I just slice off the length.
+       */
+      const { buffer, byteOffset, byteLength } = serializeEncryptionContext(context || {}).slice(2)
+      const aad = Buffer.from(buffer, byteOffset, byteLength)
       const { keyNamespace, keyName } = this
 
       return aesGcmWrapKey(keyNamespace, keyName, material, aad, wrappingMaterial)
@@ -84,7 +90,14 @@ export class RawAesKeyringNode extends KeyringNode {
 
     const _unwrapKey = async (material: NodeDecryptionMaterial, edk: EncryptedDataKey, context?: EncryptionContext) => {
       const { keyNamespace, keyName } = this
-      const aad = Buffer.concat(encodeEncryptionContext(context || {}))
+      /* The AAD section is uInt16BE(length) + AAD
+       * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
+       * However, the RAW Keyring wants _only_ the ADD.
+       * So, I just slice off the length.
+       */
+      const { buffer, byteOffset, byteLength } = serializeEncryptionContext(context || {}).slice(2)
+      const aad = Buffer.from(buffer, byteOffset, byteLength)
+      // const aad = Buffer.concat(encodeEncryptionContext(context || {}))
 
       return aesGcmUnwrapKey(keyNamespace, keyName, material, wrappingMaterial, edk, aad)
     }

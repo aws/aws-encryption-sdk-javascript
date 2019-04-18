@@ -31,7 +31,6 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
 ): CryptographicMaterialsCacheKeyHelpersInterface<S> {
   const {
     serializeEncryptionContext,
-    encodeEncryptionContext,
     serializeEncryptedDataKey
   } = serializeFactory(fromUtf8)
 
@@ -84,8 +83,7 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
   }
 
   function encryptionContextHash (context?: EncryptionContext) {
-    const encodedContext = encodeEncryptionContext(context || {})
-    const serializedContext = serializeEncryptionContext(encodedContext)
+    const serializedContext = serializeEncryptionContext(context || {})
     return sha512Hex(serializedContext)
   }
 }
