@@ -19,7 +19,6 @@
   "dependencies": {
     "@aws-crypto/material-management-node": "^0.0.1",
     "@aws-crypto/cache-material": "^0.0.1",
-    "@aws-crypto/serialize": "^0.0.1",
     "tslib": "^1.9.3"
   },
   "devDependencies": {

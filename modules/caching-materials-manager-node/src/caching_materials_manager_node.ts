@@ -45,7 +45,7 @@ export class NodeCachingMaterialsManager implements CachingMaterialsManager<Node
   readonly _partition!: string
   readonly _maxBytesEncrypted!: number
   readonly _maxMessagesEncrypted!: number
-  readonly _maxAge?: number
+  readonly _maxAge!: number
 
   constructor (input: CachingMaterialsManagerInput<NodeAlgorithmSuite>) {
     const backingMaterialsManager = input.backingMaterials instanceof KeyringNode
