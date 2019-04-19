@@ -68,7 +68,13 @@ export function getDecipherStream () {
             decipherInfo = info
           })
           .on('BodyInfo', this._onBodyHeader)
-          .on('AuthTag', this._onAuthTag)
+          .on('AuthTag', async (authTag: Buffer) => {
+            try {
+              await this._onAuthTag(authTag)
+            } catch (e) {
+              this.emit('error', e)
+            }
+          })
       })
     }
 
@@ -130,8 +136,11 @@ export function getDecipherStream () {
 
     _onAuthTag = async (authTag: Buffer) => {
       const { decipher, content, contentLength } = decipherState
-      /* Precondition: _onAuthTag must be called only after a frame has been accumulated. */
-      needs(frameComplete, 'AuthTag before frame.')
+      /* Precondition: _onAuthTag must be called only after a frame has been accumulated.
+       * However there is an edge case.  The final frame _can_ be zero length.
+       * This means that _transform will never be called.
+       */
+      needs(frameComplete || contentLength === 0, 'AuthTag before frame.')
       /* Precondition: I must have received all content for this frame. */
       needs(contentLength === 0, 'Lengths do not match')
 
@@ -160,9 +169,8 @@ export function getDecipherStream () {
         }
       }
 
-      if (!frameComplete) throw new Error('AuthTag before frame.') // this is for Typescript type guards
-      // This frame is complete. Notify _transform to continue
-      frameComplete()
+      // This frame is complete. Notify _transform to continue, see needs above for more details
+      if (frameComplete) frameComplete()
       // reset for next frame.
       frameComplete = false
     }

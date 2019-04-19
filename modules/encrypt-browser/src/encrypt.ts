@@ -29,7 +29,8 @@ import {
   MessageHeader, // eslint-disable-line no-unused-vars
   SerializationVersion,
   ObjectType,
-  ContentType
+  ContentType,
+  serializeSignatureInfo
 } from '@aws-crypto/serialize'
 import { fromUtf8 } from '@aws-sdk/util-utf8-browser'
 import { getWebCryptoBackend } from '@aws-crypto/web-crypto-backend'
@@ -119,8 +120,9 @@ export async function encrypt (
   dispose()
 
   if (typeof subtleSign === 'function') {
-    const signature = await subtleSign(cipherMessage)
-    return { cipherMessage: concatBuffers(cipherMessage, signature), messageHeader }
+    const signatureArrayBuffer = await subtleSign(cipherMessage)
+    const signatureInfo = serializeSignatureInfo(new Uint8Array(signatureArrayBuffer))
+    return { cipherMessage: concatBuffers(cipherMessage, signatureInfo), messageHeader }
   } else {
     return { cipherMessage, messageHeader }
   }
