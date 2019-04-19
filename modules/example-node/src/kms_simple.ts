@@ -34,8 +34,8 @@ import { decrypt } from '@aws-crypto/decrypt-node'
 import { NodeCryptographicMaterialsManager } from '@aws-crypto/material-management-node'
 
 export async function kmsSimpleTest () {
-  const generatorKeyId = 'arn:aws:kms:us-west-2:111122223333:alias/EncryptDecrypt'
-  const keyIds = ['arn:aws:kms:us-west-2:111122223333:alias/EncryptDecrypt', 'arn:aws:kms:us-west-2:111122223333:alias/EncryptDecrypt']
+  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+  const keyIds = ['arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt', 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt']
   const keyring = new KmsKeyringNode({ generatorKeyId, keyIds })
 
   const cmm = new NodeCryptographicMaterialsManager(keyring)
