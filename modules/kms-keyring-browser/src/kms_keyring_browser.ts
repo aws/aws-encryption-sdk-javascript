@@ -93,4 +93,4 @@ export class KmsKeyringBrowser extends KmsKeyringClass(KeyringWebCrypto as KeyRi
 }
 immutableClass(KmsKeyringBrowser)
 
-export { getClient, cacheKmsClients, limitRegions, excludeRegions, cacheClients }
+export { getClient, cacheKmsClients, limitRegions, excludeRegions, cacheClients, KMS }

@@ -33,7 +33,7 @@ import {
   WebCryptoBackend // eslint-disable-line no-unused-vars
 } from '@aws-crypto/web-crypto-backend'
 
-import { bytes2JWK } from './bytes2jwk'
+import { bytes2JWK } from './bytes2_jwk'
 
 export interface GetSubtleEncrypt {
   (iv: Uint8Array, additionalData: Uint8Array) : (data: Uint8Array) => Promise<ArrayBuffer>
@@ -148,7 +148,7 @@ export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
   const cryptoKey = material.getCryptoKey()
 
   /* Precondition: The cryptoKey and backend must match in terms of Mixed vs Full support. */
-  needs(isCryptoKey(cryptoKey) !== isFullSupportWebCryptoBackend(backend), 'CryptoKey vs WebCrypto backend mismatch.')
+  needs(isCryptoKey(cryptoKey) === isFullSupportWebCryptoBackend(backend), 'CryptoKey vs WebCrypto backend mismatch.')
   const { suite } = material
   const { encryption: cipherName, ivLength, tagLength } = suite
 

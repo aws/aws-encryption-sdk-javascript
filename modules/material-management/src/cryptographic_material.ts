@@ -24,22 +24,27 @@ import { needs } from './needs'
 
 let timingSafeEqual: (a: Uint8Array, b: Uint8Array) => boolean
 try {
+  /* It is possible for `require` to return an empty object, or an object
+   * that does not implement `timingSafeEqual`.
+   * in this case I need a fallback
+   */
   const { timingSafeEqual: nodeTimingSafeEqual } = require('crypto')
-  timingSafeEqual = nodeTimingSafeEqual
+  timingSafeEqual = nodeTimingSafeEqual || portableTimingSafeEqual
 } catch {
-  /* https://codahale.com/a-lesson-in-timing-attacks/ */
-  timingSafeEqual = function timingSafeEqual (a: Uint8Array, b: Uint8Array) {
-    /* Check for early return (Postcondition): Size is well-know information
-     * and does not leak information about contents.
-     */
-    if (a.byteLength !== b.byteLength) return false
+  timingSafeEqual = portableTimingSafeEqual
+}
+/* https://codahale.com/a-lesson-in-timing-attacks/ */
+function portableTimingSafeEqual (a: Uint8Array, b: Uint8Array) {
+  /* Check for early return (Postcondition): Size is well-know information
+   * and does not leak information about contents.
+   */
+  if (a.byteLength !== b.byteLength) return false
 
-    let diff = 0
-    for (let i = 0; i < b.length; i++) {
-      diff |= a[i] ^ b[i]
-    }
-    return (diff === 0)
+  let diff = 0
+  for (let i = 0; i < b.length; i++) {
+    diff |= a[i] ^ b[i]
   }
+  return (diff === 0)
 }
 
 /*
@@ -456,16 +461,15 @@ export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>> (mater
   }
 
   readOnlyProperty(material, 'setCryptoKey', setCryptoKey)
-  Object.defineProperty(material, 'cryptoKey', {
-    get: () => {
-      /* Precondition: The cryptoKey must be set before we can return it. */
-      needs(cryptoKey, 'Crypto key is not set.')
-      // In the case of MixedBackendCryptoKey the object
-      // has already been frozen above so it is safe to return
-      return cryptoKey
-    },
-    enumerable: true
-  })
+  const getCryptoKey = () => {
+    /* Precondition: The cryptoKey must be set before we can return it. */
+    needs(cryptoKey, 'Crypto key is not set.')
+    // In the case of MixedBackendCryptoKey the object
+    // has already been frozen above so it is safe to return
+    return <Readonly<CryptoKey|MixedBackendCryptoKey>>cryptoKey
+  }
+  readOnlyProperty(material, 'getCryptoKey', getCryptoKey)
+
   Object.defineProperty(material, 'hasCryptoKey', {
     get: () => !!cryptoKey,
     enumerable: true
