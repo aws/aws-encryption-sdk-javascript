@@ -17,9 +17,11 @@ import {
   WebCryptoAlgorithmSuite,
   WebCryptoCryptographicMaterialsManager, // eslint-disable-line no-unused-vars
   getDecryptionHelper,
-  GetSubtleDecrypt // eslint-disable-line no-unused-vars
+  GetSubtleDecrypt, // eslint-disable-line no-unused-vars
+  needs
 } from '@aws-crypto/material-management-browser'
 import {
+  deserializeSignature,
   MessageHeader, // eslint-disable-line no-unused-vars
   deserializeFactory,
   kdfInfo,
@@ -63,8 +65,11 @@ export async function decrypt (
 
   if (subtleVerify) {
     const data = ciphertext.slice(0, readPos)
-    const signature = ciphertext.slice(readPos)
-    if (!(await subtleVerify(signature, data))) throw new Error('signature error')
+    const signatureInfo = ciphertext.slice(readPos)
+    const signature = deserializeSignature(signatureInfo)
+    const isValid = await subtleVerify(signature, data)
+    /* Postcondition: subtleVerify must validate the signature. */
+    needs(isValid, 'Invalid Signature')
     return { messageHeader, clearMessage }
   } else {
     return { messageHeader, clearMessage }

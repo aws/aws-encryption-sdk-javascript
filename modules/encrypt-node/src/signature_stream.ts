@@ -15,6 +15,7 @@
 
 import { Transform } from 'stream'
 import { GetSigner } from '@aws-crypto/material-management-node' // eslint-disable-line no-unused-vars
+import { serializeSignatureInfo } from '@aws-crypto/serialize'
 
 type AWSSigner = ReturnType<GetSigner>
 
@@ -34,7 +35,10 @@ export class SignatureStream extends Transform {
   }
 
   _flush (callback: Function) {
-    this._signer && this.push(this._signer.awsCryptoSign())
+    if (this._signer) {
+      const signature = this._signer.awsCryptoSign()
+      this.push(serializeSignatureInfo(signature))
+    }
     callback()
   }
 }

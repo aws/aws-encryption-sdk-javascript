@@ -22,6 +22,7 @@ import {
   GetVerify // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 import {
+  deserializeSignature,
   decodeBodyHeader,
   BodyHeader, // eslint-disable-line no-unused-vars
   HeaderInfo // eslint-disable-line no-unused-vars
@@ -43,7 +44,7 @@ interface VerifyState {
   buffer: Buffer
   authTagBuffer: Buffer
   currentFrame?: BodyHeader
-  signature: Buffer
+  signatureInfo: Buffer
 }
 
 export class VerifyStream extends PortableTransformWithType {
@@ -51,7 +52,7 @@ export class VerifyStream extends PortableTransformWithType {
   private _verifyState: VerifyState = {
     buffer: Buffer.alloc(0),
     authTagBuffer: Buffer.alloc(0),
-    signature: Buffer.alloc(0)
+    signatureInfo: Buffer.alloc(0)
   }
   private _verify?: AWSVerify
   constructor () {
@@ -62,6 +63,14 @@ export class VerifyStream extends PortableTransformWithType {
       source.once('VerifyInfo', (verifyInfo: VerifyInfo) => {
         const { getDecipher, verify, headerInfo, dispose } = verifyInfo
         const { messageId, contentType } = headerInfo.messageHeader
+        /* If I have a verify, the header needs to be flushed through.
+         * I do it here for initialize the verifier before I even
+         * add the element to the object.
+         */
+        if (verify) {
+          const { rawHeader, headerIv, headerAuthTag } = headerInfo
+          ;[rawHeader, headerIv, headerAuthTag].forEach(e => verify.update(e))
+        }
         Object.defineProperty(this, '_headerInfo', { value: headerInfo, enumerable: true })
         Object.defineProperty(this, '_verify', { value: verify, enumerable: true })
 
@@ -147,7 +156,7 @@ export class VerifyStream extends PortableTransformWithType {
     }
 
     if (chunk.length) {
-      state.signature = Buffer.concat([state.signature, chunk])
+      state.signatureInfo = Buffer.concat([state.signatureInfo, chunk])
     }
 
     callback()
@@ -162,11 +171,12 @@ export class VerifyStream extends PortableTransformWithType {
   }
 
   _flush (callback: Function) {
-    /* Precondition: If there is no verify stream do not attempt to verify. */
+    /* Check for early return (Postcondition): If there is no verify stream do not attempt to verify. */
     if (!this._verify) return callback()
-    /* Precondition: If there is a verify stream, there must be a signature. */
-    needs(this._verifyState.signature.length, 'Invalid Signature')
-    const isVerified = this._verify.awsCryptoVerify(this._verifyState.signature)
+    const { signatureInfo } = this._verifyState
+    const { buffer, byteOffset, byteLength } = deserializeSignature(signatureInfo)
+    const signature = Buffer.from(buffer, byteOffset, byteLength)
+    const isVerified = this._verify.awsCryptoVerify(signature)
     /* Postcondition: The signature must be valid. */
     needs(isVerified, 'Invalid Signature')
     callback()

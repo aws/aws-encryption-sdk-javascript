@@ -32,7 +32,7 @@ export interface DecryptOutput {
 export async function decrypt (
   cmm: NodeCryptographicMaterialsManager|KeyringNode,
   ciphertext: Buffer|Uint8Array|Readable|string,
-  encoding?: string
+  encoding?: BufferEncoding
 ): Promise<DecryptOutput> {
   const stream = decryptStream(cmm)
 
