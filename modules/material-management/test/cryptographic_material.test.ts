@@ -251,7 +251,7 @@ describe('decorateWebCryptoMaterial', () => {
     const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
     test.setCryptoKey(key, trace)
-    expect(test.cryptoKey === key).to.equal(true)
+    expect(test.getCryptoKey() === key).to.equal(true)
     expect(test.hasCryptoKey).to.equal(true)
   })
 
@@ -262,16 +262,16 @@ describe('decorateWebCryptoMaterial', () => {
     const mixedKey: any = { zeroByteCryptoKey: key, nonZeroByteCryptoKey: key }
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
     test.setCryptoKey(mixedKey, trace)
-    expect(test.cryptoKey !== mixedKey).to.equal(true)
+    expect(test.getCryptoKey() !== mixedKey).to.equal(true)
     expect(test.hasCryptoKey).to.equal(true)
-    expect(test.cryptoKey.zeroByteCryptoKey === mixedKey.zeroByteCryptoKey).to.equal(true)
-    expect(test.cryptoKey.nonZeroByteCryptoKey === mixedKey.nonZeroByteCryptoKey).to.equal(true)
-    expect(Object.isFrozen(test.cryptoKey)).to.equal(true)
+    expect(test.getCryptoKey().zeroByteCryptoKey === mixedKey.zeroByteCryptoKey).to.equal(true)
+    expect(test.getCryptoKey().nonZeroByteCryptoKey === mixedKey.nonZeroByteCryptoKey).to.equal(true)
+    expect(Object.isFrozen(test.getCryptoKey())).to.equal(true)
   })
 
   it('Precondition: The cryptoKey must be set before we can return it.', () => {
     const test: any = decorateWebCryptoMaterial((<any>{}), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
-    expect(() => test.cryptoKey).to.throw()
+    expect(() => test.getCryptoKey()).to.throw()
   })
 
   it('Precondition: cryptoKey must not be set.  Modifying the cryptoKey is denied', () => {
