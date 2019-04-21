@@ -16,6 +16,7 @@
 import {
   RsaPadding,
   JsonWebKeyRsaAlg,
+  RsaHash,
   BinaryKey, // eslint-disable-line no-unused-vars
   RsaJsonWebKey, // eslint-disable-line no-unused-vars
   RsaImportableKey, // eslint-disable-line no-unused-vars
@@ -27,7 +28,7 @@ import {
   isCryptoKey
 } from '@aws-crypto/material-management-browser'
 
-type WebCryptoRsaName = 'RSA-OAEP'
+type WebCryptoRsaName = keyof typeof JsonWebKeyRsaAlg
 const OAEP_SHA1_MFG1: RsaWrappingKeyAlgorithm = { name: 'RSA-OAEP', hash: { name: 'SHA-1' } }
 Object.freeze(OAEP_SHA1_MFG1)
 Object.freeze(OAEP_SHA1_MFG1.hash)
@@ -36,33 +37,47 @@ const OAEP_SHA256_MFG1: RsaWrappingKeyAlgorithm = { name: 'RSA-OAEP', hash: { na
 Object.freeze(OAEP_SHA256_MFG1)
 Object.freeze(OAEP_SHA256_MFG1.hash)
 
+const OAEP_SHA384_MFG1: RsaWrappingKeyAlgorithm = { name: 'RSA-OAEP', hash: { name: 'SHA-384' } }
+Object.freeze(OAEP_SHA384_MFG1)
+Object.freeze(OAEP_SHA384_MFG1.hash)
+
+const OAEP_SHA512_MFG1: RsaWrappingKeyAlgorithm = { name: 'RSA-OAEP', hash: { name: 'SHA-512' } }
+Object.freeze(OAEP_SHA512_MFG1)
+Object.freeze(OAEP_SHA512_MFG1.hash)
+
+const JsonWebKeyMap: {[key in JsonWebKeyRsaAlg]: RsaWrappingKeyAlgorithm} = Object.freeze({
+  [JsonWebKeyRsaAlg['RSA-OAEP']]: OAEP_SHA1_MFG1,
+  [JsonWebKeyRsaAlg['RSA-OAEP-256']]: OAEP_SHA256_MFG1,
+  [JsonWebKeyRsaAlg['RSA-OAEP-384']]: OAEP_SHA384_MFG1,
+  [JsonWebKeyRsaAlg['RSA-OAEP-512']]: OAEP_SHA512_MFG1
+})
+
+const RsaPaddingMap: {[key in RsaPadding]: RsaWrappingKeyAlgorithm} = Object.freeze({
+  [RsaPadding.OAEP_SHA1_MFG1]: OAEP_SHA1_MFG1,
+  [RsaPadding.OAEP_SHA256_MFG1]: OAEP_SHA256_MFG1,
+  [RsaPadding.OAEP_SHA384_MFG1]: OAEP_SHA384_MFG1,
+  [RsaPadding.OAEP_SHA512_MFG1]: OAEP_SHA512_MFG1
+})
+
 export function getImportOptions (keyInfo: RsaImportableKey) {
-  if ((<RsaJsonWebKey>keyInfo).alg === JsonWebKeyRsaAlg['RSA-OAEP']) {
+  const { alg } = (<RsaJsonWebKey>keyInfo)
+  const { padding } = (<BinaryKey>keyInfo)
+  if (JsonWebKeyMap[alg]) {
     return {
       format: 'jwk',
       key: (<RsaJsonWebKey>keyInfo),
-      wrappingAlgorithm: OAEP_SHA1_MFG1
+      wrappingAlgorithm: JsonWebKeyMap[alg]
     }
-  } else
-  if ((<RsaJsonWebKey>keyInfo).alg === JsonWebKeyRsaAlg['RSA-OAEP-256']) {
+  } else if (RsaPaddingMap[padding]) {
+    const { format, key } = (<BinaryKey>keyInfo)
     return {
-      format: 'jwk',
-      key: (<RsaJsonWebKey>keyInfo),
-      wrappingAlgorithm: OAEP_SHA256_MFG1
+      format,
+      key,
+      wrappingAlgorithm: RsaPaddingMap[padding]
     }
-  } else
-  if ((<BinaryKey>keyInfo).padding === RsaPadding.OAEP_SHA1_MFG1) {
-    const wrappingAlgorithm = OAEP_SHA1_MFG1
-    const { format, key } = (<BinaryKey>keyInfo)
-    return { format, key, wrappingAlgorithm }
-  } else
-  if ((<BinaryKey>keyInfo).padding === RsaPadding.OAEP_SHA256_MFG1) {
-    const wrappingAlgorithm = OAEP_SHA256_MFG1
-    const { format, key } = (<BinaryKey>keyInfo)
-    return { format, key, wrappingAlgorithm }
-  } else {
-    throw new Error('Unsupported RsaImportableKey')
   }
+
+  throw new Error('Unsupported RsaImportableKey')
 }
 
 export function getWrappingAlgorithm (publicKey?: CryptoKey, privateKey?: CryptoKey|MixedBackendCryptoKey) {
@@ -89,10 +104,10 @@ export function verify (...args: RsaWrappingKeyAlgorithm[]) {
   /* Precondition: Need at least 1 algorithm to verify. */
   needs(wrappingAlgorithm, 'Can not verify an empty set of algorithms.')
   const { name, hash } = wrappingAlgorithm
-  /* Precondition: The only supported name is 'RSA-OAEP'. */
-  needs(name === 'RSA-OAEP', '')
-  /* Precondition: The only supported hash names are 'SHA-1'|'SHA-256'. */
-  needs(hash && (hash.name === 'SHA-1' || hash.name === 'SHA-256'), '')
+  /* Precondition: The wrappingAlgorithm name must be a supported value. */
+  needs(JsonWebKeyRsaAlg[name], 'Algorithm name is not supported.')
+  /* Precondition: The hash name must be a supported value. */
+  needs(hash && RsaHash[hash.name], 'Hash name is not supported.')
   /* Check for early return (Postcondition): Only 1 wrappingAlgorithm is clearly valid. */
   if (!rest.length) return wrappingAlgorithm
   /* Precondition: All keys must have the same wrappingAlgorithm. */

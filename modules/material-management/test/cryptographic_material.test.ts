@@ -248,6 +248,7 @@ describe('decorateWebCryptoMaterial', () => {
   it('add CryptoKey', () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const test: any = decorateWebCryptoMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    test.validUsages = ['deriveKey']
     const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
     test.setCryptoKey(key, trace)
@@ -258,6 +259,7 @@ describe('decorateWebCryptoMaterial', () => {
   it('add MixedBackendCryptoKey', () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const test: any = decorateWebCryptoMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    test.validUsages = ['deriveKey']
     const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
     const mixedKey: any = { zeroByteCryptoKey: key, nonZeroByteCryptoKey: key }
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
@@ -277,6 +279,7 @@ describe('decorateWebCryptoMaterial', () => {
   it('Precondition: cryptoKey must not be set.  Modifying the cryptoKey is denied', () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const test: any = decorateWebCryptoMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    test.validUsages = ['deriveKey']
     const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
     test.setCryptoKey(key, trace)

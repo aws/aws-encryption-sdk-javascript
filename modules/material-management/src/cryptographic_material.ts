@@ -94,6 +94,7 @@ export interface WebCryptoMaterial<T extends CryptographicMaterial<T>> extends C
   setCryptoKey: (dataKey: CryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => T
   getCryptoKey: () => CryptoKey|MixedBackendCryptoKey
   hasCryptoKey: boolean
+  validUsages: ReadonlyArray<KeyUsage>
 }
 
 export class NodeEncryptionMaterial implements
@@ -174,10 +175,12 @@ export class WebCryptoEncryptionMaterial implements
   setCryptoKey!: (dataKey: CryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => WebCryptoEncryptionMaterial
   getCryptoKey!: () => CryptoKey|MixedBackendCryptoKey
   hasCryptoKey!: boolean
+  validUsages: ReadonlyArray<KeyUsage>
   constructor (suite: WebCryptoAlgorithmSuite) {
     /* Precondition: WebCryptoEncryptionMaterial suite must be WebCryptoAlgorithmSuite. */
     needs(suite instanceof WebCryptoAlgorithmSuite, 'Suite must be a WebCryptoAlgorithmSuite')
     this.suite = suite
+    this.validUsages = Object.freeze(<KeyUsage[]>['deriveKey', 'encrypt'])
     // EncryptionMaterial have generated a data key on setUnencryptedDataKey
     const setFlag = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
     decorateCryptographicMaterial<WebCryptoEncryptionMaterial>(this, setFlag)
@@ -208,10 +211,12 @@ export class WebCryptoDecryptionMaterial implements
   setCryptoKey!: (dataKey: CryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => WebCryptoDecryptionMaterial
   getCryptoKey!: () => CryptoKey|MixedBackendCryptoKey
   hasCryptoKey!: boolean
+  validUsages: ReadonlyArray<KeyUsage>
   constructor (suite: WebCryptoAlgorithmSuite) {
     /* Precondition: WebCryptoDecryptionMaterial suite must be WebCryptoAlgorithmSuite. */
     needs(suite instanceof WebCryptoAlgorithmSuite, 'Suite must be a WebCryptoAlgorithmSuite')
     this.suite = suite
+    this.validUsages = Object.freeze(<KeyUsage[]>['deriveKey', 'decrypt'])
     // DecryptionMaterial have decrypted a data key on setUnencryptedDataKey
     const setFlag = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
     decorateCryptographicMaterial<WebCryptoDecryptionMaterial>(this, setFlag)
@@ -288,8 +293,11 @@ export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>
     enumerable: true
   })
   const zeroUnencryptedDataKey = () => {
-    /* Precondition: The unencryptedDataKey must be set to be zeroed. */
-    needs(unencryptedDataKey, 'No unencryptedDataKey to zero.')
+    /* Precondition: If the unencryptedDataKey has not been set, it should not be settable. */
+    if (!unencryptedDataKey) {
+      unencryptedDataKey = new Uint8Array()
+      udkForVerification = new Uint8Array()
+    }
     unencryptedDataKey.fill(0)
     udkForVerification.fill(0)
     unencryptedDataKeyZeroed = true
@@ -446,7 +454,13 @@ export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>> (mater
       needs(trace && trace.keyName && trace.keyNamespace, 'Malformed KeyringTrace')
       /* Precondition: On set the required KeyringTraceFlag must be set. */
       needs(trace.flags & setFlags, 'Required KeyringTraceFlag not set')
-
+      /* If I a setting a cryptoKey without an unencrypted data key,
+       * an unencrypted data should never be set.
+       * The expectation is if you are setting the cryptoKey *first* then
+       * the unencrypted data key has already been "handled".
+       * This ensures that a cryptoKey and an unencrypted data key always match.
+       */
+      material.zeroUnencryptedDataKey()
       material.keyringTrace.push(trace)
     }
 
@@ -497,14 +511,8 @@ export function isValidCryptoKey<T extends WebCryptoMaterial<T>> (
       isValidCryptoKey(nonZeroByteCryptoKey, material)
   }
 
-  const { suite } = material
+  const { suite, validUsages } = material
   const { encryption, keyLength, kdf } = suite
-  /* To use this function to both set the crypto key and derive the crypto key
-   * I need to check that either usage is valid.
-   */
-  const validUsages = [
-    kdf && 'deriveKey',
-    (material as any).setSignatureKey ? 'encrypt' : 'decrypt']
 
   /* See:
    * https://developer.mozilla.org/en-US/docs/Web/API/CryptoKey
@@ -520,8 +528,10 @@ export function isValidCryptoKey<T extends WebCryptoMaterial<T>> (
     // Must match the suite
     ((kdf && name === kdf) ||
      (name === encryption && length === keyLength)) &&
-    // Only valid usage are: encrypt|decrypt|deriveKey
-    usages.length === 1 && validUsages.includes(usages[0]) &&
+    /* Only valid usage are: encrypt|decrypt|deriveKey
+     * The complexity between deriveKey and suite.kdf should be handled in the Material class.
+     */
+    usages.some(u => validUsages.includes(u)) &&
     // Since CryptoKey can not be zeroized, not extractable is the next best thing
     !extractable
 }

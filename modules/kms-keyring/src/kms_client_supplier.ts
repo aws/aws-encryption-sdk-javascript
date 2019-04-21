@@ -109,6 +109,17 @@ function deferCache<Client extends KMS> (
           clientsCache[region] = Object.assign(client, { encrypt, decrypt, generateDataKey })
           return response
         })
+        .catch((e: any) => {
+          /* Errors from a KMS contact mean that the region is "live".
+           * As such the client can be cached because the problem is not with the client per se,
+           * but with the request made.
+           */
+          if (e.$metadata && e.$metadata.httpStatusCode) {
+            clientsCache[region] = Object.assign(client, { encrypt, decrypt, generateDataKey })
+          }
+          // The request was not successful
+          return Promise.reject(e)
+        })
     }
     return client
   }

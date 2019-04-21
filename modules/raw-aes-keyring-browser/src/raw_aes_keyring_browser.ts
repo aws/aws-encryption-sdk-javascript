@@ -75,7 +75,7 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
        * Note: the KeyringTrace and flag are _only_ set because I am reusing an existing implementation.
        * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
        */
-      .setCryptoKey(masterKey, { keyNamespace, keyName, flags: 0 })
+      .setCryptoKey(masterKey, { keyNamespace, keyName, flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
 
     const _wrapKey = async (material: WebCryptoEncryptionMaterial, context?: EncryptionContext) => {
       /* The AAD section is uInt16BE(length) + AAD
@@ -116,11 +116,13 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
   _onDecrypt = _onDecrypt<WebCryptoAlgorithmSuite, RawAesKeyringWebCrypto>()
 
   static importCryptoKey (masterKey: Uint8Array, wrappingSuite: WrappingSuiteIdentifier) {
-    needs(masterKey instanceof Uint8Array, '')
+    needs(masterKey instanceof Uint8Array, 'Unsupported master key type.')
     const material = new WebCryptoRawAesMaterial(wrappingSuite)
-    const trace = { keyNamespace: '', keyName: '', flags: 0 }
-    /* Precondition: masterKey must correspond to the algorithm suite specification. */
-    material.setUnencryptedDataKey(masterKey, trace)
+      /* Precondition: masterKey must correspond to the algorithm suite specification.
+      * Note: the KeyringTrace and flag are _only_ set because I am reusing an existing implementation.
+      * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
+      */
+      .setUnencryptedDataKey(masterKey, { keyNamespace: 'importOnly', keyName: 'importOnly', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
     return getWebCryptoBackend()
       .then(getZeroByteSubtle)
       .then(backend => _importCryptoKey(backend, material, ['encrypt', 'decrypt']))

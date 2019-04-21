@@ -80,17 +80,19 @@ export class WebCryptoRawAesMaterial implements
   setCryptoKey!: (dataKey: CryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => WebCryptoRawAesMaterial
   getCryptoKey!: () => CryptoKey|MixedBackendCryptoKey
   hasCryptoKey!: boolean
+  validUsages: ReadonlyArray<KeyUsage>
   constructor (suiteId: WrappingSuiteIdentifier) {
     /* Precondition: WebCryptoAlgorithmSuite suiteId must be RawAesWrappingSuiteIdentifier. */
     needs(RawAesWrappingSuiteIdentifier[suiteId], 'suiteId not supported.')
     this.suite = new WebCryptoAlgorithmSuite(suiteId)
+    this.validUsages = Object.freeze([<KeyUsage>'decrypt', <KeyUsage>'encrypt'])
     /* WebCryptoRawAesMaterial need to set a flag, this is an abuse of TraceFlags
      * because the material is not generated.
      * but CryptographicMaterial force a flag to be set.
      */
     const setFlag = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
     decorateCryptographicMaterial<WebCryptoRawAesMaterial>(this, setFlag)
-    decorateWebCryptoMaterial<WebCryptoRawAesMaterial>(this, 0)
+    decorateWebCryptoMaterial<WebCryptoRawAesMaterial>(this, setFlag)
     Object.setPrototypeOf(this, WebCryptoRawAesMaterial.prototype)
     Object.freeze(this)
   }
