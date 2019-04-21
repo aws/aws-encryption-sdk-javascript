@@ -118,7 +118,7 @@ export function verify (...args: RsaWrappingKeyAlgorithm[]) {
   function equalWrappingAlgorithm (algorithm: RsaWrappingKeyAlgorithm) {
     return algorithm.name === name &&
       algorithm.hash &&
-      algorithm.hash === hash
+      algorithm.hash.name === hash.name
   }
 }
 
