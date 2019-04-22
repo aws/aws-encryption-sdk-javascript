@@ -14,3 +14,4 @@
  */
 
 export * from './raw_rsa_keyring_web_crypto'
+export * from './types'

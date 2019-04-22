@@ -293,14 +293,32 @@ export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>
     enumerable: true
   })
   const zeroUnencryptedDataKey = () => {
-    /* Precondition: If the unencryptedDataKey has not been set, it should not be settable. */
+    /* These checks are separated on purpose.  It should be impossible to have only one unset.
+     * *But* if it was the case, I *must* make sure I zero out the set one, and not leave it up to GC.
+     * If I only checked on say unencryptedDataKey, and udkForVerification was somehow set,
+     * doing the simplest thing would be to set both to new Uint8Array.
+     * Leaving udkForVerification to be garbage collected.
+     * This level of insanity is due to the fact that we are dealing with the unencrypted data key.
+     */
+    let unsetCount = 0
+    /* Precondition: If the unencryptedDataKey has not been set, it should not be settable later. */
     if (!unencryptedDataKey) {
       unencryptedDataKey = new Uint8Array()
+      unsetCount += 1
+    }
+    /* Precondition: If the udkForVerification has not been set, it should not be settable later. */
+    if (!udkForVerification) {
       udkForVerification = new Uint8Array()
+      unsetCount += 1
     }
     unencryptedDataKey.fill(0)
     udkForVerification.fill(0)
     unencryptedDataKeyZeroed = true
+
+    /* Postcondition: Both unencryptedDataKey and udkForVerification must be either set or unset.
+     * If it is ever the case that only one was unset, then something is wrong in a profound way.
+     */
+    needs(unsetCount === 0 || unsetCount === 2, 'Either unencryptedDataKey or udkForVerification was not set.')
     return material
   }
   Object.defineProperty(material, 'unencryptedDataKeyLength', {
