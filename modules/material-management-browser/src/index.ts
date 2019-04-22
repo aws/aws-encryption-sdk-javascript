@@ -16,6 +16,7 @@
 export * from './browser_cryptographic_materials_manager'
 export * from './material_helpers'
 export * from './bytes2_jwk'
+export * from './keyring_helpers'
 export {
   WebCryptoDecryptionMaterial, WebCryptoEncryptionMaterial, WebCryptoAlgorithmSuite,
   AlgorithmSuiteIdentifier, EncryptionContext, EncryptedDataKey, KeyringWebCrypto,
