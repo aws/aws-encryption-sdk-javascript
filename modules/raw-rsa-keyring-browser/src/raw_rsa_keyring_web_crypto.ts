@@ -25,6 +25,8 @@ import {
   readOnlyProperty,
   bytes2JWK,
   keyUsageForMaterial,
+  EncryptionContext, // eslint-disable-line no-unused-vars
+  importForWebCryptoEncryptionMaterial,
   MixedBackendCryptoKey, // eslint-disable-line no-unused-vars
   WebCryptoAlgorithmSuite // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
@@ -76,7 +78,7 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
       const extractable = true
       const { encryption } = material.suite
       const importFormat = 'jwk'
-      const keyUsages: KeyUsage[] = [] // limit the use of this key (*not* decrypt, encrypt, deriveKey)
+      const keyUsages: KeyUsage[] = ['wrapKey'] // limit the use of this key (*not* decrypt, encrypt, deriveKey)
       const jwk = bytes2JWK(material.getUnencryptedDataKey())
       const cryptoKey = await subtle.importKey(importFormat, jwk, encryption, extractable, keyUsages)
 
@@ -125,6 +127,10 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
         keyUsages
       ]
 
+      /* This is superior to importForWebCryptoDecryptionMaterial.
+       * Here I use `subtle.unwrap` and bring the unencrypted data key into the WebCrypto world
+       * without ever exposing the unencrypted data key to JavaScript.
+       */
       if (isFullSupportWebCryptoBackend(backend)) {
         const cryptoKey = await backend.subtle.unwrapKey(...importArgs)
         return material.setCryptoKey(cryptoKey, trace)
@@ -150,7 +156,16 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
     return providerId === keyNamespace && providerInfo.startsWith(keyName)
   }
 
-  _onEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, RawRsaKeyringWebCrypto>(randomValuesOnly)
+  _rawOnEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, RawRsaKeyringWebCrypto>(randomValuesOnly)
+  _onEncrypt = async (material: WebCryptoEncryptionMaterial, context?: EncryptionContext) => {
+    const _material = await this._rawOnEncrypt(material, context)
+    return importForWebCryptoEncryptionMaterial(_material)
+  }
+
+  /* onDecrypt does not need to import the CryptoKey, because this is handled in the unwrap operation.
+   * Encrypt needs to have access to the unencrypted data key to encrypt with other keyrings
+   * but once I have functional material no other decrypt operations need to be performed.
+   */
   _onDecrypt = _onDecrypt<WebCryptoAlgorithmSuite, RawRsaKeyringWebCrypto>()
 
   static async importPublicKey (publicKey: RsaImportableKey): Promise<CryptoKey> {

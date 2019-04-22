@@ -26,7 +26,8 @@ import {
   EncryptionContext, // eslint-disable-line no-unused-vars
   getSubtleFunction,
   _importCryptoKey,
-  importCryptoKey
+  importForWebCryptoEncryptionMaterial,
+  importForWebCryptoDecryptionMaterial
 } from '@aws-crypto/material-management-browser'
 import {
   serializeFactory,
@@ -112,7 +113,16 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
     return providerId === keyNamespace && providerInfo.startsWith(keyName)
   }
 
-  _onEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, RawAesKeyringWebCrypto>(randomValuesOnly)
+  _rawOnEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, RawAesKeyringWebCrypto>(randomValuesOnly)
+  _onEncrypt = async (material: WebCryptoEncryptionMaterial, context?: EncryptionContext) => {
+    const _material = await this._rawOnEncrypt(material, context)
+    return importForWebCryptoEncryptionMaterial(_material)
+  }
+
+  /* onDecrypt does not need to import the crypto key, because this is handled in the unwrap operation
+   * Encrypt needs to have access to the unencrypted data key to encrypt with other keyrings
+   * but once I have functional material no other decrypt operations need to be performed.
+   */
   _onDecrypt = _onDecrypt<WebCryptoAlgorithmSuite, RawAesKeyringWebCrypto>()
 
   static importCryptoKey (masterKey: Uint8Array, wrappingSuite: WrappingSuiteIdentifier) {
@@ -188,8 +198,5 @@ async function aesGcmUnwrapKey (
   const buffer = await KdfGetSubtleDecrypt(info)(iv, aad)(concatBuffers(ciphertext, authTag))
   const trace = { keyNamespace, keyName, flags: decryptFlags }
   material.setUnencryptedDataKey(new Uint8Array(buffer), trace)
-  const cryptoKey = await importCryptoKey(backend, material)
-  return material
-    .zeroUnencryptedDataKey()
-    .setCryptoKey(cryptoKey, trace)
+  return importForWebCryptoDecryptionMaterial(material)
 }

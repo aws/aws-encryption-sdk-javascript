@@ -31,10 +31,10 @@ import {
   EncryptionContext, // eslint-disable-line no-unused-vars
   EncryptedDataKey, // eslint-disable-line no-unused-vars
   immutableClass,
-  importCryptoKey,
+  importForWebCryptoEncryptionMaterial,
+  importForWebCryptoDecryptionMaterial,
   KeyringWebCrypto // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
-import { getWebCryptoBackend } from '@aws-crypto/web-crypto-backend'
 import { KMS, KMSConfiguration } from '@aws-sdk/client-kms-browser' // eslint-disable-line no-unused-vars
 
 const getKmsClient = getClient(KMS)
@@ -58,37 +58,13 @@ export class KmsKeyringBrowser extends KmsKeyringClass(KeyringWebCrypto as KeyRi
   async _onEncrypt (material: WebCryptoEncryptionMaterial, context?: EncryptionContext) {
     const _material = await super._onEncrypt(material, context)
 
-    /* Check for early return (Postcondition): If a cryptoKey has already been imported for encrypt, return. */
-    if (_material.hasUnencryptedDataKey && _material.hasCryptoKey) {
-      return _material
-    }
-
-    const backend = await getWebCryptoBackend()
-    const cryptoKey = await importCryptoKey(backend, _material)
-    // The trace is only set when the material does not already have
-    // an hasUnencryptedDataKey.  This is an implementation detail :(
-    const [trace] = _material.keyringTrace
-
-    return _material.setCryptoKey(cryptoKey, trace)
+    return importForWebCryptoEncryptionMaterial(_material)
   }
 
   async _onDecrypt (material: WebCryptoDecryptionMaterial, encryptedDataKeys: EncryptedDataKey[], context?: EncryptionContext) {
     const _material = await super._onDecrypt(material, encryptedDataKeys, context)
 
-    /* Check for early return (Postcondition): If a cryptoKey has already been imported for decrypt, return. */
-    if (_material.hasValidKey()) return _material
-    /* Check for early return (Postcondition): If no key was able to be decrypted, return. */
-    if (!_material.hasUnencryptedDataKey) return _material
-
-    const backend = await getWebCryptoBackend()
-    const cryptoKey = await importCryptoKey(backend, _material)
-    // Now that a cryptoKey has been imported, the unencrypted data key can be zeroed.
-    _material.zeroUnencryptedDataKey()
-    // The trace is only set when the material does not already have
-    // an hasUnencryptedDataKey.  This is an implementation detail :(
-    const [trace] = _material.keyringTrace
-
-    return _material.setCryptoKey(cryptoKey, trace)
+    return importForWebCryptoDecryptionMaterial(_material)
   }
 }
 immutableClass(KmsKeyringBrowser)
