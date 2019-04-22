@@ -232,15 +232,27 @@ export async function importCryptoKey<T extends WebCryptoMaterial<T>> (
   }
 }
 
-export function _importCryptoKey<T extends WebCryptoMaterial<T>> (
+export async function _importCryptoKey<T extends WebCryptoMaterial<T>> (
   subtle: SubtleCrypto,
   material: T,
   keyUsages: KeyUsage[] = [keyUsageForMaterial(material)]
 ) {
-  const jwk = bytes2JWK(material.getUnencryptedDataKey())
   const { suite } = material
   const extractable = false
-  const format = 'jwk'
-  const algorithm = suite.kdf ? suite.kdf : suite.encryption
-  return subtle.importKey(format, jwk, algorithm, extractable, keyUsages)
+  const udk = material.getUnencryptedDataKey()
+
+  if (suite.kdf) {
+    /* For several browsers, import for a key to derive with HKDF
+     * *must* be raw.  This may cause some compatibility issues
+     * with browsers that need a zero byte gcm fallback.
+     */
+    const format = 'raw'
+    const algorithm = suite.kdf
+    return subtle.importKey(format, udk, algorithm, extractable, keyUsages)
+  } else {
+    const format = 'jwk'
+    const algorithm = suite.encryption
+    const jwk = bytes2JWK(udk)
+    return subtle.importKey(format, jwk, algorithm, extractable, keyUsages)
+  }
 }

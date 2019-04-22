@@ -97,9 +97,13 @@ describe('decorateCryptographicMaterial', () => {
     expect(() => test.unencryptedDataKeyLength).to.throw()
   })
 
-  it('Precondition: The unencryptedDataKey must be set to be zeroed.', () => {
-    const test: any = decorateCryptographicMaterial((<any>{}), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
-    expect(() => test.zeroUnencryptedDataKey()).to.throw()
+  it('Precondition: If the unencryptedDataKey has not been set, it should not be settable later.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
+    test.zeroUnencryptedDataKey()
+    const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    expect(() => test.setUnencryptedDataKey(dataKey, trace)).to.throw()
   })
 
   it('Precondition: dataKey must be Binary Data', () => {
@@ -248,22 +252,30 @@ describe('decorateWebCryptoMaterial', () => {
   it('add CryptoKey', () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const test: any = decorateWebCryptoMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    // setCryptoKey uses `zeroUnencryptedDataKey` when setting a cryptoKey *without* a unencrypted data key
+    decorateCryptographicMaterial(test, KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    test.validUsages = ['deriveKey']
     const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
     test.setCryptoKey(key, trace)
     expect(test.getCryptoKey() === key).to.equal(true)
     expect(test.hasCryptoKey).to.equal(true)
+    expect(test.hasUnencryptedDataKey).to.equal(false)
   })
 
   it('add MixedBackendCryptoKey', () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const test: any = decorateWebCryptoMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    test.validUsages = ['deriveKey']
+    // setCryptoKey uses `zeroUnencryptedDataKey` when setting a cryptoKey *without* a unencrypted data key
+    decorateCryptographicMaterial(test, KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
     const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
     const mixedKey: any = { zeroByteCryptoKey: key, nonZeroByteCryptoKey: key }
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
     test.setCryptoKey(mixedKey, trace)
     expect(test.getCryptoKey() !== mixedKey).to.equal(true)
     expect(test.hasCryptoKey).to.equal(true)
+    expect(test.hasUnencryptedDataKey).to.equal(false)
     expect(test.getCryptoKey().zeroByteCryptoKey === mixedKey.zeroByteCryptoKey).to.equal(true)
     expect(test.getCryptoKey().nonZeroByteCryptoKey === mixedKey.nonZeroByteCryptoKey).to.equal(true)
     expect(Object.isFrozen(test.getCryptoKey())).to.equal(true)
@@ -277,6 +289,9 @@ describe('decorateWebCryptoMaterial', () => {
   it('Precondition: cryptoKey must not be set.  Modifying the cryptoKey is denied', () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const test: any = decorateWebCryptoMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    test.validUsages = ['deriveKey']
+    // setCryptoKey uses `zeroUnencryptedDataKey` when setting a cryptoKey *without* a unencrypted data key
+    decorateCryptographicMaterial(test, KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
     const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
     test.setCryptoKey(key, trace)
