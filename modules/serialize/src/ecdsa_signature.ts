@@ -91,8 +91,8 @@ export function raw2der (rawSignature: Uint8Array, { signatureCurve }: WebCrypto
   needs(byteLength === 2 * _keyLengthBytes, 'Malformed signature.')
 
   // A little more portable than Buffer.from, but not much
-  const r = new asn.bignum.BN(rawSignature.slice(0, _keyLengthBytes)).toBuffer()
-  const s = new asn.bignum.BN(rawSignature.slice(_keyLengthBytes)).toBuffer()
+  const r = new asn.bignum.BN(rawSignature.slice(0, _keyLengthBytes)).toArrayLike(Buffer)
+  const s = new asn.bignum.BN(rawSignature.slice(_keyLengthBytes)).toArrayLike(Buffer)
 
   return ECDSASignature.encode({ r, s }, 'der')
 }
