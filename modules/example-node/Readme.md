@@ -1,4 +1,4 @@
-# AWS Encryption SDK for Javascript Web Crypto examples
+# AWS Encryption SDK for Javascript Node.js examples
 
 This repository holds examples for encrypt and decrypt in Node.js.
 These examples are intended to work so you can experiment with functional code.
