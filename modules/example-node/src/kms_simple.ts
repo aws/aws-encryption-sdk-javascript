@@ -34,18 +34,63 @@ import { decrypt } from '@aws-crypto/decrypt-node'
 import { NodeCryptographicMaterialsManager } from '@aws-crypto/material-management-node'
 
 export async function kmsSimpleTest () {
+  /* A KMS CMK to generate the data key is required.
+   * Access to KMS generateDataKey is required for the generatorKeyId.
+   */
   const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+
+  /* Adding Alternate KMS keys that can decrypt.
+   * Access to KMS encrypt is required for every CMK in keyIds.
+   * Often this used to have a local CMK in multiple regions.
+   * In this example, I am using the same CMK.
+   * This is *only* to demonstrate how the CMK ARN's are configured.
+   */
   const keyIds = ['arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt', 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt']
+
+  /* The KMS Keyring must be configured with the desired CMK's */
   const keyring = new KmsKeyringNode({ generatorKeyId, keyIds })
 
+  /* A CryptographicMaterialsManager is required to provide material to the `encrypt` or `decrypt` function.
+   * The keyring _can_ be passed directly to the `encrypt` or `decrypt` function,
+   * but this example is being explicit.
+   */
   const cmm = new NodeCryptographicMaterialsManager(keyring)
 
-  const context = { some: 'context' }
-  const plaintext = 'asdf'
+  /* Encryption Context is a *very* powerful tool for controlling and managing access.
+   * It is ***not*** secret!
+   * Remember encrypted data is opaque, encryption context will help your run time checking.
+   * Just because you have decrypted a JSON file, and it successfully parsed,
+   * does not mean it is the intended JSON file.
+   */
+  const context = {
+    stage: 'demo',
+    purpose: 'simple demonstration app',
+    origin: 'us-west-2'
+  }
 
-  const { ciphertext } = await encrypt(cmm, plaintext, { context })
+  /* I need something to encrypt.  A simple string. */
+  const cleartext = 'asdf'
 
-  const cleartext = await decrypt(cmm, ciphertext)
+  /* Encrypt the data.*/
+  const { ciphertext } = await encrypt(cmm, cleartext, { context })
 
-  return { plaintext, ciphertext, cleartext }
+  /* Decrypt the data. */
+  const {plaintext, messageHeader} = await decrypt(cmm, ciphertext)
+
+  /* Grab the encryption context so I can verify it. */
+  const { encryptionContext } = messageHeader
+
+  /* Verify the encryption context.
+   * Depending on the Algorithm Suite, the `encryptionContext` _may_ contain additional values.
+   * In Signing Algorithm Suites the public verification key is serialized into the `encryptionContext`.
+   * So it is best to make sure that all the values that you expect exist as opposed to the reverse.
+   */
+  Object
+    .entries(context)
+    .forEach(([key, value]) => {
+      if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
+    })
+
+  /* Return the values so I can manage this code with tests. */
+  return { plaintext, ciphertext, cleartext, messageHeader }
 }
