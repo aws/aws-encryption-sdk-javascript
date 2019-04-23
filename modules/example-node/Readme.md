@@ -3,7 +3,7 @@
 This repository holds examples for encrypt and decrypt in Node.js.
 These examples are intended to work so you can experiment with functional code.
 
-#NOTE
+# NOTE
 The CMK's in these examples *are only* for example.  They *are public*.
 Replace these CMK's with your own.
 
