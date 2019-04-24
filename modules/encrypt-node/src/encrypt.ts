@@ -12,7 +12,7 @@ import { Readable, Duplex } from 'stream' // eslint-disable-line no-unused-vars
 import { MessageHeader } from '@aws-crypto/serialize' // eslint-disable-line no-unused-vars
 
 interface EncryptInput extends EncryptStreamInput {
-  encoding?: string
+  encoding?: BufferEncoding
 }
 
 export interface EncryptOutput {
