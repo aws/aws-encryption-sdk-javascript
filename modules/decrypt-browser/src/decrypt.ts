@@ -28,6 +28,7 @@ import {
   decodeBodyHeader,
   aadFactory,
   concatBuffers,
+  der2raw,
   HeaderInfo // eslint-disable-line no-unused-vars
 } from '@aws-crypto/serialize'
 import { fromUtf8, toUtf8 } from '@aws-sdk/util-utf8-browser'
@@ -66,8 +67,11 @@ export async function decrypt (
   if (subtleVerify) {
     const data = ciphertext.slice(0, readPos)
     const signatureInfo = ciphertext.slice(readPos)
-    const signature = deserializeSignature(signatureInfo)
-    const isValid = await subtleVerify(signature, data)
+
+    const derSignature = deserializeSignature(signatureInfo)
+    const rawSignature = der2raw(derSignature, material.suite)
+
+    const isValid = await subtleVerify(rawSignature, data)
     /* Postcondition: subtleVerify must validate the signature. */
     needs(isValid, 'Invalid Signature')
     return { messageHeader, clearMessage }
