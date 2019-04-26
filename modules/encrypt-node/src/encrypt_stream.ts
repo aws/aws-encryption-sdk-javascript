@@ -80,7 +80,7 @@ export function encryptStream (
 
       wrappingStream.setReadable(signatureStream)
       // Flush the rawHeader through the signatureStream
-      rawHeader.forEach(buff => signatureStream.push(buff))
+      rawHeader.forEach(buff => signatureStream.write(buff))
 
       // @ts-ignore until readable-stream exports v3 types...
       wrappingStream.setWritable(encryptStream)
