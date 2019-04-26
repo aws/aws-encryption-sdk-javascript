@@ -56,20 +56,11 @@ export function der2raw (derSignature: Uint8Array, { signatureCurve }: WebCrypto
 
   const _keyLengthBytes = keyLengthBytes[signatureCurve]
 
-  /* Precondition: The DER length must be big enough to have a valid r and s.
-   * There is an implicit assumption going on here, that the DER overhead
-   * is greater than the smallest r or s length.
-   */
-  needs(derSignature.byteLength > 2 * _keyLengthBytes, 'Malformed signature')
-
   // A little more portable than Buffer.from, but not much
-  const { r, s } = ECDSASignature.decode(new asn.bignum.BN(derSignature).toBuffer())
+  const { r, s } = ECDSASignature.decode(new asn.bignum.BN(derSignature).toBuffer(), 'der')
 
   const rLength = r.byteLength()
   const sLength = r.byteLength()
-
-  /* Precondition: r and s must be the right length. */
-  needs(_keyLengthBytes === rLength && _keyLengthBytes === sLength, '')
 
   return concatBuffers(
     new Uint8Array(_keyLengthBytes - rLength),
@@ -103,5 +94,5 @@ export function raw2der (rawSignature: Uint8Array, { signatureCurve }: WebCrypto
   const r = new asn.bignum.BN(rawSignature.slice(0, _keyLengthBytes)).toBuffer()
   const s = new asn.bignum.BN(rawSignature.slice(_keyLengthBytes)).toBuffer()
 
-  return ECDSASignature.encode({ r, s })
+  return ECDSASignature.encode({ r, s }, 'der')
 }

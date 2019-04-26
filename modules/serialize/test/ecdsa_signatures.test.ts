@@ -47,6 +47,8 @@ v.update(dataToSign)
 const isVerified = v.verify(publicPem, derSignature)
 */
 
+
+
 const validSuite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
 const rawSignature = new Uint8Array([22, 77, 187, 192, 175, 104, 2, 240, 55, 2, 6, 138, 103, 148, 214, 240, 244, 65, 224, 254, 60, 52, 218, 22, 250, 245, 216, 228, 151, 151, 220, 234, 125, 9, 97, 8, 132, 123, 79, 193, 216, 207, 214, 0, 73, 183, 149, 173, 26, 173, 251, 132, 140, 139, 44, 122, 11, 50, 163, 105, 138, 221, 223, 29])
 const derSignature = new Uint8Array([48, 68, 2, 32, 22, 77, 187, 192, 175, 104, 2, 240, 55, 2, 6, 138, 103, 148, 214, 240, 244, 65, 224, 254, 60, 52, 218, 22, 250, 245, 216, 228, 151, 151, 220, 234, 2, 32, 125, 9, 97, 8, 132, 123, 79, 193, 216, 207, 214, 0, 73, 183, 149, 173, 26, 173, 251, 132, 140, 139, 44, 122, 11, 50, 163, 105, 138, 221, 223, 29])
@@ -60,17 +62,6 @@ describe('der2raw', () => {
   it('Precondition: Do not attempt to RAW format if the suite does not support signing.', () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     expect(() => der2raw(derSignature, suite)).to.throw()
-  })
-
-  it('Precondition: The DER length must be big enough to have a valid r and s.', () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
-    expect(() => der2raw(derSignature, suite)).to.throw()
-  })
-
-  it('Precondition: r and s must be the right length', () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
-    const signatureRSSizeMismatch = concatBuffers(derSignature, new Uint8Array(27))
-    expect(() => der2raw(signatureRSSizeMismatch, suite)).to.throw()
   })
 })
 
