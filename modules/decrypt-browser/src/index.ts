@@ -14,3 +14,4 @@
  */
 
 export { decrypt, DecryptResult } from './decrypt'
+export { MessageHeader } from '@aws-crypto/serialize'
