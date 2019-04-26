@@ -70,7 +70,7 @@ export async function kmsStreamTest () {
   /* Create a simple pipeline to encrypt the package.json for this project. */
   const stream = createReadStream('./package.json')
     .pipe(encryptStream(cmm, { context }))
-    /* A Keyring can be pass instead of a CryptographicMaterialsManager. */
+    /* A Keyring can be passed instead of a CryptographicMaterialsManager. */
     .pipe(decryptStream(new KmsKeyringNode({ discovery: true })))
     .on('MessageHeader', ({ encryptionContext }: MessageHeader) => {
       /* Verify the encryption context.
