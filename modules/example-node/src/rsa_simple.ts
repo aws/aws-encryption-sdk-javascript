@@ -43,7 +43,7 @@ const generateKeyPairAsync = promisify(generateKeyPair)
  */
 export async function rsaTest () {
   const keyName = 'rsa-name'
-  const keyNamespace = 'rsa-namespce'
+  const keyNamespace = 'rsa-namespace'
   // You should get your key pairs from wherever you are storing them.
   const rsaKey = await generateRsaKeys()
 
@@ -56,7 +56,7 @@ export async function rsaTest () {
   /* A CryptographicMaterialsManager is required to provide material to the `encrypt` function.
    * The keyring _can_ be passed directly to the `encrypt` function,
    * but this example is being explicit.
-   * */ 
+   */
   const cmm = new NodeCryptographicMaterialsManager(keyring)
 
   /* Encryption Context is a *very* powerful tool for controlling and managing access.

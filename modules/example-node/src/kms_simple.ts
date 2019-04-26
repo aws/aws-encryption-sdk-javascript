@@ -45,7 +45,7 @@ export async function kmsSimpleTest () {
    * In this example, I am using the same CMK.
    * This is *only* to demonstrate how the CMK ARN's are configured.
    */
-  const keyIds = ['arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt', 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt']
+  const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
 
   /* The KMS Keyring must be configured with the desired CMK's */
   const keyring = new KmsKeyringNode({ generatorKeyId, keyIds })
@@ -71,11 +71,11 @@ export async function kmsSimpleTest () {
   /* I need something to encrypt.  A simple string. */
   const cleartext = 'asdf'
 
-  /* Encrypt the data.*/
+  /* Encrypt the data. */
   const { ciphertext } = await encrypt(cmm, cleartext, { context })
 
   /* Decrypt the data. */
-  const {plaintext, messageHeader} = await decrypt(cmm, ciphertext)
+  const { plaintext, messageHeader } = await decrypt(cmm, ciphertext)
 
   /* Grab the encryption context so I can verify it. */
   const { encryptionContext } = messageHeader

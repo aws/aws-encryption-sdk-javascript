@@ -31,7 +31,10 @@
 import { NodeCryptographicMaterialsManager } from '@aws-crypto/material-management-node'
 import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
 import { encryptStream } from '@aws-crypto/encrypt-node'
-import { decryptStream, MessageHeader } from '@aws-crypto/decrypt-node'
+import {
+  decryptStream,
+  MessageHeader // eslint-disable-line no-unused-vars
+} from '@aws-crypto/decrypt-node'
 import { finished } from 'stream'
 import { createReadStream, createWriteStream } from 'fs'
 import { promisify } from 'util'
@@ -44,7 +47,7 @@ export async function kmsStreamTest () {
   const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
   /* The KMS Keyring must be configured with the desired CMK's */
-  const keyring = new KmsKeyringNode({generatorKeyId })
+  const keyring = new KmsKeyringNode({ generatorKeyId })
 
   /* A CryptographicMaterialsManager is required to provide material to the `encrypt` or `decrypt` function.
    * The keyring _can_ be passed directly to the `encrypt` or `decrypt` function,
@@ -65,10 +68,11 @@ export async function kmsStreamTest () {
   }
 
   /* Create a simple pipeline to encrypt the package.json for this project. */
-  const stream = createReadStream('../package.json')
+  const stream = createReadStream('./package.json')
     .pipe(encryptStream(cmm, { context }))
-    .pipe(decryptStream(cmm))
-    .on('MessageHeader', ({encryptionContext}: MessageHeader) => {
+    /* A Keyring can be pass instead of a CryptographicMaterialsManager. */
+    .pipe(decryptStream(new KmsKeyringNode({ discovery: true })))
+    .on('MessageHeader', ({ encryptionContext }: MessageHeader) => {
       /* Verify the encryption context.
       * Depending on the Algorithm Suite, the `encryptionContext` _may_ contain additional values.
       * In Signing Algorithm Suites the public verification key is serialized into the `encryptionContext`.
@@ -80,7 +84,7 @@ export async function kmsStreamTest () {
           if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
         })
     })
-    .pipe(createWriteStream('../package.json.decrypt'))
+    .pipe(createWriteStream('./package.json.decrypt'))
 
   return finishedAsync(stream)
 }

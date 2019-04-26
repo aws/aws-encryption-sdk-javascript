@@ -19,6 +19,8 @@ import { expect } from 'chai'
 import 'mocha'
 import { rsaTest } from '../src/rsa_simple'
 import { kmsSimpleTest } from '../src/kms_simple'
+import { kmsStreamTest } from '../src/kms_stream'
+import { readFileSync } from 'fs'
 
 describe('test', () => {
   it('rsa', async () => {
@@ -31,5 +33,13 @@ describe('test', () => {
     const { cleartext, plaintext } = await kmsSimpleTest()
 
     expect(plaintext.toString()).to.equal(cleartext)
+  })
+
+  it('kms', async () => {
+    await kmsStreamTest()
+    const packageJson = readFileSync('./package.json', { encoding: 'utf8' })
+    const test = readFileSync('./package.json.decrypt', { encoding: 'utf8' })
+
+    expect(test).to.equal(packageJson)
   })
 })
