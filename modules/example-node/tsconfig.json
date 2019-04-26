@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.settings.json",
+  "compilerOptions": {
+    "outDir": "build/main",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules/**"],
+  "references": [
+    { "path": "../encrypt-node" },
+    { "path": "../decrypt-node" },
+    { "path": "../material-management-node" },
+    { "path": "../raw-rsa-keyring-node" },
+    { "path": "../kms-keyring-node" },
+  ]
+}

@@ -27,3 +27,4 @@ coverage
 
 # TypeScript config is built by ./util/bootstrap_tsconfig
 /tsconfig.json
+package.json.decrypt
