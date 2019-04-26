@@ -18,16 +18,17 @@
 import { expect } from 'chai'
 import 'mocha'
 import { getClient, limitRegions, excludeRegions, cacheClients } from '../src/kms_client_supplier'
-import { KMSConfiguration } from '../src/kms_types/KMSConfiguration' // eslint-disable-line no-unused-vars
 
 describe('getClient', () => {
   it('return a client', () => {
     const region = 'us-west-2'
     let assertCount = 0
     const TestKMS: any = class {
-      constructor (config: KMSConfiguration) {
+      config: any
+      constructor (config: any) {
         expect(config.region).to.equal(region)
         assertCount++
+        this.config = { region }
       }
     }
     const getKmsClient = getClient(TestKMS)
@@ -36,7 +37,42 @@ describe('getClient', () => {
     expect(assertCount).to.equal(1)
   })
 
-  it('Precondition: region be a string.', () => {
+  it('passes default config values', () => {
+    const region = 'us-west-2'
+    let assertCount = 0
+    const TestKMS: any = class {
+      config: any
+      constructor (config: any) {
+        expect(config.region).to.equal(region)
+        expect(config.extra).to.equal('value')
+        assertCount++
+        this.config = { region }
+      }
+    }
+    const getKmsClient = getClient(TestKMS, { extra: 'value' } as any)
+    const test = getKmsClient(region)
+    expect(test).instanceOf(TestKMS)
+    expect(assertCount).to.equal(1)
+  })
+
+  it('will not override region', () => {
+    const region = 'us-west-2'
+    let assertCount = 0
+    const TestKMS: any = class {
+      config: any
+      constructor (config: any) {
+        expect(config.region).to.equal(region)
+        assertCount++
+        this.config = { region }
+      }
+    }
+    const getKmsClient = getClient(TestKMS, { region: 'no-a-region' } as any)
+    const test = getKmsClient(region)
+    expect(test).instanceOf(TestKMS)
+    expect(assertCount).to.equal(1)
+  })
+
+  it('Postcondition: A region must be configured.', () => {
     let assertCount = 0
     const TestKMS: any = class {
       constructor () {
@@ -46,7 +82,7 @@ describe('getClient', () => {
     const getKmsClient = getClient(TestKMS)
     expect(() => getKmsClient('')).to.throw()
     expect(() => getKmsClient({} as any)).to.throw()
-    expect(assertCount).to.equal(0)
+    expect(assertCount).to.equal(2)
   })
 })
 
@@ -55,9 +91,11 @@ describe('limitRegions', () => {
     const region = 'us-west-2'
     let assertCount = 0
     const TestKMS: any = class {
-      constructor (config: KMSConfiguration) {
+      config: any
+      constructor (config: any) {
         expect(config.region).to.equal(region)
         assertCount++
+        this.config = { region }
       }
     }
     const getKmsClient = getClient(TestKMS)
@@ -71,7 +109,7 @@ describe('limitRegions', () => {
     const region = 'us-west-2'
     let assertCount = 0
     const TestKMS: any = class {
-      constructor (config: KMSConfiguration) {
+      constructor (config: any) {
         expect(config.region).to.equal(region)
         assertCount++
       }
@@ -94,7 +132,7 @@ describe('excludeRegions', () => {
     const region = 'us-west-2'
     let assertCount = 0
     const TestKMS: any = class {
-      constructor (config: KMSConfiguration) {
+      constructor (config: any) {
         expect(config.region).to.equal(region)
         assertCount++
       }
@@ -110,9 +148,11 @@ describe('excludeRegions', () => {
     const region = 'us-west-2'
     let assertCount = 0
     const TestKMS: any = class {
-      constructor (config: KMSConfiguration) {
+      config: any
+      constructor (config: any) {
         expect(config.region).to.equal(region)
         assertCount++
+        this.config = { region }
       }
     }
     const getKmsClient = getClient(TestKMS)
@@ -133,9 +173,11 @@ describe('cacheClients', () => {
     const region = 'us-west-2'
     let assertCount = 0
     const TestKMS: any = class {
-      constructor (config: KMSConfiguration) {
+      config: any
+      constructor (config: any) {
         expect(config.region).to.equal(region)
         assertCount++
+        this.config = { region }
       }
     }
     const getKmsClient = cacheClients(getClient(TestKMS))
@@ -148,9 +190,11 @@ describe('cacheClients', () => {
     const region = 'us-west-2'
     let assertCount = 0
     const TestKMS: any = class {
-      constructor (config: KMSConfiguration) {
+      config: any
+      constructor (config: any) {
         expect(config.region).to.equal(region)
         assertCount++
+        this.config = { region }
       }
     }
     const getKmsClient = cacheClients(getClient(TestKMS))
@@ -167,9 +211,11 @@ describe('cacheClients', () => {
     const region = 'us-west-2'
     let assertCount = 0
     const TestKMS: any = class {
-      constructor (config: KMSConfiguration) {
+      config: any
+      constructor (config: any) {
         expect(config.region).to.equal(region)
         assertCount++
+        this.config = { region }
       }
       async decrypt () {
 
@@ -181,6 +227,7 @@ describe('cacheClients', () => {
     expect(test).instanceOf(TestKMS)
     expect(assertCount).to.equal(1)
 
+    // @ts-ignore
     await test.decrypt({} as any)
 
     const test2 = getKmsClient(region)

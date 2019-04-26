@@ -201,7 +201,7 @@ export async function WebCryptoKdf<T extends WebCryptoMaterial<T>> (
   needs(
     kdf === 'HKDF' &&
     kdfHash &&
-    info instanceof Uint8Array && 
+    info instanceof Uint8Array &&
     info.byteLength,
     'Invalid HKDF values.'
   )

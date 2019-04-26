@@ -30,7 +30,6 @@ import {
   EncryptedDataKey,
   Keyring
 } from '@aws-crypto/material-management'
-import { DecryptInput } from '../src/kms_types/DecryptInput' // eslint-disable-line no-unused-vars
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -41,12 +40,12 @@ describe('KmsKeyring: _onDecrypt',
       const encryptKmsKey = 'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012'
       const keyIds = [encryptKmsKey]
       const context = { some: 'context' }
-      const grantTokens = 'grant'
+      const grantTokens = ['grant']
       const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
       const clientProvider: any = () => {
         return { decrypt }
-        function decrypt ({ CiphertextBlob, EncryptionContext, GrantTokens }: DecryptInput) {
+        function decrypt ({ CiphertextBlob, EncryptionContext, GrantTokens }: any) {
           expect(EncryptionContext === context).to.equal(true)
           expect(GrantTokens).to.equal(grantTokens)
           return {
@@ -89,13 +88,13 @@ describe('KmsKeyring: _onDecrypt',
     it('discovery keyring should return material', async () => {
       const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
       const context = { some: 'context' }
-      const grantTokens = 'grant'
+      const grantTokens = ['grant']
       const discovery = true
       const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
       const clientProvider: any = () => {
         return { decrypt }
-        function decrypt ({ CiphertextBlob, EncryptionContext, GrantTokens }: DecryptInput) {
+        function decrypt ({ CiphertextBlob, EncryptionContext, GrantTokens }: any) {
           expect(EncryptionContext === context).to.equal(true)
           expect(GrantTokens).to.equal(grantTokens)
           return {
@@ -137,7 +136,7 @@ describe('KmsKeyring: _onDecrypt',
     it('decrypt errors should not halt', async () => {
       const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
       const context = { some: 'context' }
-      const grantTokens = 'grant'
+      const grantTokens = ['grant']
       const discovery = true
       const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
