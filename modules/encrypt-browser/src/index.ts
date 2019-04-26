@@ -14,3 +14,4 @@
  */
 
 export { encrypt, EncryptInput, EncryptResult } from './encrypt'
+export { MessageHeader } from '@aws-crypto/serialize'

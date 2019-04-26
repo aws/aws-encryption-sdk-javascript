@@ -15,3 +15,4 @@
 
 export { decryptStream } from './decrypt_stream'
 export { decrypt } from './decrypt'
+export { MessageHeader } from '@aws-crypto/serialize'

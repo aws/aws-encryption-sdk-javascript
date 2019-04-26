@@ -15,3 +15,4 @@
 
 export { encryptStream } from './encrypt_stream'
 export { encrypt } from './encrypt'
+export { MessageHeader } from '@aws-crypto/serialize'
