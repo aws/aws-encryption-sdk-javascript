@@ -49,7 +49,7 @@ const sha512Hex = async (...inputs: (Uint8Array|string)[]) => {
 
 const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(fromUtf8, sha512Hex)
 
-export class NodeCachingMaterialsManager implements CachingMaterialsManager<WebCryptoAlgorithmSuite> {
+export class WebCryptoCachingMaterialsManager implements CachingMaterialsManager<WebCryptoAlgorithmSuite> {
   readonly _cache!: CryptographicMaterialsCache<WebCryptoAlgorithmSuite>
   readonly _backingMaterialsManager!: MaterialsManager<WebCryptoAlgorithmSuite>
   readonly _partition!: string
