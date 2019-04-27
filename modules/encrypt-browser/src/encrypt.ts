@@ -30,7 +30,8 @@ import {
   SerializationVersion,
   ObjectType,
   ContentType,
-  serializeSignatureInfo
+  serializeSignatureInfo,
+  raw2der
 } from '@aws-crypto/serialize'
 import { fromUtf8 } from '@aws-sdk/util-utf8-browser'
 import { getWebCryptoBackend } from '@aws-crypto/web-crypto-backend'
@@ -121,7 +122,8 @@ export async function encrypt (
 
   if (typeof subtleSign === 'function') {
     const signatureArrayBuffer = await subtleSign(cipherMessage)
-    const signatureInfo = serializeSignatureInfo(new Uint8Array(signatureArrayBuffer))
+    const derSignature = raw2der(new Uint8Array(signatureArrayBuffer), material.suite)
+    const signatureInfo = serializeSignatureInfo(derSignature)
     return { cipherMessage: concatBuffers(cipherMessage, signatureInfo), messageHeader }
   } else {
     return { cipherMessage, messageHeader }
