@@ -40,7 +40,7 @@ export function decorateProperties<S extends SupportedAlgorithmSuites> (
   obj: CachingMaterialsManager<S>,
   input: CachingMaterialsManagerDecorateInput<S>
 ) {
-  const { cache, backingMaterialsManager, maxAge, maxBytesEncrypted, maxMessagesEncrypted } = input
+  const { cache, backingMaterialsManager, maxAge, maxBytesEncrypted, maxMessagesEncrypted, partition } = input
 
   /* Precondition: A caching material manager needs a cache. */
   needs(cache, 'You must provide a cache.')
@@ -52,12 +52,15 @@ export function decorateProperties<S extends SupportedAlgorithmSuites> (
   needs(!maxBytesEncrypted || (maxBytesEncrypted > 0 && Maximum.BYTES_PER_KEY >= maxBytesEncrypted), 'maxBytesEncrypted is outside of bounds.')
   /* Precondition: maxMessagesEncrypted must be inside bounds.  i.e. positive and not more than the maximum. */
   needs(!maxMessagesEncrypted || (maxMessagesEncrypted > 0 && Maximum.MESSAGES_PER_KEY >= maxMessagesEncrypted), 'maxMessagesEncrypted is outside of bounds.')
+  /* Precondition: partition must be a string. */
+  needs(partition && typeof partition === 'string', 'partition must be a string.')
 
   readOnlyProperty(obj, '_cache', cache)
   readOnlyProperty(obj, '_backingMaterialsManager', backingMaterialsManager)
   readOnlyProperty(obj, '_maxAge', maxAge)
   readOnlyProperty(obj, '_maxBytesEncrypted', maxBytesEncrypted || Maximum.BYTES_PER_KEY)
   readOnlyProperty(obj, '_maxMessagesEncrypted', maxMessagesEncrypted || Maximum.MESSAGES_PER_KEY)
+  readOnlyProperty(obj, '_partition', partition)
 }
 
 export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
@@ -184,6 +187,7 @@ export interface CachingMaterialsManagerInput<S extends SupportedAlgorithmSuites
 
 export interface CachingMaterialsManagerDecorateInput<S extends SupportedAlgorithmSuites> extends CachingMaterialsManagerInput<S> {
   backingMaterialsManager: MaterialsManager<S>
+  partition: string
 }
 
 export interface CachingMaterialsManager<S extends SupportedAlgorithmSuites> extends MaterialsManager<S> {

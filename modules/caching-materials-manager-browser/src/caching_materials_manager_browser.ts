@@ -29,8 +29,8 @@ import {
   WebCryptoAlgorithmSuite, // eslint-disable-line no-unused-vars
   KeyringWebCrypto
 } from '@aws-crypto/material-management-browser'
-import { fromUtf8 } from '@aws-sdk/util-utf8-browser'
-import { getWebCryptoBackend, getNonZeroByteBackend } from '@aws-crypto/web-crypto-backend'
+import { fromUtf8, toUtf8 } from '@aws-sdk/util-utf8-browser'
+import { getWebCryptoBackend, getNonZeroByteBackend, synchronousRandomValues } from '@aws-crypto/web-crypto-backend'
 import { concatBuffers } from '@aws-crypto/serialize'
 
 const sha512Hex = async (...inputs: (Uint8Array|string)[]) => {
@@ -62,7 +62,17 @@ export class WebCryptoCachingMaterialsManager implements CachingMaterialsManager
       ? new WebCryptoCryptographicMaterialsManager(input.backingMaterials)
       : <WebCryptoCryptographicMaterialsManager>input.backingMaterials
 
-    decorateProperties(this, { backingMaterialsManager, ...input })
+    /* Precondition: A partition value must exist for WebCryptoCachingMaterialsManager.
+     * The maximum hash function at this time is 512.
+     * So I create 64 bytes of random data.
+     */
+    const { partition = toUtf8(synchronousRandomValues(64)) } = input
+
+    decorateProperties(this, {
+      ...input,
+      backingMaterialsManager,
+      partition
+    })
   }
 
   getEncryptionMaterials = getEncryptionMaterials<WebCryptoAlgorithmSuite>(cacheKeyHelpers)

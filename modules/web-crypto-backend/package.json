@@ -18,7 +18,6 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/ie11-detection": "^0.1.0-preview.1",
-    "@aws-crypto/random-source-browser": "^0.1.0-preview.1",
     "@aws-crypto/supports-web-crypto": "^0.1.0-preview.1",
     "@aws-sdk/util-locate-window": "^0.1.0-preview.1",
     "tslib": "^1.9.3"
