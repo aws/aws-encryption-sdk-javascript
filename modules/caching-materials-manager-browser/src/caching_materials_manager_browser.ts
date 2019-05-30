@@ -1,0 +1,81 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"). You may not use
+ * this file except in compliance with the License. A copy of the License is
+ * located at
+ *
+ *     http://aws.amazon.com/apache2.0/
+ *
+ * or in the "license" file accompanying this file. This file is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import {
+  CachingMaterialsManager, // eslint-disable-line no-unused-vars
+  decorateProperties,
+  getEncryptionMaterials,
+  decryptMaterials,
+  cacheEntryHasExceededLimits,
+  buildCryptographicMaterialsCacheKeyHelpers,
+  CachingMaterialsManagerInput, // eslint-disable-line no-unused-vars
+  CryptographicMaterialsCache // eslint-disable-line no-unused-vars
+} from '@aws-crypto/cache-material'
+import {
+  MaterialsManager, // eslint-disable-line no-unused-vars
+  WebCryptoCryptographicMaterialsManager,
+  WebCryptoAlgorithmSuite, // eslint-disable-line no-unused-vars
+  KeyringWebCrypto
+} from '@aws-crypto/material-management-browser'
+import { fromUtf8, toUtf8 } from '@aws-sdk/util-utf8-browser'
+import { getWebCryptoBackend, getNonZeroByteBackend, synchronousRandomValues } from '@aws-crypto/web-crypto-backend'
+import { concatBuffers } from '@aws-crypto/serialize'
+
+const sha512Hex = async (...inputs: (Uint8Array|string)[]) => {
+  // Normalize to Uint8Array and squash into a single value.
+  const data = concatBuffers(...inputs.map(u => typeof u === 'string' ? fromUtf8(u) : u))
+  // Prefer the non-zero byte because this will always be the native implementation.
+  const backend = getNonZeroByteBackend(await getWebCryptoBackend())
+  // Do the hash
+  const ab = await backend.digest('SHA-512', data)
+  // Hex encoding
+  return Array
+    .from(new Uint8Array(ab))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(fromUtf8, sha512Hex)
+
+export class WebCryptoCachingMaterialsManager implements CachingMaterialsManager<WebCryptoAlgorithmSuite> {
+  readonly _cache!: CryptographicMaterialsCache<WebCryptoAlgorithmSuite>
+  readonly _backingMaterialsManager!: MaterialsManager<WebCryptoAlgorithmSuite>
+  readonly _partition!: string
+  readonly _maxBytesEncrypted!: number
+  readonly _maxMessagesEncrypted!: number
+  readonly _maxAge!: number
+
+  constructor (input: CachingMaterialsManagerInput<WebCryptoAlgorithmSuite>) {
+    const backingMaterialsManager = input.backingMaterials instanceof KeyringWebCrypto
+      ? new WebCryptoCryptographicMaterialsManager(input.backingMaterials)
+      : <WebCryptoCryptographicMaterialsManager>input.backingMaterials
+
+    /* Precondition: A partition value must exist for WebCryptoCachingMaterialsManager.
+     * The maximum hash function at this time is 512.
+     * So I create 64 bytes of random data.
+     */
+    const { partition = toUtf8(synchronousRandomValues(64)) } = input
+
+    decorateProperties(this, {
+      ...input,
+      backingMaterialsManager,
+      partition
+    })
+  }
+
+  getEncryptionMaterials = getEncryptionMaterials<WebCryptoAlgorithmSuite>(cacheKeyHelpers)
+  decryptMaterials = decryptMaterials<WebCryptoAlgorithmSuite>(cacheKeyHelpers)
+  _cacheEntryHasExceededLimits = cacheEntryHasExceededLimits<WebCryptoAlgorithmSuite>()
+}

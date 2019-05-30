@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -13,22 +14,7 @@
  * limitations under the License.
  */
 
-import { locateWindow } from '@aws-sdk/util-locate-window'
-import { webCryptoBackendFactory } from './backend-factory'
-
-const {
-  getWebCryptoBackend,
-  configureFallback
-} = webCryptoBackendFactory(locateWindow())
-export { getWebCryptoBackend, configureFallback }
-
-export {
-  getNonZeroByteBackend,
-  getZeroByteSubtle,
-  isFullSupportWebCryptoBackend,
-  WebCryptoBackend,
-  FullSupportWebCryptoBackend,
-  MixedSupportWebCryptoBackend
-} from './backend-factory'
-
-export { synchronousRandomValues } from './synchronous_random_values'
+export * from './get_test_iterator'
+export * from './integration_tests'
+export * from './decrypt_materials_manager_node'
+export * from './types'

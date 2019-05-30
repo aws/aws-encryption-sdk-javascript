@@ -30,7 +30,7 @@ import {
   KeyringNode
 } from '@aws-crypto/material-management-node'
 
-import { createHash } from 'crypto'
+import { createHash, randomBytes } from 'crypto'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const sha512Hex = async (...data: (Uint8Array|string)[]) => data
@@ -52,7 +52,17 @@ export class NodeCachingMaterialsManager implements CachingMaterialsManager<Node
       ? new NodeCryptographicMaterialsManager(input.backingMaterials)
       : <NodeCryptographicMaterialsManager>input.backingMaterials
 
-    decorateProperties(this, { backingMaterialsManager, ...input })
+    /* Precondition: A partition value must exist for NodeCachingMaterialsManager.
+     * The maximum hash function at this time is 512.
+     * So I create 64 bytes of random data.
+     */
+    const { partition = randomBytes(64).toString('utf8') } = input
+
+    decorateProperties(this, {
+      ...input,
+      backingMaterialsManager,
+      partition
+    })
   }
 
   getEncryptionMaterials = getEncryptionMaterials<NodeAlgorithmSuite>(cacheKeyHelpers)

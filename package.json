@@ -15,7 +15,8 @@
     "mocha": "mocha --require ts-node/register modules/**/test/*test.ts",
     "coverage": "nyc --check-coverage -x 'modules/**/test/*test.ts' npm run mocha",
     "test": "npm run lint && npm run build && npm run coverage",
-    "integration_browser": "npm run build; lerna run build_fixtures --stream --no-prefix -- -- -v ../../aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-1.3.8.zip -k"
+    "integration_browser": "npm run build; lerna run build_fixtures --stream --no-prefix -- -- -v ../../aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-1.3.8.zip -k",
+    "integration_node": "npm run build; lerna run integration_node --stream --no-prefix -- -- -v ../../aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-1.3.8.zip"
   },
   "repository": {
     "type": "git",
