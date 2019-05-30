@@ -1,0 +1,79 @@
+{
+  "name": "@aws-crypto/integration-browser",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "tsc -b tsconfig.json",
+    "lint": "standard src/*.ts test/**/*.ts",
+    "karma": "karma start karma.conf.js",
+    "build_fixtures": "npx .",
+    "test": "npm run lint && npm run karma"
+  },
+  "author": {
+    "name": "AWS Crypto Tools Team",
+    "email": "aws-cryptools@amazon.com",
+    "url": "https://aws.amazon.com/javascript/"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@aws-crypto/decrypt-browser": "^0.0.1",
+    "@aws-crypto/encrypt-browser": "^0.0.1",
+    "@aws-crypto/kms-keyring-browser": "^0.0.1",
+    "@aws-crypto/material-management-browser": "^0.0.1",
+    "@aws-crypto/raw-aes-keyring-browser": "^0.0.1",
+    "@aws-crypto/raw-rsa-keyring-browser": "^0.0.1",
+    "@aws-sdk/util-base64-browser": "0.1.0-preview.1",
+    "@trust/keyto": "^0.3.7",
+    "@types/unzipper": "^0.9.1",
+    "@types/yargs": "^13.0.0",
+    "stream-to-promise": "^2.2.0",
+    "tslib": "^1.9.3",
+    "unzipper": "^0.9.11",
+    "yargs": "^13.2.2"
+  },
+  "devDependencies": {
+    "@aws-sdk/karma-credential-loader": "0.1.0-preview.2",
+    "@types/chai": "^4.1.4",
+    "@types/chai-as-promised": "^7.1.0",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^11.11.4",
+    "@typescript-eslint/eslint-plugin": "^1.4.2",
+    "@typescript-eslint/parser": "^1.4.2",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "jasmine-core": "^3.4.0",
+    "karma": "^4.1.0",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-coverage": "^1.1.2",
+    "karma-jasmine": "^2.0.1",
+    "karma-json-fixtures-preprocessor": "0.0.6",
+    "karma-mocha": "^1.3.0",
+    "karma-typescript": "^4.0.0",
+    "karma-webpack": "^3.0.5",
+    "mocha": "^5.2.0",
+    "mocha-loader": "^2.0.1",
+    "nyc": "^14.0.0",
+    "puppeteer": "^1.14.0",
+    "standard": "^12.0.1",
+    "ts-loader": "^5.3.3",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.2.0",
+    "webpack": "^4.30.0",
+    "webpack-cli": "^3.3.0"
+  },
+  "sideEffects": false,
+  "main": "./build/main/index.js",
+  "module": "./build/module/index.js",
+  "types": "./build/main/index.d.ts",
+  "bin": "./build_fixtures",
+  "files": [
+    "./build/**/*"
+  ],
+  "standard": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ]
+  }
+}

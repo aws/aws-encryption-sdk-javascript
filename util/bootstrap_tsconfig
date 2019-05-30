@@ -24,7 +24,7 @@ const { exec } = require('child_process')
 const { promisify } = require('util')
 const execAsync = promisify(exec)
 
-const lernaLs = 'npx lerna ls'
+const lernaLs = 'npx lerna la'
 
 execAsync(lernaLs)
   .then(clean)
@@ -33,7 +33,11 @@ execAsync(lernaLs)
     files: [],
     references
   }))
-  .then(tsconfig => writeFileSync('./tsconfig.json', JSON.stringify(tsconfig, null, '  ')))
+  .then(tsconfig => {
+    writeFileSync('./tsconfig.json', JSON.stringify(tsconfig, null, '  '))
+    const references = tsconfig.references.map(({path}) => ({path: path + '/tsconfig.module.json'}))
+    writeFileSync('./tsconfig.module.json', JSON.stringify({...tsconfig, references}, null, '  '))
+  })
 
 const namespace = '@aws-crypto/'
 function clean ({ stdout, stderr }) {
