@@ -15,19 +15,19 @@
 
 import { isMsWindow } from '@aws-crypto/ie11-detection'
 import { supportsWebCrypto, supportsSubtleCrypto, supportsZeroByteGCM } from '@aws-crypto/supports-web-crypto'
-import { randomValuesOnly as randomValues } from '@aws-crypto/random-source-browser'
+import { synchronousRandomValues as randomValues } from './synchronous_random_values'
 import promisifyMsSubtleCrypto from './promisify-ms-crypto'
 
 type MaybeSubtleCrypto = SubtleCrypto|false
 export type WebCryptoBackend = FullSupportWebCryptoBackend|MixedSupportWebCryptoBackend
 export type FullSupportWebCryptoBackend = {
   subtle: SubtleCrypto
-  randomValues: (byteLength: number) => Promise<Uint8Array>
+  randomValues: (byteLength: number) => Uint8Array
 }
 export type MixedSupportWebCryptoBackend = {
   zeroByteSubtle: SubtleCrypto
   nonZeroByteSubtle: SubtleCrypto
-  randomValues: (byteLength: number) => Promise<Uint8Array>
+  randomValues: (byteLength: number) => Uint8Array
 }
 
 export function webCryptoBackendFactory (window: Window) {
@@ -39,7 +39,7 @@ export function webCryptoBackendFactory (window: Window) {
   async function getWebCryptoBackend (): Promise<WebCryptoBackend> {
     /* Precondition: Access to a secure random source is required. */
     try {
-      await randomValues(1)
+      randomValues(1)
     } catch (ex) {
       throw new Error('No supported secure random')
     }

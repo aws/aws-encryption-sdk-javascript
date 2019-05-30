@@ -30,3 +30,5 @@ export {
   FullSupportWebCryptoBackend,
   MixedSupportWebCryptoBackend
 } from './backend-factory'
+
+export { synchronousRandomValues } from './synchronous_random_values'
