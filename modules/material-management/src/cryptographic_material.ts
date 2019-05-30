@@ -35,6 +35,12 @@ try {
 }
 /* https://codahale.com/a-lesson-in-timing-attacks/ */
 function portableTimingSafeEqual (a: Uint8Array, b: Uint8Array) {
+  /* It is *possible* that a runtime could optimize this constant time function.
+   * Adding `eval` should keep the optimization, but this is no grantee.
+   * If you copy this function for your own use, make sure to educate yourself.
+   * Side channel attacks are pernicious and subtle.
+   */
+  eval('') // eslint-disable-line no-eval
   /* Check for early return (Postcondition): Size is well-know information
    * and does not leak information about contents.
    */
