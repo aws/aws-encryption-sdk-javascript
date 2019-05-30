@@ -36,8 +36,6 @@ describe('browser decryption vectors', function () {
       const response = await fetch(`base/fixtures/${testName}.json`)
       const { keysInfo, cipherText, plainText } = await response.json()
 
-      // console.log(JSON.stringify(keysInfo))
-
       const cipher = fromBase64(cipherText)
       const good = fromBase64(plainText)
       try {
@@ -47,7 +45,6 @@ describe('browser decryption vectors', function () {
       } catch (e) {
         if (!notSupportedMessages.includes(e.message)) throw e
       }
-      // console.log(`stop: ${testName}`)
     })
   }
 })

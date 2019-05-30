@@ -46,7 +46,10 @@ declare const credentials: any
 
 const Bits2RawAesWrappingSuiteIdentifier: {[key: number]: WrappingSuiteIdentifier} = {
   128: RawAesWrappingSuiteIdentifier.AES128_GCM_IV12_TAG16_NO_PADDING,
-  // 192: RawAesWrappingSuiteIdentifier.AES192_GCM_IV12_TAG16_NO_PADDING,
+  /* Browsers do not support 192 Bit keys.
+   * Leaving this here to make sure this is clear.
+   *192: RawAesWrappingSuiteIdentifier.AES192_GCM_IV12_TAG16_NO_PADDING,
+   */
   256: RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
 }
 
@@ -102,7 +105,10 @@ async function pem2JWK (keyInfo: RsaKeyInfo, { material, type }: RSAKey) {
   const OAEP_SHA256_MFG1 = 'RSA-OAEP-256'
   const OAEP_SHA384_MFG1 = 'RSA-OAEP-384'
   const OAEP_SHA512_MFG1 = 'RSA-OAEP-512'
-  // const RSASSA_PKCS1_V1_5_SHA1 = 'RSASSA-PKCS1-v1_5'
+  /* Browsers do not support PKCS1.
+   * Leaving this here to make sure this is clear.
+   * const RSASSA_PKCS1_V1_5_SHA1 = 'RSASSA-PKCS1-v1_5'
+   */
 
   // @ts-ignore
   const jwk = keyto.from(material, 'pem').toJwk(type)
