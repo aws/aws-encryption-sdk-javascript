@@ -19,7 +19,6 @@ import { expect } from 'chai'
 import 'mocha'
 import { der2raw, raw2der } from '../src/ecdsa_signature'
 import { WebCryptoAlgorithmSuite, AlgorithmSuiteIdentifier } from '@aws-crypto/material-management'
-import { concatBuffers } from '../src/concat_buffers'
 
 /* Data for both verification examples
 const dataToSign = new Uint8Array([1,2,3,4])
@@ -46,8 +45,6 @@ const v = createVerify('sha256')
 v.update(dataToSign)
 const isVerified = v.verify(publicPem, derSignature)
 */
-
-
 
 const validSuite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
 const rawSignature = new Uint8Array([22, 77, 187, 192, 175, 104, 2, 240, 55, 2, 6, 138, 103, 148, 214, 240, 244, 65, 224, 254, 60, 52, 218, 22, 250, 245, 216, 228, 151, 151, 220, 234, 125, 9, 97, 8, 132, 123, 79, 193, 216, 207, 214, 0, 73, 183, 149, 173, 26, 173, 251, 132, 140, 139, 44, 122, 11, 50, 163, 105, 138, 221, 223, 29])
