@@ -180,16 +180,16 @@ export function nodeKdf (material: NodeEncryptionMaterial|NodeDecryptionMaterial
 
   const { kdf, kdfHash, keyLengthBytes } = material.suite
 
-  /* Check for early return (Postcondition): No KDF, just return the unencrypted data key. */
-  if (!kdf) return dataKey
+  /* Check for early return (Postcondition): No Node.js KDF, just return the unencrypted data key. */
+  if (!kdf && !kdfHash) return dataKey
 
-  /* Precondition: Valid HKDF values must exist. */
+  /* Precondition: Valid HKDF values must exist for Node.js. */
   needs(
     kdf === 'HKDF' &&
     kdfHash &&
     kdfIndex[kdfHash] &&
     info instanceof Uint8Array,
-    ''
+    'Invalid HKDF values.'
   )
   // info and kdfHash are now defined
   const toExtract = Buffer.from(dataKey.buffer, dataKey.byteOffset, dataKey.byteLength)
