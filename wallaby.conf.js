@@ -27,6 +27,27 @@ module.exports = function (wallaby) {
       '**/*.ts': wallaby.compilers.typeScript(compilerOptions),
     },
     env: { type: 'node' },
-    debug: true
+    debug: true,
+    setup: w => {
+      const {projectCacheDir} = w
+      const path = require('path')
+      const {Module} = require('module')
+      const fs = require('fs')
+      if (!Module._originalRequire) {
+        const modulePrototype = Module.prototype
+        Module._originalRequire = modulePrototype.require
+        modulePrototype.require = function (filePath) {
+          if (!filePath.startsWith('@aws-crypto')) {
+            return Module._originalRequire.call(this, filePath)
+          }
+          const [, _module] = filePath.split('/')
+          const _filePath = path.join(projectCacheDir, 'modules', _module, 'src', 'index.js')
+          if (!fs.existsSync(_filePath)) {
+            return Module._originalRequire.call(this, filePath)
+          }
+          return Module._originalRequire.call(this, _filePath)
+        }
+      }
+    }
   }
 }
