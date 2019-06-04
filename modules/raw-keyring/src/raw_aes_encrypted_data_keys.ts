@@ -35,7 +35,7 @@ import {
 
 export function rawAesEncryptedDataKeyFactory (
   toUtf8: (input: Uint8Array) => string,
-  fromUtf8: (input: any) => Uint8Array
+  fromUtf8: (input: string) => Uint8Array
 ) {
   return { rawAesEncryptedDataKey }
 
@@ -56,10 +56,15 @@ export function rawAesEncryptedDataKeyFactory (
   }
 }
 
-export function rawAesEncryptedPartsFactory (fromUtf8: (input: any) => Uint8Array) {
+export function rawAesEncryptedPartsFactory (fromUtf8: (input: string) => Uint8Array) {
   return { rawAesEncryptedParts }
 
-  function rawAesEncryptedParts (suite: AlgorithmSuite, keyName: string, { encryptedDataKey, rawInfo }: EncryptedDataKey) {
+  function rawAesEncryptedParts (
+    suite: AlgorithmSuite,
+    keyName: string,
+    { encryptedDataKey, rawInfo }: EncryptedDataKey
+  ) {
+    /* Precondition: rawInfo must be a Uint8Array. */
     if (!(rawInfo instanceof Uint8Array)) throw new Error('Malformed Encrypted Data Key.')
     // see above for format, slice off the "string part"
     rawInfo = rawInfo.slice(fromUtf8(keyName).byteLength)
