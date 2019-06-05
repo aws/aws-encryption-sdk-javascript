@@ -31,6 +31,7 @@ import {
   ObjectType,
   ContentType,
   serializeSignatureInfo,
+  FRAME_LENGTH,
   raw2der
 } from '@aws-crypto/serialize'
 import { fromUtf8 } from '@aws-sdk/util-utf8-browser'
@@ -42,7 +43,7 @@ const { messageAADContentString, messageAAD } = aadFactory(fromUtf8)
 export interface EncryptInput {
   suiteId?: AlgorithmSuiteIdentifier
   encryptionContext?: EncryptionContext
-  // frameLength?: number // Subtle Crypto functions are all one-shot, so frames and length are === plaintext.byteLength
+  frameLength?: number
   // plaintextLength?: number // Subtle Crypto functions are all one-shot, so frames and length are === plaintext.byteLength
 }
 
@@ -54,14 +55,13 @@ export interface EncryptResult {
 export async function encrypt (
   cmm: WebCryptoCryptographicMaterialsManager,
   plaintext: Uint8Array,
-  { suiteId, encryptionContext }: EncryptInput = {}
+  { suiteId, encryptionContext, frameLength = FRAME_LENGTH }: EncryptInput = {}
 ): Promise<EncryptResult> {
   const backend = await getWebCryptoBackend()
   if (!backend) throw new Error('No supported crypto backend')
 
   // Subtle Crypto functions are all one-shot so all the plaintext needs to be available.
   const plaintextLength = plaintext.byteLength
-  const frameLength = plaintextLength + 1
   const suite = suiteId ? new WebCryptoAlgorithmSuite(suiteId) : new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
 
   const encryptionRequest: WebCryptoEncryptionRequest = {
@@ -99,23 +99,31 @@ export async function encrypt (
   const headerAuthIv = serialize.headerAuthIv(ivLength)
   const headerAuthTag = await getSubtleEncrypt(headerAuthIv, header)(new Uint8Array(0))
 
-  const sequenceNumber = 1
-  const frameIv = serialize.frameIv(ivLength, sequenceNumber)
-  const finalFrameHeader = serialize.finalFrameHeader(sequenceNumber, frameIv, plaintextLength)
-  const messageAdditionalData = messageAAD(
-    messageId,
-    messageAADContentString({ contentType: messageHeader.contentType, isFinalFrame: true }),
-    sequenceNumber,
-    plaintextLength
-  )
+  const numberOfFrames = Math.ceil(plaintextLength / frameLength) + 1
+  const bodyContent = []
 
-  const cipherBufferAndAuthTag = await getSubtleEncrypt(frameIv, messageAdditionalData)(plaintext)
+  for (let sequenceNumber = 1; sequenceNumber > numberOfFrames; sequenceNumber += 1) {
+    const frameIv = serialize.frameIv(ivLength, sequenceNumber)
+    const frameHeader = sequenceNumber === numberOfFrames
+      ? serialize.finalFrameHeader(sequenceNumber, frameIv, plaintextLength - (numberOfFrames - 1) * frameLength)
+      : serialize.frameHeader(sequenceNumber, frameIv)
+    const messageAdditionalData = messageAAD(
+      messageId,
+      messageAADContentString({ contentType: messageHeader.contentType, isFinalFrame: true }),
+      sequenceNumber,
+      plaintextLength
+    )
+
+    const cipherBufferAndAuthTag = await getSubtleEncrypt(frameIv, messageAdditionalData)(plaintext)
+
+    bodyContent.push(frameHeader, cipherBufferAndAuthTag)
+  }
+
   const cipherMessage = concatBuffers(
     header,
     headerAuthIv,
     headerAuthTag,
-    finalFrameHeader,
-    cipherBufferAndAuthTag
+    ...bodyContent
   )
 
   dispose()

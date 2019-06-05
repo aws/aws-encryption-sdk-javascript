@@ -75,3 +75,6 @@ export enum Maximum {
   AAD_BYTE_SIZE = 2 ** 16 - 1, // eslint-disable-line no-unused-vars
 }
 Object.freeze(Maximum)
+
+// Default frame length when using framing
+export const FRAME_LENGTH = 4096
