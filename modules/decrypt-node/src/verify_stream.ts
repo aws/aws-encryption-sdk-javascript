@@ -40,6 +40,10 @@ export interface VerifyInfo {
   verify?: AWSVerify
 }
 
+export interface VerifyStreamOptions {
+  maxBodySize?: number
+}
+
 interface VerifyState {
   buffer: Buffer
   authTagBuffer: Buffer
@@ -55,8 +59,13 @@ export class VerifyStream extends PortableTransformWithType {
     signatureInfo: Buffer.alloc(0)
   }
   private _verify?: AWSVerify
-  constructor () {
+  private _maxBodySize?: number
+  constructor ({ maxBodySize }: VerifyStreamOptions) {
     super()
+    /* Precondition: MaxBodySize must be falsey or a number. */
+    needs(!maxBodySize || typeof maxBodySize === 'number', 'Unsupported MaxBodySize.')
+    Object.defineProperty(this, '_maxBodySize', { value: maxBodySize, enumerable: true })
+
     this.on('pipe', (source: ParseHeaderStream) => {
       /* Precondition: The source must a ParseHeaderStream emit the required events. */
       needs(source instanceof ParseHeaderStream, 'Unsupported source')
@@ -102,6 +111,12 @@ export class VerifyStream extends PortableTransformWithType {
         state.buffer = frameBuffer
         return callback()
       }
+
+      /* Precondition: If maxBodySize was set I can not buffer more data than maxBodySize.
+       * Before returning *any* cleartext, the stream **MUST** verify the decryption.
+       * This means that I must buffer the message until the AuthTag is reached.
+       */
+      needs(!this._maxBodySize || this._maxBodySize > frameHeader.contentLength, 'maxBodySize exceeded.')
 
       if (this._verify) {
         this._verify.update(frameBuffer.slice(0, frameHeader.readPos))

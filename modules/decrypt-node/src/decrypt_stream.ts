@@ -26,7 +26,14 @@ import { Duplex } from 'stream' // eslint-disable-line no-unused-vars
 // @ts-ignore
 import { pipeline } from 'readable-stream'
 
-export function decryptStream (cmm: NodeCryptographicMaterialsManager|KeyringNode): Duplex {
+export interface DecryptStreamOptions {
+  maxBodySize?: number
+}
+
+export function decryptStream (
+  cmm: NodeCryptographicMaterialsManager|KeyringNode,
+  { maxBodySize } : DecryptStreamOptions = {}
+): Duplex {
   /* If the cmm is not a MaterialsManager, wrap in one.
    * I am expecting the NodeCryptographicMaterialsManager to
    * handle non-keyring parameters.
@@ -35,8 +42,8 @@ export function decryptStream (cmm: NodeCryptographicMaterialsManager|KeyringNod
     ? cmm
     : new NodeCryptographicMaterialsManager(cmm)
 
-  const parseHeaderStream = new ParseHeaderStream(cmm)
-  const verifyStream = new VerifyStream()
+  const parseHeaderStream = new ParseHeaderStream(cmm, { maxBodySize })
+  const verifyStream = new VerifyStream({ maxBodySize })
   const decipherStream = getDecipherStream()
 
   pipeline(parseHeaderStream, verifyStream, decipherStream)

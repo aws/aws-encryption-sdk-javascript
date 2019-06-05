@@ -19,9 +19,10 @@ import { Transform } from 'stream' // eslint-disable-line no-unused-vars
 import {
   NodeAlgorithmSuite,
   NodeCryptographicMaterialsManager, // eslint-disable-line no-unused-vars
-  getDecryptionHelper
+  getDecryptionHelper,
+  needs
 } from '@aws-crypto/material-management-node'
-import { deserializeFactory, kdfInfo } from '@aws-crypto/serialize'
+import { deserializeFactory, kdfInfo, ContentType } from '@aws-crypto/serialize'
 import { VerifyInfo } from './verify_stream' // eslint-disable-line no-unused-vars
 
 const toUtf8 = (input: Uint8Array) => Buffer
@@ -34,12 +35,20 @@ interface HeaderState {
   buffer: Buffer
 }
 
+export interface ParseHeaderOptions {
+  maxBodySize?: number
+}
+
 export class ParseHeaderStream extends PortableTransformWithType {
   private materialsManager!: NodeCryptographicMaterialsManager
   private _headerState: HeaderState
-  constructor (cmm: NodeCryptographicMaterialsManager) {
+  private _maxBodySize?: number
+  constructor (cmm: NodeCryptographicMaterialsManager, { maxBodySize }: ParseHeaderOptions = {}) {
+    /* Precondition: MaxBodySize must be falsey or a number. */
+    needs(!maxBodySize || typeof maxBodySize === 'number', 'Unsupported MaxBodySize.')
     super()
     Object.defineProperty(this, 'materialsManager', { value: cmm, enumerable: true })
+    Object.defineProperty(this, '_maxBodySize', { value: maxBodySize, enumerable: true })
     this._headerState = {
       buffer: Buffer.alloc(0)
     }
@@ -58,7 +67,23 @@ export class ParseHeaderStream extends PortableTransformWithType {
     const { rawHeader, headerIv, headerAuthTag } = headerInfo
 
     const suite = new NodeAlgorithmSuite(algorithmSuite.id)
-    const { encryptionContext, encryptedDataKeys } = messageHeader
+    const { encryptionContext, encryptedDataKeys, contentType, frameLength } = messageHeader
+
+    /* Framed messages store the frame size in the header.
+     * It is easy to confirm here.
+     * For non-framed messages, the size is in the body header.
+     * The check in verify stream _should_ be adequate from a logical perspective.
+     * However, doing this check here allows framed messages to exit before the CMM is called.
+     * This means that decryption of the Encrypted Data Key is never even attempted.
+     */
+    if (contentType === ContentType.FRAMED_DATA) {
+      /* Precondition: If maxBodySize was set I can not buffer a frame more data than maxBodySize.
+       * Before returning *any* cleartext, the stream **MUST** verify the decryption.
+       * This means that I must buffer the message until the AuthTag is reached.
+       */
+      needs(!this._maxBodySize || this._maxBodySize > frameLength, 'maxBodySize exceeded.')
+    }
+
     this.materialsManager
       .decryptMaterials({ suite, encryptionContext, encryptedDataKeys })
       .then(({ material }) => {
@@ -83,7 +108,6 @@ export class ParseHeaderStream extends PortableTransformWithType {
         // The header is parsed, pass control
         const readPos = rawHeader.byteLength + headerIv.byteLength + headerAuthTag.byteLength
         const tail = headerBuffer.slice(readPos)
-        // Turn the stream into a passthrough
         this._transform = (chunk: any, _enc: string, cb: Function) => cb(null, chunk)
         // flush the tail.  Stream control is now in the verify and decrypt streams
         return setImmediate(() => this._transform(tail, encoding, callback))

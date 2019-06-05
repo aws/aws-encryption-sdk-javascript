@@ -29,12 +29,17 @@ export interface DecryptOutput {
   messageHeader: MessageHeader
 }
 
+export interface DecryptOptions {
+  encoding?: BufferEncoding
+  maxBodySize?: number
+}
+
 export async function decrypt (
   cmm: NodeCryptographicMaterialsManager|KeyringNode,
   ciphertext: Buffer|Uint8Array|Readable|string,
-  encoding?: BufferEncoding
+  { encoding, maxBodySize } : DecryptOptions = {}
 ): Promise<DecryptOutput> {
-  const stream = decryptStream(cmm)
+  const stream = decryptStream(cmm, { maxBodySize })
 
   const plaintext: Buffer[] = []
   let messageHeader: MessageHeader|false = false
