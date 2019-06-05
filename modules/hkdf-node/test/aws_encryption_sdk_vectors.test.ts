@@ -20,7 +20,7 @@ import 'mocha'
 import { HKDF } from '../src/index'
 import { testVectors } from './fixtures'
 
-// See: https://github.com/awslabs/aws-encryption-sdk-c/blob/master/tests/unit/t_hkdf.c
+// See: https://github.com/aws/aws-encryption-sdk-c/blob/master/tests/unit/t_hkdf.c
 describe('aws-encryption-sdk-c hkdf test vectors', () => {
   for (const vector of testVectors) {
     it(`Test: ${vector.testName}`, () => {
