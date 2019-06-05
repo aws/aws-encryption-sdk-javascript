@@ -1,5 +1,6 @@
 import {
-  NodeCryptographicMaterialsManager // eslint-disable-line no-unused-vars
+  KeyringNode, // eslint-disable-line no-unused-vars
+  NodeMaterialsManager // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 import {
   encryptStream,
@@ -21,7 +22,7 @@ export interface EncryptOutput {
 }
 
 export async function encrypt (
-  cmm: NodeCryptographicMaterialsManager,
+  cmm: KeyringNode|NodeMaterialsManager,
   plaintext: Buffer|Uint8Array|Readable|string,
   op: EncryptInput = {}
 ): Promise<EncryptOutput> {

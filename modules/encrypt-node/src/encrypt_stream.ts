@@ -14,8 +14,9 @@
  */
 
 import {
-  NodeCryptographicMaterialsManager, NodeAlgorithmSuite, AlgorithmSuiteIdentifier, // eslint-disable-line no-unused-vars
-  KeyringNode, NodeEncryptionMaterial, getEncryptHelper, EncryptionContext // eslint-disable-line no-unused-vars
+  NodeDefaultCryptographicMaterialsManager, NodeAlgorithmSuite, AlgorithmSuiteIdentifier, // eslint-disable-line no-unused-vars
+  KeyringNode, NodeEncryptionMaterial, getEncryptHelper, EncryptionContext, // eslint-disable-line no-unused-vars
+  NodeMaterialsManager // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 import { getFramedEncryptStream } from './framed_encrypt_stream'
 import { SignatureStream } from './signature_stream'
@@ -41,25 +42,22 @@ export interface EncryptStreamInput {
 }
 
 /**
- * Takes a NodeCryptographicMaterialsManager or a KeyringNode that will
- * be wrapped in a NodeCryptographicMaterialsManager and returns a stream.
+ * Takes a NodeDefaultCryptographicMaterialsManager or a KeyringNode that will
+ * be wrapped in a NodeDefaultCryptographicMaterialsManager and returns a stream.
  *
- * @param cmm NodeCryptographicMaterialsManager|KeyringNode
+ * @param cmm NodeMaterialsManager|KeyringNode
  * @param op EncryptStreamInput
  */
 export function encryptStream (
-  cmm: NodeCryptographicMaterialsManager|KeyringNode,
+  cmm: KeyringNode|NodeMaterialsManager,
   op: EncryptStreamInput = {}
 ): Duplex {
   const { suiteId, context, frameLength = 10 } = op
 
-  /* If the cmm is not a MaterialsManager, wrap in one.
-   * I am expecting the NodeCryptographicMaterialsManager to
-   * handle non-keyring parameters.
-   */
-  cmm = cmm instanceof NodeCryptographicMaterialsManager
-    ? cmm
-    : new NodeCryptographicMaterialsManager(cmm)
+  /* If the cmm is a Keyring, wrap it with NodeDefaultCryptographicMaterialsManager. */
+  cmm = cmm instanceof KeyringNode
+    ? new NodeDefaultCryptographicMaterialsManager(cmm)
+    : cmm
 
   const suite = suiteId && new NodeAlgorithmSuite(suiteId)
 

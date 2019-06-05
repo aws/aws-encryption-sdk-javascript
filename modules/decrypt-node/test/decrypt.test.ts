@@ -20,7 +20,7 @@ import 'mocha'
 import {
   NodeDecryptionMaterial, // eslint-disable-line no-unused-vars
   NodeEncryptionMaterial, // eslint-disable-line no-unused-vars
-  NodeCryptographicMaterialsManager, KeyringNode, EncryptedDataKey,
+  KeyringNode, EncryptedDataKey,
   KeyringTraceFlag, AlgorithmSuiteIdentifier
 } from '@aws-crypto/material-management-node'
 
@@ -48,13 +48,12 @@ describe('simple', () => {
     }
 
     const keyRing = new TestKeyring()
-    const cmm = new NodeCryptographicMaterialsManager(keyRing)
     const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
 
     const plaintext = 'asdf'
-    const { ciphertext } = await encrypt(cmm, plaintext, { suiteId })
+    const { ciphertext } = await encrypt(keyRing, plaintext, { suiteId })
 
-    const { plaintext: test, messageHeader } = await decrypt(cmm, ciphertext)
+    const { plaintext: test, messageHeader } = await decrypt(keyRing, ciphertext)
 
     expect(messageHeader.suiteId).to.equal(suiteId)
     expect(test.toString()).to.equal(plaintext)

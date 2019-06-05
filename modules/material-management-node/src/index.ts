@@ -25,5 +25,5 @@ export {
   AlgorithmSuiteIdentifier, EncryptionContext, EncryptedDataKey,
   KeyringTrace, KeyringTraceFlag, needs, KeyringNode, MultiKeyringNode,
   immutableBaseClass, immutableClass, frozenClass, readOnlyProperty,
-  MaterialsManager, GetEncryptionMaterials, GetDecryptMaterials
+  NodeMaterialsManager
 } from '@aws-crypto/material-management'
