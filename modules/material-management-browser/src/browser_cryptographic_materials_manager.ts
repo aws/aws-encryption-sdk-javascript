@@ -36,7 +36,7 @@ export type WebCryptoGetDecryptMaterials = GetDecryptMaterials<WebCryptoAlgorith
 
 /**
  * The DefaultCryptographicMaterialsManager is a specific implementation of the CryptographicMaterialsManager.
- * It is not a root behavior that MUST be extended, the way Keyrings are.
+ * New cryptography materials managers SHOULD extend from WebCryptoMaterialsManager.
  * Users should never need to create an instance of a DefaultCryptographicMaterialsManager.
  * Creation of custom CryptographicMaterialsManager should be undertaken carefully.
  */
