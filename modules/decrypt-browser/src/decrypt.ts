@@ -47,7 +47,7 @@ export async function decrypt (
   cmm: KeyringWebCrypto|WebCryptoMaterialsManager,
   ciphertext: Uint8Array
 ): Promise<DecryptResult> {
-  /* If the cmm is a Keyring, wrap it with WebCryptoCryptographicMaterialsManager. */
+  /* If the cmm is a Keyring, wrap it with WebCryptoDefaultCryptographicMaterialsManager. */
   cmm = cmm instanceof KeyringWebCrypto
     ? new WebCryptoDefaultCryptographicMaterialsManager(cmm)
     : cmm
