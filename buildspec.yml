@@ -1,0 +1,14 @@
+version: 0.2
+
+phases:
+    install:
+        runtime-versions:
+            nodejs: 10
+        commands:
+            - npm install
+            - npm run bootstrap
+            - npm run build:node
+            - npm run build:browser
+    build:
+        commands:
+            - npm test
