@@ -27,14 +27,21 @@ import { Duplex } from 'stream' // eslint-disable-line no-unused-vars
 // @ts-ignore
 import { pipeline } from 'readable-stream'
 
-export function decryptStream (cmm: KeyringNode|NodeMaterialsManager): Duplex {
+export interface DecryptStreamOptions {
+  maxBodySize?: number
+}
+
+export function decryptStream (
+  cmm: KeyringNode|NodeMaterialsManager,
+  { maxBodySize } : DecryptStreamOptions = {}
+): Duplex {
   /* If the cmm is a Keyring, wrap it with NodeDefaultCryptographicMaterialsManager. */
   cmm = cmm instanceof KeyringNode
     ? new NodeDefaultCryptographicMaterialsManager(cmm)
     : cmm
 
-  const parseHeaderStream = new ParseHeaderStream(cmm)
-  const verifyStream = new VerifyStream()
+  const parseHeaderStream = new ParseHeaderStream(cmm, { maxBodySize })
+  const verifyStream = new VerifyStream({ maxBodySize })
   const decipherStream = getDecipherStream()
 
   pipeline(parseHeaderStream, verifyStream, decipherStream)
