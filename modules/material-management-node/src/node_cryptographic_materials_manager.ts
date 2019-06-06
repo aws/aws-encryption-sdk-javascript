@@ -35,9 +35,8 @@ export type NodeGetDecryptMaterials = GetDecryptMaterials<NodeAlgorithmSuite>
 
 /**
  * The DefaultCryptographicMaterialsManager is a specific implementation of the Default CryptographicMaterialsManager.
- * It is not a root behavior that MUST be extended, the way Keyrings are.
+ * New cryptography materials managers SHOULD extend from NodeMaterialsManager.
  * Users should never need to create an instance of a DefaultCryptographicMaterialsManager.
- * Creation of custom CryptographicMaterialsManager should be undertaken carefully.
  */
 export class NodeDefaultCryptographicMaterialsManager implements NodeMaterialsManager {
   readonly keyring!: KeyringNode
