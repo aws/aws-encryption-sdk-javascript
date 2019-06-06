@@ -81,7 +81,7 @@ export class ParseHeaderStream extends PortableTransformWithType {
        * Before returning *any* cleartext, the stream **MUST** verify the decryption.
        * This means that I must buffer the message until the AuthTag is reached.
        */
-      needs(!this._maxBodySize || this._maxBodySize > frameLength, 'maxBodySize exceeded.')
+      needs(!this._maxBodySize || this._maxBodySize >= frameLength, 'maxBodySize exceeded.')
     }
 
     this.materialsManager
