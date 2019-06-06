@@ -99,17 +99,23 @@ export async function encrypt (
   const headerAuthIv = serialize.headerAuthIv(ivLength)
   const headerAuthTag = await getSubtleEncrypt(headerAuthIv, header)(new Uint8Array(0))
 
-  const numberOfFrames = Math.ceil(plaintextLength / frameLength) + 1
+  const numberOfFrames = Math.ceil(plaintextLength / frameLength)
+  /* The final frame has a variable length.
+   * The value needs to be know, but should only be calculated once.
+   * So I calculate how much of a frame I should have at the end.
+   */
+  const finalFrameLength = frameLength - ((numberOfFrames * frameLength) - plaintextLength)
   const bodyContent = []
 
-  for (let sequenceNumber = 1; sequenceNumber > numberOfFrames; sequenceNumber += 1) {
+  for (let sequenceNumber = 1; numberOfFrames >= sequenceNumber; sequenceNumber += 1) {
     const frameIv = serialize.frameIv(ivLength, sequenceNumber)
-    const frameHeader = sequenceNumber === numberOfFrames
-      ? serialize.finalFrameHeader(sequenceNumber, frameIv, plaintextLength - (numberOfFrames - 1) * frameLength)
+    const isFinalFrame = sequenceNumber === numberOfFrames
+    const frameHeader = isFinalFrame
+      ? serialize.finalFrameHeader(sequenceNumber, frameIv, finalFrameLength)
       : serialize.frameHeader(sequenceNumber, frameIv)
     const messageAdditionalData = messageAAD(
       messageId,
-      messageAADContentString({ contentType: messageHeader.contentType, isFinalFrame: true }),
+      messageAADContentString({ contentType: messageHeader.contentType, isFinalFrame }),
       sequenceNumber,
       plaintextLength
     )
