@@ -32,7 +32,7 @@ export interface DecryptStreamOptions {
 }
 
 export function decryptStream (
-  cmm: NodeCryptographicMaterialsManager|KeyringNode,
+  cmm: KeyringNode|NodeMaterialsManager,
   { maxBodySize } : DecryptStreamOptions = {}
 ): Duplex {
   /* If the cmm is a Keyring, wrap it with NodeDefaultCryptographicMaterialsManager. */
