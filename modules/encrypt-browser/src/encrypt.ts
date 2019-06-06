@@ -101,7 +101,7 @@ export async function encrypt (
 
   const numberOfFrames = Math.ceil(plaintextLength / frameLength)
   /* The final frame has a variable length.
-   * The value needs to be know, but should only be calculated once.
+   * The value needs to be known, but should only be calculated once.
    * So I calculate how much of a frame I should have at the end.
    */
   const finalFrameLength = frameLength - ((numberOfFrames * frameLength) - plaintextLength)
