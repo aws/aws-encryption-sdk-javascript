@@ -24,7 +24,8 @@ import Duplexify from 'duplexify'
 import { randomBytes } from 'crypto'
 import {
   MessageHeader, // eslint-disable-line no-unused-vars
-  serializeFactory, kdfInfo, ContentType, SerializationVersion, ObjectType
+  serializeFactory, kdfInfo, ContentType, SerializationVersion, ObjectType,
+  FRAME_LENGTH,
 } from '@aws-crypto/serialize'
 
 // @ts-ignore
@@ -52,7 +53,7 @@ export function encryptStream (
   cmm: KeyringNode|NodeMaterialsManager,
   op: EncryptStreamInput = {}
 ): Duplex {
-  const { suiteId, context, frameLength = 10 } = op
+  const { suiteId, context, frameLength = FRAME_LENGTH } = op
 
   /* If the cmm is a Keyring, wrap it with NodeDefaultCryptographicMaterialsManager. */
   cmm = cmm instanceof KeyringNode
