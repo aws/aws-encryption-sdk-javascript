@@ -34,7 +34,7 @@ export type NodeGetEncryptionMaterials = GetEncryptionMaterials<NodeAlgorithmSui
 export type NodeGetDecryptMaterials = GetDecryptMaterials<NodeAlgorithmSuite>
 
 /**
- * The DefaultCryptographicMaterialsManager is a specific implementation of the Default CryptographicMaterialsManager.
+ * The DefaultCryptographicMaterialsManager is a specific implementation of the CryptographicMaterialsManager.
  * New cryptography materials managers SHOULD extend from NodeMaterialsManager.
  * Users should never need to create an instance of a DefaultCryptographicMaterialsManager.
  */
