@@ -24,10 +24,12 @@ import {
   CryptographicMaterialsCache // eslint-disable-line no-unused-vars
 } from '@aws-crypto/cache-material'
 import {
-  MaterialsManager, // eslint-disable-line no-unused-vars
-  NodeCryptographicMaterialsManager,
+  NodeMaterialsManager, // eslint-disable-line no-unused-vars
+  NodeDefaultCryptographicMaterialsManager,
   NodeAlgorithmSuite, // eslint-disable-line no-unused-vars
-  KeyringNode
+  KeyringNode,
+  NodeGetEncryptionMaterials, // eslint-disable-line no-unused-vars
+  NodeGetDecryptMaterials // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 
 import { createHash, randomBytes } from 'crypto'
@@ -41,7 +43,7 @@ const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(fromUtf8, sha
 
 export class NodeCachingMaterialsManager implements CachingMaterialsManager<NodeAlgorithmSuite> {
   readonly _cache!: CryptographicMaterialsCache<NodeAlgorithmSuite>
-  readonly _backingMaterialsManager!: MaterialsManager<NodeAlgorithmSuite>
+  readonly _backingMaterialsManager!: NodeMaterialsManager
   readonly _partition!: string
   readonly _maxBytesEncrypted!: number
   readonly _maxMessagesEncrypted!: number
@@ -49,8 +51,8 @@ export class NodeCachingMaterialsManager implements CachingMaterialsManager<Node
 
   constructor (input: CachingMaterialsManagerInput<NodeAlgorithmSuite>) {
     const backingMaterialsManager = input.backingMaterials instanceof KeyringNode
-      ? new NodeCryptographicMaterialsManager(input.backingMaterials)
-      : <NodeCryptographicMaterialsManager>input.backingMaterials
+      ? new NodeDefaultCryptographicMaterialsManager(input.backingMaterials)
+      : <NodeDefaultCryptographicMaterialsManager>input.backingMaterials
 
     /* Precondition: A partition value must exist for NodeCachingMaterialsManager.
      * The maximum hash function at this time is 512.
@@ -65,7 +67,7 @@ export class NodeCachingMaterialsManager implements CachingMaterialsManager<Node
     })
   }
 
-  getEncryptionMaterials = getEncryptionMaterials<NodeAlgorithmSuite>(cacheKeyHelpers)
-  decryptMaterials = decryptMaterials<NodeAlgorithmSuite>(cacheKeyHelpers)
+  getEncryptionMaterials: NodeGetEncryptionMaterials = getEncryptionMaterials<NodeAlgorithmSuite>(cacheKeyHelpers)
+  decryptMaterials: NodeGetDecryptMaterials = decryptMaterials<NodeAlgorithmSuite>(cacheKeyHelpers)
   _cacheEntryHasExceededLimits = cacheEntryHasExceededLimits<NodeAlgorithmSuite>()
 }

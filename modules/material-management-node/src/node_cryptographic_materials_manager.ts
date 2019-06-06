@@ -18,7 +18,8 @@ import {
   EncryptionResponse, DecryptionResponse, // eslint-disable-line no-unused-vars
   NodeAlgorithmSuite, NodeEncryptionMaterial, NodeDecryptionMaterial, SignatureKey,
   needs, VerificationKey, AlgorithmSuiteIdentifier,
-  immutableClass, readOnlyProperty, KeyringNode
+  immutableClass, readOnlyProperty, KeyringNode,
+  GetEncryptionMaterials, GetDecryptMaterials // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 
 import { ENCODED_SIGNER_KEY } from '@aws-crypto/serialize'
@@ -29,8 +30,15 @@ export type NodeEncryptionRequest = EncryptionRequest<NodeAlgorithmSuite>
 export type NodeDecryptionRequest = DecryptionRequest<NodeAlgorithmSuite>
 export type NodeEncryptionResponse = EncryptionResponse<NodeAlgorithmSuite>
 export type NodeDecryptionResponse = DecryptionResponse<NodeAlgorithmSuite>
+export type NodeGetEncryptionMaterials = GetEncryptionMaterials<NodeAlgorithmSuite>
+export type NodeGetDecryptMaterials = GetDecryptMaterials<NodeAlgorithmSuite>
 
-export class NodeCryptographicMaterialsManager implements NodeMaterialsManager {
+/**
+ * The DefaultCryptographicMaterialsManager is a specific implementation of the CryptographicMaterialsManager.
+ * New cryptography materials managers SHOULD extend from NodeMaterialsManager.
+ * Users should never need to create an instance of a DefaultCryptographicMaterialsManager.
+ */
+export class NodeDefaultCryptographicMaterialsManager implements NodeMaterialsManager {
   readonly keyring!: KeyringNode
   constructor (keyring: KeyringNode) {
     /* Precondition: keyrings must be a KeyringNode. */
@@ -96,12 +104,12 @@ export class NodeCryptographicMaterialsManager implements NodeMaterialsManager {
     /* Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve to load a signature key. */
     if (!namedCurve) return material
 
-    /* Precondition: NodeCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist. */
+    /* Precondition: NodeDefaultCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist. */
     if (!context) throw new Error('Context does not contain required public key.')
 
     const { [ENCODED_SIGNER_KEY]: compressPoint } = context
 
-    /* Precondition: NodeCryptographicMaterialsManager The context must contain the public key. */
+    /* Precondition: NodeDefaultCryptographicMaterialsManager The context must contain the public key. */
     needs(compressPoint, 'Context does not contain required public key.')
 
     const publicKeyBytes = VerificationKey.decodeCompressPoint(Buffer.from(compressPoint, 'base64'), material.suite)
@@ -109,4 +117,4 @@ export class NodeCryptographicMaterialsManager implements NodeMaterialsManager {
     return material.setVerificationKey(new VerificationKey(publicKeyBytes, material.suite))
   }
 }
-immutableClass(NodeCryptographicMaterialsManager)
+immutableClass(NodeDefaultCryptographicMaterialsManager)

@@ -15,7 +15,6 @@
 
 import {
   needs,
-  NodeCryptographicMaterialsManager,
   MultiKeyringNode
 } from '@aws-crypto/material-management-node'
 import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
@@ -44,8 +43,7 @@ const Bits2RawAesWrappingSuiteIdentifier: {[key: number]: WrappingSuiteIdentifie
 
 export function decryptMaterialsManagerNode (keyInfos: KeyInfoTuple[]) {
   const children = keyInfos.map(keyringNode)
-  const keyring = new MultiKeyringNode({ children })
-  return new NodeCryptographicMaterialsManager(keyring)
+  return new MultiKeyringNode({ children })
 }
 
 function keyringNode ([ info, key ]: KeyInfoTuple) {

@@ -19,7 +19,7 @@ import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import 'mocha'
 import { KeyringNode } from '@aws-crypto/material-management'
-import { NodeCryptographicMaterialsManager } from '../src/node_cryptographic_materials_manager'
+import { NodeDefaultCryptographicMaterialsManager } from '../src/node_cryptographic_materials_manager'
 import {
   NodeEncryptionMaterial, // eslint-disable-line no-unused-vars
   NodeDecryptionMaterial, // eslint-disable-line no-unused-vars
@@ -32,7 +32,7 @@ import { ENCODED_SIGNER_KEY } from '@aws-crypto/serialize'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-describe('NodeCryptographicMaterialsManager', () => {
+describe('NodeDefaultCryptographicMaterialsManager', () => {
   it('constructor sets keyring', () => {
     class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
@@ -43,8 +43,8 @@ describe('NodeCryptographicMaterialsManager', () => {
       }
     }
     const keyring = new TestKeyring()
-    const test = new NodeCryptographicMaterialsManager(keyring)
-    expect(test).to.be.instanceOf(NodeCryptographicMaterialsManager)
+    const test = new NodeDefaultCryptographicMaterialsManager(keyring)
+    expect(test).to.be.instanceOf(NodeDefaultCryptographicMaterialsManager)
     expect(test).to.haveOwnPropertyDescriptor('keyring', {
       value: keyring,
       writable: false,
@@ -54,7 +54,7 @@ describe('NodeCryptographicMaterialsManager', () => {
   })
 
   it('Precondition: keyrings must be a KeyringNode.', () => {
-    expect(() => new NodeCryptographicMaterialsManager({} as any)).to.throw()
+    expect(() => new NodeDefaultCryptographicMaterialsManager({} as any)).to.throw()
   })
 
   it('should create a signature key and append it to context', async () => {
@@ -67,7 +67,7 @@ describe('NodeCryptographicMaterialsManager', () => {
       }
     }
     const keyring = new TestKeyring()
-    const cmm = new NodeCryptographicMaterialsManager(keyring)
+    const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const material = new NodeEncryptionMaterial(suite)
@@ -90,7 +90,7 @@ describe('NodeCryptographicMaterialsManager', () => {
       }
     }
     const keyring = new TestKeyring()
-    const cmm = new NodeCryptographicMaterialsManager(keyring)
+    const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const material = new NodeEncryptionMaterial(suite)
@@ -112,7 +112,7 @@ describe('NodeCryptographicMaterialsManager', () => {
       }
     }
     const keyring = new TestKeyring()
-    const cmm = new NodeCryptographicMaterialsManager(keyring)
+    const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
 
@@ -138,7 +138,7 @@ describe('NodeCryptographicMaterialsManager', () => {
       }
     }
     const keyring = new TestKeyring()
-    const cmm = new NodeCryptographicMaterialsManager(keyring)
+    const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const material = new NodeDecryptionMaterial(suite)
@@ -147,7 +147,7 @@ describe('NodeCryptographicMaterialsManager', () => {
     expect(test === material).to.equal(true)
   })
 
-  it('Precondition: NodeCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist.', async () => {
+  it('Precondition: NodeDefaultCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist.', async () => {
     class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
@@ -157,7 +157,7 @@ describe('NodeCryptographicMaterialsManager', () => {
       }
     }
     const keyring = new TestKeyring()
-    const cmm = new NodeCryptographicMaterialsManager(keyring)
+    const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
 
     await expect(cmm._loadVerificationKeyFromEncryptionContext(
@@ -165,7 +165,7 @@ describe('NodeCryptographicMaterialsManager', () => {
     )).to.rejectedWith(Error)
   })
 
-  it('Precondition: NodeCryptographicMaterialsManager The context must contain the public key.', async () => {
+  it('Precondition: NodeDefaultCryptographicMaterialsManager The context must contain the public key.', async () => {
     class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
@@ -175,7 +175,7 @@ describe('NodeCryptographicMaterialsManager', () => {
       }
     }
     const keyring = new TestKeyring()
-    const cmm = new NodeCryptographicMaterialsManager(keyring)
+    const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
 
     await expect(cmm._loadVerificationKeyFromEncryptionContext(
@@ -196,7 +196,7 @@ describe('NodeCryptographicMaterialsManager', () => {
       }
     }
     const keyring = new TestKeyring()
-    const cmm = new NodeCryptographicMaterialsManager(keyring)
+    const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
     await expect(cmm.getEncryptionMaterials({ suite })).to.rejectedWith(Error)
   })
@@ -215,7 +215,7 @@ describe('NodeCryptographicMaterialsManager', () => {
       }
     }
     const keyring = new TestKeyring()
-    const cmm = new NodeCryptographicMaterialsManager(keyring)
+    const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
     await expect(cmm.getEncryptionMaterials({ suite })).to.rejectedWith(Error)
   })
@@ -232,7 +232,7 @@ describe('NodeCryptographicMaterialsManager', () => {
       }
     }
     const keyring = new TestKeyring()
-    const cmm = new NodeCryptographicMaterialsManager(keyring)
+    const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
     const encryptedDataKeys = [new EncryptedDataKey({
       providerId: 'p', providerInfo: 'p', encryptedDataKey: new Uint8Array(5)
     })]
@@ -254,7 +254,7 @@ describe('NodeCryptographicMaterialsManager', () => {
       }
     }
     const keyring = new TestKeyring()
-    const cmm = new NodeCryptographicMaterialsManager(keyring)
+    const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
     const encryptedDataKeys = [new EncryptedDataKey({
       providerId: 'p', providerInfo: 'p', encryptedDataKey: new Uint8Array(5)
     })]

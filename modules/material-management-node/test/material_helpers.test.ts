@@ -23,7 +23,7 @@ import { nodeKdf, getCryptoStream, getEncryptHelper, getDecryptionHelper } from 
 import { Decipheriv, Cipheriv, createECDH } from 'crypto'
 
 describe('nodeKdf', () => {
-  it('Check for early return (Postcondition): No KDF, just return the unencrypted data key.', () => {
+  it('Check for early return (Postcondition): No Node.js KDF, just return the unencrypted data key.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const material = new NodeEncryptionMaterial(suite)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
@@ -58,7 +58,7 @@ describe('nodeKdf', () => {
     expect(test.byteLength).to.equal(suite.keyLengthBytes)
   })
 
-  it('Precondition: Valid HKDF values must exist.', () => {
+  it('Precondition: Valid HKDF values must exist for Node.js.', () => {
     expect(() => nodeKdf({
       getUnencryptedDataKey () {},
       suite: {

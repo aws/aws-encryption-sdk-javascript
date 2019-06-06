@@ -28,7 +28,6 @@
  * limitations under the License.
  */
 
-import { NodeCryptographicMaterialsManager } from '@aws-crypto/material-management-node'
 import { RawRsaKeyringNode } from '@aws-crypto/raw-rsa-keyring-node'
 import { encrypt } from '@aws-crypto/encrypt-node'
 import { decrypt } from '@aws-crypto/decrypt-node'
@@ -53,12 +52,6 @@ export async function rsaTest () {
    */
   const keyring = new RawRsaKeyringNode({ keyName, keyNamespace, rsaKey })
 
-  /* A CryptographicMaterialsManager is required to provide material to the `encrypt` function.
-   * The keyring _can_ be passed directly to the `encrypt` function,
-   * but this example is being explicit.
-   */
-  const cmm = new NodeCryptographicMaterialsManager(keyring)
-
   /* Encryption Context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
    * Remember encrypted data is opaque, encryption context will help your run time checking.
@@ -75,9 +68,9 @@ export async function rsaTest () {
   const cleartext = 'asdf'
 
   /* Encrypt the data. */
-  const { ciphertext } = await encrypt(cmm, cleartext, { context })
+  const { ciphertext } = await encrypt(keyring, cleartext, { context })
   /* Decrypt the data. */
-  const { plaintext, messageHeader } = await decrypt(cmm, ciphertext)
+  const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
 
   /* Grab the encryption context so I can verify it. */
   const { encryptionContext } = messageHeader

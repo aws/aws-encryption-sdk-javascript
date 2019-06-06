@@ -15,7 +15,6 @@
 
 import {
   needs,
-  WebCryptoCryptographicMaterialsManager,
   MultiKeyringWebCrypto
 } from '@aws-crypto/material-management-browser'
 import {
@@ -55,8 +54,7 @@ const Bits2RawAesWrappingSuiteIdentifier: {[key: number]: WrappingSuiteIdentifie
 
 export async function decryptMaterialsManagerWebCrypto (keyInfos: KeyInfoTuple[]) {
   const children = await Promise.all(keyInfos.map(keyringWebCrypto))
-  const keyring = new MultiKeyringWebCrypto({ children })
-  return new WebCryptoCryptographicMaterialsManager(keyring)
+  return new MultiKeyringWebCrypto({ children })
 }
 
 async function keyringWebCrypto ([ info, key ]: KeyInfoTuple) {

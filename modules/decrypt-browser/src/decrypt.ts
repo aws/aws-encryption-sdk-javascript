@@ -15,10 +15,12 @@
 
 import {
   WebCryptoAlgorithmSuite,
-  WebCryptoCryptographicMaterialsManager, // eslint-disable-line no-unused-vars
+  KeyringWebCrypto,
+  WebCryptoDefaultCryptographicMaterialsManager,
   getDecryptionHelper,
   GetSubtleDecrypt, // eslint-disable-line no-unused-vars
-  needs
+  needs,
+  WebCryptoMaterialsManager // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
 import {
   deserializeSignature,
@@ -42,9 +44,14 @@ export interface DecryptResult {
 }
 
 export async function decrypt (
-  cmm: WebCryptoCryptographicMaterialsManager,
+  cmm: KeyringWebCrypto|WebCryptoMaterialsManager,
   ciphertext: Uint8Array
 ): Promise<DecryptResult> {
+  /* If the cmm is a Keyring, wrap it with WebCryptoDefaultCryptographicMaterialsManager. */
+  cmm = cmm instanceof KeyringWebCrypto
+    ? new WebCryptoDefaultCryptographicMaterialsManager(cmm)
+    : cmm
+
   const headerInfo = deserialize.deserializeMessageHeader(ciphertext)
   if (headerInfo === false) throw new Error('Unable to parse Header')
   const { messageHeader } = headerInfo

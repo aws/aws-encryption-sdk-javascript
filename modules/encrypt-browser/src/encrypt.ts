@@ -15,11 +15,13 @@
 
 import {
   WebCryptoAlgorithmSuite,
-  WebCryptoCryptographicMaterialsManager, // eslint-disable-line no-unused-vars
+  WebCryptoDefaultCryptographicMaterialsManager, // eslint-disable-line no-unused-vars
   WebCryptoEncryptionRequest, // eslint-disable-line no-unused-vars
   EncryptionContext, // eslint-disable-line no-unused-vars
   AlgorithmSuiteIdentifier,
-  getEncryptHelper
+  getEncryptHelper,
+  KeyringWebCrypto,
+  WebCryptoMaterialsManager // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
 import {
   serializeFactory,
@@ -52,12 +54,17 @@ export interface EncryptResult {
 }
 
 export async function encrypt (
-  cmm: WebCryptoCryptographicMaterialsManager,
+  cmm: KeyringWebCrypto|WebCryptoMaterialsManager,
   plaintext: Uint8Array,
   { suiteId, encryptionContext }: EncryptInput = {}
 ): Promise<EncryptResult> {
   const backend = await getWebCryptoBackend()
   if (!backend) throw new Error('No supported crypto backend')
+
+  /* If the cmm is a Keyring, wrap it with WebCryptoDefaultCryptographicMaterialsManager. */
+  cmm = cmm instanceof KeyringWebCrypto
+    ? new WebCryptoDefaultCryptographicMaterialsManager(cmm)
+    : cmm
 
   // Subtle Crypto functions are all one-shot so all the plaintext needs to be available.
   const plaintextLength = plaintext.byteLength

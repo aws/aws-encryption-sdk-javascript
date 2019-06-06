@@ -18,7 +18,7 @@ import { Transform as PortableTransform } from 'readable-stream'
 import { Transform } from 'stream' // eslint-disable-line no-unused-vars
 import {
   NodeAlgorithmSuite,
-  NodeCryptographicMaterialsManager, // eslint-disable-line no-unused-vars
+  NodeMaterialsManager, // eslint-disable-line no-unused-vars
   getDecryptionHelper,
   needs
 } from '@aws-crypto/material-management-node'
@@ -40,10 +40,10 @@ export interface ParseHeaderOptions {
 }
 
 export class ParseHeaderStream extends PortableTransformWithType {
-  private materialsManager!: NodeCryptographicMaterialsManager
+  private materialsManager!: NodeMaterialsManager
   private _headerState: HeaderState
   private _maxBodySize?: number
-  constructor (cmm: NodeCryptographicMaterialsManager, { maxBodySize }: ParseHeaderOptions = {}) {
+  constructor (cmm: NodeMaterialsManager, { maxBodySize }: ParseHeaderOptions = {}) {
     /* Precondition: MaxBodySize must be falsey or a number. */
     needs(!maxBodySize || typeof maxBodySize === 'number', 'Unsupported MaxBodySize.')
     super()
