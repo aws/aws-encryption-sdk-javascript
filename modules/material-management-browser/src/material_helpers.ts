@@ -194,27 +194,33 @@ export async function WebCryptoKdf<T extends WebCryptoMaterial<T>> (
 ): Promise<CryptoKey> {
   const { kdf, kdfHash, keyLength, encryption } = material.suite
 
-  if (kdf === 'HKDF' && kdfHash) {
-    needs(info && info.byteLength, 'HKDF requires info.')
-    // https://developer.mozilla.org/en-US/docs/Web/API/HkdfParams
-    const kdfAlgorithm = { name: kdf, hash: { name: kdfHash }, info, salt: new Uint8Array() }
-    const derivedKeyAlgorithm = { name: encryption, length: keyLength }
-    const extractable = false
-    const deriveKey = await subtle
-      .deriveKey(
-        // @ts-ignore types need to be updated see: https://developer.mozilla.org/en-US/docs/Web/API/HkdfParams
-        kdfAlgorithm,
-        cryptoKey,
-        derivedKeyAlgorithm,
-        extractable,
-        keyUsages
-      )
-    /* Postcondition: The derived key must conform to the algorith suite specification. */
-    needs(isValidCryptoKey(deriveKey, material), 'Invalid derived key')
-    return deriveKey
-  } else {
-    return cryptoKey
-  }
+  /* Check for early return (Postcondition): No WebCrypto KDF, just return the unencrypted data key. */
+  if (!kdf && !kdfHash) return cryptoKey
+
+  /* Precondition: Valid HKDF values must exist for browsers. */
+  needs(
+    kdf === 'HKDF' &&
+    kdfHash &&
+    info instanceof Uint8Array && 
+    info.byteLength,
+    'Invalid HKDF values.'
+  )
+  // https://developer.mozilla.org/en-US/docs/Web/API/HkdfParams
+  const kdfAlgorithm = { name: kdf, hash: { name: kdfHash }, info, salt: new Uint8Array() }
+  const derivedKeyAlgorithm = { name: encryption, length: keyLength }
+  const extractable = false
+  const deriveKey = await subtle
+    .deriveKey(
+      // @ts-ignore types need to be updated see: https://developer.mozilla.org/en-US/docs/Web/API/HkdfParams
+      kdfAlgorithm,
+      cryptoKey,
+      derivedKeyAlgorithm,
+      extractable,
+      keyUsages
+    )
+  /* Postcondition: The derived key must conform to the algorith suite specification. */
+  needs(isValidCryptoKey(deriveKey, material), 'Invalid derived key')
+  return deriveKey
 }
 
 export async function importCryptoKey<T extends WebCryptoMaterial<T>> (
