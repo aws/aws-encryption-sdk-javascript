@@ -48,9 +48,9 @@ export function HKDF (algorithm: string = 'sha256'): HKDFOutput {
    * @param salt [String|Buffer] Optional salt for the extraction
    * @return [Function] expand function with the extracted key curried onto it
    */
-  function extractExpand (ikm: string|Buffer, salt?: string|Buffer|false) {
+  function extractExpand (ikm: string|Uint8Array, salt?: string|Uint8Array|false) {
     const prk = extract(ikm, salt)
-    return (length:number, info?:Buffer) => expand(prk, length, info)
+    return (length:number, info?:Uint8Array) => expand(prk, length, info)
   }
 
   /**
@@ -60,7 +60,7 @@ export function HKDF (algorithm: string = 'sha256'): HKDFOutput {
    * @param salt [String|Buffer] Optional salt for the extraction
    * @return [Buffer] the expanded key
    */
-  function extract (ikm: string|Buffer, salt?: string|Buffer|false) {
+  function extract (ikm: string|Uint8Array, salt?: string|Uint8Array|false) {
     var _salt = salt || Buffer.alloc(hashLength, 0).toString()
     return createHmac(algorithm, _salt).update(ikm).digest()
   }
@@ -73,7 +73,7 @@ export function HKDF (algorithm: string = 'sha256'): HKDFOutput {
    * @param info [Buffer] Data to bind the expanded key to application/context specific information
    * @return [Buffer] the expanded
    */
-  function expand (prk:Buffer, length:number, info?:Buffer) {
+  function expand (prk:Uint8Array, length:number, info?:Uint8Array) {
     if (length > maxLength) {
       throw new KeyLengthError(maxLength, algorithm)
     }
@@ -97,11 +97,11 @@ export function HKDF (algorithm: string = 'sha256'): HKDFOutput {
 }
 
 export interface Extract {
-  (ikm: string|Buffer, salt?: string|Buffer|false): Buffer
+  (ikm: string|Uint8Array, salt?: string|Uint8Array|false): Buffer
 }
 
 export interface Expand {
-  (prk:Buffer, length:number, info?:Buffer): Buffer
+  (prk:Uint8Array, length:number, info?:Uint8Array): Buffer
 }
 
 export interface HKDFOutput {
