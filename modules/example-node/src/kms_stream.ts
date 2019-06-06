@@ -28,7 +28,6 @@
  * limitations under the License.
  */
 
-import { NodeCryptographicMaterialsManager } from '@aws-crypto/material-management-node'
 import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
 import { encryptStream } from '@aws-crypto/encrypt-node'
 import {
@@ -49,12 +48,6 @@ export async function kmsStreamTest () {
   /* The KMS Keyring must be configured with the desired CMK's */
   const keyring = new KmsKeyringNode({ generatorKeyId })
 
-  /* A CryptographicMaterialsManager is required to provide material to the `encrypt` or `decrypt` function.
-   * The keyring _can_ be passed directly to the `encrypt` or `decrypt` function,
-   * but this example is being explicit.
-   */
-  const cmm = new NodeCryptographicMaterialsManager(keyring)
-
   /* Encryption Context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
    * Remember encrypted data is opaque, encryption context will help your run time checking.
@@ -69,8 +62,7 @@ export async function kmsStreamTest () {
 
   /* Create a simple pipeline to encrypt the package.json for this project. */
   const stream = createReadStream('./package.json')
-    .pipe(encryptStream(cmm, { context }))
-    /* A Keyring can be passed instead of a CryptographicMaterialsManager. */
+    .pipe(encryptStream(keyring, { context }))
     .pipe(decryptStream(new KmsKeyringNode({ discovery: true })))
     .on('MessageHeader', ({ encryptionContext }: MessageHeader) => {
       /* Verify the encryption context.

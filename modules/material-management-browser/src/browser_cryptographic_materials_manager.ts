@@ -19,22 +19,29 @@ import {
   EncryptionResponse, DecryptionResponse, Keyring, // eslint-disable-line no-unused-vars
   WebCryptoAlgorithmSuite, WebCryptoEncryptionMaterial,
   WebCryptoDecryptionMaterial, SignatureKey, needs,
-  VerificationKey, AlgorithmSuiteIdentifier, immutableBaseClass
+  VerificationKey, AlgorithmSuiteIdentifier, immutableBaseClass,
+  KeyringWebCrypto, GetEncryptionMaterials, GetDecryptMaterials // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 
 import { ENCODED_SIGNER_KEY } from '@aws-crypto/serialize'
 import { getWebCryptoBackend, getNonZeroByteBackend } from '@aws-crypto/web-crypto-backend'
 import { fromBase64, toBase64 } from '@aws-sdk/util-base64-browser'
 
-type WebCryptoKeyring = Keyring<WebCryptoAlgorithmSuite>
 export type WebCryptoEncryptionRequest = EncryptionRequest<WebCryptoAlgorithmSuite>
 export type WebCryptoDecryptionRequest = DecryptionRequest<WebCryptoAlgorithmSuite>
 export type WebCryptoEncryptionResponse = EncryptionResponse<WebCryptoAlgorithmSuite>
 export type WebCryptoDecryptionResponse = DecryptionResponse<WebCryptoAlgorithmSuite>
+export type WebCryptoGetEncryptionMaterials = GetEncryptionMaterials<WebCryptoAlgorithmSuite>
+export type WebCryptoGetDecryptMaterials = GetDecryptMaterials<WebCryptoAlgorithmSuite>
 
-export class WebCryptoCryptographicMaterialsManager implements WebCryptoMaterialsManager {
-  readonly keyring: WebCryptoKeyring
-  constructor (keyring: WebCryptoKeyring) {
+/**
+ * The DefaultCryptographicMaterialsManager is a specific implementation of the CryptographicMaterialsManager.
+ * New cryptography materials managers SHOULD extend from WebCryptoMaterialsManager.
+ * Users should never need to create an instance of a DefaultCryptographicMaterialsManager.
+ */
+export class WebCryptoDefaultCryptographicMaterialsManager implements WebCryptoMaterialsManager {
+  readonly keyring: KeyringWebCrypto
+  constructor (keyring: KeyringWebCrypto) {
     needs(keyring instanceof Keyring, 'Unsupported type.')
     this.keyring = keyring
   }
@@ -103,12 +110,12 @@ export class WebCryptoCryptographicMaterialsManager implements WebCryptoMaterial
     /* Precondition: The algorithm suite specification must support a signatureCurve to extract a verification key. */
     if (!namedCurve) return material
 
-    /* Precondition: WebCryptoCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist. */
+    /* Precondition: WebCryptoDefaultCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist. */
     if (!context) throw new Error('Context does not contain required public key.')
 
     const { [ENCODED_SIGNER_KEY]: compressPoint } = context
 
-    /* Precondition: WebCryptoCryptographicMaterialsManager The context must contain the public key. */
+    /* Precondition: WebCryptoDefaultCryptographicMaterialsManager The context must contain the public key. */
     needs(compressPoint, 'Context does not contain required public key.')
 
     const backend = await getWebCryptoBackend()
@@ -125,4 +132,4 @@ export class WebCryptoCryptographicMaterialsManager implements WebCryptoMaterial
   }
 }
 
-immutableBaseClass(WebCryptoCryptographicMaterialsManager)
+immutableBaseClass(WebCryptoDefaultCryptographicMaterialsManager)

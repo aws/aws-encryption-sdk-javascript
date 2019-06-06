@@ -30,7 +30,6 @@
 
 import { KmsKeyringNode, limitRegions, excludeRegions, getKmsClient } from '@aws-crypto/kms-keyring-node'
 import { decrypt } from '@aws-crypto/decrypt-node'
-import { NodeCryptographicMaterialsManager } from '@aws-crypto/material-management-node'
 
 export async function kmsRegionalDiscoveryLimitTest (ciphertext: string|Buffer) {
   const discovery = true
@@ -38,9 +37,7 @@ export async function kmsRegionalDiscoveryLimitTest (ciphertext: string|Buffer) 
   const clientProvider = limitRegions(['us-east-1'], getKmsClient)
   const keyring = new KmsKeyringNode({ clientProvider, discovery })
 
-  const cmm = new NodeCryptographicMaterialsManager(keyring)
-
-  const cleartext = await decrypt(cmm, ciphertext)
+  const cleartext = await decrypt(keyring, ciphertext)
 
   return { ciphertext, cleartext }
 }
@@ -51,9 +48,7 @@ export async function kmsRegionalDiscoveryExcludeTest (ciphertext: string|Buffer
   const clientProvider = excludeRegions(['us-east-1'], getKmsClient)
   const keyring = new KmsKeyringNode({ clientProvider, discovery })
 
-  const cmm = new NodeCryptographicMaterialsManager(keyring)
-
-  const cleartext = await decrypt(cmm, ciphertext)
+  const cleartext = await decrypt(keyring, ciphertext)
 
   return { ciphertext, cleartext }
 }

@@ -31,7 +31,6 @@
 import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
 import { encrypt } from '@aws-crypto/encrypt-node'
 import { decrypt } from '@aws-crypto/decrypt-node'
-import { NodeCryptographicMaterialsManager } from '@aws-crypto/material-management-node'
 
 export async function kmsSimpleTest () {
   /* A KMS CMK to generate the data key is required.
@@ -50,12 +49,6 @@ export async function kmsSimpleTest () {
   /* The KMS Keyring must be configured with the desired CMK's */
   const keyring = new KmsKeyringNode({ generatorKeyId, keyIds })
 
-  /* A CryptographicMaterialsManager is required to provide material to the `encrypt` or `decrypt` function.
-   * The keyring _can_ be passed directly to the `encrypt` or `decrypt` function,
-   * but this example is being explicit.
-   */
-  const cmm = new NodeCryptographicMaterialsManager(keyring)
-
   /* Encryption Context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
    * Remember encrypted data is opaque, encryption context will help your run time checking.
@@ -72,10 +65,10 @@ export async function kmsSimpleTest () {
   const cleartext = 'asdf'
 
   /* Encrypt the data. */
-  const { ciphertext } = await encrypt(cmm, cleartext, { context })
+  const { ciphertext } = await encrypt(keyring, cleartext, { context })
 
   /* Decrypt the data. */
-  const { plaintext, messageHeader } = await decrypt(cmm, ciphertext)
+  const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
 
   /* Grab the encryption context so I can verify it. */
   const { encryptionContext } = messageHeader

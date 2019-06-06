@@ -18,7 +18,7 @@ import { Transform as PortableTransform } from 'readable-stream'
 import { Transform } from 'stream' // eslint-disable-line no-unused-vars
 import {
   NodeAlgorithmSuite,
-  NodeCryptographicMaterialsManager, // eslint-disable-line no-unused-vars
+  NodeMaterialsManager, // eslint-disable-line no-unused-vars
   getDecryptionHelper
 } from '@aws-crypto/material-management-node'
 import { deserializeFactory, kdfInfo } from '@aws-crypto/serialize'
@@ -35,9 +35,9 @@ interface HeaderState {
 }
 
 export class ParseHeaderStream extends PortableTransformWithType {
-  private materialsManager!: NodeCryptographicMaterialsManager
+  private materialsManager!: NodeMaterialsManager
   private _headerState: HeaderState
-  constructor (cmm: NodeCryptographicMaterialsManager) {
+  constructor (cmm: NodeMaterialsManager) {
     super()
     Object.defineProperty(this, 'materialsManager', { value: cmm, enumerable: true })
     this._headerState = {
