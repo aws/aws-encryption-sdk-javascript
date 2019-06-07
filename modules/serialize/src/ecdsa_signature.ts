@@ -57,7 +57,7 @@ export function der2raw (derSignature: Uint8Array, { signatureCurve }: WebCrypto
   const _keyLengthBytes = keyLengthBytes[signatureCurve]
 
   // A little more portable than Buffer.from, but not much
-  const { r, s } = ECDSASignature.decode(new asn.bignum.BN(derSignature).toBuffer(), 'der')
+  const { r, s } = ECDSASignature.decode(new asn.bignum.BN(derSignature).toArrayLike(Buffer), 'der')
 
   const rLength = r.byteLength()
   const sLength = r.byteLength()
