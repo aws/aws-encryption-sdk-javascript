@@ -1,9 +1,9 @@
 
 const compilerOptions = Object.assign({
-    "esModuleInterop": true,
-    "target": "esnext",
-    "module": "commonjs",
-  })
+  'esModuleInterop': true,
+  'target': 'esnext',
+  'module': 'commonjs'
+})
 
 module.exports = function (wallaby) {
   return {
@@ -12,26 +12,26 @@ module.exports = function (wallaby) {
       'modules/**/fixtures.ts',
       '!modules/**/test/**/*.test.ts',
       '!modules/**/node_modules/**',
-      '!modules/**/build/**',
+      '!modules/**/build/**'
     ],
     tests: [
       'modules/**/test/**/*test.ts',
       '!modules/**/node_modules/**',
-      '!modules/**/build/**',
+      '!modules/**/build/**'
     ],
     filesWithNoCoverageCalculated: [
       'modules/**/src/index.ts'
     ],
     testFramework: 'mocha',
     compilers: {
-      '**/*.ts': wallaby.compilers.typeScript(compilerOptions),
+      '**/*.ts': wallaby.compilers.typeScript(compilerOptions)
     },
     env: { type: 'node' },
     debug: true,
     setup: w => {
-      const {projectCacheDir} = w
+      const { projectCacheDir } = w
       const path = require('path')
-      const {Module} = require('module')
+      const { Module } = require('module')
       const fs = require('fs')
       if (!Module._originalRequire) {
         const modulePrototype = Module.prototype

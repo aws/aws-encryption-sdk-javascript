@@ -25,7 +25,7 @@ import { randomBytes } from 'crypto'
 import {
   MessageHeader, // eslint-disable-line no-unused-vars
   serializeFactory, kdfInfo, ContentType, SerializationVersion, ObjectType,
-  FRAME_LENGTH,
+  FRAME_LENGTH
 } from '@aws-crypto/serialize'
 
 // @ts-ignore
