@@ -39,7 +39,7 @@ export function cloneMaterial<M extends Material> (source: M): M {
   if (!clone) throw new Error('Unsupported material type')
 
   const udk = new Uint8Array(source.getUnencryptedDataKey())
-  clone.setUnencryptedDataKey(udk, clone.keyringTrace[0])
+  clone.setUnencryptedDataKey(udk, source.keyringTrace[0])
   if ((<WebCryptoDecryptionMaterial>source).hasCryptoKey) {
     const cryptoKey = (<WebCryptoDecryptionMaterial>source).getCryptoKey()
     ;(<WebCryptoDecryptionMaterial>clone)
@@ -47,8 +47,11 @@ export function cloneMaterial<M extends Material> (source: M): M {
   }
 
   if (isEncryptionMaterial(source) && isEncryptionMaterial(clone)) {
-    source.encryptedDataKeys.forEach((edk, i) => {
-      clone.addEncryptedDataKey(edk, clone.keyringTrace[i].flags)
+    source.encryptedDataKeys.forEach(edk => {
+      const { providerInfo, providerId } = edk
+      const trace = source.keyringTrace.find(({ keyNamespace, keyName }) => keyName === providerInfo && keyNamespace === providerId)
+      if (!trace) throw new Error('Malformed Encrypted Data Key')
+      clone.addEncryptedDataKey(edk, trace.flags)
     })
 
     if (source.suite.signatureCurve && source.signatureKey) {

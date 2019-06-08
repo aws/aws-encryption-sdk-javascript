@@ -77,12 +77,12 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
       plaintextLength: number,
       maxAge?: number
     ) {
-      /* Precondition: plaintextLength can not be negative */
-      needs(plaintextLength >= 0, '')
+      /* Precondition: putEncryptionResponse plaintextLength can not be negative. */
+      needs(plaintextLength >= 0, 'Malformed plaintextLength')
       /* Precondition: Only cache EncryptionMaterial. */
-      needs(isEncryptionMaterial(response.material), '')
+      needs(isEncryptionMaterial(response.material), 'Malformed response.')
       /* Precondition: Only cache EncryptionMaterial that is cacheSafe. */
-      needs(response.material.suite.cacheSafe, '')
+      needs(response.material.suite.cacheSafe, 'Can not cache non-cache safe material')
       const entry = Object.seal({
         response: Object.freeze(response),
         bytesEncrypted: plaintextLength,
@@ -98,9 +98,9 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
       maxAge?: number
     ) {
       /* Precondition: Only cache DecryptionMaterial. */
-      needs(isDecryptionMaterial(response.material), '')
+      needs(isDecryptionMaterial(response.material), 'Malformed response.')
       /* Precondition: Only cache DecryptionMaterial that is cacheSafe. */
-      needs(response.material.suite.cacheSafe, '')
+      needs(response.material.suite.cacheSafe, 'Can not cache non-cache safe material')
       const entry = Object.seal({
         response: Object.freeze(response),
         bytesEncrypted: 0,
@@ -111,13 +111,13 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
       cache.set(key, entry, maxAge)
     },
     getEncryptionResponse (key: string, plaintextLength: number) {
-      /* Precondition: plaintextLength can not be negative */
-      needs(plaintextLength >= 0, '')
+      /* Precondition: plaintextLength can not be negative. */
+      needs(plaintextLength >= 0, 'Malformed plaintextLength')
       const entry = cache.get(key)
       /* Check for early return (Postcondition): If this key does not have an EncryptionMaterial, return false. */
       if (!entry) return false
       /* Postcondition: Only return EncryptionMaterial. */
-      needs(isEncryptionMaterial(entry.response.material), '')
+      needs(isEncryptionMaterial(entry.response.material), 'Malformed response.')
 
       entry.bytesEncrypted += plaintextLength
       entry.messagesEncrypted += 1
@@ -129,7 +129,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
       /* Check for early return (Postcondition): If this key does not have a DecryptionMaterial, return false. */
       if (!entry) return false
       /* Postcondition: Only return DecryptionMaterial. */
-      needs(isDecryptionMaterial(entry.response.material), '')
+      needs(isDecryptionMaterial(entry.response.material), 'Malformed response.')
 
       return <DecryptionResponseEntry<S>>entry
     },
