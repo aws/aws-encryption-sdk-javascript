@@ -1,13 +1,13 @@
 // Karma configuration
 process.env.CHROME_BIN = require('puppeteer').executablePath()
 
-module.exports = function(config) {
+module.exports = function (config) {
   config.set({
     basePath: '',
     frameworks: ['jasmine'],
     files: [
       'fixtures/tests.json',
-      {pattern: 'fixtures/*.json', included: false, served: true, watched: false, nocache: true},
+      { pattern: 'fixtures/*.json', included: false, served: true, watched: false, nocache: true },
       'src/integration.test.ts'
     ],
     preprocessors: {
@@ -34,7 +34,7 @@ module.exports = function(config) {
         reasons: true,
         errorDetails: true
       },
-      devtool: 'inline-source-map',
+      devtool: 'inline-source-map'
     },
     plugins: [
       '@aws-sdk/karma-credential-loader',

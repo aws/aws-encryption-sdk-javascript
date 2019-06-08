@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('path')
 
 module.exports = {
   entry: './src/asdf.test.ts',
@@ -25,4 +25,4 @@ module.exports = {
     path: path.resolve(__dirname, 'build')
   },
   node: false
-};
+}

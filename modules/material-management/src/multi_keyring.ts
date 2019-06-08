@@ -53,7 +53,7 @@ immutableClass(MultiKeyringWebCrypto)
 function decorateProperties<S extends SupportedAlgorithmSuites> (
   obj: IMultiKeyring<S>,
   BaseKeyring: any,
-  { generator, children = [] }: MultiKeyringInput<S>,
+  { generator, children = [] }: MultiKeyringInput<S>
 ) {
   /* Precondition: MultiKeyring must have keyrings. */
   needs(generator || children.length, 'Noop MultiKeyring is not supported.')
