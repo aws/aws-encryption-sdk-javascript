@@ -36,10 +36,9 @@ describe('test', () => {
   })
 
   it('kms', async () => {
-    await kmsStreamTest()
-    const packageJson = readFileSync('./package.json', { encoding: 'utf8' })
-    const test = readFileSync('./package.json.decrypt', { encoding: 'utf8' })
+    const test = await kmsStreamTest(__filename)
+    const clearFile = readFileSync(__filename)
 
-    expect(test).to.equal(packageJson)
+    expect(test).to.deep.equal(clearFile)
   })
 })
