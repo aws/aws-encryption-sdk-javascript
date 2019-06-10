@@ -97,15 +97,20 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
 /* Node has Buffer.compare,
  * but browsers have nothing.
  * This is a simple compare function that is portable.
+ * This function is *not* constant time.
  */
 function sort (a: Uint8Array, b: Uint8Array) {
-  if (a.byteLength > b.byteLength) return 1
-  if (a.byteLength < b.byteLength) return -1
+  const length = a.byteLength > b.byteLength
+    ? b.byteLength
+    : a.byteLength
 
-  for (let i = 0; a.length > i; i += 1) {
+  for (let i = 0; length > i; i += 1) {
     if (a[i] > b[i]) return 1
     if (a[i] < b[i]) return -1
   }
+
+  if (a.byteLength > b.byteLength) return 1
+  if (a.byteLength < b.byteLength) return -1
 
   return 0
 }
