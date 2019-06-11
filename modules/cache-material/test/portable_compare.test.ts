@@ -20,9 +20,9 @@ import 'mocha'
 import { compare } from '../src/portable_compare'
 
 describe('compare', () => {
-  const a = new Uint8Array([0,0])
-  const b = new Uint8Array([1,0])
-  const c = new Uint8Array([0,1])
+  const a = new Uint8Array([0, 0])
+  const b = new Uint8Array([1, 0])
+  const c = new Uint8Array([0, 1])
   const d = new Uint8Array([1])
   const e = new Uint8Array([0])
   it('a == a', () => {
