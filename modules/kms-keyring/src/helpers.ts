@@ -80,18 +80,21 @@ export async function encrypt<Client extends KMS> (
 
 export async function decrypt<Client extends KMS> (
   clientProvider: KmsClientSupplier<Client>,
-  edk: EncryptedDataKey,
+  {providerId, providerInfo, encryptedDataKey}: EncryptedDataKey,
   EncryptionContext?: EncryptionContext,
   GrantTokens?: string[]
 ): Promise<RequiredDecryptOutput|false> {
   /* Precondition:  The EDK must be a KMS edk. */
-  needs(edk.providerId === KMS_PROVIDER_ID, 'Unsupported providerId')
-  const region = regionFromKmsKeyArn(edk.providerInfo)
+  needs(providerId === KMS_PROVIDER_ID, 'Unsupported providerId')
+  const region = regionFromKmsKeyArn(providerInfo)
   const client = clientProvider(region)
   /* Check for early return (Postcondition): Client region was not provided. */
   if (!client) return false
 
-  const request: DecryptInput<Client> = { CiphertextBlob: edk.encryptedDataKey, EncryptionContext, GrantTokens } as DecryptInput<Client>
+  const request: DecryptInput<Client> = {
+    CiphertextBlob: encryptedDataKey,
+    EncryptionContext,
+    GrantTokens } as DecryptInput<Client>
   // @ts-ignore
   const v2vsV3Response = client.decrypt(request)
   const v2vsV3Promise = (v2vsV3Response.promise ? v2vsV3Response.promise() : v2vsV3Response)
@@ -100,7 +103,10 @@ export async function decrypt<Client extends KMS> (
   return safeDecryptOutput(dataKey)
 }
 
-export function kms2EncryptedDataKey ({ KeyId: providerInfo, CiphertextBlob: encryptedDataKey }: RequiredEncryptOutput) {
+export function kmsResponseToEncryptedDataKey ({
+  KeyId: providerInfo,
+  CiphertextBlob: encryptedDataKey
+}: RequiredEncryptOutput) {
   return new EncryptedDataKey({ providerId: KMS_PROVIDER_ID, providerInfo, encryptedDataKey })
 }
 
