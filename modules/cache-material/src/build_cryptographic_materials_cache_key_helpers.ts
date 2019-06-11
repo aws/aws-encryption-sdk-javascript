@@ -21,6 +21,7 @@ import {
   EncryptionContext // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 import { serializeFactory, uInt16BE } from '@aws-crypto/serialize'
+import { compare } from './portable_compare'
 
 //  512 bits of 0 for padding between hashes in decryption materials cache ID generation.
 const BIT_PAD_512 = Buffer.alloc(64)
@@ -80,7 +81,7 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
         .map(serializeEncryptedDataKey)
         .map(edk => sha512(edk))
     )
-    return hashes.sort(sort)
+    return hashes.sort(compare)
   }
 
   function encryptionContextHash (context?: EncryptionContext) {
@@ -92,27 +93,6 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
     const serializedContext = serializeEncryptionContext(context || {}).slice(2)
     return sha512(serializedContext)
   }
-}
-
-/* Node has Buffer.compare,
- * but browsers have nothing.
- * This is a simple compare function that is portable.
- * This function is *not* constant time.
- */
-function sort (a: Uint8Array, b: Uint8Array) {
-  const length = a.byteLength > b.byteLength
-    ? b.byteLength
-    : a.byteLength
-
-  for (let i = 0; length > i; i += 1) {
-    if (a[i] > b[i]) return 1
-    if (a[i] < b[i]) return -1
-  }
-
-  if (a.byteLength > b.byteLength) return 1
-  if (a.byteLength < b.byteLength) return -1
-
-  return 0
 }
 
 export interface CryptographicMaterialsCacheKeyHelpersInterface<S extends SupportedAlgorithmSuites> {
