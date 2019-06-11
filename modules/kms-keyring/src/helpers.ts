@@ -80,7 +80,7 @@ export async function encrypt<Client extends KMS> (
 
 export async function decrypt<Client extends KMS> (
   clientProvider: KmsClientSupplier<Client>,
-  {providerId, providerInfo, encryptedDataKey}: EncryptedDataKey,
+  { providerId, providerInfo, encryptedDataKey }: EncryptedDataKey,
   EncryptionContext?: EncryptionContext,
   GrantTokens?: string[]
 ): Promise<RequiredDecryptOutput|false> {

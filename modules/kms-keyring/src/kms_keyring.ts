@@ -31,7 +31,7 @@ import {
   immutableClass,
   readOnlyProperty
 } from '@aws-crypto/material-management'
-import { KMS_PROVIDER_ID, generateDataKey, encrypt, decrypt, kms2EncryptedDataKey } from './helpers'
+import { KMS_PROVIDER_ID, generateDataKey, encrypt, decrypt, kmsResponseToEncryptedDataKey } from './helpers'
 import { regionFromKmsKeyArn } from './region_from_kms_key_arn'
 
 export interface KmsKeyringInput<Client extends KMS> {
@@ -117,7 +117,7 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
           * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
           */
           .setUnencryptedDataKey(dataKey.Plaintext, trace)
-          .addEncryptedDataKey(kms2EncryptedDataKey(dataKey), KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+          .addEncryptedDataKey(kmsResponseToEncryptedDataKey(dataKey), KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
       } else if (generatorKeyId) {
         keyIds.unshift(generatorKeyId)
       }
@@ -133,7 +133,7 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
         const kmsEDK = await encrypt(clientProvider, unencryptedDataKey, kmsKey, context, grantTokens)
 
         /* clientProvider may not return a client, in this case there is not an EDK to add */
-        if (kmsEDK) material.addEncryptedDataKey(kms2EncryptedDataKey(kmsEDK), flags)
+        if (kmsEDK) material.addEncryptedDataKey(kmsResponseToEncryptedDataKey(kmsEDK), flags)
       }
 
       return material
