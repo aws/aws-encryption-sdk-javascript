@@ -21,13 +21,15 @@ import {
   EncryptionContext // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 import { serializeFactory, uInt16BE } from '@aws-crypto/serialize'
+import { compare } from './portable_compare'
 
 //  512 bits of 0 for padding between hashes in decryption materials cache ID generation.
 const BIT_PAD_512 = Buffer.alloc(64)
 
 export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAlgorithmSuites> (
   fromUtf8: (input: string) => Uint8Array,
-  sha512Hex: (...data: ((Uint8Array|string))[]) => Promise<string>
+  toUtf8: (input: Uint8Array) => string,
+  sha512: (...data: ((Uint8Array|string))[]) => Promise<Uint8Array>
 ): CryptographicMaterialsCacheKeyHelpersInterface<S> {
   const {
     serializeEncryptionContext,
@@ -46,14 +48,15 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
     { suite, encryptionContext }: EncryptionRequest<S>
   ) {
     const algorithmInfo = suite
-      ? [Buffer.from([1]), uInt16BE(suite.id)]
-      : [Buffer.alloc(0)]
+      ? [new Uint8Array([1]), uInt16BE(suite.id)]
+      : [new Uint8Array([0])]
 
-    return sha512Hex(
-      await sha512Hex(partition),
+    const key = await sha512(
+      await sha512(fromUtf8(partition)),
       ...algorithmInfo,
       await encryptionContextHash(encryptionContext)
     )
+    return toUtf8(key)
   }
 
   async function buildDecryptionResponseCacheKey (
@@ -62,24 +65,23 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
   ) {
     const { id } = suite
 
-    return sha512Hex(
-      await sha512Hex(partition),
+    const key = await sha512(
+      await sha512(fromUtf8(partition)),
       uInt16BE(id),
       ...(await encryptedDataKeysHash(encryptedDataKeys)),
       BIT_PAD_512,
       await encryptionContextHash(encryptionContext)
     )
+    return toUtf8(key)
   }
 
   async function encryptedDataKeysHash (encryptedDataKeys: ReadonlyArray<EncryptedDataKey>) {
     const hashes = await Promise.all(
       encryptedDataKeys
         .map(serializeEncryptedDataKey)
-        .map(edk => sha512Hex(edk))
+        .map(edk => sha512(edk))
     )
-    return hashes
-      // is this sort valid?  locally, it should be fine
-      .sort((a, b) => a.localeCompare(b))
+    return hashes.sort(compare)
   }
 
   function encryptionContextHash (context?: EncryptionContext) {
@@ -89,7 +91,7 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
      * So, I just slice off the length.
      */
     const serializedContext = serializeEncryptionContext(context || {}).slice(2)
-    return sha512Hex(serializedContext)
+    return sha512(serializedContext)
   }
 }
 
@@ -102,6 +104,6 @@ export interface CryptographicMaterialsCacheKeyHelpersInterface<S extends Suppor
     partition: string,
     { suite, encryptedDataKeys, encryptionContext }: DecryptionRequest<S>
   ): Promise<string>
-  encryptedDataKeysHash(encryptedDataKeys: ReadonlyArray<EncryptedDataKey>): Promise<string[]>
-  encryptionContextHash(context?: EncryptionContext): Promise<string>
+  encryptedDataKeysHash(encryptedDataKeys: ReadonlyArray<EncryptedDataKey>): Promise<Uint8Array[]>
+  encryptionContextHash(context?: EncryptionContext): Promise<Uint8Array>
 }

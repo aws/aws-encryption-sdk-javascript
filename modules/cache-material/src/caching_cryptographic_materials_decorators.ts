@@ -155,7 +155,7 @@ export function cacheEntryHasExceededLimits<S extends SupportedAlgorithmSuites> 
     { now, messagesEncrypted, bytesEncrypted }: Entry<S>
   ): boolean {
     const age = Date.now() - now
-    return (!this._maxAge || age > this._maxAge) ||
+    return age > this._maxAge ||
       messagesEncrypted > this._maxMessagesEncrypted ||
       bytesEncrypted > this._maxBytesEncrypted
   }
