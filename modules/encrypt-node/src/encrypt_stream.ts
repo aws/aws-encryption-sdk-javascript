@@ -26,6 +26,7 @@ import {
   MessageHeader, // eslint-disable-line no-unused-vars
   serializeFactory, kdfInfo, ContentType, SerializationVersion, ObjectType,
   FRAME_LENGTH
+  MESSAGE_ID_LENGTH
 } from '@aws-crypto/serialize'
 
 // @ts-ignore
@@ -92,7 +93,7 @@ export function encryptStream (
 export function getEncryptionInfo (material : NodeEncryptionMaterial, frameLength: number, context: EncryptionContext) {
   const { kdfGetCipher } = getEncryptHelper(material)
 
-  const messageId = randomBytes(16)
+  const messageId = randomBytes(MESSAGE_ID_LENGTH)
   const { id, ivLength } = material.suite
   const messageHeader: MessageHeader = Object.freeze({
     version: SerializationVersion.V1,
