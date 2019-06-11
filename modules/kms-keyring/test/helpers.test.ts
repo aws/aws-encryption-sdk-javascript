@@ -17,17 +17,17 @@
 
 import { expect } from 'chai'
 import 'mocha'
-import { generateDataKey, encrypt, decrypt, kms2EncryptedDataKey } from '../src/helpers'
+import { generateDataKey, encrypt, decrypt, kmsResponseToEncryptedDataKey } from '../src/helpers'
 import { EncryptedDataKey } from '@aws-crypto/material-management'
 
-describe('kms2EncryptedDataKey', () => {
+describe('kmsResponseToEncryptedDataKey', () => {
   it('return an EncryptedDataKey', () => {
     const response = {
       KeyId: 'asdf',
       CiphertextBlob: new Uint8Array(5),
       $metadata: {} as any
     }
-    const test = kms2EncryptedDataKey(response)
+    const test = kmsResponseToEncryptedDataKey(response)
     expect(test).instanceOf(EncryptedDataKey)
     expect(test.providerId).to.equal('aws-kms')
     expect(test.providerInfo).to.equal('asdf')
