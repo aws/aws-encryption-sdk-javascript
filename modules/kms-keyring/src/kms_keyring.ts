@@ -15,6 +15,10 @@
 
 import { KmsClientSupplier } from './kms_client_supplier' // eslint-disable-line no-unused-vars
 import {
+  KMS, // eslint-disable-line no-unused-vars
+  RequiredDecryptOutput // eslint-disable-line no-unused-vars
+} from './kms_types'
+import {
   needs,
   Keyring, // eslint-disable-line no-unused-vars
   EncryptionMaterial, // eslint-disable-line no-unused-vars
@@ -27,16 +31,14 @@ import {
   immutableClass,
   readOnlyProperty
 } from '@aws-crypto/material-management'
-import { KMS_PROVIDER_ID, generateDataKey, encrypt, decrypt, kms2EncryptedDataKey } from './helpers'
-import { KMS } from './kms_types/KMS' // eslint-disable-line no-unused-vars
-import { DecryptOutput } from './kms_types/DecryptOutput' // eslint-disable-line no-unused-vars
+import { KMS_PROVIDER_ID, generateDataKey, encrypt, decrypt, kmsResponseToEncryptedDataKey } from './helpers'
 import { regionFromKmsKeyArn } from './region_from_kms_key_arn'
 
 export interface KmsKeyringInput<Client extends KMS> {
   clientProvider: KmsClientSupplier<Client>
   keyIds?: string[]
   generatorKeyId?: string
-  grantTokens?: string
+  grantTokens?: string[]
   discovery?: boolean
 }
 
@@ -44,7 +46,7 @@ export interface KeyRing<S extends SupportedAlgorithmSuites, Client extends KMS>
   keyIds: ReadonlyArray<string>
   generatorKeyId?: string
   clientProvider: KmsClientSupplier<Client>
-  grantTokens?: string
+  grantTokens?: string[]
   isDiscovery: boolean
   _onEncrypt(material: EncryptionMaterial<S>, context?: EncryptionContext): Promise<EncryptionMaterial<S>>
   _onDecrypt(material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[], context?: EncryptionContext): Promise<DecryptionMaterial<S>>
@@ -65,7 +67,7 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
     public keyIds!: ReadonlyArray<string>
     public generatorKeyId?: string
     public clientProvider!: KmsClientSupplier<Client>
-    public grantTokens?: string
+    public grantTokens?: string[]
     public isDiscovery!: boolean
 
     constructor ({ clientProvider, generatorKeyId, keyIds = [], grantTokens, discovery }: KmsKeyringInput<Client>) {
@@ -115,7 +117,7 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
           * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
           */
           .setUnencryptedDataKey(dataKey.Plaintext, trace)
-          .addEncryptedDataKey(kms2EncryptedDataKey(dataKey), KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+          .addEncryptedDataKey(kmsResponseToEncryptedDataKey(dataKey), KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
       } else if (generatorKeyId) {
         keyIds.unshift(generatorKeyId)
       }
@@ -131,7 +133,7 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
         const kmsEDK = await encrypt(clientProvider, unencryptedDataKey, kmsKey, context, grantTokens)
 
         /* clientProvider may not return a client, in this case there is not an EDK to add */
-        if (kmsEDK) material.addEncryptedDataKey(kms2EncryptedDataKey(kmsEDK), flags)
+        if (kmsEDK) material.addEncryptedDataKey(kmsResponseToEncryptedDataKey(kmsEDK), flags)
       }
 
       return material
@@ -158,7 +160,7 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
         })
 
       for (const edk of decryptableEDKs) {
-        let dataKey: Required<DecryptOutput>|false = false
+        let dataKey: RequiredDecryptOutput|false = false
         try {
           dataKey = await decrypt(clientProvider, edk, context, grantTokens)
         } catch (e) {

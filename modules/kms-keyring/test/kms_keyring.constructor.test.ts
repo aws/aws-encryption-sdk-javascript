@@ -28,7 +28,7 @@ describe('KmsKeyring: constructor', () => {
     const clientProvider: any = () => {}
     const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const keyIds = ['arn:aws:kms:us-east-1:123456789012:alias/example-alias']
-    const grantTokens = 'grant'
+    const grantTokens = ['grant']
 
     class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
 

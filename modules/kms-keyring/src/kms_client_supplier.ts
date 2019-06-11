@@ -13,27 +13,48 @@
  * limitations under the License.
  */
 
-import { KMS } from './kms_types/KMS' // eslint-disable-line no-unused-vars
-import { KMSConfiguration } from './kms_types/KMSConfiguration' // eslint-disable-line no-unused-vars
 import { needs } from '@aws-crypto/material-management'
+import {
+  KMS, // eslint-disable-line no-unused-vars
+  KMSConfiguration, // eslint-disable-line no-unused-vars
+  KMSOperations // eslint-disable-line no-unused-vars
+} from './kms_types'
 
-export interface KMSConstructible<Client extends KMS, Config extends KMSConfiguration> {
+interface KMSConstructibleNonOption<Client extends KMS, Config extends KMSConfiguration> {
   new(config: Config) : Client
 }
 
+interface KMSConstructibleOption<Client extends KMS, Config extends KMSConfiguration> {
+  new(config?: Config) : Client
+}
+
+export type KMSConstructible<Client extends KMS, Config extends KMSConfiguration> = KMSConstructibleNonOption<Client, Config> | KMSConstructibleOption<Client, Config>
+
 export interface KmsClientSupplier<Client extends KMS> {
   /* KmsClientProvider is allowed to return undefined if, for example, user wants to exclude particular regions. */
-  (region: string): Client|false
+  (region: string): Client | false
 }
 
 export function getClient<Client extends KMS, Config extends KMSConfiguration> (
-  KMSClient: KMSConstructible<Client, Config>
+  KMSClient: KMSConstructible<Client, Config>,
+  defaultConfig?: Config
 ): KmsClientSupplier<Client> {
   return function getKmsClient (region: string) {
-    /* Precondition: region be a string. */
-    needs(region && typeof region === 'string', 'A region is required')
+    /* a KMS alias is supported.  These do not have a region
+     * in this case, the SDK should find the default region
+     * or the default region needs to be supplied to this function
+     */
+    const config = { ...defaultConfig, region } as Config
+    const client = new KMSClient(config)
 
-    return new KMSClient({ region } as Config)
+    /* Postcondition: A region must be configured.
+     * The AWS SDK has a process for determining the default region.
+     * A user can configure a default region by setting it in `defaultConfig`
+     * But KMS requires a region to operate.
+     */
+    // @ts-ignore the V3 client has set the config to protected, reasonable, but I need to know...
+    needs(client.config.region, 'A region is required')
+    return client
   }
 }
 
@@ -75,7 +96,6 @@ export function cacheClients<Client extends KMS> (
   }
 }
 
-type KMSOperations = keyof KMS
 /* It is possible that a malicious user can attempt a local resource
  * DOS by sending ciphertext with a large number of spurious regions.
  * This will fill the cache with regions and exhaust resources.
@@ -99,12 +119,14 @@ function deferCache<Client extends KMS> (
 
   /* Wrap each of the operations to cache the client on response */
   function wrapOperation (client: Client, name: KMSOperations): Client {
-    type params = Parameters<KMS[typeof name]>
-    type retValue = ReturnType<KMS[typeof name]>
+    // type params = Parameters<KMS[typeof name]>
+    // type retValue = ReturnType<KMS[typeof name]>
     const original = client[name]
-    client[name] = function (...args: params): retValue {
+    client[name] = function (...args: any): Promise<any> {
       // @ts-ignore (there should be a TypeScript solution for this)
-      return original.apply(client, args)
+      const v2vsV3Response = original.apply(client, args)
+      const v2vsV3Promise = (v2vsV3Response.promise ? v2vsV3Response.promise() : v2vsV3Response)
+      return v2vsV3Promise
         .then((response: any) => {
           clientsCache[region] = Object.assign(client, { encrypt, decrypt, generateDataKey })
           return response

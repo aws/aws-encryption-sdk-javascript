@@ -29,8 +29,6 @@ import {
   KeyringTraceFlag,
   Keyring
 } from '@aws-crypto/material-management'
-import { GenerateDataKeyInput } from '../src/kms_types/GenerateDataKeyInput' // eslint-disable-line no-unused-vars
-import { EncryptInput } from '../src/kms_types/EncryptInput' // eslint-disable-line no-unused-vars
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -40,12 +38,12 @@ describe('KmsKeyring: _onEncrypt', () => {
     const encryptKmsKey = 'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012'
     const keyIds = [encryptKmsKey]
     const context = { some: 'context' }
-    const grantTokens = 'grant'
+    const grantTokens = ['grant']
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
     const clientProvider: any = () => {
       return { generateDataKey, encrypt }
-      function generateDataKey ({ KeyId, EncryptionContext, GrantTokens }: GenerateDataKeyInput) {
+      function generateDataKey ({ KeyId, EncryptionContext, GrantTokens }: any) {
         expect(EncryptionContext === context).to.equal(true)
         expect(GrantTokens).to.equal(grantTokens)
         return {
@@ -54,7 +52,7 @@ describe('KmsKeyring: _onEncrypt', () => {
           CiphertextBlob: new Uint8Array(5)
         }
       }
-      function encrypt ({ KeyId, EncryptionContext, GrantTokens }: EncryptInput) {
+      function encrypt ({ KeyId, EncryptionContext, GrantTokens }: any) {
         expect(EncryptionContext === context).to.equal(true)
         expect(GrantTokens).to.equal(grantTokens)
         return {
@@ -101,7 +99,7 @@ describe('KmsKeyring: _onEncrypt', () => {
     const encryptKmsKey = 'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012'
     const keyIds = [encryptKmsKey]
     const context = { some: 'context' }
-    const grantTokens = 'grant'
+    const grantTokens = ['grant']
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
     const clientProvider: any = () => {
@@ -124,7 +122,7 @@ describe('KmsKeyring: _onEncrypt', () => {
     const encryptKmsKey = 'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012'
     const keyIds = [encryptKmsKey]
     const context = { some: 'context' }
-    const grantTokens = 'grant'
+    const grantTokens = ['grant']
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
     const clientProvider: any = () => {
@@ -148,7 +146,7 @@ describe('KmsKeyring: _onEncrypt', () => {
 
     const clientProvider: any = () => {
       return { encrypt }
-      function encrypt ({ KeyId }: EncryptInput) {
+      function encrypt ({ KeyId }: any) {
         return {
           KeyId,
           CiphertextBlob: new Uint8Array(5)

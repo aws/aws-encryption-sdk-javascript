@@ -35,13 +35,13 @@ import {
   importForWebCryptoDecryptionMaterial,
   KeyringWebCrypto // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
-import { KMS, KMSConfiguration } from '@aws-sdk/client-kms-browser' // eslint-disable-line no-unused-vars
+import { KMS } from 'aws-sdk' // eslint-disable-line no-unused-vars
 
 const getKmsClient = getClient(KMS)
 const cacheKmsClients = cacheClients(getKmsClient)
 
 export type KmsKeyringWebCryptoInput = Partial<KmsKeyringInput<KMS>>
-export type KMSWebCryptoConstructible = KMSConstructible<KMS, KMSConfiguration>
+export type KMSWebCryptoConstructible = KMSConstructible<KMS, KMS.ClientConfiguration>
 export type KmsWebCryptoClientSupplier = KmsClientSupplier<KMS>
 
 export class KmsKeyringBrowser extends KmsKeyringClass(KeyringWebCrypto as KeyRingConstructible<WebCryptoAlgorithmSuite>) {
