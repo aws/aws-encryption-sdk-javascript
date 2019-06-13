@@ -28,9 +28,7 @@
  * limitations under the License.
  */
 
-import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
-import { encrypt } from '@aws-crypto/encrypt-node'
-import { decrypt } from '@aws-crypto/decrypt-node'
+import { KmsKeyringNode, encrypt, decrypt } from '@aws-crypto/client-node'
 
 export async function kmsSimpleTest () {
   /* A KMS CMK to generate the data key is required.

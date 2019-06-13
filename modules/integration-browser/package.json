@@ -16,12 +16,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/decrypt-browser": "^0.0.1",
-    "@aws-crypto/encrypt-browser": "^0.0.1",
-    "@aws-crypto/kms-keyring-browser": "^0.0.1",
-    "@aws-crypto/material-management-browser": "^0.0.1",
-    "@aws-crypto/raw-aes-keyring-browser": "^0.0.1",
-    "@aws-crypto/raw-rsa-keyring-browser": "^0.0.1",
+    "@aws-crypto/client-browser": "^0.0.1",
     "@aws-sdk/util-base64-browser": "0.1.0-preview.1",
     "@trust/keyto": "^0.3.7",
     "@types/unzipper": "^0.9.1",
@@ -29,10 +24,10 @@
     "stream-to-promise": "^2.2.0",
     "tslib": "^1.9.3",
     "unzipper": "^0.9.11",
+    "@aws-sdk/karma-credential-loader": "0.1.0-preview.2",
     "yargs": "^13.2.2"
   },
   "devDependencies": {
-    "@aws-sdk/karma-credential-loader": "0.1.0-preview.2",
     "@types/chai": "^4.1.4",
     "@types/chai-as-promised": "^7.1.0",
     "@types/mocha": "^5.2.5",

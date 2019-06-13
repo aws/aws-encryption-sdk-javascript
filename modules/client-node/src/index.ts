@@ -13,6 +13,10 @@
  * limitations under the License.
  */
 
-export * from './decrypt_stream'
-export * from './decrypt'
-export { MessageHeader } from '@aws-crypto/serialize'
+export * from '@aws-crypto/encrypt-node'
+export * from '@aws-crypto/decrypt-node'
+export * from '@aws-crypto/material-management-node'
+export * from '@aws-crypto/caching-materials-manager-node'
+export * from '@aws-crypto/kms-keyring-node'
+export * from '@aws-crypto/raw-aes-keyring-node'
+export * from '@aws-crypto/raw-rsa-keyring-node'

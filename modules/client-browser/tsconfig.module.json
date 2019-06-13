@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig",
+  "compilerOptions": {
+    "target": "esnext",
+    "outDir": "build/module",
+    "module": "esnext",
+    "allowSyntheticDefaultImports": true
+  },
+  "exclude": [ "node_modules/**" ],
+  "references": [
+    { "path": "../encrypt-browser/tsconfig.module.json" },
+    { "path": "../decrypt-browser/tsconfig.module.json" },
+    { "path": "../material-management-browser/tsconfig.module.json" },
+    { "path": "../caching-materials-manager-browser/tsconfig.module.json" },
+    { "path": "../kms-keyring-browser/tsconfig.module.json" },
+    { "path": "../raw-rsa-keyring-browser/tsconfig.module.json" },
+    { "path": "../raw-aes-keyring-browser/tsconfig.module.json" },
+  ]
+}
