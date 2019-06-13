@@ -34,6 +34,7 @@ import {
   ContentType,
   serializeSignatureInfo,
   FRAME_LENGTH,
+  MESSAGE_ID_LENGTH,
   raw2der
 } from '@aws-crypto/serialize'
 import { fromUtf8 } from '@aws-sdk/util-utf8-browser'
@@ -81,9 +82,7 @@ export async function encrypt (
   const { material, context } = await cmm.getEncryptionMaterials(encryptionRequest)
   const { kdfGetSubtleEncrypt, subtleSign, dispose } = await getEncryptHelper(material)
 
-  // Why is this here?
-  const idLength = 16
-  const messageId = await backend.randomValues(idLength)
+  const messageId = await backend.randomValues(MESSAGE_ID_LENGTH)
 
   const { id, ivLength } = material.suite
 
