@@ -17,7 +17,7 @@
 
 import { decryptMaterialsManagerWebCrypto } from './decrypt_materials_manager_web_crypto'
 import { fromBase64 } from '@aws-sdk/util-base64-browser'
-import { decrypt } from '@aws-crypto/decrypt-browser'
+import { decrypt } from '@aws-crypto/client-browser'
 
 declare const expect: any
 declare const __fixtures__: any

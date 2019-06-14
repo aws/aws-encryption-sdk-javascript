@@ -28,12 +28,13 @@
  * limitations under the License.
  */
 
-import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
-import { encryptStream } from '@aws-crypto/encrypt-node'
 import {
+  KmsKeyringNode,
   decryptStream,
+  encryptStream,
   MessageHeader // eslint-disable-line no-unused-vars
-} from '@aws-crypto/decrypt-node'
+} from '@aws-crypto/client-node'
+
 import { finished } from 'stream'
 import { createReadStream, createWriteStream } from 'fs'
 import { promisify } from 'util'

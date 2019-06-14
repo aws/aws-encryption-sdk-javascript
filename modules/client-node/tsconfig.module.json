@@ -6,8 +6,7 @@
     "module": "esnext",
     "allowSyntheticDefaultImports": true
   },
-  "exclude": [ "node_modules/**" ],
-  "references": [
-    { "path": "../client-browser/tsconfig.module.json" }
+  "exclude": [
+    "node_modules/**"
   ]
 }

@@ -28,9 +28,7 @@
  * limitations under the License.
  */
 
-import { RawRsaKeyringNode } from '@aws-crypto/raw-rsa-keyring-node'
-import { encrypt } from '@aws-crypto/encrypt-node'
-import { decrypt } from '@aws-crypto/decrypt-node'
+import { RawRsaKeyringNode, encrypt, decrypt } from '@aws-crypto/client-node'
 
 import { generateKeyPair } from 'crypto'
 import { promisify } from 'util'

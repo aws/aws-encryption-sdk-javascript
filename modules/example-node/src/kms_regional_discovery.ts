@@ -28,8 +28,7 @@
  * limitations under the License.
  */
 
-import { KmsKeyringNode, limitRegions, excludeRegions, getKmsClient } from '@aws-crypto/kms-keyring-node'
-import { decrypt } from '@aws-crypto/decrypt-node'
+import { KmsKeyringNode, limitRegions, excludeRegions, getKmsClient, decrypt } from '@aws-crypto/client-node'
 
 export async function kmsRegionalDiscoveryLimitTest (ciphertext: string|Buffer) {
   const discovery = true

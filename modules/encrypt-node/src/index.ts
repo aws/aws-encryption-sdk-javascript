@@ -13,6 +13,6 @@
  * limitations under the License.
  */
 
-export { encryptStream } from './encrypt_stream'
-export { encrypt } from './encrypt'
+export * from './encrypt_stream'
+export * from './encrypt'
 export { MessageHeader } from '@aws-crypto/serialize'
