@@ -13,12 +13,16 @@
  * limitations under the License.
  */
 
+/* This is a simple example of using a KMS Keyring
+ * to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser.
+ */
+
 import { encrypt } from '@aws-crypto/encrypt-browser'
 import { decrypt } from '@aws-crypto/decrypt-browser'
 import {
   KmsKeyringBrowser,
   KMS,
-  KmsWebCryptoClientSupplier // eslint-disable-line no-unused-vars
+  getClient
 } from '@aws-crypto/kms-keyring-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
@@ -30,8 +34,7 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
  */
 declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
 
-// declare const AWS_ACCESS_KEY_ID: string
-;(async function testKMS () {
+;(async function kmsSimpleExample () {
   /* A KMS CMK to generate the data key is required.
    * Access to KMS generateDataKey is required for the generatorKeyId.
    */
@@ -46,20 +49,25 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
 
   /* Need a client provider that will inject correct credentials.
-   * The credentials here are injected by webpack from your environment.
-   * The credential values are pulled from @aws-sdk/credential-provider-node
+   * The credentials here are injected by webpack from your environment bundle is created
+   * The credential values are pulled using @aws-sdk/credential-provider-node.
    * See kms.webpack.config
+   * You should inject your credential into the browser in a secure manner,
+   * that works with your application.
    */
   const { accessKeyId, secretAccessKey } = AWS_CREDENTIALS
-  const clientProvider: KmsWebCryptoClientSupplier = (region) => {
-    return new KMS({
-      region,
-      credentials: {
-        accessKeyId,
-        secretAccessKey
-      }
-    })
-  }
+
+  /* getClient takes a KMS client constructor
+   * and optional configuration values. 
+   * The credentials can be injected here,
+   * because browser do not have a standard credential discover process the way Node.js does.
+   */
+  const clientProvider = getClient(KMS, {
+    credentials: {
+      accessKeyId,
+      secretAccessKey
+    }
+  })
 
   /* The KMS Keyring must be configured with the desired CMK's */
   const keyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
