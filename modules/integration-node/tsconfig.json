@@ -7,11 +7,6 @@
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules/**"],
   "references": [
-    { "path": "../encrypt-node" },
-    { "path": "../decrypt-node" },
-    { "path": "../material-management-node" },
-    { "path": "../kms-keyring-node" },
-    { "path": "../raw-rsa-keyring-node" },
-    { "path": "../raw-aes-keyring-node" },
+    { "path": "../client-node" }
   ]
 }

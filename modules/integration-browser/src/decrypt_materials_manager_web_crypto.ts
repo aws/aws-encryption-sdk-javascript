@@ -15,19 +15,15 @@
 
 import {
   needs,
-  MultiKeyringWebCrypto
-} from '@aws-crypto/material-management-browser'
-import {
+  MultiKeyringWebCrypto,
   KmsKeyringBrowser,
   KmsWebCryptoClientSupplier, // eslint-disable-line no-unused-vars
-  KMS
-} from '@aws-crypto/kms-keyring-browser'
-import {
+  KMS,
   RawAesKeyringWebCrypto,
   WrappingSuiteIdentifier, // eslint-disable-line no-unused-vars
-  RawAesWrappingSuiteIdentifier
-} from '@aws-crypto/raw-aes-keyring-browser'
-import { RawRsaKeyringWebCrypto } from '@aws-crypto/raw-rsa-keyring-browser'
+  RawAesWrappingSuiteIdentifier,
+  RawRsaKeyringWebCrypto
+} from '@aws-crypto/client-browser'
 import {
   RsaKeyInfo, // eslint-disable-line no-unused-vars
   AesKeyInfo, // eslint-disable-line no-unused-vars

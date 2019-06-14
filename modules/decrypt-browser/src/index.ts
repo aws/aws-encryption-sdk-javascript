@@ -13,5 +13,5 @@
  * limitations under the License.
  */
 
-export { decrypt, DecryptResult } from './decrypt'
+export * from './decrypt'
 export { MessageHeader } from '@aws-crypto/serialize'
