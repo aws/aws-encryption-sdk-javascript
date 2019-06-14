@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.settings.json",
+  "compilerOptions": {
+    "outDir": "build/main",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules/**"],
+  "references": [
+    { "path": "../encrypt-browser" },
+    { "path": "../decrypt-browser" },
+    { "path": "../material-management-browser" },
+    { "path": "../kms-keyring-browser" },
+    { "path": "../raw-rsa-keyring-browser" },
+    { "path": "../raw-aes-keyring-browser" },
+  ]
+}
