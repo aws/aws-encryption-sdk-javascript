@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-/* This is a simple example of using a KMS Keyring
+/* This is a simple example of using a raw RSA Keyring
  * to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser.
  */
 
@@ -25,7 +25,7 @@ import { encrypt } from '@aws-crypto/encrypt-browser'
 import { decrypt } from '@aws-crypto/decrypt-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
-;(async function testRSA () {
+  ;(async function testRSA () {
   /* JWK for the RSA Keys to use.
    * These keys are *Public*!
    * *DO NOT USE*

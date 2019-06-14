@@ -58,7 +58,7 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   const { accessKeyId, secretAccessKey } = AWS_CREDENTIALS
 
   /* getClient takes a KMS client constructor
-   * and optional configuration values. 
+   * and optional configuration values.
    * The credentials can be injected here,
    * because browser do not have a standard credential discover process the way Node.js does.
    */
