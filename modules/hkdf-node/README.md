@@ -3,7 +3,7 @@
 Another HMAC-based Key Derivation Function for node.js.
 The function is very simple,
 but having a controlled, reviewed, and blessed version is valuable.
-As a crypto primitive this helpful to have,
+As a crypto primitive this is helpful to have,
 but the nodejs `crypto` module only exposes what openssl supports.
 Since it is so simple and derivable,
 there are no plans to include this in core.
