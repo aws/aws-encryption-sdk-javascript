@@ -3,8 +3,7 @@
 The AWS Encryption SDK for JavaScript is a client-side encryption library designed to make it easy for everyone to encrypt and decrypt data using industry standards and best practices. It uses a data format compatible with the AWS Encryption SDKs in other languages. For more information on the AWS Encryption SDKs in all languages, see the [Developer Guide](https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/introduction.html).
 
 ## About example-browser
-This repository holds examples for encrypt and decrypt in a browser
-using KMS and RSA keys.
+This repository holds examples for encrypting and decrypting in a browser using KMS and RSA keys.
 
 This package is intended to act as a working example. It is not intended for direct use by clients. To get started with the AWS Encryption SDK for JavaScript, follow the instructions in [the README](https://github.com/awslabs/aws-encryption-sdk-javascript/blob/master/README.md).
 
