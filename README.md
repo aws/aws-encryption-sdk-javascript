@@ -69,6 +69,12 @@ Data keys are the encryption keys that are used to encrypt your data.
 If your algorithm suite uses a key derivation function,
 the data key is used to generate the key that directly encrypts the data.
 
+## test
+
+```sh
+npm test
+```
+
 ## License
 
 This SDK is distributed under the
