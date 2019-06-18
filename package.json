@@ -9,14 +9,16 @@
     "clean": "npm run clear-build-cache && lerna clean",
     "clear-build-cache": "rimraf ./modules/*/build/*",
     "lint": "standard modules/**/src/*.ts modules/**/test/**/*.ts",
-    "build:node": "tsc -b tsconfig.json",
-    "build:browser": "tsc -b tsconfig.module.json",
-    "build": "run-p build:*",
-    "mocha": "mocha --require source-map-support/register --require ts-node/register modules/**/test/*test.ts",
-    "coverage": "nyc --lines 57 --require ts-node/register --instrument -e .ts --all -n 'modules/**/src/*.ts' --check-coverage -x 'modules/**/test/*.ts' npm run mocha",
+    "build-node": "tsc -b tsconfig.json",
+    "build-browser": "tsc -b tsconfig.module.json",
+    "build": "run-s build-*",
+    "mocha": "mocha --require source-map-support/register --require ts-node/register --exclude 'modules/*-+(browser|backend)/test/*test.ts'  modules/**/test/*test.ts",
+    "coverage-node": "nyc --lines 70 --require ts-node/register --check-coverage --instrument -e .ts --all -n 'modules/**/src/*.ts' -x 'modules/**/test/*.ts' -x 'modules/*-+(browser|backend)/**/*.ts' npm run mocha",
+    "coverage": "run-p coverage-*",
     "test": "npm run lint && npm run build && npm run coverage",
-    "integration_browser": "npm run build; lerna run build_fixtures --stream --no-prefix -- -- -v ../../aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-1.3.8.zip -k",
-    "integration_node": "npm run build; lerna run integration_node --stream --no-prefix -- -- -v ../../aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-1.3.8.zip"
+    "integration-browser": "npm run build; lerna run build_fixtures --stream --no-prefix -- -- -v ../../aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-1.3.8.zip -k",
+    "integration-node": "npm run build; lerna run integration_node --stream --no-prefix -- -- -v ../../aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-1.3.8.zip",
+    "integration": "run-p integration-*"
   },
   "repository": {
     "type": "git",
