@@ -40,6 +40,7 @@ describe('SignatureKey', () => {
     const sigKey = new SignatureKey(new Uint8Array(3), new Uint8Array(3), suite)
     expect(sigKey).to.haveOwnProperty('privateKey').to.be.a('string')
     expect(sigKey).to.haveOwnProperty('compressPoint').to.be.instanceOf(Uint8Array)
+    expect(sigKey).to.haveOwnProperty('signatureCurve').and.to.equal(suite.signatureCurve)
   })
 
   it('encodeCompressPoint', () => {
@@ -50,11 +51,12 @@ describe('SignatureKey', () => {
   })
 })
 
-describe('SignatureKey', () => {
+describe('VerificationKey', () => {
   it('basic usage', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
     const verKey = new VerificationKey(new Uint8Array(3), suite)
     expect(verKey).to.haveOwnProperty('publicKey').to.be.a('string')
+    expect(verKey).to.haveOwnProperty('signatureCurve').and.to.equal(suite.signatureCurve)
   })
 
   it('decodeCompressPoint', () => {

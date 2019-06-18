@@ -48,6 +48,7 @@ export class SignatureKey {
       readOnlyProperty<SignatureKey, 'privateKey'>(this, 'privateKey', privateKey)
     }
     readOnlyBinaryProperty(this, 'compressPoint', compressPoint)
+    readOnlyProperty(this, 'signatureCurve', namedCurve)
     Object.setPrototypeOf(this, SignatureKey.prototype)
     Object.freeze(this)
   }
@@ -81,6 +82,7 @@ export class VerificationKey {
     } else {
       readOnlyProperty<VerificationKey, 'publicKey'>(this, 'publicKey', publicKey)
     }
+    readOnlyProperty(this, 'signatureCurve', namedCurve)
     Object.setPrototypeOf(this, VerificationKey.prototype)
     Object.freeze(this)
   }
