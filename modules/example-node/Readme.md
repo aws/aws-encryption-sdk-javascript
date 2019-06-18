@@ -3,7 +3,7 @@
 This repository includes examples for encrypting and decrypting in Node.js. These are not for production use.
 
 To run this example, you must have an AWS account with at least one AWS Key Management Service (AWS KMS) customer managed CMK.
-To encrypt, CMK must have kms:GenerateDataKey permission. 
+To encrypt, the CMK must have kms:GenerateDataKey permission. 
 To decrypt, the CMK must have kms:Decrypt permission.
 The CMKs in these examples are only for *example*. *Replace these CMK's with your own*.
 
@@ -26,7 +26,7 @@ For a more detailed explanation, see kms_regional_discovery.ts.
 ## RSA Simple
 
 This is an example of using a RSA key pair to encrypt and decrypt a simple string. 
-This has some advantages for certain use cases, but we recommend that you use a keyring that protects your wrapping keys and performs cryptographic operations within a secure boundary. This is how a KMS keyring works: it uses AWS Key Management Service (AWS KMS) customer master keys (CMKs) that never leave AWS KMS unencrypted. 
+This has some advantages for certain use cases, but we recommend that you use a keyring that protects your wrapping keys and performs cryptographic operations within a secure boundary. A KMS keyring uses AWS Key Management Service (AWS KMS) customer master keys (CMKs) that never leave AWS KMS unencrypted. 
 For a more detailed explanation, see rsa_simple.ts.
 
 ## How to Use
