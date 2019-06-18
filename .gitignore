@@ -18,6 +18,7 @@ package.json.decrypt
 
 # nyc/code coverage
 .nyc_output
+.karma_output
 coverage
 
 # symlink to test vectors
