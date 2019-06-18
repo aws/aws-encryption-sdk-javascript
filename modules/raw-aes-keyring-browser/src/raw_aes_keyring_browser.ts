@@ -125,7 +125,7 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
    */
   _onDecrypt = _onDecrypt<WebCryptoAlgorithmSuite, RawAesKeyringWebCrypto>()
 
-  static importCryptoKey (masterKey: Uint8Array, wrappingSuite: WrappingSuiteIdentifier) {
+  static async importCryptoKey (masterKey: Uint8Array, wrappingSuite: WrappingSuiteIdentifier) {
     needs(masterKey instanceof Uint8Array, 'Unsupported master key type.')
     const material = new WebCryptoRawAesMaterial(wrappingSuite)
       /* Precondition: masterKey must correspond to the algorithm suite specification.
@@ -164,8 +164,10 @@ async function aesGcmWrapKey (
   const info = new Uint8Array()
   const dataKey = material.getUnencryptedDataKey()
   const buffer = await kdfGetSubtleEncrypt(info)(iv, aad)(dataKey)
+  const ciphertext = new Uint8Array(buffer, 0, buffer.byteLength - material.suite.tagLength / 8)
+  const authTag = new Uint8Array(buffer, buffer.byteLength - material.suite.tagLength / 8)
 
-  const edk = rawAesEncryptedDataKey(keyNamespace, keyName, iv, new Uint8Array(buffer), new Uint8Array())
+  const edk = rawAesEncryptedDataKey(keyNamespace, keyName, iv, ciphertext, authTag)
   return material.addEncryptedDataKey(edk, encryptFlags)
 }
 
