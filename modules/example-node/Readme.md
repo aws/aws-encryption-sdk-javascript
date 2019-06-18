@@ -5,7 +5,7 @@ This repository includes examples for encrypting and decrypting in Node.js. Thes
 To run this example, you must have an AWS account with at least one AWS Key Management Service (AWS KMS) customer managed CMK.
 To encrypt, the CMK must have kms:GenerateDataKey permission. 
 To decrypt, the CMK must have kms:Decrypt permission.
-The CMKs in these examples are only for *example*. *Replace these CMK's with your own*.
+The CMKs in these examples are only for *example*. *Replace these CMKs with your own*.
 
 ## KMS Simple
 
