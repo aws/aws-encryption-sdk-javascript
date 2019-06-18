@@ -79,7 +79,6 @@ const { encryptionContext } = messageHeader
     })
 
 /* If the encryption context is verified, return the plaintext. */
-return { plaintext, ciphertext, cleartext, messageHeader }
 
 ```
 
