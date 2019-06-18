@@ -12,7 +12,6 @@ JavaScript with Node.js.
 * caching-materials-manager-node
 * raw-aes-keyring-node
 * raw-rsa-keyring-node
-* tslib
 
 For code examples that show you how to these modules to create keyrings and encrypt and decrypt data, install the [example-node](https://github.com/awslabs/aws-encryption-sdk-javascript/tree/master/modules/example-node) module. 
 ## install
