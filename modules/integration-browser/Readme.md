@@ -1,6 +1,6 @@
 # AWS Encryption SDK for Javascript Browser Integration
 
-This repository is for compatibility tests with the other versions of the AWS Encryption SDK.
+This module includes compatibility tests with the other versions of the AWS Encryption SDK.
 It's designed to facilitate testing for the set of test vectors of the AWS Encryption SDK. 
 The test vectors can be found [here] (https://github.com/awslabs/aws-encryption-sdk-test-vectors/tree/a28851a188163e45b8cbf94c1d5a1e67e9622aa8).
 
