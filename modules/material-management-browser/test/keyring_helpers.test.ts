@@ -58,7 +58,7 @@ describe('importForWebCryptoEncryptionMaterial', async () => {
     await importForWebCryptoEncryptionMaterial(material)
     const cryptoKey = material.getCryptoKey()
     /* This is as good as it gets I think.
-     * There are several protections to keep the cryptKey from changing.
+     * There are several protections to keep the cryptoKey from changing.
      * But these methods should throw.
      */
     await importForWebCryptoEncryptionMaterial(material)
@@ -81,7 +81,7 @@ describe('importForWebCryptoDecryptionMaterial', () => {
     await importForWebCryptoDecryptionMaterial(material)
     const cryptoKey = material.getCryptoKey()
     /* This is as good as it gets I think.
-     * There are several protections to keep the cryptKey from changing.
+     * There are several protections to keep the cryptoKey from changing.
      * But these methods should throw.
      */
     await importForWebCryptoDecryptionMaterial(material)
