@@ -117,7 +117,8 @@ For details on `configureFallback` see: [@aws-crypto/web-crypto-backend](https:/
 
 Modern versions of Safari do not support AES-GCM on zero bytes.
 The AWS Encryption SDK needs this to operate.
-As above, a fallback to support this can be configured.
+To fix this, configure a fallback library exactly as above.
+The AWS Encryption SDK will only use the fallback for zero byte operations.
 
 ### RSA Options
 
