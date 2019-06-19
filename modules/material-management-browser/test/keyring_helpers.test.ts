@@ -37,11 +37,8 @@ const { expect } = chai
 
 describe('importCryptoKeyToMaterial', () => {
   it('adds a cryptoKey', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoEncryptionMaterial(suite)
-    const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
-    material.setUnencryptedDataKey(udk, trace)
+    const material = getWebCryptoEncryptionMaterial()
+
     await importCryptoKeyToMaterial(material)
     expect(material.hasCryptoKey).to.equal(true)
   })
@@ -49,22 +46,14 @@ describe('importCryptoKeyToMaterial', () => {
 
 describe('importForWebCryptoEncryptionMaterial', async () => {
   it('adds a cryptoKey to Encryption Material', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoEncryptionMaterial(suite)
-    const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
-    material.setUnencryptedDataKey(udk, trace)
+    const material = getWebCryptoEncryptionMaterial()
 
     await importForWebCryptoEncryptionMaterial(material)
     expect(material.hasCryptoKey).to.equal(true)
   })
 
   it('Check for early return (Postcondition): If a cryptoKey has already been imported for encrypt, return.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoEncryptionMaterial(suite)
-    const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
-    material.setUnencryptedDataKey(udk, trace)
+    const material = getWebCryptoEncryptionMaterial()
 
     await importForWebCryptoEncryptionMaterial(material)
     const cryptoKey = material.getCryptoKey()
@@ -72,18 +61,14 @@ describe('importForWebCryptoEncryptionMaterial', async () => {
      * There are several protections to keep the cryptKey from changing.
      * But these methods should throw.
      */
-    importForWebCryptoEncryptionMaterial(material)
+    await importForWebCryptoEncryptionMaterial(material)
     expect(material.getCryptoKey() === cryptoKey).to.equal(true)
   })
 })
 
 describe('importForWebCryptoDecryptionMaterial', () => {
   it('adds a cryptoKey to decryption material, and zeroes out the unencrypted data key.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoDecryptionMaterial(suite)
-    const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
-    material.setUnencryptedDataKey(udk, trace)
+    const material = getWebCryptoDecryptionMaterial()
 
     await importForWebCryptoDecryptionMaterial(material)
     expect(material.hasCryptoKey).to.equal(true)
@@ -91,11 +76,7 @@ describe('importForWebCryptoDecryptionMaterial', () => {
   })
 
   it('Check for early return (Postcondition): If a cryptoKey has already been imported for decrypt, return.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoDecryptionMaterial(suite)
-    const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
-    material.setUnencryptedDataKey(udk, trace)
+    const material = getWebCryptoDecryptionMaterial()
 
     await importForWebCryptoDecryptionMaterial(material)
     const cryptoKey = material.getCryptoKey()
@@ -112,5 +93,22 @@ describe('importForWebCryptoDecryptionMaterial', () => {
     const material = new WebCryptoDecryptionMaterial(suite)
 
     await importForWebCryptoDecryptionMaterial(material)
+    expect(material.hasCryptoKey).to.equal(false)
   })
 })
+
+function getWebCryptoDecryptionMaterial() {
+  const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+  const material = new WebCryptoDecryptionMaterial(suite)
+  const udk = synchronousRandomValues(suite.keyLengthBytes)
+  const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+  return material.setUnencryptedDataKey(udk, trace)
+}
+
+function getWebCryptoEncryptionMaterial() {
+  const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+  const material = new WebCryptoEncryptionMaterial(suite)
+  const udk = synchronousRandomValues(suite.keyLengthBytes)
+  const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+  return material.setUnencryptedDataKey(udk, trace)
+}
