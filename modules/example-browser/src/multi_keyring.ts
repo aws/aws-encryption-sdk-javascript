@@ -17,13 +17,13 @@
  * to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser.
  */
 
+import { encrypt } from '@aws-crypto/encrypt-browser'
+import { decrypt } from '@aws-crypto/decrypt-browser'
 import {
   KmsKeyringBrowser,
   KMS,
-  getClient,
-  encrypt,
-  decrypt
-} from '@aws-crypto/client-browser'
+  getClient
+} from '@aws-crypto/kms-keyring-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
 /* This is injected by webpack.

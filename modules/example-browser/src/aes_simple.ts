@@ -13,64 +13,37 @@
  * limitations under the License.
  */
 
-/* This is a simple example of using a KMS Keyring
+/* This is a simple example of using a raw AES Keyring
  * to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser.
  */
 
 import {
-  KmsKeyringBrowser,
-  KMS,
-  getClient,
+  RawAesWrappingSuiteIdentifier,
+  RawAesKeyringWebCrypto,
   encrypt,
-  decrypt
+  decrypt,
+  synchronousRandomValues
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
-/* This is injected by webpack.
- * The webpack.DefinePlugin will replace the values when bundling.
- * The credential values are pulled from @aws-sdk/credential-provider-node
- * Use any method you like to get credentials into the browser.
- * See kms.webpack.config
- */
-declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
-
-;(async function kmsSimpleExample () {
-  /* A KMS CMK to generate the data key is required.
-   * Access to KMS generateDataKey is required for the generatorKeyId.
+;(async function testAES () {
+  /* Raw providers need to have a name and a namespace.
+   * These values *must* match *case sensitive exactly* on the decrypt side.
    */
-  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+  const keyName = 'aes-name'
+  const keyNamespace = 'aes-namespace'
 
-  /* Adding Alternate KMS keys that can decrypt.
-   * Access to KMS encrypt is required for every CMK in keyIds.
-   * Often this used to have a local CMK in multiple regions.
-   * In this example, I am using the same CMK.
-   * This is *only* to demonstrate how the CMK ARN's are configured.
-   */
-  const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
+  /* The wrapping suite defines the AES-GCM algorithm suite to use. */
+  const wrappingSuite = RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
 
-  /* Need a client provider that will inject correct credentials.
-   * The credentials here are injected by webpack from your environment bundle is created
-   * The credential values are pulled using @aws-sdk/credential-provider-node.
-   * See kms.webpack.config
-   * You should inject your credential into the browser in a secure manner,
-   * that works with your application.
-   */
-  const { accessKeyId, secretAccessKey } = AWS_CREDENTIALS
+  // You should get your unencrypted master key from wherever you store it.
+  const unencryptedMasterKey = synchronousRandomValues(32)
 
-  /* getClient takes a KMS client constructor
-   * and optional configuration values.
-   * The credentials can be injected here,
-   * because browser do not have a standard credential discover process the way Node.js does.
-   */
-  const clientProvider = getClient(KMS, {
-    credentials: {
-      accessKeyId,
-      secretAccessKey
-    }
-  })
+  /* The unencrypted master key, must be imported into a WebCrypto CryptoKey. */
+  const masterKey = await RawAesKeyringWebCrypto.importCryptoKey(unencryptedMasterKey, wrappingSuite)
 
-  /* The KMS Keyring must be configured with the desired CMK's */
-  const keyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
+  /* Configure the Raw AES Keyring. */
+  const keyring = new RawAesKeyringWebCrypto({ keyName, keyNamespace, wrappingSuite, masterKey })
 
   /* Encryption Context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
@@ -116,6 +89,6 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
     })
 
   /* Log the clear message. */
-  document.write('</br>Decrypted:' + clearMessage)
+  document.write('</br>clearMessage:' + clearMessage)
   console.log(clearMessage)
 })()

@@ -20,6 +20,8 @@ import 'mocha'
 import { rsaTest } from '../src/rsa_simple'
 import { kmsSimpleTest } from '../src/kms_simple'
 import { kmsStreamTest } from '../src/kms_stream'
+import { aesTest } from '../src/aes_simple'
+import { multiKeyringTest } from '../src/multi_keyring'
 import { readFileSync } from 'fs'
 
 describe('test', () => {
@@ -41,5 +43,17 @@ describe('test', () => {
     const test = readFileSync('./package.json.decrypt', { encoding: 'utf8' })
 
     expect(test).to.equal(packageJson)
+  })
+
+  it('aes', async () => {
+    const { cleartext, plaintext } = await aesTest()
+
+    expect(plaintext.toString()).to.equal(cleartext)
+  })
+
+  it('multi keyring', async () => {
+    const { cleartext, plaintext } = await multiKeyringTest()
+
+    expect(plaintext.toString()).to.equal(cleartext)
   })
 })

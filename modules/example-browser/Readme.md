@@ -15,18 +15,40 @@ This is a simple example of using a KMS Keyring to encrypt and decrypt using the
 
 This is a simple example of using a raw RSA Keyring to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser. See rsa_simple.ts for more information.
 
+# AES Simple Example
+
+This is a simple example of using a raw AES Keyring to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser. See aes_simple.ts for more information.
+
+# Multi Keyring Example
+
+This is a simple example of combining an KMS Keyring and a raw AES Keyring to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser. See multi_keyring.ts for more information.
+
 # To test KMS encryption in a browser locally on OSX
 
 ```
-npm run example:kms
-open kms_simple.html
+npm run example-kms
+open html/kms_simple.html
 ```
 
 # To test RSA encryption in a browser locally on OSX
 
 ```
-npm run example:rsa
-open rsa_simple.html
+npm run example-rsa
+open html/rsa_simple.html
+```
+
+# To test AES encryption in a browser locally on OSX
+
+```
+npm run example-aes
+open html/aes_simple.html
+```
+
+# To test Multi Keyring encryption in a browser locally on OSX
+
+```
+npm run example-multi-keyring
+open html/multi_keyring_simple.html
 ```
 
 ## License

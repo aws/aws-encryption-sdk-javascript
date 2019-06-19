@@ -1,12 +1,12 @@
 const path = require('path')
 
 module.exports = {
-  entry: './src/rsa_simple.ts',
+  entry: './src/aes_simple.ts',
   // devtool: 'inline-source-map',
   module: {
     rules: [
       {
-        test: /rsa_simple.ts$/,
+        test: /aes_simple.ts$/,
         use: [
           {
             loader: 'ts-loader',
@@ -15,8 +15,8 @@ module.exports = {
             }
           }
         ],
-        include: /rsa_simple.ts/,
-        exclude: [/node_modules/, /kms_simple/]
+        include: /aes_simple.ts/,
+        exclude: [/node_modules/]
       }
     ]
   },
@@ -24,7 +24,7 @@ module.exports = {
     extensions: [ '.tsx', '.ts', '.js' ]
   },
   output: {
-    filename: 'rsa_simple_bundle.js',
-    path: path.resolve(__dirname, 'build')
+    filename: 'aes_simple_bundle.js',
+    path: path.resolve(__dirname, '..', 'build')
   }
 }

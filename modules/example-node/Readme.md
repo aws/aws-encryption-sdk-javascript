@@ -1,6 +1,7 @@
 # AWS Encryption SDK for Javascript Node.js examples
 
-This repository includes examples for encrypting and decrypting in Node.js. These are not for production use.
+This repository includes examples for encrypting and decrypting in Node.js.
+**These are not for production use.**
 
 To run this example, you must have an AWS account with at least one AWS Key Management Service (AWS KMS) customer managed CMK.
 To encrypt, the CMK must have kms:GenerateDataKey permission. 
@@ -20,14 +21,37 @@ For a more detailed explanation, see kms_stream.ts.
 ## KMS Regional Discovery
 
 This is an example of using a KMS Regional Discovery Keyring that limits the AWS Encryption SDK to CMKs in a particular AWS Region(s).
-This is different from a KMS Discovery Keyring that doesn't specify any CMKs and will therefore use CMKs from any region available. 
+This is different from a KMS Discovery Keyring that doesn't specify any CMKs
+and will therefore use CMKs from any region available. 
 For a more detailed explanation, see kms_regional_discovery.ts.
 
 ## RSA Simple
 
 This is an example of using a RSA key pair to encrypt and decrypt a simple string. 
-This has some advantages for certain use cases, but we recommend that you use a keyring that protects your wrapping keys and performs cryptographic operations within a secure boundary. A KMS keyring uses AWS Key Management Service (AWS KMS) customer master keys (CMKs) that never leave AWS KMS unencrypted. 
+This has some advantages for certain use cases,
+but we recommend that you use a keyring that protects your wrapping keys
+and performs cryptographic operations within a secure boundary.
+A KMS keyring uses AWS Key Management Service (AWS KMS) customer master keys (CMKs) that never leave AWS KMS unencrypted. 
 For a more detailed explanation, see rsa_simple.ts.
+
+## AES Simple
+
+This is an example of using a shared secret to encrypt and decrypt a simple string. 
+This has some advantages for certain use cases,
+but we recommend that you use a keyring that protects your wrapping keys
+and performs cryptographic operations within a secure boundary.
+A KMS keyring uses AWS Key Management Service (AWS KMS) customer master keys (CMKs) that never leave AWS KMS unencrypted. 
+For a more detailed explanation, see aes_simple.ts.
+
+## Multi Keyring
+
+This is an example of using a Multi Keyring to encrypt and decrypt a simple string.
+This example uses an raw AES keyring and a KMS Keyring.
+This has some advantages for certain use cases,
+but we recommend that you use a keyring that protects your wrapping keys
+and performs cryptographic operations within a secure boundary.
+A KMS keyring uses AWS Key Management Service (AWS KMS) customer master keys (CMKs) that never leave AWS KMS unencrypted. 
+For a more detailed explanation, see multi_keyring.ts.
 
 ## How to Use
 

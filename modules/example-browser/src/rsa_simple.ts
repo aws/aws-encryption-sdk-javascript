@@ -19,13 +19,13 @@
 
 import {
   RsaImportableKey, // eslint-disable-line no-unused-vars
-  RawRsaKeyringWebCrypto
-} from '@aws-crypto/raw-rsa-keyring-browser'
-import { encrypt } from '@aws-crypto/encrypt-browser'
-import { decrypt } from '@aws-crypto/decrypt-browser'
+  RawRsaKeyringWebCrypto,
+  encrypt,
+  decrypt
+} from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
-  ;(async function testRSA () {
+;(async function testRSA () {
   /* JWK for the RSA Keys to use.
    * These keys are *Public*!
    * *DO NOT USE*

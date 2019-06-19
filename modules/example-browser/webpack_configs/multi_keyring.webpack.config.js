@@ -3,12 +3,12 @@ const path = require('path')
 const {defaultProvider} = require('@aws-sdk/credential-provider-node')
 
 module.exports = (async () => ({
-  entry: './src/kms_simple.ts',
+  entry: './src/multi_keyring.ts',
   // devtool: 'inline-source-map',
   module: {
     rules: [
       {
-        test: /kms_simple.ts$/,
+        test: /multi_keyring.ts$/,
         use: [
           {
             loader: 'ts-loader',
@@ -17,8 +17,8 @@ module.exports = (async () => ({
             }
           }
         ],
-        include: /kms_simple.ts/,
-        exclude: [/node_modules/, /rsa_simple/]
+        include: /multi_keyring.ts/,
+        exclude: [/node_modules/]
       }
     ]
   },
@@ -26,8 +26,8 @@ module.exports = (async () => ({
     extensions: [ '.tsx', '.ts', '.js' ]
   },
   output: {
-    filename: 'kms_simple_bundle.js',
-    path: path.resolve(__dirname, 'build')
+    filename: 'multi_keyring_bundle.js',
+    path: path.resolve(__dirname, '..', 'build')
   },
   plugins: [
     new webpack.DefinePlugin({
