@@ -1,13 +1,16 @@
 # @aws-crypto/hkdf-node
 
-Another HMAC-based Key Derivation Function for Node.js.
+This module exports a HMAC-based Key Derivation Function (HKDF) for Node.js.
 The function is very simple,
-but having a reviewed version
+but having a reviewed module
 with extensive test vectors is valuable.
-As a crypto primitive it is useful,
+As a crypto primitive hkdf is useful,
 but the Node.js `crypto` module only exposes what openssl supports.
 Since it is so simple and derivable,
 there are no plans to include this in Node.js core.
+
+This module use used as part of the AWS Encryption SDK for JavaScript
+to provide hkdf key derivation for specific algorithm suites.
 
 spec: https://tools.ietf.org/html/rfc5869
 
