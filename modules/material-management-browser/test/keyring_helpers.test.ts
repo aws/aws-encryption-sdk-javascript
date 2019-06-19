@@ -97,7 +97,7 @@ describe('importForWebCryptoDecryptionMaterial', () => {
   })
 })
 
-function getWebCryptoDecryptionMaterial() {
+function getWebCryptoDecryptionMaterial () {
   const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
   const material = new WebCryptoDecryptionMaterial(suite)
   const udk = synchronousRandomValues(suite.keyLengthBytes)
@@ -105,7 +105,7 @@ function getWebCryptoDecryptionMaterial() {
   return material.setUnencryptedDataKey(udk, trace)
 }
 
-function getWebCryptoEncryptionMaterial() {
+function getWebCryptoEncryptionMaterial () {
   const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
   const material = new WebCryptoEncryptionMaterial(suite)
   const udk = synchronousRandomValues(suite.keyLengthBytes)
