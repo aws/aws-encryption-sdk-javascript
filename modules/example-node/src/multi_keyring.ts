@@ -13,6 +13,11 @@
  * limitations under the License.
  */
 
+ /* This is a simple example of using a Multi Keyring KMS Keyring
+ * to combine a KMS Keyring and a raw AES Keyring
+ * to encrypt and decrypt using the AWS Encryption SDK for Javascript in Node.js.
+ */
+
 import { MultiKeyringNode, KmsKeyringNode, RawAesKeyringNode, RawAesWrappingSuiteIdentifier, encrypt, decrypt } from '@aws-crypto/client-node'
 import { randomBytes } from 'crypto'
 
@@ -46,6 +51,7 @@ export async function multiKeyringTest () {
   /* Configure the Raw AES Keyring. */
   const aesKeyring = new RawAesKeyringNode({ keyName, keyNamespace, unencryptedMasterKey, wrappingSuite })
 
+  /* Combine the two keyrings with a MultiKeyring. */
   const keyring = new MultiKeyringNode({ generator: kmsKeyring, children: [ aesKeyring ] })
 
   /* Encryption Context is a *very* powerful tool for controlling and managing access.

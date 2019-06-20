@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-/* This is a simple example of using a KMS Keyring
+/* This is a simple example of using a Multi Keyring KMS Keyring
+ * to combine a KMS Keyring and a raw AES Keyring
  * to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser.
  */
 
@@ -21,8 +22,12 @@ import {
   KmsKeyringBrowser,
   KMS,
   getClient,
+  RawAesKeyringWebCrypto,
+  RawAesWrappingSuiteIdentifier,
+  MultiKeyringWebCrypto,
   encrypt,
-  decrypt
+  decrypt,
+  synchronousRandomValues
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
@@ -34,7 +39,7 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
  */
 declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
 
-;(async function kmsSimpleExample () {
+;(async function multiKeyringExample () {
   /* A KMS CMK to generate the data key is required.
    * Access to KMS generateDataKey is required for the generatorKeyId.
    */
@@ -70,7 +75,28 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   })
 
   /* The KMS Keyring must be configured with the desired CMK's */
-  const keyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
+  const kmsKeyring  = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
+
+  /* Raw providers need to have a name and a namespace.
+   * These values *must* match *case sensitive exactly* on the decrypt side.
+   */
+  const keyName = 'aes-name'
+  const keyNamespace = 'aes-namespace'
+
+  /* The wrapping suite defines the AES-GCM algorithm suite to use. */
+  const wrappingSuite = RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
+
+  // You should get your unencrypted master key from wherever you store it.
+  const unencryptedMasterKey = synchronousRandomValues(32)
+
+  /* The unencrypted master key, must be imported into a WebCrypto CryptoKey. */
+  const masterKey = await RawAesKeyringWebCrypto.importCryptoKey(unencryptedMasterKey, wrappingSuite)
+
+  /* Configure the Raw AES Keyring. */
+  const aesKeyring = new RawAesKeyringWebCrypto({ keyName, keyNamespace, wrappingSuite, masterKey })
+
+  /* Combine the two keyrings with a MultiKeyring. */
+  const keyring = new MultiKeyringWebCrypto({ generator: kmsKeyring, children: [ aesKeyring ] })
 
   /* Encryption Context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
