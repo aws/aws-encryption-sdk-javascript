@@ -15,12 +15,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/decrypt-node": "^0.0.1",
-    "@aws-crypto/encrypt-node": "^0.0.1",
-    "@aws-crypto/kms-keyring-node": "^0.0.1",
-    "@aws-crypto/material-management-node": "^0.0.1",
-    "@aws-crypto/raw-aes-keyring-node": "^0.0.1",
-    "@aws-crypto/raw-rsa-keyring-node": "^0.0.1",
+    "@aws-crypto/client-node": "^0.0.1",
     "@types/unzipper": "^0.9.1",
     "@types/yargs": "^13.0.0",
     "tslib": "^1.9.3",
