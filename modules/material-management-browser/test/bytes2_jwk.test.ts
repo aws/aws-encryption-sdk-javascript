@@ -13,11 +13,17 @@
  * limitations under the License.
  */
 
-export * from '@aws-crypto/encrypt-browser'
-export * from '@aws-crypto/decrypt-browser'
-export * from '@aws-crypto/material-management-browser'
-export * from '@aws-crypto/caching-materials-manager-browser'
-export * from '@aws-crypto/kms-keyring-browser'
-export * from '@aws-crypto/raw-aes-keyring-browser'
-export * from '@aws-crypto/raw-rsa-keyring-browser'
-export * from '@aws-crypto/web-crypto-backend'
+/* eslint-env mocha */
+
+import { expect } from 'chai'
+import 'mocha'
+import { bytes2JWK } from '../src/index'
+
+describe('bytes2JWK', () => {
+  it('https://tools.ietf.org/html/rfc7515#appendix-C test vector', () => {
+    const binary = new Uint8Array([3, 236, 255, 224, 193])
+    const test = bytes2JWK(binary)
+    expect(test.kty).to.equal('oct')
+    expect(test.k).to.equal('A-z_4ME')
+  })
+})
