@@ -12,6 +12,7 @@ the JavaScript web browser.
 * caching-materials-manager-browser
 * raw-aes-keyring-browser
 * raw-rsa-keyring-browser
+* web-crypto-backend
 
 For code examples that show you how to these modules to create keyrings and encrypt and decrypt data, install the [example-browser](https://github.com/awslabs/aws-encryption-sdk-javascript/tree/master/modules/example-browser) module. 
 ## install
@@ -96,6 +97,36 @@ console.log(clearMessage)
 ```sh
 npm test
 ```
+
+## Compatibility Considerations
+
+### WebCrypto availability
+
+The WebCrypto API is not available on all browsers.
+A fallback can be configured.
+An example of a fallback library is:
+[MSR Crypto](https://www.microsoft.com/en-us/research/project/msr-javascript-cryptography-library/)
+```javascript
+import { configureFallback } from '@aws-crypto/client-browser'
+configureFallback(msrCrypto)
+```
+
+For details on `configureFallback` see: [@aws-crypto/web-crypto-backend](https://npmjs.com/package/@aws-crypto/web-crypto-backend)
+
+### Zero Byte AES-GCM operations
+
+Modern versions of Safari do not support AES-GCM on zero bytes.
+The AWS Encryption SDK needs this to operate.
+To fix this, configure a fallback library exactly as above.
+The AWS Encryption SDK will only use the fallback for zero byte operations.
+
+### RSA Options
+
+The WebCrypto API does not support `PKCS1v15` RSA key wrapping.
+
+### 192 Bit Keys
+
+Browsers do not support key lengths of 192 bits.
 
 ## license
 
