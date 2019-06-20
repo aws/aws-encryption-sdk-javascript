@@ -143,6 +143,7 @@ export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
   backend: WebCryptoBackend,
   subtleFunction: SubtleFunction = subtleFunctionForMaterial(material)
 ): KdfGetSubtleEncrypt|KdfGetSubtleDecrypt {
+  /* Precondition: The material must have a CryptoKey. */
   needs(material.hasCryptoKey, 'Material must have a CryptoKey.')
 
   const cryptoKey = material.getCryptoKey()
@@ -160,7 +161,7 @@ export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
         WebCryptoKdf(getZeroByteSubtle(backend), material, cryptoKey.zeroByteCryptoKey, [subtleFunction], info)
       ]).then(([nonZeroByteCryptoKey, zeroByteCryptoKey]) => ({ nonZeroByteCryptoKey, zeroByteCryptoKey }))
     return (iv: Uint8Array, additionalData: Uint8Array) => {
-      /* Precondition: The length of the IV must match the algorithm suite specification */
+      /* Precondition: The length of the IV must match the algorithm suite specification. */
       needs(iv.byteLength === ivLength, 'Iv length does not match algorithm suite specification')
       return async (data: Uint8Array) => {
         const deriveKey = await derivedKeyPromise
