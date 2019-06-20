@@ -16,9 +16,9 @@
 import {
   WebCryptoMaterialsManager, EncryptionRequest, // eslint-disable-line no-unused-vars
   DecryptionRequest, EncryptionContext, // eslint-disable-line no-unused-vars
-  EncryptionResponse, DecryptionResponse, Keyring, // eslint-disable-line no-unused-vars
+  EncryptionResponse, DecryptionResponse, // eslint-disable-line no-unused-vars
   WebCryptoAlgorithmSuite, WebCryptoEncryptionMaterial,
-  WebCryptoDecryptionMaterial, SignatureKey, needs,
+  WebCryptoDecryptionMaterial, SignatureKey, needs, readOnlyProperty,
   VerificationKey, AlgorithmSuiteIdentifier, immutableBaseClass,
   KeyringWebCrypto, GetEncryptionMaterials, GetDecryptMaterials // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
@@ -40,10 +40,11 @@ export type WebCryptoGetDecryptMaterials = GetDecryptMaterials<WebCryptoAlgorith
  * Users should never need to create an instance of a DefaultCryptographicMaterialsManager.
  */
 export class WebCryptoDefaultCryptographicMaterialsManager implements WebCryptoMaterialsManager {
-  readonly keyring: KeyringWebCrypto
+  readonly keyring!: KeyringWebCrypto
   constructor (keyring: KeyringWebCrypto) {
-    needs(keyring instanceof Keyring, 'Unsupported type.')
-    this.keyring = keyring
+    /* Precondition: keyrings must be a KeyringWebCrypto. */
+    needs(keyring instanceof KeyringWebCrypto, 'Unsupported type.')
+    readOnlyProperty(this, 'keyring', keyring)
   }
   async getEncryptionMaterials ({ suite, encryptionContext }: WebCryptoEncryptionRequest): Promise<WebCryptoEncryptionResponse> {
     suite = suite || new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)

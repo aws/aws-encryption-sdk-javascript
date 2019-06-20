@@ -88,6 +88,17 @@ const { encryptionContext } = messageHeader
 npm test
 ```
 
+## Compatibility Considerations
+
+### RSA Options
+
+Node.js crypto does not support all RSA key wrapping options supported by other other implementation of the AWS Encryption SDK
+
+The supported configurations are:
+
+* OAEP with SHA1 and MGF1 with SHA1
+* PKCS1v15
+
 ## license
 
 This SDK is distributed under the

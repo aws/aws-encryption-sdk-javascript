@@ -20,6 +20,7 @@
     "@aws-crypto/caching-materials-manager-browser": "^0.0.1",
     "@aws-crypto/raw-aes-keyring-browser": "^0.0.1",
     "@aws-crypto/raw-rsa-keyring-browser": "^0.0.1",
+    "@aws-crypto/web-crypto-backend": "^0.0.1",
     "tslib": "^1.9.3"
   },
   "devDependencies": {
