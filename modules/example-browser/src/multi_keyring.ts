@@ -90,7 +90,9 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   /* Encrypt the data. */
   const { cipherMessage } = await encrypt(keyring, plainText, { encryptionContext: context })
 
-  /* Log the plain text. */
+  /* Log the plain text,
+   * only for testing and to show that it works.
+   */
   console.log('plainText:', plainText)
   document.write('</br>plainText:' + plainText + '</br>')
 
@@ -115,7 +117,9 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
       if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
     })
 
-  /* Log the clear message. */
+  /* Log the clear message,
+   * only for testing and to show that it works.
+   */
   document.write('</br>Decrypted:' + clearMessage)
   console.log(clearMessage)
 })()
