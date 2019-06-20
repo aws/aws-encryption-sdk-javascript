@@ -17,28 +17,13 @@
 
 import { expect } from 'chai'
 import 'mocha'
-import { rsaTest } from '../src/rsa_simple'
-import { kmsSimpleTest } from '../src/kms_simple'
-import { kmsStreamTest } from '../src/kms_stream'
-import { readFileSync } from 'fs'
+import { decrypt } from '../src/index'
 
-describe('test', () => {
-  it('rsa', async () => {
-    const { cleartext, plaintext } = await rsaTest()
-
-    expect(plaintext.toString()).to.equal(cleartext)
-  })
-
-  it('kms', async () => {
-    const { cleartext, plaintext } = await kmsSimpleTest()
-
-    expect(plaintext.toString()).to.equal(cleartext)
-  })
-
-  it('kms', async () => {
-    const test = await kmsStreamTest(__filename)
-    const clearFile = readFileSync(__filename)
-
-    expect(test).to.deep.equal(clearFile)
+describe('decrypt', () => {
+  /* This test is mostly to insure that I include all files.
+   * So I can not lie on code coverage.
+   */
+  it('is a function', () => {
+    expect(decrypt).to.be.a('function')
   })
 })
