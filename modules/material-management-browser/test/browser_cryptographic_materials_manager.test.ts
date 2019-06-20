@@ -37,10 +37,10 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   it('constructor sets keyring', () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
       async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
     }
 
@@ -62,10 +62,10 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   it('set a signatureKey and the compress point on the encryption context', async () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
       async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
     }
 
@@ -78,7 +78,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
     expect(Object.keys(test)).lengthOf(2)
 
     const { signatureKey } = material
-    if (!signatureKey) throw new Error('never')
+    if (!signatureKey) throw new Error('I should never see this error')
 
     expect(test).to.have.haveOwnProperty(ENCODED_SIGNER_KEY).and.to.equal(toBase64(signatureKey.compressPoint))
     expect(test).to.have.haveOwnProperty('some').and.to.equal('context')
@@ -87,10 +87,10 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   it('Precondition: The algorithm suite specification must support a signatureCurve to generate a signing key.', async () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
       async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
     }
 
@@ -107,10 +107,10 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   it('set a verificationKey from context', async () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
       async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
     }
 
@@ -121,17 +121,17 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
 
     const test = await cmm._loadVerificationKeyFromEncryptionContext(new WebCryptoDecryptionMaterial(suite), context)
     const { verificationKey } = test
-    if (!verificationKey) throw new Error('never')
+    if (!verificationKey) throw new Error('I should never see this error')
     expect(verificationKey.signatureCurve).to.equal(suite.signatureCurve)
   })
 
   it('Precondition: The algorithm suite specification must support a signatureCurve to extract a verification key.', async () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
       async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
     }
 
@@ -147,10 +147,10 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   it('Precondition: WebCryptoDefaultCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist.', async () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
       async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
     }
 
@@ -164,10 +164,10 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   it('Precondition: WebCryptoDefaultCryptographicMaterialsManager The context must contain the public key.', async () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
       async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
     }
 
@@ -192,7 +192,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
         return importForWebCryptoEncryptionMaterial(material)
       }
       async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
     }
 
@@ -205,7 +205,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
 
     const test = await cmm.getEncryptionMaterials({ suite, encryptionContext })
     expect(Object.keys(test.context)).lengthOf(2)
-    if (!test.material.signatureKey) throw new Error('never')
+    if (!test.material.signatureKey) throw new Error('I should never see this error')
     expect(test.context).to.have.haveOwnProperty(ENCODED_SIGNER_KEY).and.to.equal(toBase64(test.material.signatureKey.compressPoint))
     expect(test.context).to.have.haveOwnProperty('some').and.to.equal('context')
   })
@@ -223,7 +223,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
         return importForWebCryptoEncryptionMaterial(material)
       }
       async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
     }
 
@@ -235,7 +235,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
 
     const test = await cmm.getEncryptionMaterials({ encryptionContext })
     expect(Object.keys(test.context)).lengthOf(2)
-    if (!test.material.signatureKey) throw new Error('never')
+    if (!test.material.signatureKey) throw new Error('I should never see this error')
     expect(test.context).to.have.haveOwnProperty(ENCODED_SIGNER_KEY).and.to.equal(toBase64(test.material.signatureKey.compressPoint))
     expect(test.context).to.have.haveOwnProperty('some').and.to.equal('context')
   })
@@ -251,7 +251,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
           .addEncryptedDataKey(edk, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
       }
       async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
     }
 
@@ -275,7 +275,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
         return importForWebCryptoEncryptionMaterial(material)
       }
       async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
     }
 
@@ -291,7 +291,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   it('can return a decryption response', async () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
       async _onDecrypt (material: WebCryptoDecryptionMaterial): Promise<WebCryptoDecryptionMaterial> {
         const udk = synchronousRandomValues(material.suite.keyLengthBytes)
@@ -310,7 +310,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
     const edk = new EncryptedDataKey({ providerId: ' keyNamespace', providerInfo: 'keyName', encryptedDataKey: new Uint8Array(5) })
 
     const test = await cmm.decryptMaterials({ suite, encryptionContext, encryptedDataKeys: [edk] })
-    if (!test.material.verificationKey) throw new Error('never')
+    if (!test.material.verificationKey) throw new Error('I should never see this error')
     expect(test.context).to.deep.equal(encryptionContext)
     expect(test.material.verificationKey.signatureCurve).to.equal(suite.signatureCurve)
   })
@@ -318,7 +318,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   it('Postcondition: The WebCryptoDecryptionMaterial must contain a valid dataKey.', async () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('never')
+        throw new Error('I should never see this error')
       }
       async _onDecrypt (material: WebCryptoDecryptionMaterial): Promise<WebCryptoDecryptionMaterial> {
         const udk = synchronousRandomValues(material.suite.keyLengthBytes)
