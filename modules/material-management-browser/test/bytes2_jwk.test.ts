@@ -13,14 +13,17 @@
  * limitations under the License.
  */
 
-import { toBase64 } from '@aws-sdk/util-base64-browser'
+/* eslint-env mocha */
 
-export function bytes2JWK (rawKeyBytes: Uint8Array): JsonWebKey {
-  // See https://tools.ietf.org/html/rfc7515#appendix-C Base64url Encoding
-  const base64 = toBase64(rawKeyBytes)
-  const base64Url = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
-  return {
-    kty: 'oct',
-    k: base64Url
-  }
-}
+import { expect } from 'chai'
+import 'mocha'
+import { bytes2JWK } from '../src/index'
+
+describe('bytes2JWK', () => {
+  it('https://tools.ietf.org/html/rfc7515#appendix-C test vector', () => {
+    const binary = new Uint8Array([3, 236, 255, 224, 193])
+    const test = bytes2JWK(binary)
+    expect(test.kty).to.equal('oct')
+    expect(test.k).to.equal('A-z_4ME')
+  })
+})
