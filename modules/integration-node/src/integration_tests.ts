@@ -18,7 +18,7 @@ import {
   getTestVectorIterator
 } from './get_test_iterator'
 import { decryptMaterialsManagerNode } from './decrypt_materials_manager_node'
-import { decrypt } from '@aws-crypto/decrypt-node'
+import { decrypt } from '@aws-crypto/client-node'
 
 // This is only viable for small streams, if we start get get larger streams, an stream equality should get written
 export async function testVector ({ name, keysInfo, plainTextStream, cipherStream }: TestVectorInfo): Promise<TestVectorResults> {
