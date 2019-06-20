@@ -7,8 +7,8 @@ phases:
         commands:
             - npm install
             - npm run bootstrap
-            - npm run build-node
-            - npm run build-browser
+            - npm run build
     build:
         commands:
             - npm test
+            - npm run integration

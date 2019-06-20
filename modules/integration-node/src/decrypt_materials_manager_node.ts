@@ -15,15 +15,13 @@
 
 import {
   needs,
-  MultiKeyringNode
-} from '@aws-crypto/material-management-node'
-import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
-import {
+  MultiKeyringNode,
+  KmsKeyringNode,
   RawAesKeyringNode,
   WrappingSuiteIdentifier, // eslint-disable-line no-unused-vars
-  RawAesWrappingSuiteIdentifier
-} from '@aws-crypto/raw-aes-keyring-node'
-import { RawRsaKeyringNode } from '@aws-crypto/raw-rsa-keyring-node'
+  RawAesWrappingSuiteIdentifier,
+  RawRsaKeyringNode
+} from '@aws-crypto/client-node'
 import {
   RsaKeyInfo, // eslint-disable-line no-unused-vars
   AesKeyInfo, // eslint-disable-line no-unused-vars
