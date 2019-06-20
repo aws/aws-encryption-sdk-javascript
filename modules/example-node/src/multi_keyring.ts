@@ -46,7 +46,7 @@ export async function multiKeyringTest () {
   /* Configure the Raw AES Keyring. */
   const aesKeyring = new RawAesKeyringNode({ keyName, keyNamespace, unencryptedMasterKey, wrappingSuite })
 
-  const keyring = new MultiKeyringNode({generator: kmsKeyring, children: [ aesKeyring ]})
+  const keyring = new MultiKeyringNode({ generator: kmsKeyring, children: [ aesKeyring ] })
 
   /* Encryption Context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!

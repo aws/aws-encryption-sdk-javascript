@@ -26,7 +26,7 @@ import {
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
-;(async function testAES () {
+  ;(async function testAES () {
   /* Raw providers need to have a name and a namespace.
    * These values *must* match *case sensitive exactly* on the decrypt side.
    */
