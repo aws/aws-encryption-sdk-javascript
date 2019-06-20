@@ -36,11 +36,11 @@ import {
 } from '@aws-crypto/client-node'
 
 import { finished } from 'stream'
-import { createReadStream, createWriteStream } from 'fs'
+import { createReadStream } from 'fs'
 import { promisify } from 'util'
 const finishedAsync = promisify(finished)
 
-export async function kmsStreamTest () {
+export async function kmsStreamTest (filename: string) {
   /* A KMS CMK to generate the data key is required.
    * Access to KMS generateDataKey is required for the generatorKeyId.
    */
@@ -62,7 +62,7 @@ export async function kmsStreamTest () {
   }
 
   /* Create a simple pipeline to encrypt the package.json for this project. */
-  const stream = createReadStream('./package.json')
+  const stream = createReadStream(filename)
     .pipe(encryptStream(keyring, { context }))
     .pipe(decryptStream(new KmsKeyringNode({ discovery: true })))
     .on('MessageHeader', ({ encryptionContext }: MessageHeader) => {
@@ -77,7 +77,18 @@ export async function kmsStreamTest () {
           if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
         })
     })
-    .pipe(createWriteStream('./package.json.decrypt'))
 
-  return finishedAsync(stream)
+  /* This is not strictly speaking part of the example.
+   * Streams need a place to drain.
+   * To test this code I just accumulate the stream.
+   * Then I can return that Buffer and verify.
+   * In a real world case you do not want to always buffer the whole stream.
+   */
+  const buff: Buffer[] = []
+  stream.on('data', (chunk: Buffer) => {
+    buff.push(chunk)
+  })
+
+  await finishedAsync(stream)
+  return Buffer.concat(buff)
 }
