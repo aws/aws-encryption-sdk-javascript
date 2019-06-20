@@ -13,11 +13,17 @@
  * limitations under the License.
  */
 
-export * from '@aws-crypto/encrypt-browser'
-export * from '@aws-crypto/decrypt-browser'
-export * from '@aws-crypto/material-management-browser'
-export * from '@aws-crypto/caching-materials-manager-browser'
-export * from '@aws-crypto/kms-keyring-browser'
-export * from '@aws-crypto/raw-aes-keyring-browser'
-export * from '@aws-crypto/raw-rsa-keyring-browser'
-export * from '@aws-crypto/web-crypto-backend'
+/* eslint-env mocha */
+
+import { expect } from 'chai'
+import 'mocha'
+import { encrypt } from '../src/index'
+
+describe('encrypt', () => {
+  /* This test is mostly to insure that I include all files.
+   * So I can not lie on code coverage.
+   */
+  it('is a function', () => {
+    expect(encrypt).to.be.a('function')
+  })
+})
