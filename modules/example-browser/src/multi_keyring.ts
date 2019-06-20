@@ -75,7 +75,7 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   })
 
   /* The KMS Keyring must be configured with the desired CMK's */
-  const kmsKeyring  = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
+  const kmsKeyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
 
   /* Raw providers need to have a name and a namespace.
    * These values *must* match *case sensitive exactly* on the decrypt side.
