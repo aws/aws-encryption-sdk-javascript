@@ -70,7 +70,7 @@ const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
 const { encryptionContext } = messageHeader
 
 /* Verify that all values in the original encryption context are in the 
- * current one. (the Encryption SDK adds extra values for signing.) 
+ * current one. (The Encryption SDK adds extra values for signing.) 
  */
  Object
     .entries(context)
