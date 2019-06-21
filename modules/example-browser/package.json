@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/example-browser",
-  "version": "0.0.1",
+  "version": "0.1.0-preview.0",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -17,11 +17,12 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/client-browser": "^0.0.1",
+    "@aws-crypto/client-browser": "^0.1.0-preview.0",
     "@aws-sdk/util-base64-browser": "0.1.0-preview.1",
     "tslib": "^1.9.3"
   },
   "devDependencies": {
+    "@aws-sdk/credential-provider-node": "^0.1.0-preview.4",
     "@types/chai": "^4.1.4",
     "@types/mocha": "^5.2.5",
     "chai": "^4.1.2",
@@ -30,7 +31,6 @@
     "ts-node": "^7.0.1",
     "typescript": "^3.5.0",
     "webpack": "^4.30.0",
-    "@aws-sdk/credential-provider-node": "^0.1.0-preview.4",
     "webpack-cli": "^3.3.0"
   },
   "main": "./build/main/index.js",

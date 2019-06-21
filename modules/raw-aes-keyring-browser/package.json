@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/raw-aes-keyring-browser",
-  "version": "0.0.1",
+  "version": "0.1.0-preview.0",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -16,12 +16,12 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/material-management-browser": "^0.0.1",
-    "@aws-crypto/serialize": "^0.0.1",
-    "@aws-crypto/raw-keyring": "^0.0.1",
-    "@aws-crypto/web-crypto-backend": "^0.0.1",
-    "@aws-sdk/util-utf8-browser": "0.1.0-preview.1",
+    "@aws-crypto/material-management-browser": "^0.1.0-preview.0",
     "@aws-crypto/random-source-browser": "^0.1.0-preview.1",
+    "@aws-crypto/raw-keyring": "^0.1.0-preview.0",
+    "@aws-crypto/serialize": "^0.1.0-preview.0",
+    "@aws-crypto/web-crypto-backend": "^0.1.0-preview.0",
+    "@aws-sdk/util-utf8-browser": "0.1.0-preview.1",
     "tslib": "^1.9.3"
   },
   "devDependencies": {
@@ -32,17 +32,17 @@
     "@typescript-eslint/eslint-plugin": "^1.9.0",
     "@typescript-eslint/parser": "^1.9.0",
     "chai": "^4.1.2",
+    "istanbul-instrumenter-loader": "^3.0.1",
     "karma": "^4.1.0",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.2.0",
+    "karma-coverage-istanbul-reporter": "^2.0.4",
     "karma-mocha": "^1.3.0",
     "karma-webpack": "^3.0.5",
-    "istanbul-instrumenter-loader": "^3.0.1",
-    "karma-coverage-istanbul-reporter": "^2.0.4",
-    "ts-loader": "^5.3.3",
     "mocha": "^5.2.0",
     "nyc": "^14.0.0",
     "standard": "^12.0.1",
+    "ts-loader": "^5.3.3",
     "ts-node": "^7.0.1",
     "typescript": "^3.5.0"
   },
