@@ -39,7 +39,7 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
   /* The wrapping suite defines the AES-GCM algorithm suite to use. */
   const wrappingSuite = RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
 
-  // Get your unencrypted master key from wherever you store it.
+  // Get your plaintext master key from wherever you store it.
   const unencryptedMasterKey = synchronousRandomValues(32)
 
   /* Import the plaintext master key into a WebCrypto CryptoKey. */

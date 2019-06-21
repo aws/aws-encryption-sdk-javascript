@@ -48,7 +48,7 @@ export async function multiKeyringTest () {
   const keyNamespace = 'aes-namespace'
   /* The wrapping suite defines the AES-GCM algorithm suite to use. */
   const wrappingSuite = RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
-  // You should get your unencrypted master key from wherever you store it.
+  // Get your plaintext master key from wherever you store it.
   const unencryptedMasterKey = randomBytes(32)
 
   /* Configure the Raw AES Keyring. */
