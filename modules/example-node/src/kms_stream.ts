@@ -58,6 +58,7 @@ export async function kmsStreamTest (filename: string) {
    * does not mean it is what you expect.
    * If you are are only expecting data with an from 'us-west-2'
    * the `origin` can be used to identify a malicious actor.
+   * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    */
   const context = {
     stage: 'demo',
@@ -73,7 +74,9 @@ export async function kmsStreamTest (filename: string) {
       /* Verify the encryption context.
       * Depending on the Algorithm Suite, the `encryptionContext` _may_ contain additional values.
       * In Signing Algorithm Suites the public verification key is serialized into the `encryptionContext`.
-      * So it is best to make sure that all the values that you expect exist as opposed to the reverse.
+      * Because the encryption context might contain additional key-value pairs,
+      * do not add a test that requires that all key-value pairs match.
+      * Instead verify that the key-value pairs you expect match.
       */
       Object
         .entries(context)

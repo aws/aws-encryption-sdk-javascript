@@ -82,6 +82,7 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
    * does not mean it is what you expect.
    * If you are are only expecting data with an from 'us-west-2'
    * the `origin` can be used to identify a malicious actor.
+   * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    */
   const context = {
     stage: 'demo',
@@ -101,7 +102,9 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   console.log('plainText:', plainText)
   document.write('</br>plainText:' + plainText + '</br>')
 
-  /* In case you want to check compatibility, I log the cipher text. */
+  /* Log the base64-encoded ciphertext
+   * so that you can try decrypting it with another AWS Encryption SDK implementation.
+   */
   const cipherMessageBase64 = toBase64(cipherMessage)
   console.log(cipherMessageBase64)
   document.write(cipherMessageBase64)
@@ -115,7 +118,9 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
    * Depending on the algorithm suite, the `encryptionContext` _may_ contain additional values.
    * If you use an algorithm suite with signing,
    * the SDK adds a name-value pair to the encryption context that contains the public key.
-   * So it is best to make sure that all the values that you expect exist as opposed to the reverse.
+   * Because the encryption context might contain additional key-value pairs,
+   * do not add a test that requires that all key-value pairs match.
+   * Instead verify that the key-value pairs you expect match.
    */
   Object
     .entries(context)
