@@ -163,7 +163,7 @@ export function cacheEntryHasExceededLimits<S extends SupportedAlgorithmSuites> 
 
 /**
  * I need to clone the underlying material.
- * Because when the SDK is done with material, it will zero it out.
+ * Because when the Encryption SDK is done with material, it will zero it out.
  * Plucking off the material and cloning just that and then returning the rest of the response
  * can just be handled in one place.
  * @param response EncryptionResponse|DecryptionResponse

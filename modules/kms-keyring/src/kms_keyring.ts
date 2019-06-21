@@ -147,7 +147,7 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
       /* If there are no key IDs in the list, keyring is in "discovery" mode and will attempt KMS calls with
       * every ARN it comes across in the message. If there are key IDs in the list, it will cross check the
       * ARN it reads with that list before attempting KMS calls. Note that if caller provided key IDs in
-      * anything other than a CMK ARN format, the SDK will not attempt to decrypt those data keys, because
+      * anything other than a CMK ARN format, the Encryption SDK will not attempt to decrypt those data keys, because
       * the EDK data format always specifies the CMK with the full (non-alias) ARN.
       */
       const decryptableEDKs = encryptedDataKeys
