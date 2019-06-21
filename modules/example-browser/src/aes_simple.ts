@@ -13,32 +13,40 @@
  * limitations under the License.
  */
 
-import { RawRsaKeyringNode, encrypt, decrypt } from '@aws-crypto/client-node'
-
-import { generateKeyPair } from 'crypto'
-import { promisify } from 'util'
-const generateKeyPairAsync = promisify(generateKeyPair)
-
-/**
- * This function is an example of using the RsaKeyringNode
- * to encrypt and decrypt a simple string
+/* This is a simple example of using a raw AES keyring
+ * to encrypt and decrypt using the AWS Encryption SDK for Javascript
+ * in a browser.
  */
-export async function rsaTest () {
+
+import {
+  RawAesWrappingSuiteIdentifier,
+  RawAesKeyringWebCrypto,
+  encrypt,
+  decrypt,
+  synchronousRandomValues
+} from '@aws-crypto/client-browser'
+import { toBase64 } from '@aws-sdk/util-base64-browser'
+
+  ;(async function testAES () {
   /* You need to specify a name
    * and a namespace for raw encryption key providers.
    * The name and namespace that you use in the decryption keyring *must* be an exact,
    * *case-sensitive* match for the name and namespace in the encryption keyring.
    */
-  const keyName = 'rsa-name'
-  const keyNamespace = 'rsa-namespace'
-  // Get your key pairs from wherever you  store them.
-  const rsaKey = await generateRsaKeys()
+  const keyName = 'aes-name'
+  const keyNamespace = 'aes-namespace'
 
-  /* The RSA keyring must be configured with the desired RSA keys
-   * If you only want to encrypt, only configure a public key.
-   * If you only want to decrypt, only configure a private key.
-   */
-  const keyring = new RawRsaKeyringNode({ keyName, keyNamespace, rsaKey })
+  /* The wrapping suite defines the AES-GCM algorithm suite to use. */
+  const wrappingSuite = RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
+
+  // Get your plaintext master key from wherever you store it.
+  const unencryptedMasterKey = synchronousRandomValues(32)
+
+  /* Import the plaintext master key into a WebCrypto CryptoKey. */
+  const masterKey = await RawAesKeyringWebCrypto.importCryptoKey(unencryptedMasterKey, wrappingSuite)
+
+  /* Configure the Raw AES keyring. */
+  const keyring = new RawAesKeyringWebCrypto({ keyName, keyNamespace, wrappingSuite, masterKey })
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
@@ -55,13 +63,26 @@ export async function rsaTest () {
     origin: 'us-west-2'
   }
 
-  /* Find data to encrypt.  A simple string. */
-  const cleartext = 'asdf'
+  /* Find data to encrypt. */
+  const plainText = new Uint8Array([1, 2, 3, 4, 5])
 
   /* Encrypt the data. */
-  const { ciphertext } = await encrypt(keyring, cleartext, { context })
-  /* Decrypt the data. */
-  const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
+  const { cipherMessage } = await encrypt(keyring, plainText, { encryptionContext: context })
+
+  /* Log the plain text
+   * only for testing and to show that it works.
+   */
+  console.log('plainText:', plainText)
+  document.write('</br>plainText:' + plainText + '</br>')
+
+  /* Log the base64-encoded ciphertext
+   * so that you can try decrypting it with another AWS Encryption SDK implementation.
+   */
+  const cipherMessageBase64 = toBase64(cipherMessage)
+  console.log(cipherMessageBase64)
+  document.write(cipherMessageBase64)
+
+  const { clearMessage, messageHeader } = await decrypt(keyring, cipherMessage)
 
   /* Grab the encryption context so you can verify it. */
   const { encryptionContext } = messageHeader
@@ -79,21 +100,9 @@ export async function rsaTest () {
       if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
     })
 
-  /* Return the values so the code can be tested. */
-  return { plaintext, ciphertext, cleartext }
-}
-
-/**
- * This is a helper function to generate an RSA key pair for testing purposes only.
- */
-async function generateRsaKeys () {
-  const modulusLength = 3072
-  const publicKeyEncoding = { type: 'pkcs1', format: 'pem' }
-  const privateKeyEncoding = { type: 'pkcs1', format: 'pem' }
-  // @ts-ignore
-  return generateKeyPairAsync('rsa', {
-    modulusLength,
-    publicKeyEncoding,
-    privateKeyEncoding
-  })
-}
+  /* Log the clear message
+   * only for testing and to show that it works.
+   */
+  document.write('</br>clearMessage:' + clearMessage)
+  console.log(clearMessage)
+})()

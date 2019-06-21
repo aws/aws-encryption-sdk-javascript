@@ -13,32 +13,30 @@
  * limitations under the License.
  */
 
-import { RawRsaKeyringNode, encrypt, decrypt } from '@aws-crypto/client-node'
-
-import { generateKeyPair } from 'crypto'
-import { promisify } from 'util'
-const generateKeyPairAsync = promisify(generateKeyPair)
+import { RawAesKeyringNode, encrypt, decrypt, RawAesWrappingSuiteIdentifier } from '@aws-crypto/client-node'
+import { randomBytes } from 'crypto'
 
 /**
- * This function is an example of using the RsaKeyringNode
+ * This function is an example of using the RawAesKeyringNode
  * to encrypt and decrypt a simple string
  */
-export async function rsaTest () {
+export async function aesTest () {
   /* You need to specify a name
    * and a namespace for raw encryption key providers.
    * The name and namespace that you use in the decryption keyring *must* be an exact,
    * *case-sensitive* match for the name and namespace in the encryption keyring.
    */
-  const keyName = 'rsa-name'
-  const keyNamespace = 'rsa-namespace'
-  // Get your key pairs from wherever you  store them.
-  const rsaKey = await generateRsaKeys()
+  const keyName = 'aes-name'
+  const keyNamespace = 'aes-namespace'
 
-  /* The RSA keyring must be configured with the desired RSA keys
-   * If you only want to encrypt, only configure a public key.
-   * If you only want to decrypt, only configure a private key.
-   */
-  const keyring = new RawRsaKeyringNode({ keyName, keyNamespace, rsaKey })
+  /* The wrapping suite defines the AES-GCM algorithm suite to use. */
+  const wrappingSuite = RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
+
+  // Get your plaintext master key from wherever you store it.
+  const unencryptedMasterKey = randomBytes(32)
+
+  /* Configure the Raw AES keyring. */
+  const keyring = new RawAesKeyringNode({ keyName, keyNamespace, unencryptedMasterKey, wrappingSuite })
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
@@ -81,19 +79,4 @@ export async function rsaTest () {
 
   /* Return the values so the code can be tested. */
   return { plaintext, ciphertext, cleartext }
-}
-
-/**
- * This is a helper function to generate an RSA key pair for testing purposes only.
- */
-async function generateRsaKeys () {
-  const modulusLength = 3072
-  const publicKeyEncoding = { type: 'pkcs1', format: 'pem' }
-  const privateKeyEncoding = { type: 'pkcs1', format: 'pem' }
-  // @ts-ignore
-  return generateKeyPairAsync('rsa', {
-    modulusLength,
-    publicKeyEncoding,
-    privateKeyEncoding
-  })
 }

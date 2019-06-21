@@ -13,32 +13,49 @@
  * limitations under the License.
  */
 
-import { RawRsaKeyringNode, encrypt, decrypt } from '@aws-crypto/client-node'
-
-import { generateKeyPair } from 'crypto'
-import { promisify } from 'util'
-const generateKeyPairAsync = promisify(generateKeyPair)
-
-/**
- * This function is an example of using the RsaKeyringNode
- * to encrypt and decrypt a simple string
+/* This is a simple example of using a multi-keyring KMS keyring
+ * to combine a KMS keyring and a raw AES keyring
+ * to encrypt and decrypt using the AWS Encryption SDK for Javascript in Node.js.
  */
-export async function rsaTest () {
+
+import { MultiKeyringNode, KmsKeyringNode, RawAesKeyringNode, RawAesWrappingSuiteIdentifier, encrypt, decrypt } from '@aws-crypto/client-node'
+import { randomBytes } from 'crypto'
+
+export async function multiKeyringTest () {
+  /* A KMS CMK is required to generate the data key.
+   * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
+   */
+  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+
+  /* Adding alternate KMS keys that can decrypt.
+   * Access to kms:Encrypt is required for every CMK in keyIds.
+   * You might list several keys in different AWS Regions.
+   * This allows you to decrypt the data in any of the represented Regions.
+   * In this example, I am using the same CMK.
+   * This is *only* to demonstrate how the CMK ARNs are configured.
+   */
+  const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
+
+  /* The KMS keyring must be configured with the desired CMKs */
+  const kmsKeyring = new KmsKeyringNode({ generatorKeyId, keyIds })
+
   /* You need to specify a name
    * and a namespace for raw encryption key providers.
    * The name and namespace that you use in the decryption keyring *must* be an exact,
    * *case-sensitive* match for the name and namespace in the encryption keyring.
    */
-  const keyName = 'rsa-name'
-  const keyNamespace = 'rsa-namespace'
-  // Get your key pairs from wherever you  store them.
-  const rsaKey = await generateRsaKeys()
+  const keyName = 'aes-name'
+  const keyNamespace = 'aes-namespace'
+  /* The wrapping suite defines the AES-GCM algorithm suite to use. */
+  const wrappingSuite = RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
+  // Get your plaintext master key from wherever you store it.
+  const unencryptedMasterKey = randomBytes(32)
 
-  /* The RSA keyring must be configured with the desired RSA keys
-   * If you only want to encrypt, only configure a public key.
-   * If you only want to decrypt, only configure a private key.
-   */
-  const keyring = new RawRsaKeyringNode({ keyName, keyNamespace, rsaKey })
+  /* Configure the Raw AES Keyring. */
+  const aesKeyring = new RawAesKeyringNode({ keyName, keyNamespace, unencryptedMasterKey, wrappingSuite })
+
+  /* Combine the two keyrings with a MultiKeyring. */
+  const keyring = new MultiKeyringNode({ generator: kmsKeyring, children: [ aesKeyring ] })
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
@@ -60,7 +77,14 @@ export async function rsaTest () {
 
   /* Encrypt the data. */
   const { ciphertext } = await encrypt(keyring, cleartext, { context })
-  /* Decrypt the data. */
+
+  /* Decrypt the data.
+   * This decrypt call could be done with **any** of the 3 keyrings.
+   * Here we use the multi-keyring, but
+   * decrypt(kmsKeyring, ciphertext)
+   * decrypt(aesKeyring, ciphertext)
+   * would both work as well.
+   */
   const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
 
   /* Grab the encryption context so you can verify it. */
@@ -80,20 +104,5 @@ export async function rsaTest () {
     })
 
   /* Return the values so the code can be tested. */
-  return { plaintext, ciphertext, cleartext }
-}
-
-/**
- * This is a helper function to generate an RSA key pair for testing purposes only.
- */
-async function generateRsaKeys () {
-  const modulusLength = 3072
-  const publicKeyEncoding = { type: 'pkcs1', format: 'pem' }
-  const privateKeyEncoding = { type: 'pkcs1', format: 'pem' }
-  // @ts-ignore
-  return generateKeyPairAsync('rsa', {
-    modulusLength,
-    publicKeyEncoding,
-    privateKeyEncoding
-  })
+  return { plaintext, ciphertext, cleartext, messageHeader }
 }

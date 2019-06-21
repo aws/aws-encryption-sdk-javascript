@@ -41,19 +41,22 @@ import { promisify } from 'util'
 const finishedAsync = promisify(finished)
 
 export async function kmsStreamTest (filename: string) {
-  /* A KMS CMK to generate the data key is required.
-   * Access to KMS generateDataKey is required for the generatorKeyId.
+  /* A KMS CMK is required to generate the data key.
+   * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
   const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
-  /* The KMS Keyring must be configured with the desired CMK's */
+  /* The KMS keyring must be configured with the desired CMKs */
   const keyring = new KmsKeyringNode({ generatorKeyId })
 
-  /* Encryption Context is a *very* powerful tool for controlling and managing access.
+  /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
-   * Remember encrypted data is opaque, encryption context will help your run time checking.
-   * Just because you have decrypted a JSON file, and it successfully parsed,
-   * does not mean it is the intended JSON file.
+   * Encrypted data is opaque.
+   * You can use an encryption context to assert things about the encrypted data.
+   * Just because you can decrypt something does not mean it is what you expect.
+   * For example, if you are are only expecting data from 'us-west-2',
+   * the origin can identify a malicious actor.
+   * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    */
   const context = {
     stage: 'demo',
@@ -69,7 +72,9 @@ export async function kmsStreamTest (filename: string) {
       /* Verify the encryption context.
       * Depending on the Algorithm Suite, the `encryptionContext` _may_ contain additional values.
       * In Signing Algorithm Suites the public verification key is serialized into the `encryptionContext`.
-      * So it is best to make sure that all the values that you expect exist as opposed to the reverse.
+      * Because the encryption context might contain additional key-value pairs,
+      * do not add a test that requires that all key-value pairs match.
+      * Instead, verify that the key-value pairs you expect match.
       */
       Object
         .entries(context)

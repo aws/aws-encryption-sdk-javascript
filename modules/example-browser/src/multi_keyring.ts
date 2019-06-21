@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-/* This is a simple example of using a KMS Keyring
+/* This is a simple example of using a multi-keyring KMS keyring
+ * to combine a KMS keyring and a raw AES keyring
  * to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser.
  */
 
@@ -21,8 +22,12 @@ import {
   KmsKeyringBrowser,
   KMS,
   getClient,
+  RawAesKeyringWebCrypto,
+  RawAesWrappingSuiteIdentifier,
+  MultiKeyringWebCrypto,
   encrypt,
-  decrypt
+  decrypt,
+  synchronousRandomValues
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
@@ -34,7 +39,7 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
  */
 declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
 
-;(async function kmsSimpleExample () {
+;(async function multiKeyringExample () {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
@@ -50,10 +55,11 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
 
   /* Need a client provider that will inject correct credentials.
-   * The credentials here are injected by webpack from your environment bundle is created
+   * The credentials here are injected by webpack
+   * from your environment when the bundle is created.
    * The credential values are pulled using @aws-sdk/credential-provider-node.
    * See kms.webpack.config
-   * You should inject your credential into the browser in a secure manner,
+   * You should inject your credential into the browser in a secure manner
    * that works with your application.
    */
   const { accessKeyId, secretAccessKey } = AWS_CREDENTIALS
@@ -61,7 +67,8 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   /* getClient takes a KMS client constructor
    * and optional configuration values.
    * The credentials can be injected here,
-   * because browser do not have a standard credential discover process the way Node.js does.
+   * because browser does not have a standard credential discover process
+   * the way Node.js does.
    */
   const clientProvider = getClient(KMS, {
     credentials: {
@@ -71,7 +78,30 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   })
 
   /* The KMS keyring must be configured with the desired CMKs */
-  const keyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
+  const kmsKeyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
+
+  /* You need to specify a name
+   * and a namespace for raw encryption key providers.
+   * The name and namespace that you use in the decryption keyring *must* be an exact,
+   * *case-sensitive* match for the name and namespace in the encryption keyring.
+   */
+  const keyName = 'aes-name'
+  const keyNamespace = 'aes-namespace'
+
+  /* The wrapping suite defines the AES-GCM algorithm suite to use. */
+  const wrappingSuite = RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
+
+  // Get your plaintext master key from its storage location.
+  const unencryptedMasterKey = synchronousRandomValues(32)
+
+  /* The plaintext master key must be imported into a WebCrypto CryptoKey. */
+  const masterKey = await RawAesKeyringWebCrypto.importCryptoKey(unencryptedMasterKey, wrappingSuite)
+
+  /* Configure the Raw AES keyring. */
+  const aesKeyring = new RawAesKeyringWebCrypto({ keyName, keyNamespace, wrappingSuite, masterKey })
+
+  /* Combine the two keyrings into a multi-keyring. */
+  const keyring = new MultiKeyringWebCrypto({ generator: kmsKeyring, children: [ aesKeyring ] })
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
@@ -107,6 +137,13 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   console.log(cipherMessageBase64)
   document.write(cipherMessageBase64)
 
+  /* Decrypt the data.
+   * This decrypt call could be done with **any** of the 3 keyrings.
+   * Here we use the multi-keyring, but
+   * decrypt(kmsKeyring, ciphertext)
+   * decrypt(aesKeyring, ciphertext)
+   * would both work as well.
+   */
   const { clearMessage, messageHeader } = await decrypt(keyring, cipherMessage)
 
   /* Grab the encryption context so you can verify it. */

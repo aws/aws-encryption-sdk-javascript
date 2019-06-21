@@ -16,27 +16,31 @@
 import { KmsKeyringNode, encrypt, decrypt } from '@aws-crypto/client-node'
 
 export async function kmsSimpleTest () {
-  /* A KMS CMK to generate the data key is required.
-   * Access to KMS generateDataKey is required for the generatorKeyId.
+  /* A KMS CMK is required to generate the data key.
+   * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
   const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
-  /* Adding Alternate KMS keys that can decrypt.
-   * Access to KMS encrypt is required for every CMK in keyIds.
-   * Often this used to have a local CMK in multiple regions.
+  /* Adding alternate KMS keys that can decrypt.
+   * Access to kms:Encrypt is required for every CMK in keyIds.
+   * You might list several keys in different AWS Regions.
+   * This allows you to decrypt the data in any of the represented Regions.
    * In this example, I am using the same CMK.
-   * This is *only* to demonstrate how the CMK ARN's are configured.
+   * This is *only* to demonstrate how the CMK ARNs are configured.
    */
   const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
 
-  /* The KMS Keyring must be configured with the desired CMK's */
+  /* The KMS keyring must be configured with the desired CMKs */
   const keyring = new KmsKeyringNode({ generatorKeyId, keyIds })
 
-  /* Encryption Context is a *very* powerful tool for controlling and managing access.
+  /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
-   * Remember encrypted data is opaque, encryption context will help your run time checking.
-   * Just because you have decrypted a JSON file, and it successfully parsed,
-   * does not mean it is the intended JSON file.
+   * Encrypted data is opaque.
+   * You can use an encryption context to assert things about the encrypted data.
+   * Just because you can decrypt something does not mean it is what you expect.
+   * For example, if you are are only expecting data from 'us-west-2',
+   * the origin can identify a malicious actor.
+   * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    */
   const context = {
     stage: 'demo',
@@ -44,7 +48,7 @@ export async function kmsSimpleTest () {
     origin: 'us-west-2'
   }
 
-  /* I need something to encrypt.  A simple string. */
+  /* Find data to encrypt.  A simple string. */
   const cleartext = 'asdf'
 
   /* Encrypt the data. */
@@ -53,13 +57,15 @@ export async function kmsSimpleTest () {
   /* Decrypt the data. */
   const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
 
-  /* Grab the encryption context so I can verify it. */
+  /* Grab the encryption context so you can verify it. */
   const { encryptionContext } = messageHeader
 
   /* Verify the encryption context.
-   * Depending on the Algorithm Suite, the `encryptionContext` _may_ contain additional values.
-   * In Signing Algorithm Suites the public verification key is serialized into the `encryptionContext`.
-   * So it is best to make sure that all the values that you expect exist as opposed to the reverse.
+   * If you use an algorithm suite with signing,
+   * the SDK adds a name-value pair to the encryption context that contains the public key.
+   * Because the encryption context might contain additional key-value pairs,
+   * do not add a test that requires that all key-value pairs match.
+   * Instead, verify that the key-value pairs you expect match.
    */
   Object
     .entries(context)
@@ -67,6 +73,6 @@ export async function kmsSimpleTest () {
       if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
     })
 
-  /* Return the values so I can manage this code with tests. */
+  /* Return the values so the code can be tested. */
   return { plaintext, ciphertext, cleartext, messageHeader }
 }

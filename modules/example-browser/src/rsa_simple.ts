@@ -13,16 +13,17 @@
  * limitations under the License.
  */
 
-/* This is a simple example of using a raw RSA Keyring
- * to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser.
+/* This is a simple example of using a raw RSA keyring
+ * to encrypt and decrypt using the AWS Encryption SDK for Javascript
+ * in a browser.
  */
 
 import {
   RsaImportableKey, // eslint-disable-line no-unused-vars
-  RawRsaKeyringWebCrypto
-} from '@aws-crypto/raw-rsa-keyring-browser'
-import { encrypt } from '@aws-crypto/encrypt-browser'
-import { decrypt } from '@aws-crypto/decrypt-browser'
+  RawRsaKeyringWebCrypto,
+  encrypt,
+  decrypt
+} from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
   ;(async function testRSA () {
@@ -38,9 +39,10 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
   /* The RSA public key needs to be imported to a CryptoKey. */
   const publicKey = await RawRsaKeyringWebCrypto.importPublicKey(publicRsaJwkKey)
 
-  /* Raw providers need to have a name and a namespace.
-   * These values *must* match *case sensitive exactly* on the decrypt side.
-   * In this case I chose the Thumbprint of the RSA key as the keyName.
+  /* You need to specify a name
+   * and a namespace for raw encryption key providers.
+   * The name and namespace that you use in the decryption keyring *must* be an exact,
+   * *case-sensitive* match for the name and namespace in the encryption keyring.
    */
   const keyName = '8CED2FD20FC88A9C06EFDB073707EB1EF1655780'
   const keyNamespace = 'Example RSA Provider'
@@ -48,11 +50,14 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
   /* The Raw RSA Keyring must be configured with the desired CryptoKeys. */
   const keyring = new RawRsaKeyringWebCrypto({ keyName, keyNamespace, publicKey, privateKey })
 
-  /* Encryption Context is a *very* powerful tool for controlling and managing access.
+  /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
-   * Remember encrypted data is opaque, encryption context will help your run time checking.
-   * Just because you have decrypted a JSON file, and it successfully parsed,
-   * does not mean it is the intended JSON file.
+   * Encrypted data is opaque.
+   * You can use an encryption context to assert things about the encrypted data.
+   * Just because you can decrypt something does not mean it is what you expect.
+   * For example, if you are are only expecting data from 'us-west-2',
+   * the origin can identify a malicious actor.
+   * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    */
   const context = {
     stage: 'demo',
@@ -60,30 +65,36 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
     origin: 'us-west-2'
   }
 
-  /* I need something to encrypt. */
+  /* Find data to encrypt. */
   const plainText = new Uint8Array([1, 2, 3, 4, 5])
 
   /* Encrypt the data. */
   const { cipherMessage } = await encrypt(keyring, plainText, { encryptionContext: context })
 
-  /* Log the plain text. */
+  /* Log the plain text
+   * only for testing and to show that it works.
+   */
   console.log('plainText:', plainText)
   document.write('</br>plainText:' + plainText + '</br>')
 
-  /* In case you want to check compatibility, I log the cipher text. */
+  /* Log the base64-encoded ciphertext
+   * so that you can try decrypting it with another AWS Encryption SDK implementation.
+   */
   const cipherMessageBase64 = toBase64(cipherMessage)
   console.log(cipherMessageBase64)
   document.write(cipherMessageBase64)
 
   const { clearMessage, messageHeader } = await decrypt(keyring, cipherMessage)
 
-  /* Grab the encryption context so I can verify it. */
+  /* Grab the encryption context so you can verify it. */
   const { encryptionContext } = messageHeader
 
   /* Verify the encryption context.
-   * Depending on the Algorithm Suite, the `encryptionContext` _may_ contain additional values.
-   * In Signing Algorithm Suites the public verification key is serialized into the `encryptionContext`.
-   * So it is best to make sure that all the values that you expect exist as opposed to the reverse.
+   * If you use an algorithm suite with signing,
+   * the SDK adds a name-value pair to the encryption context that contains the public key.
+   * Because the encryption context might contain additional key-value pairs,
+   * do not add a test that requires that all key-value pairs match.
+   * Instead, verify that the key-value pairs you expect match.
    */
   Object
     .entries(context)
@@ -91,7 +102,9 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
       if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
     })
 
-  /* Log the clear message. */
+  /* Log the clear message
+   * only for testing and to show that it works.
+   */
   document.write('</br>clearMessage:' + clearMessage)
   console.log(clearMessage)
 })()
