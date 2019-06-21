@@ -53,7 +53,7 @@
   "module": "./build/module/index.js",
   "types": "./build/main/index.d.ts",
   "files": [
-    "./build/**/*"
+    "build/**/*"
   ],
   "standard": {
     "fix": true,

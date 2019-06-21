@@ -41,7 +41,7 @@
   "types": "./build/main/index.d.ts",
   "bin": "./build/main/cli.js",
   "files": [
-    "./build/**/*"
+    "build/**/*"
   ],
   "standard": {
     "parser": "@typescript-eslint/parser",
