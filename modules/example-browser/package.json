@@ -1,40 +1,39 @@
 {
-    "name": "@aws-crypto/example-browser",
-    "private": true,
-    "version": "0.0.1",
-    "scripts": {
-        "prepublishOnly": "npm run build",
-        "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
-        "test": "mocha --require ts-node/register tests/**/*tests.ts",
-        "example-rsa": "webpack -d --config webpack_configs/rsa.webpack.config.js",
-        "example-aes": "webpack -d --config webpack_configs/aes.webpack.config.js",
-        "example-kms": "webpack -d --config webpack_configs/kms.webpack.config.js",
-        "example-multi-keyring": "webpack -d --config webpack_configs/multi_keyring.webpack.config.js"
-    },
-    "author": {
-        "name": "AWS Crypto Tools Team",
-        "email": "aws-crypto-tools-team@amazon.com",
-        "url": "https://aws.amazon.com/javascript/"
-    },
-    "license": "Apache-2.0",
-    "dependencies": {
-        "@aws-crypto/client-browser": "^0.0.1",
-        "@aws-sdk/util-base64-browser": "0.1.0-preview.1",
-        "tslib": "^1.9.3"
-    },
-    "devDependencies": {
-        "@types/chai": "^4.1.4",
-        "@types/mocha": "^5.2.5",
-        "chai": "^4.1.2",
-        "mocha": "^5.2.0",
-        "ts-loader": "^5.3.3",
-        "ts-node": "^7.0.1",
-        "typescript": "^3.5.0",
-        "webpack": "^4.30.0",
-        "@aws-sdk/credential-provider-node": "^0.1.0-preview.4",
-        "webpack-cli": "^3.3.0"
-    },
-    "main": "./build/main/index.js",
-    "module": "./build/module/index.js",
-    "types": "./build/main/index.d.ts"
+  "name": "@aws-crypto/example-browser",
+  "version": "0.0.1",
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
+    "test": "mocha --require ts-node/register tests/**/*tests.ts",
+    "example-rsa": "webpack -d --config webpack_configs/rsa.webpack.config.js",
+    "example-aes": "webpack -d --config webpack_configs/aes.webpack.config.js",
+    "example-kms": "webpack -d --config webpack_configs/kms.webpack.config.js",
+    "example-multi-keyring": "webpack -d --config webpack_configs/multi_keyring.webpack.config.js"
+  },
+  "author": {
+    "name": "AWS Crypto Tools Team",
+    "email": "aws-crypto-tools-team@amazon.com",
+    "url": "https://aws.amazon.com/javascript/"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@aws-crypto/client-browser": "^0.0.1",
+    "@aws-sdk/util-base64-browser": "0.1.0-preview.1",
+    "tslib": "^1.9.3"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.4",
+    "@types/mocha": "^5.2.5",
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "ts-loader": "^5.3.3",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.5.0",
+    "webpack": "^4.30.0",
+    "@aws-sdk/credential-provider-node": "^0.1.0-preview.4",
+    "webpack-cli": "^3.3.0"
+  },
+  "main": "./build/main/index.js",
+  "module": "./build/module/index.js",
+  "types": "./build/main/index.d.ts"
 }
