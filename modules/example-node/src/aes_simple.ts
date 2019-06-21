@@ -65,7 +65,6 @@ export async function aesTest () {
   const { encryptionContext } = messageHeader
 
   /* Verify the encryption context.
-   * Depending on the algorithm suite, the `encryptionContext` _may_ contain additional values.
    * If you use an algorithm suite with signing,
    * the SDK adds a name-value pair to the encryption context that contains the public key.
    * Because the encryption context might contain additional key-value pairs,
@@ -78,6 +77,6 @@ export async function aesTest () {
       if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
     })
 
-  /* Return the values so the code can be testsed. */
+  /* Return the values so the code can be tested. */
   return { plaintext, ciphertext, cleartext }
 }
