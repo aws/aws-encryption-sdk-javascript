@@ -40,24 +40,26 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
 declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
 
 ;(async function multiKeyringExample () {
-  /* A KMS CMK to generate the data key is required.
-   * Access to KMS generateDataKey is required for the generatorKeyId.
+  /* A KMS CMK is required to generate the data key.
+   * Access to kms:GenerateDataKey is required for the generatorKeyId.
    */
   const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
-  /* Adding Alternate KMS keys that can decrypt.
-   * Access to KMS encrypt is required for every CMK in keyIds.
-   * Often this used to have a local CMK in multiple regions.
+  /* Adding alternate KMS keys that can decrypt.
+   * Access to kms:Encrypt is required for every CMK in keyIds.
+   * You might list several keys in different AWS Regions.
+   * This allows you to decrypt the data in any of the represented Regions.
    * In this example, I am using the same CMK.
-   * This is *only* to demonstrate how the CMK ARN's are configured.
+   * This is *only* to demonstrate how the CMK ARNs are configured.
    */
   const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
 
   /* Need a client provider that will inject correct credentials.
-   * The credentials here are injected by webpack from your environment bundle is created
+   * The credentials here are injected by webpack
+   * from your environment when the bundle is created.
    * The credential values are pulled using @aws-sdk/credential-provider-node.
    * See kms.webpack.config
-   * You should inject your credential into the browser in a secure manner,
+   * You should inject your credential into the browser in a secure manner
    * that works with your application.
    */
   const { accessKeyId, secretAccessKey } = AWS_CREDENTIALS
@@ -65,7 +67,8 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   /* getClient takes a KMS client constructor
    * and optional configuration values.
    * The credentials can be injected here,
-   * because browser do not have a standard credential discover process the way Node.js does.
+   * because browser does not have a standard credential discover process
+   * the way Node.js does.
    */
   const clientProvider = getClient(KMS, {
     credentials: {
@@ -74,11 +77,13 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
     }
   })
 
-  /* The KMS Keyring must be configured with the desired CMK's */
+  /* The KMS keyring must be configured with the desired CMKs */
   const kmsKeyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
 
-  /* Raw providers need to have a name and a namespace.
-   * These values *must* match *case sensitive exactly* on the decrypt side.
+  /* You need to specify a name
+   * and a namespace for raw encryption key providers.
+   * The name and namespace that you use in the decryption keyring *must* be an exact,
+   * *case-sensitive* match for the name and namespace in the encryption keyring.
    */
   const keyName = 'aes-name'
   const keyNamespace = 'aes-namespace'
@@ -86,23 +91,27 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   /* The wrapping suite defines the AES-GCM algorithm suite to use. */
   const wrappingSuite = RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
 
-  // You should get your unencrypted master key from wherever you store it.
+  // Get your plaintext master key from its storage location.
   const unencryptedMasterKey = synchronousRandomValues(32)
 
-  /* The unencrypted master key, must be imported into a WebCrypto CryptoKey. */
+  /* The plaintext master key must be imported into a WebCrypto CryptoKey. */
   const masterKey = await RawAesKeyringWebCrypto.importCryptoKey(unencryptedMasterKey, wrappingSuite)
 
-  /* Configure the Raw AES Keyring. */
+  /* Configure the Raw AES keyring. */
   const aesKeyring = new RawAesKeyringWebCrypto({ keyName, keyNamespace, wrappingSuite, masterKey })
 
-  /* Combine the two keyrings with a MultiKeyring. */
+  /* Combine the two keyrings into a multi-keyring. */
   const keyring = new MultiKeyringWebCrypto({ generator: kmsKeyring, children: [ aesKeyring ] })
 
-  /* Encryption Context is a *very* powerful tool for controlling and managing access.
+  /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
-   * Remember encrypted data is opaque, encryption context will help your run time checking.
-   * Just because you have decrypted a JSON file, and it successfully parsed,
-   * does not mean it is the intended JSON file.
+   * Remember encrypted data is opaque,
+   * encryption context is how a reader
+   * asserts things that must be true about the encrypted data.
+   * Just because you can decrypt something
+   * does not mean it is what you expect.
+   * If you are are only expecting data with an from 'us-west-2'
+   * the `origin` can be used to identify a malicious actor.
    */
   const context = {
     stage: 'demo',
@@ -116,25 +125,28 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   /* Encrypt the data. */
   const { cipherMessage } = await encrypt(keyring, plainText, { encryptionContext: context })
 
-  /* Log the plain text,
+  /* Log the plain text
    * only for testing and to show that it works.
    */
   console.log('plainText:', plainText)
   document.write('</br>plainText:' + plainText + '</br>')
 
-  /* In case you want to check compatibility, I log the cipher text. */
+  /* Log the ciphertext so you can copy it
+   * and check compatibility with another another implementation of the AWS Encryption SDK.
+   */
   const cipherMessageBase64 = toBase64(cipherMessage)
   console.log(cipherMessageBase64)
   document.write(cipherMessageBase64)
 
   const { clearMessage, messageHeader } = await decrypt(keyring, cipherMessage)
 
-  /* Grab the encryption context so I can verify it. */
+  /* Grab the encryption context so you can verify it. */
   const { encryptionContext } = messageHeader
 
   /* Verify the encryption context.
-   * Depending on the Algorithm Suite, the `encryptionContext` _may_ contain additional values.
-   * In Signing Algorithm Suites the public verification key is serialized into the `encryptionContext`.
+   * Depending on the algorithm suite, the `encryptionContext` _may_ contain additional values.
+   * If you use an algorithm suite with signing,
+   * the SDK adds a name-value pair to the encryption context that contains the public key.
    * So it is best to make sure that all the values that you expect exist as opposed to the reverse.
    */
   Object
@@ -143,7 +155,7 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
       if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
     })
 
-  /* Log the clear message,
+  /* Log the clear message
    * only for testing and to show that it works.
    */
   document.write('</br>Decrypted:' + clearMessage)

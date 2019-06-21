@@ -22,24 +22,27 @@ import { MultiKeyringNode, KmsKeyringNode, RawAesKeyringNode, RawAesWrappingSuit
 import { randomBytes } from 'crypto'
 
 export async function multiKeyringTest () {
-  /* A KMS CMK to generate the data key is required.
-   * Access to KMS generateDataKey is required for the generatorKeyId.
+  /* A KMS CMK is required to generate the data key.
+   * Access to kms:GenerateDataKey is required for the generatorKeyId.
    */
   const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
-  /* Adding Alternate KMS keys that can decrypt.
-   * Access to KMS encrypt is required for every CMK in keyIds.
-   * Often this used to have a local CMK in multiple regions.
+  /* Adding alternate KMS keys that can decrypt.
+   * Access to kms:Encrypt is required for every CMK in keyIds.
+   * You might list several keys in different AWS Regions.
+   * This allows you to decrypt the data in any of the represented Regions.
    * In this example, I am using the same CMK.
-   * This is *only* to demonstrate how the CMK ARN's are configured.
+   * This is *only* to demonstrate how the CMK ARNs are configured.
    */
   const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
 
-  /* The KMS Keyring must be configured with the desired CMK's */
+  /* The KMS keyring must be configured with the desired CMKs */
   const kmsKeyring = new KmsKeyringNode({ generatorKeyId, keyIds })
 
-  /* Raw providers need to have a name and a namespace.
-   * These values *must* match *case sensitive exactly* on the decrypt side.
+  /* You need to specify a name
+   * and a namespace for raw encryption key providers.
+   * The name and namespace that you use in the decryption keyring *must* be an exact,
+   * *case-sensitive* match for the name and namespace in the encryption keyring.
    */
   const keyName = 'aes-name'
   const keyNamespace = 'aes-namespace'
@@ -54,11 +57,15 @@ export async function multiKeyringTest () {
   /* Combine the two keyrings with a MultiKeyring. */
   const keyring = new MultiKeyringNode({ generator: kmsKeyring, children: [ aesKeyring ] })
 
-  /* Encryption Context is a *very* powerful tool for controlling and managing access.
+  /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
-   * Remember encrypted data is opaque, encryption context will help your run time checking.
-   * Just because you have decrypted a JSON file, and it successfully parsed,
-   * does not mean it is the intended JSON file.
+   * Remember encrypted data is opaque,
+   * encryption context is how a reader
+   * asserts things that must be true about the encrypted data.
+   * Just because you can decrypt something
+   * does not mean it is what you expect.
+   * If you are are only expecting data with an from 'us-west-2'
+   * the `origin` can be used to identify a malicious actor.
    */
   const context = {
     stage: 'demo',
@@ -81,12 +88,13 @@ export async function multiKeyringTest () {
    */
   const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
 
-  /* Grab the encryption context so I can verify it. */
+  /* Grab the encryption context so you can verify it. */
   const { encryptionContext } = messageHeader
 
   /* Verify the encryption context.
-   * Depending on the Algorithm Suite, the `encryptionContext` _may_ contain additional values.
-   * In Signing Algorithm Suites the public verification key is serialized into the `encryptionContext`.
+   * Depending on the algorithm suite, the `encryptionContext` _may_ contain additional values.
+   * If you use an algorithm suite with signing,
+   * the SDK adds a name-value pair to the encryption context that contains the public key.
    * So it is best to make sure that all the values that you expect exist as opposed to the reverse.
    */
   Object

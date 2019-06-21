@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-/* This is a simple example of using a raw AES Keyring
- * to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser.
+/* This is a simple example of using a raw AES keyring
+ * to encrypt and decrypt using the AWS Encryption SDK for Javascript
+ * in a browser.
  */
 
 import {
@@ -27,8 +28,10 @@ import {
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
   ;(async function testAES () {
-  /* Raw providers need to have a name and a namespace.
-   * These values *must* match *case sensitive exactly* on the decrypt side.
+  /* You need to specify a name
+   * and a namespace for raw encryption key providers.
+   * The name and namespace that you use in the decryption keyring *must* be an exact,
+   * *case-sensitive* match for the name and namespace in the encryption keyring.
    */
   const keyName = 'aes-name'
   const keyNamespace = 'aes-namespace'
@@ -36,20 +39,24 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
   /* The wrapping suite defines the AES-GCM algorithm suite to use. */
   const wrappingSuite = RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
 
-  // You should get your unencrypted master key from wherever you store it.
+  // Get your unencrypted master key from wherever you store it.
   const unencryptedMasterKey = synchronousRandomValues(32)
 
-  /* The unencrypted master key, must be imported into a WebCrypto CryptoKey. */
+  /* Import the plaintext master key into a WebCrypto CryptoKey. */
   const masterKey = await RawAesKeyringWebCrypto.importCryptoKey(unencryptedMasterKey, wrappingSuite)
 
-  /* Configure the Raw AES Keyring. */
+  /* Configure the Raw AES keyring. */
   const keyring = new RawAesKeyringWebCrypto({ keyName, keyNamespace, wrappingSuite, masterKey })
 
-  /* Encryption Context is a *very* powerful tool for controlling and managing access.
+  /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
-   * Remember encrypted data is opaque, encryption context will help your run time checking.
-   * Just because you have decrypted a JSON file, and it successfully parsed,
-   * does not mean it is the intended JSON file.
+   * Remember encrypted data is opaque,
+   * encryption context is how a reader
+   * asserts things that must be true about the encrypted data.
+   * Just because you can decrypt something
+   * does not mean it is what you expect.
+   * If you are are only expecting data with an from 'us-west-2'
+   * the `origin` can be used to identify a malicious actor.
    */
   const context = {
     stage: 'demo',
@@ -63,25 +70,28 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
   /* Encrypt the data. */
   const { cipherMessage } = await encrypt(keyring, plainText, { encryptionContext: context })
 
-  /* Log the plain text,
+  /* Log the plain text
    * only for testing and to show that it works.
    */
   console.log('plainText:', plainText)
   document.write('</br>plainText:' + plainText + '</br>')
 
-  /* In case you want to check compatibility, I log the cipher text. */
+  /* Log the ciphertext so you can copy it
+   * and check compatibility with another another implementation of the AWS Encryption SDK.
+   */
   const cipherMessageBase64 = toBase64(cipherMessage)
   console.log(cipherMessageBase64)
   document.write(cipherMessageBase64)
 
   const { clearMessage, messageHeader } = await decrypt(keyring, cipherMessage)
 
-  /* Grab the encryption context so I can verify it. */
+  /* Grab the encryption context so you can verify it. */
   const { encryptionContext } = messageHeader
 
   /* Verify the encryption context.
-   * Depending on the Algorithm Suite, the `encryptionContext` _may_ contain additional values.
-   * In Signing Algorithm Suites the public verification key is serialized into the `encryptionContext`.
+   * Depending on the algorithm suite, the `encryptionContext` _may_ contain additional values.
+   * If you use an algorithm suite with signing,
+   * the SDK adds a name-value pair to the encryption context that contains the public key.
    * So it is best to make sure that all the values that you expect exist as opposed to the reverse.
    */
   Object
@@ -90,7 +100,7 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
       if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
     })
 
-  /* Log the clear message,
+  /* Log the clear message
    * only for testing and to show that it works.
    */
   document.write('</br>clearMessage:' + clearMessage)

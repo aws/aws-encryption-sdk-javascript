@@ -21,8 +21,10 @@ import { randomBytes } from 'crypto'
  * to encrypt and decrypt a simple string
  */
 export async function aesTest () {
-  /* Raw providers need to have a name and a namespace.
-   * These values *must* match *case sensitive exactly* on the decrypt side.
+  /* You need to specify a name
+   * and a namespace for raw encryption key providers.
+   * The name and namespace that you use in the decryption keyring *must* be an exact,
+   * *case-sensitive* match for the name and namespace in the encryption keyring.
    */
   const keyName = 'aes-name'
   const keyNamespace = 'aes-namespace'
@@ -33,14 +35,18 @@ export async function aesTest () {
   // You should get your unencrypted master key from wherever you store it.
   const unencryptedMasterKey = randomBytes(32)
 
-  /* Configure the Raw AES Keyring. */
+  /* Configure the Raw AES keyring. */
   const keyring = new RawAesKeyringNode({ keyName, keyNamespace, unencryptedMasterKey, wrappingSuite })
 
-  /* Encryption Context is a *very* powerful tool for controlling and managing access.
+  /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
-   * Remember encrypted data is opaque, encryption context will help your run time checking.
-   * Just because you have decrypted a JSON file, and it successfully parsed,
-   * does not mean it is the intended JSON file.
+   * Remember encrypted data is opaque,
+   * encryption context is how a reader
+   * asserts things that must be true about the encrypted data.
+   * Just because you can decrypt something
+   * does not mean it is what you expect.
+   * If you are are only expecting data with an from 'us-west-2'
+   * the `origin` can be used to identify a malicious actor.
    */
   const context = {
     stage: 'demo',
@@ -56,12 +62,13 @@ export async function aesTest () {
   /* Decrypt the data. */
   const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
 
-  /* Grab the encryption context so I can verify it. */
+  /* Grab the encryption context so you can verify it. */
   const { encryptionContext } = messageHeader
 
   /* Verify the encryption context.
-   * Depending on the Algorithm Suite, the `encryptionContext` _may_ contain additional values.
-   * In Signing Algorithm Suites the public verification key is serialized into the `encryptionContext`.
+   * Depending on the algorithm suite, the `encryptionContext` _may_ contain additional values.
+   * If you use an algorithm suite with signing,
+   * the SDK adds a name-value pair to the encryption context that contains the public key.
    * So it is best to make sure that all the values that you expect exist as opposed to the reverse.
    */
   Object
