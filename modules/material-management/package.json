@@ -1,6 +1,5 @@
 {
   "name": "@aws-crypto/material-management",
-  "private": true,
   "version": "0.1.0",
   "scripts": {
     "prepublishOnly": "npm run build",

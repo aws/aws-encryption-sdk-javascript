@@ -1,6 +1,5 @@
 {
   "name": "@aws-crypto/integration-node",
-  "private": true,
   "version": "0.1.0",
   "scripts": {
     "build": "tsc -b tsconfig.json",

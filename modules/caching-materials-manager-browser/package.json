@@ -1,6 +1,5 @@
 {
   "name": "@aws-crypto/caching-materials-manager-browser",
-  "private": true,
   "version": "0.0.1",
   "scripts": {
     "prepublishOnly": "npm run build",
