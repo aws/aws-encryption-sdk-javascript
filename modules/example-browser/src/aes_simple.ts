@@ -50,13 +50,11 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
-   * Remember encrypted data is opaque,
-   * encryption context is how a reader
-   * asserts things that must be true about the encrypted data.
-   * Just because you can decrypt something
-   * does not mean it is what you expect.
-   * If you are are only expecting data with an from 'us-west-2'
-   * the `origin` can be used to identify a malicious actor.
+   * Encrypted data is opaque.
+   * You can use an encryption context to assert things about the encrypted data.
+   * Just because you can decrypt something does not mean it is what you expect.
+   * For example, if you are are only expecting data from 'us-west-2',
+   * the origin can identify a malicious actor.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    */
   const context = {
@@ -65,7 +63,7 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
     origin: 'us-west-2'
   }
 
-  /* I need something to encrypt. */
+  /* Find data to encrypt. */
   const plainText = new Uint8Array([1, 2, 3, 4, 5])
 
   /* Encrypt the data. */
@@ -95,7 +93,7 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
    * the SDK adds a name-value pair to the encryption context that contains the public key.
    * Because the encryption context might contain additional key-value pairs,
    * do not add a test that requires that all key-value pairs match.
-   * Instead verify that the key-value pairs you expect match.
+   * Instead, verify that the key-value pairs you expect match.
    */
   Object
     .entries(context)

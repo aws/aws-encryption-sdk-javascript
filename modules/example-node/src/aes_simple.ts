@@ -40,13 +40,11 @@ export async function aesTest () {
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
-   * Remember encrypted data is opaque,
-   * encryption context is how a reader
-   * asserts things that must be true about the encrypted data.
-   * Just because you can decrypt something
-   * does not mean it is what you expect.
-   * If you are are only expecting data with an from 'us-west-2'
-   * the `origin` can be used to identify a malicious actor.
+   * Encrypted data is opaque.
+   * You can use an encryption context to assert things about the encrypted data.
+   * Just because you can decrypt something does not mean it is what you expect.
+   * For example, if you are are only expecting data from 'us-west-2',
+   * the origin can identify a malicious actor.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    */
   const context = {
@@ -55,7 +53,7 @@ export async function aesTest () {
     origin: 'us-west-2'
   }
 
-  /* I need something to encrypt.  A simple string. */
+  /* Find data to encrypt.  A simple string. */
   const cleartext = 'asdf'
 
   /* Encrypt the data. */
@@ -72,7 +70,7 @@ export async function aesTest () {
    * the SDK adds a name-value pair to the encryption context that contains the public key.
    * Because the encryption context might contain additional key-value pairs,
    * do not add a test that requires that all key-value pairs match.
-   * Instead verify that the key-value pairs you expect match.
+   * Instead, verify that the key-value pairs you expect match.
    */
   Object
     .entries(context)
@@ -80,6 +78,6 @@ export async function aesTest () {
       if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
     })
 
-  /* Return the values so I can manage this code with tests. */
+  /* Return the values so the code can be testsed. */
   return { plaintext, ciphertext, cleartext }
 }

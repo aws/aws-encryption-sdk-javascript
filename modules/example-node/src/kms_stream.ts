@@ -42,7 +42,7 @@ const finishedAsync = promisify(finished)
 
 export async function kmsStreamTest (filename: string) {
   /* A KMS CMK is required to generate the data key.
-   * Access to kms:GenerateDataKey is required for the generatorKeyId.
+   * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
   const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
@@ -51,13 +51,11 @@ export async function kmsStreamTest (filename: string) {
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
-   * Remember encrypted data is opaque,
-   * encryption context is how a reader
-   * asserts things that must be true about the encrypted data.
-   * Just because you can decrypt something
-   * does not mean it is what you expect.
-   * If you are are only expecting data with an from 'us-west-2'
-   * the `origin` can be used to identify a malicious actor.
+   * Encrypted data is opaque.
+   * You can use an encryption context to assert things about the encrypted data.
+   * Just because you can decrypt something does not mean it is what you expect.
+   * For example, if you are are only expecting data from 'us-west-2',
+   * the origin can identify a malicious actor.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    */
   const context = {
@@ -76,7 +74,7 @@ export async function kmsStreamTest (filename: string) {
       * In Signing Algorithm Suites the public verification key is serialized into the `encryptionContext`.
       * Because the encryption context might contain additional key-value pairs,
       * do not add a test that requires that all key-value pairs match.
-      * Instead verify that the key-value pairs you expect match.
+      * Instead, verify that the key-value pairs you expect match.
       */
       Object
         .entries(context)

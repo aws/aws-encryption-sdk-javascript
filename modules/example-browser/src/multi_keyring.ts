@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-/* This is a simple example of using a Multi Keyring KMS Keyring
- * to combine a KMS Keyring and a raw AES Keyring
+/* This is a simple example of using a multi-keyring KMS keyring
+ * to combine a KMS keyring and a raw AES keyring
  * to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser.
  */
 
@@ -41,7 +41,7 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
 
 ;(async function multiKeyringExample () {
   /* A KMS CMK is required to generate the data key.
-   * Access to kms:GenerateDataKey is required for the generatorKeyId.
+   * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
   const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
@@ -105,13 +105,11 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
-   * Remember encrypted data is opaque,
-   * encryption context is how a reader
-   * asserts things that must be true about the encrypted data.
-   * Just because you can decrypt something
-   * does not mean it is what you expect.
-   * If you are are only expecting data with an from 'us-west-2'
-   * the `origin` can be used to identify a malicious actor.
+   * Encrypted data is opaque.
+   * You can use an encryption context to assert things about the encrypted data.
+   * Just because you can decrypt something does not mean it is what you expect.
+   * For example, if you are are only expecting data from 'us-west-2',
+   * the origin can identify a malicious actor.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    */
   const context = {
@@ -120,7 +118,7 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
     origin: 'us-west-2'
   }
 
-  /* I need something to encrypt. */
+  /* Find data to encrypt. */
   const plainText = new Uint8Array([1, 2, 3, 4, 5])
 
   /* Encrypt the data. */
@@ -139,6 +137,13 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   console.log(cipherMessageBase64)
   document.write(cipherMessageBase64)
 
+  /* Decrypt the data.
+   * This decrypt call could be done with **any** of the 3 keyrings.
+   * Here we use the multi-keyring, but
+   * decrypt(kmsKeyring, ciphertext)
+   * decrypt(aesKeyring, ciphertext)
+   * would both work as well.
+   */
   const { clearMessage, messageHeader } = await decrypt(keyring, cipherMessage)
 
   /* Grab the encryption context so you can verify it. */
@@ -150,7 +155,7 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
    * the SDK adds a name-value pair to the encryption context that contains the public key.
    * Because the encryption context might contain additional key-value pairs,
    * do not add a test that requires that all key-value pairs match.
-   * Instead verify that the key-value pairs you expect match.
+   * Instead, verify that the key-value pairs you expect match.
    */
   Object
     .entries(context)
