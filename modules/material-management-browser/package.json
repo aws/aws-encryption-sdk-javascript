@@ -1,6 +1,5 @@
 {
   "name": "@aws-crypto/material-management-browser",
-  "private": true,
   "version": "0.0.1",
   "scripts": {
     "prepublishOnly": "npm run build",

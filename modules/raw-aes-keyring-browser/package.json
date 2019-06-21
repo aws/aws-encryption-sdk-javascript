@@ -1,6 +1,5 @@
 {
   "name": "@aws-crypto/raw-aes-keyring-browser",
-  "private": true,
   "version": "0.0.1",
   "scripts": {
     "prepublishOnly": "npm run build",

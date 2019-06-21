@@ -1,6 +1,5 @@
 {
   "name": "@aws-crypto/encrypt-browser",
-  "private": true,
   "version": "0.0.1",
   "scripts": {
     "prepublishOnly": "tsc -p tsconfig.json && tsc -p tsconfig.module.json",

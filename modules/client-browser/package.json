@@ -1,6 +1,5 @@
 {
   "name": "@aws-crypto/client-browser",
-  "private": true,
   "version": "0.0.1",
   "scripts": {
     "build": "tsc -b tsconfig.json",
