@@ -31,7 +31,7 @@ This is an example of using a RSA key pair to encrypt and decrypt a simple strin
 This has some advantages for certain use cases,
 but we recommend that you use a keyring that protects your wrapping keys
 and performs cryptographic operations within a secure boundary.
-A KMS keyring uses AWS Key Management Service (AWS KMS) customer master keys (CMKs) that never leave AWS KMS unencrypted. 
+The KMS keyring uses AWS Key Management Service (AWS KMS) customer master keys (CMKs) that never leave AWS KMS unencrypted. 
 For a more detailed explanation, see rsa_simple.ts.
 
 # AES Simple Example
@@ -40,7 +40,7 @@ This is an example of using a shared secret to encrypt and decrypt a simple stri
 This has some advantages for certain use cases,
 but we recommend that you use a keyring that protects your wrapping keys
 and performs cryptographic operations within a secure boundary.
-A KMS keyring uses AWS Key Management Service (AWS KMS) customer master keys (CMKs) that never leave AWS KMS unencrypted. 
+The KMS keyring uses AWS Key Management Service (AWS KMS) customer master keys (CMKs) that never leave AWS KMS unencrypted. 
 For a more detailed explanation, see aes_simple.ts.
 
 # Multi keyring Example
@@ -51,7 +51,7 @@ and decrypt using the AWS Encryption SDK for Javascript in a browser.
 This has some advantages for certain use cases,
 but we recommend that you use a keyring that protects your wrapping keys
 and performs cryptographic operations within a secure boundary.
-A KMS keyring uses AWS Key Management Service (AWS KMS) customer master keys (CMKs) that never leave AWS KMS unencrypted. 
+The KMS keyring uses AWS Key Management Service (AWS KMS) customer master keys (CMKs) that never leave AWS KMS unencrypted. 
 For a more detailed explanation, see multi_keyring.ts.
 
 # To test KMS encryption in a browser locally on macOS

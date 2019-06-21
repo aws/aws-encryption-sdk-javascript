@@ -41,7 +41,7 @@ export function getClient<Client extends KMS, Config extends KMSConfiguration> (
 ): KmsClientSupplier<Client> {
   return function getKmsClient (region: string) {
     /* a KMS alias is supported.  These do not have a region
-     * in this case, the SDK should find the default region
+     * in this case, the Encryption SDK should find the default region
      * or the default region needs to be supplied to this function
      */
     const config = { ...defaultConfig, region } as Config

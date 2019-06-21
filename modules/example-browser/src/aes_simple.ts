@@ -89,7 +89,7 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
 
   /* Verify the encryption context.
    * If you use an algorithm suite with signing,
-   * the SDK adds a name-value pair to the encryption context that contains the public key.
+   * the Encryption SDK adds a name-value pair to the encryption context that contains the public key.
    * Because the encryption context might contain additional key-value pairs,
    * do not add a test that requires that all key-value pairs match.
    * Instead, verify that the key-value pairs you expect match.
