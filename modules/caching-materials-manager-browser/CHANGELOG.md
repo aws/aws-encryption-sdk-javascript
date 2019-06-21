@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.1](/compare/@aws-crypto/caching-materials-manager-browser@0.1.0-preview.0...@aws-crypto/caching-materials-manager-browser@0.1.0-preview.1) (2019-06-21)
+
+
+### Bug Fixes
+
+* package.json files path update (#120) fbc3270, closes #120
+
+
+
+
+
 # 0.1.0-preview.0 (2019-06-21)
 
 

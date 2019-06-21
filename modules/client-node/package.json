@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/client-node",
-  "version": "0.1.0-preview.0",
+  "version": "0.1.0-preview.1",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "standard src/*.ts test/**/*.ts"
@@ -12,13 +12,13 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/caching-materials-manager-node": "^0.1.0-preview.0",
-    "@aws-crypto/decrypt-node": "^0.1.0-preview.0",
-    "@aws-crypto/encrypt-node": "^0.1.0-preview.0",
-    "@aws-crypto/kms-keyring-node": "^0.1.0-preview.0",
-    "@aws-crypto/material-management-node": "^0.1.0-preview.0",
-    "@aws-crypto/raw-aes-keyring-node": "^0.1.0-preview.0",
-    "@aws-crypto/raw-rsa-keyring-node": "^0.1.0-preview.0",
+    "@aws-crypto/caching-materials-manager-node": "^0.1.0-preview.1",
+    "@aws-crypto/decrypt-node": "^0.1.0-preview.1",
+    "@aws-crypto/encrypt-node": "^0.1.0-preview.1",
+    "@aws-crypto/kms-keyring-node": "^0.1.0-preview.1",
+    "@aws-crypto/material-management-node": "^0.1.0-preview.1",
+    "@aws-crypto/raw-aes-keyring-node": "^0.1.0-preview.1",
+    "@aws-crypto/raw-rsa-keyring-node": "^0.1.0-preview.1",
     "tslib": "^1.9.3"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/raw-aes-keyring-browser",
-  "version": "0.1.0-preview.0",
+  "version": "0.1.0-preview.1",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -16,11 +16,11 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/material-management-browser": "^0.1.0-preview.0",
+    "@aws-crypto/material-management-browser": "^0.1.0-preview.1",
     "@aws-crypto/random-source-browser": "^0.1.0-preview.1",
-    "@aws-crypto/raw-keyring": "^0.1.0-preview.0",
-    "@aws-crypto/serialize": "^0.1.0-preview.0",
-    "@aws-crypto/web-crypto-backend": "^0.1.0-preview.0",
+    "@aws-crypto/raw-keyring": "^0.1.0-preview.1",
+    "@aws-crypto/serialize": "^0.1.0-preview.1",
+    "@aws-crypto/web-crypto-backend": "^0.1.0-preview.1",
     "@aws-sdk/util-utf8-browser": "0.1.0-preview.1",
     "tslib": "^1.9.3"
   },

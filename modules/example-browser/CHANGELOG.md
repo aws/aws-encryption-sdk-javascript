@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.1](/compare/@aws-crypto/example-browser@0.1.0-preview.0...@aws-crypto/example-browser@0.1.0-preview.1) (2019-06-21)
+
+**Note:** Version bump only for package @aws-crypto/example-browser
+
+
+
+
+
 # 0.1.0-preview.0 (2019-06-21)
 
 

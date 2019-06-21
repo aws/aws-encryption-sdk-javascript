@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0-preview.1](/compare/@aws-crypto/hkdf-node@0.2.0-preview.0...@aws-crypto/hkdf-node@0.2.0-preview.1) (2019-06-21)
+
+
+### Bug Fixes
+
+* package.json files path update (#120) fbc3270, closes #120
+
+
+
+
+
 # 0.2.0-preview.0 (2019-06-21)
 
 
