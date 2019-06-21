@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/hkdf-node",
-  "version": "0.2.0-preview.0",
+  "version": "0.1.0",
   "description": "nodejs hkdf crypto primitive",
   "scripts": {
     "prepublishOnly": "npm run build",
@@ -38,14 +38,10 @@
   "main": "./build/main/index.js",
   "module": "./build/module/index.js",
   "types": "./build/main/index.d.ts",
-  "files": [
-    "./build/**/*"
-  ],
+  "files": ["./build/**/*"],
   "standard": {
     "fix": true,
     "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "@typescript-eslint"
-    ]
+    "plugins": [ "@typescript-eslint" ]
   }
 }

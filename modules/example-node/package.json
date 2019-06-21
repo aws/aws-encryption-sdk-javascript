@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/example-node",
-  "version": "0.2.0-preview.0",
+  "version": "0.1.0",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -16,7 +16,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/client-node": "^0.1.0-preview.0",
+    "@aws-crypto/client-node": "^0.0.1",
     "tslib": "^1.9.3"
   },
   "devDependencies": {
@@ -39,9 +39,7 @@
   "main": "./build/main/index.js",
   "module": "./build/module/index.js",
   "types": "./build/main/index.d.ts",
-  "files": [
-    "./build/**/*"
-  ],
+  "files": ["./build/**/*"],
   "standard": {
     "parser": "@typescript-eslint/parser",
     "plugins": [
