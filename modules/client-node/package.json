@@ -31,7 +31,6 @@
   "sideEffects": false,
   "main": "./build/main/index.js",
   "types": "./build/main/index.d.ts",
-  "bin": "./build/main/cli.js",
   "files": [
     "build/**/*"
   ],
