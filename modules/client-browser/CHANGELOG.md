@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.2](/compare/@aws-crypto/client-browser@0.1.0-preview.1...@aws-crypto/client-browser@0.1.0-preview.2) (2019-06-22)
+
+
+### Bug Fixes
+
+* package.json issues (#124) a062acd, closes #124
+
+
+
+
+
 # [0.1.0-preview.1](/compare/@aws-crypto/client-browser@0.1.0-preview.0...@aws-crypto/client-browser@0.1.0-preview.1) (2019-06-21)
 
 

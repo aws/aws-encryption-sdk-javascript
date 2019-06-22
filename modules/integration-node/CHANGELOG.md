@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0-preview.2](/compare/@aws-crypto/integration-node@0.2.0-preview.1...@aws-crypto/integration-node@0.2.0-preview.2) (2019-06-22)
+
+**Note:** Version bump only for package @aws-crypto/integration-node
+
+
+
+
+
 # [0.2.0-preview.1](/compare/@aws-crypto/integration-node@0.2.0-preview.0...@aws-crypto/integration-node@0.2.0-preview.1) (2019-06-21)
 
 

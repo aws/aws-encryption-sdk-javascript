@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/client-node",
-  "version": "0.1.0-preview.1",
+  "version": "0.1.0-preview.2",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "standard src/*.ts test/**/*.ts"
