@@ -33,7 +33,6 @@
   "main": "./build/main/index.js",
   "module": "./build/module/index.js",
   "types": "./build/main/index.d.ts",
-  "bin": "./build_fixtures",
   "files": [
     "build/**/*"
   ],
