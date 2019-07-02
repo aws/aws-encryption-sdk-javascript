@@ -49,11 +49,6 @@ export class WebCryptoDefaultCryptographicMaterialsManager implements WebCryptoM
   async getEncryptionMaterials ({ suite, encryptionContext }: WebCryptoEncryptionRequest): Promise<WebCryptoEncryptionResponse> {
     suite = suite || new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
     const material = new WebCryptoEncryptionMaterial(suite)
-    /* Precondition: Browsers do not support 192 bit keys so I do not support encrypt.
-     * This is primarily an error in decrypt but this make it clear.
-     * The error can manifest deep in the decrypt loop making it hard to debug.
-     */
-    needs(suite.keyLength !== 192, '192-bit AES keys are not supported')
 
     const context = await this._generateSigningKeyAndUpdateEncryptionContext(material, encryptionContext)
 
@@ -69,10 +64,6 @@ export class WebCryptoDefaultCryptographicMaterialsManager implements WebCryptoM
   }
 
   async decryptMaterials ({ suite, encryptedDataKeys, encryptionContext }: WebCryptoDecryptionRequest): Promise<WebCryptoDecryptionResponse> {
-    /* Precondition: Browsers do not support 192 bit keys, do not attempt decrypt.
-     * The error can manifest deep in the decrypt loop making it hard to debug.
-     */
-    needs(suite.keyLength !== 192, '192-bit AES keys are not supported')
     const material = await this._loadVerificationKeyFromEncryptionContext(new WebCryptoDecryptionMaterial(suite), encryptionContext)
 
     await this.keyring.onDecrypt(material, encryptedDataKeys.slice(), encryptionContext)
