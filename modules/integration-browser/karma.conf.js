@@ -8,26 +8,14 @@ module.exports = function (config) {
     files: [
       'fixtures/tests.json',
       { pattern: 'fixtures/*.json', included: false, served: true, watched: false, nocache: true },
-      'src/integration.test.ts'
+      'build/module/integration.test.js'
     ],
     preprocessors: {
-      './src/*.test.ts': ['webpack', 'credentials'],
+      'build/module/integration.test.js': ['webpack', 'credentials'],
       './fixtures/tests.json': ['json_fixtures']
     },
     webpack: {
-      resolve: {
-        extensions: [ '.ts', '.js' ]
-      },
       mode: 'development',
-      module: {
-        rules: [
-          {
-            test: /\.tsx?$/,
-            use: 'ts-loader',
-            exclude: /node_modules/
-          }
-        ]
-      },
       stats: {
         colors: true,
         modules: true,
