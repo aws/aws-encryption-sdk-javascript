@@ -175,7 +175,7 @@ export class VerifyStream extends PortableTransformWithType {
             if (chunk.length) {
               state.signatureInfo = Buffer.concat([state.signatureInfo, chunk])
             }
-        
+
             callback()
           }
         }
@@ -188,7 +188,7 @@ export class VerifyStream extends PortableTransformWithType {
          * If the verify stream continues processing and sends the next auth tag,
          * before the current auth tag has been completed.
          * This is basically a back pressure issue.
-         * Since the frame size, and consequently the high water mark, 
+         * Since the frame size, and consequently the high water mark,
          * can not be know when the stream is created,
          * the internal stream state would need to be modified.
          * I assert that a simple callback is a simpler way to handle this.
