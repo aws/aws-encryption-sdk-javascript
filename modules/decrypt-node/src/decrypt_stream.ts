@@ -46,6 +46,10 @@ export function decryptStream (
 
   pipeline(parseHeaderStream, verifyStream, decipherStream)
 
+  decipherStream.on('error', (e) => {
+    console.log('?????', e)
+  })
+
   const stream = new Duplexify(parseHeaderStream, decipherStream)
 
   // Forward header events

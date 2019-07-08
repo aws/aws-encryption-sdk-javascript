@@ -121,8 +121,6 @@ export class VerifyStream extends PortableTransformWithType {
       if (this._verify) {
         this._verify.update(frameBuffer.slice(0, frameHeader.readPos))
       }
-      // clear the buffer.  It _could_ have cipher text...
-      state.buffer = Buffer.alloc(0)
       const tail = chunk.slice(frameHeader.readPos)
       this.emit('BodyInfo', frameHeader)
       state.currentFrame = frameHeader
@@ -155,23 +153,49 @@ export class VerifyStream extends PortableTransformWithType {
         state.authTagBuffer = Buffer.concat([authTagBuffer, chunk])
         return callback()
       } else {
-        state.authTagBuffer = Buffer.concat([authTagBuffer, chunk], tagLengthBytes)
+        const finalAuthTagBuffer = Buffer.concat([authTagBuffer, chunk], tagLengthBytes)
         if (this._verify) {
-          this._verify.update(state.authTagBuffer)
+          this._verify.update(finalAuthTagBuffer)
         }
-        this.emit('AuthTag', state.authTagBuffer)
-        const tail = chunk.slice(left)
-        if (!currentFrame.isFinalFrame) {
-          state.buffer = Buffer.alloc(0)
-          state.currentFrame = undefined
-          state.authTagBuffer = Buffer.alloc(0)
+        /* Reset state.
+         * Ciphertext buffers and authTag buffers need to be cleared.
+         */
+        state.buffer = Buffer.alloc(0)
+        state.currentFrame = undefined
+        state.authTagBuffer = Buffer.alloc(0)
+        /* After the final frame the file format is _much_ simpler.
+         * Making sure the cascading if blocks fall to the signature can be tricky and brittle.
+         * After the final frame, just moving on to concatenate the signature is much simpler.
+         */
+        if (currentFrame.isFinalFrame) {
+          /* Overwriting the _transform function.
+           * Data flow control is not handled here.
+           */
+          this._transform = (chunk: Buffer, _enc: string, callback: Function) => {
+            if (chunk.length) {
+              state.signatureInfo = Buffer.concat([state.signatureInfo, chunk])
+            }
+        
+            callback()
+          }
         }
-        return setImmediate(() => this._transform(tail, enc, callback))
-      }
-    }
 
-    if (chunk.length) {
-      state.signatureInfo = Buffer.concat([state.signatureInfo, chunk])
+        const tail = chunk.slice(left)
+        /* The decipher_stream uses the `AuthTag` event to flush the accumulated frame.
+         * This is because ciphertext should never be returned until it is verified.
+         * i.e. the auth tag checked.
+         * This can create an issue if the chucks and frame size are small.
+         * If the verify stream continues processing and sends the next auth tag,
+         * before the current auth tag has been completed.
+         * This is basically a back pressure issue.
+         * Since the frame size, and consequently the high water mark, 
+         * can not be know when the stream is created,
+         * the internal stream state would need to be modified.
+         * I assert that a simple callback is a simpler way to handle this.
+         */
+        const next = () => this._transform(tail, enc, callback)
+        return this.emit('AuthTag', finalAuthTagBuffer, next)
+      }
     }
 
     callback()

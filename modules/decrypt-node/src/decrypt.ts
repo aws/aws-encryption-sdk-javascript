@@ -36,7 +36,7 @@ export interface DecryptOptions {
 
 export async function decrypt (
   cmm: NodeMaterialsManager|KeyringNode,
-  ciphertext: Buffer|Uint8Array|Readable|string,
+  ciphertext: Buffer|Uint8Array|Readable|string|NodeJS.ReadableStream,
   { encoding, maxBodySize } : DecryptOptions = {}
 ): Promise<DecryptOutput> {
   const stream = decryptStream(cmm, { maxBodySize })
@@ -46,6 +46,9 @@ export async function decrypt (
   stream
     .once('MessageHeader', (header: MessageHeader) => { messageHeader = header })
     .on('data', (chunk: Buffer) => plaintext.push(chunk))
+    .on('error', () => {
+      console.log('wtf???')
+    })
 
   // This will check both Uint8Array|Buffer
   if (ciphertext instanceof Uint8Array) {

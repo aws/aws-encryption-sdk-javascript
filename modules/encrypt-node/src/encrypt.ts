@@ -23,7 +23,7 @@ export interface EncryptOutput {
 
 export async function encrypt (
   cmm: KeyringNode|NodeMaterialsManager,
-  plaintext: Buffer|Uint8Array|Readable|string,
+  plaintext: Buffer|Uint8Array|Readable|string|NodeJS.ReadableStream,
   op: EncryptInput = {}
 ): Promise<EncryptOutput> {
   const stream = encryptStream(cmm, op)
