@@ -40,4 +40,10 @@ describe('WebCryptoAlgorithmSuite', () => {
     expect(Object.isFrozen(WebCryptoAlgorithmSuite)).to.equal(true)
     expect(Object.isFrozen(WebCryptoAlgorithmSuite.prototype)).to.equal(true)
   })
+
+  it('Precondition: Browsers do not support 192 bit keys so the AlgorithmSuiteIdentifier is removed.', () => {
+    expect(() => new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16)).to.throw()
+    expect(() => new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256)).to.throw()
+    expect(() => new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)).to.throw()
+  })
 })

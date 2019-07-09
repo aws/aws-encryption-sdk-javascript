@@ -68,9 +68,9 @@ export function getDecipherStream () {
             decipherInfo = info
           })
           .on('BodyInfo', this._onBodyHeader)
-          .on('AuthTag', async (authTag: Buffer) => {
+          .on('AuthTag', async (authTag: Buffer, next: Function) => {
             try {
-              await this._onAuthTag(authTag)
+              await this._onAuthTag(authTag, next)
             } catch (e) {
               this.emit('error', e)
             }
@@ -134,7 +134,7 @@ export function getDecipherStream () {
       super._read(size)
     }
 
-    _onAuthTag = async (authTag: Buffer) => {
+    _onAuthTag = async (authTag: Buffer, next:Function) => {
       const { decipher, content, contentLength } = decipherState
       /* Precondition: _onAuthTag must be called only after a frame has been accumulated.
        * However there is an edge case.  The final frame _can_ be zero length.
@@ -168,6 +168,17 @@ export function getDecipherStream () {
           await new Promise(resolve => { pathologicalDrain = resolve })
         }
       }
+
+      /* This frame is complete.
+       * Need to notify the VerifyStream continue.
+       * See the note in `AuthTag` for details.
+       * The short answer is that for small frame sizes,
+       * the "next" frame associated auth tag may be
+       * parsed and send before the "current" is processed.
+       * This will cause the auth tag event to fire before
+       * any _transform events fire and a 'Lengths do not match' precondition to fail.
+       */
+      next()
 
       // This frame is complete. Notify _transform to continue, see needs above for more details
       if (frameComplete) frameComplete()

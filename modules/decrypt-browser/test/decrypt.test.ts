@@ -18,12 +18,18 @@
 import { expect } from 'chai'
 import 'mocha'
 import { decrypt } from '../src/index'
+import { AlgorithmSuiteIdentifier } from '@aws-crypto/material-management-browser'
+import * as fixtures from './fixtures'
 
 describe('decrypt', () => {
-  /* This test is mostly to insure that I include all files.
-   * So I can not lie on code coverage.
-   */
-  it('is a function', () => {
-    expect(decrypt).to.be.a('function')
+  it('buffer', async () => {
+    const { clearMessage: test, messageHeader } = await decrypt(
+      fixtures.decryptKeyring(),
+      fixtures.ciphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384()
+    )
+
+    expect(messageHeader.suiteId).to.equal(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
+    expect(messageHeader.encryptionContext).to.deep.equal(fixtures.encryptionContext())
+    expect(test).to.deep.equal(fixtures.plaintext())
   })
 })
