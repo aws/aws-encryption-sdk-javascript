@@ -15,15 +15,74 @@
 
 /* eslint-env mocha */
 
-import { expect } from 'chai'
+import * as chai from 'chai'
+import chaiAsPromised from 'chai-as-promised'
 import 'mocha'
+import {
+  WebCryptoDecryptionMaterial, // eslint-disable-line no-unused-vars
+  WebCryptoEncryptionMaterial, // eslint-disable-line no-unused-vars
+  KeyringWebCrypto, EncryptedDataKey,
+  KeyringTraceFlag, WebCryptoAlgorithmSuite,
+  importForWebCryptoEncryptionMaterial
+} from '@aws-crypto/material-management-browser'
+import {
+  deserializeFactory
+} from '@aws-crypto/serialize'
 import { encrypt } from '../src/index'
+import { toUtf8, fromUtf8 } from '@aws-sdk/util-utf8-browser'
 
-describe('encrypt', () => {
-  /* This test is mostly to insure that I include all files.
-   * So I can not lie on code coverage.
-   */
-  it('is a function', () => {
-    expect(encrypt).to.be.a('function')
+chai.use(chaiAsPromised)
+const { expect } = chai
+
+const { deserializeMessageHeader } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
+
+/* These tests only check structure.
+ * see decrypt-node for actual cryptographic tests
+ * see integration-node for exhaustive compatibility tests
+ */
+describe('encrypt structural testing', () => {
+  const edk = new EncryptedDataKey({
+    providerId: 'k',
+    providerInfo: 'k',
+    encryptedDataKey: new Uint8Array(3),
+    /* rawInfo added because it will always be there when deserialized.
+     * This way deep equal will pass nicely.
+     * 107 is 'k' in ASCII
+     */
+    rawInfo: new Uint8Array([107])
+  })
+  class TestKeyring extends KeyringWebCrypto {
+    async _onEncrypt (material: WebCryptoEncryptionMaterial) {
+      const unencryptedDataKey = new Uint8Array(material.suite.keyLengthBytes).fill(0)
+      const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+      material
+        .setUnencryptedDataKey(unencryptedDataKey, trace)
+        .addEncryptedDataKey(edk, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+      return importForWebCryptoEncryptionMaterial(material)
+    }
+    async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
+      throw new Error('I should never see this error')
+    }
+  }
+
+  const keyRing = new TestKeyring()
+
+  it('encrypt an ArrayBuffer', async () => {
+    const encryptionContext = { simple: 'context' }
+
+    const plaintext = fromUtf8('asdf')
+    const { cipherMessage, messageHeader } = await encrypt(keyRing, plaintext, { encryptionContext })
+
+    /* The default algorithm suite will add a signature key to the context.
+     * So I only check that the passed context elements exist.
+     */
+    expect(messageHeader.encryptionContext).to.haveOwnProperty('simple').and.to.equal('context')
+    expect(messageHeader.encryptedDataKeys).lengthOf(1)
+    expect(messageHeader.encryptedDataKeys[0]).to.deep.equal(edk)
+
+    const messageInfo = deserializeMessageHeader(cipherMessage)
+    if (!messageInfo) throw new Error('I should never see this error')
+
+    expect(messageHeader).to.deep.equal(messageInfo.messageHeader)
   })
 })

@@ -30,7 +30,7 @@ try {
    */
   const { timingSafeEqual: nodeTimingSafeEqual } = require('crypto')
   timingSafeEqual = nodeTimingSafeEqual || portableTimingSafeEqual
-} catch {
+} catch (e) {
   timingSafeEqual = portableTimingSafeEqual
 }
 /* https://codahale.com/a-lesson-in-timing-attacks/ */
