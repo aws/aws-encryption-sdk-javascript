@@ -36,7 +36,7 @@ export interface DecryptOptions {
 
 export async function decrypt (
   cmm: NodeMaterialsManager|KeyringNode,
-  ciphertext: Buffer|Uint8Array|Readable|string,
+  ciphertext: Buffer|Uint8Array|Readable|string|NodeJS.ReadableStream,
   { encoding, maxBodySize } : DecryptOptions = {}
 ): Promise<DecryptOutput> {
   const stream = decryptStream(cmm, { maxBodySize })
