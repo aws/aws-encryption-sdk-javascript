@@ -32,18 +32,8 @@ import {
   WebCryptoGetDecryptMaterials // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
 import { fromUtf8, toUtf8 } from '@aws-sdk/util-utf8-browser'
-import { getWebCryptoBackend, getNonZeroByteBackend, synchronousRandomValues } from '@aws-crypto/web-crypto-backend'
-import { concatBuffers } from '@aws-crypto/serialize'
-
-const sha512 = async (...inputs: (Uint8Array|string)[]) => {
-  // Normalize to Uint8Array and squash into a single value.
-  const data = concatBuffers(...inputs.map(u => typeof u === 'string' ? fromUtf8(u) : u))
-  // Prefer the non-zero byte because this will always be the native implementation.
-  const backend = getNonZeroByteBackend(await getWebCryptoBackend())
-  // Do the hash
-  const ab = await backend.digest('SHA-512', data)
-  return new Uint8Array(ab)
-}
+import { synchronousRandomValues } from '@aws-crypto/web-crypto-backend'
+import { sha512 } from './sha512'
 
 const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(fromUtf8, toUtf8, sha512)
 
