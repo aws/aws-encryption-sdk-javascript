@@ -29,6 +29,8 @@ import {
   frozenClass,
   NodeAlgorithmSuite,
   WebCryptoAlgorithmSuite,
+  AwsEsdkJsCryptoKey, // eslint-disable-line no-unused-vars
+  AwsEsdkJsKeyUsage, // eslint-disable-line no-unused-vars
   KeyringTrace, // eslint-disable-line no-unused-vars
   KeyringTraceFlag,
   needs
@@ -77,15 +79,15 @@ export class WebCryptoRawAesMaterial implements
   hasUnencryptedDataKey!: boolean
   unencryptedDataKeyLength!: number
   keyringTrace: KeyringTrace[] = []
-  setCryptoKey!: (dataKey: CryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => WebCryptoRawAesMaterial
-  getCryptoKey!: () => CryptoKey|MixedBackendCryptoKey
+  setCryptoKey!: (dataKey: AwsEsdkJsCryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => WebCryptoRawAesMaterial
+  getCryptoKey!: () => AwsEsdkJsCryptoKey|MixedBackendCryptoKey
   hasCryptoKey!: boolean
-  validUsages: ReadonlyArray<KeyUsage>
+  validUsages: ReadonlyArray<AwsEsdkJsKeyUsage>
   constructor (suiteId: WrappingSuiteIdentifier) {
     /* Precondition: WebCryptoAlgorithmSuite suiteId must be RawAesWrappingSuiteIdentifier. */
     needs(RawAesWrappingSuiteIdentifier[suiteId], 'suiteId not supported.')
     this.suite = new WebCryptoAlgorithmSuite(suiteId)
-    this.validUsages = Object.freeze([<KeyUsage>'decrypt', <KeyUsage>'encrypt'])
+    this.validUsages = Object.freeze([<AwsEsdkJsKeyUsage>'decrypt', <AwsEsdkJsKeyUsage>'encrypt'])
     /* WebCryptoRawAesMaterial need to set a flag, this is an abuse of TraceFlags
      * because the material is not generated.
      * but CryptographicMaterial force a flag to be set.
