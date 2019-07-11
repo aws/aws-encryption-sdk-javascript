@@ -16,10 +16,10 @@
 // @ts-ignore
 import { Transform as PortableTransform } from 'readable-stream'
 import { Transform } from 'stream' // eslint-disable-line no-unused-vars
-import { DecipherGCM } from 'crypto' // eslint-disable-line no-unused-vars
 import {
   needs,
-  GetVerify // eslint-disable-line no-unused-vars
+  GetVerify, // eslint-disable-line no-unused-vars
+  GetDecipher // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 import {
   deserializeSignature,
@@ -35,7 +35,7 @@ const PortableTransformWithType = (<new (...args: any[]) => Transform>PortableTr
 
 export interface VerifyInfo {
   headerInfo: HeaderInfo
-  getDecipher: (iv: Uint8Array) => DecipherGCM
+  getDecipher: GetDecipher
   dispose: () => void
   verify?: AWSVerify
 }
