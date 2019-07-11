@@ -17,45 +17,54 @@
 
 import { expect } from 'chai'
 import 'mocha'
-import {
-  NodeDecryptionMaterial, // eslint-disable-line no-unused-vars
-  NodeEncryptionMaterial, // eslint-disable-line no-unused-vars
-  KeyringNode, EncryptedDataKey,
-  KeyringTraceFlag, AlgorithmSuiteIdentifier
-} from '@aws-crypto/material-management-node'
+import { AlgorithmSuiteIdentifier } from '@aws-crypto/material-management-node'
+import { decrypt } from '../src/index'
+import * as fixtures from './fixtures'
+import from from 'from2'
 
-// import * as fs from 'fs'
+describe('decrypt', () => {
+  it('string with encoding', async () => {
+    const { plaintext: test, messageHeader } = await decrypt(
+      fixtures.decryptKeyring(),
+      fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(),
+      { encoding: 'base64' }
+    )
 
-import { encrypt } from '@aws-crypto/encrypt-node'
-import { decrypt } from '../src/decrypt'
+    expect(messageHeader.suiteId).to.equal(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
+    expect(messageHeader.encryptionContext).to.deep.equal(fixtures.encryptionContext())
+    expect(test.toString('base64')).to.equal(fixtures.base64Plaintext())
+  })
 
-describe('simple', () => {
-  it('decrypt what I encrypt', async () => {
-    class TestKeyring extends KeyringNode {
-      async _onEncrypt (material: NodeEncryptionMaterial) {
-        const unencryptedDataKey = new Uint8Array(material.suite.keyLengthBytes).fill(1)
-        const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
-        const edk = new EncryptedDataKey({ providerId: 'k', providerInfo: 'k', encryptedDataKey: new Uint8Array(3) })
-        return material
-          .setUnencryptedDataKey(unencryptedDataKey, trace)
-          .addEncryptedDataKey(edk, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
-      }
-      async _onDecrypt (material: NodeDecryptionMaterial) {
-        const unencryptedDataKey = new Uint8Array(material.suite.keyLengthBytes).fill(1)
-        const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
-        return material.setUnencryptedDataKey(unencryptedDataKey, trace)
-      }
-    }
+  it('buffer', async () => {
+    const { plaintext: test, messageHeader } = await decrypt(
+      fixtures.decryptKeyring(),
+      Buffer.from(fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(), 'base64')
+    )
 
-    const keyRing = new TestKeyring()
-    const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    expect(messageHeader.suiteId).to.equal(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
+    expect(messageHeader.encryptionContext).to.deep.equal(fixtures.encryptionContext())
+    expect(test.toString('base64')).to.equal(fixtures.base64Plaintext())
+  })
 
-    const plaintext = 'asdf'
-    const { ciphertext } = await encrypt(keyRing, plaintext, { suiteId })
+  it('stream', async () => {
+    const ciphertext = Buffer.from(fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(), 'base64')
+    const i = ciphertext.values()
+    const ciphertextStream = from((_: number, next: Function) => {
+      /* Pushing 1 byte at time is the most annoying thing.
+       * This is done intentionally to hit _every_ boundary condition.
+       */
+      const { value, done } = i.next()
+      if (done) return next(null, null)
+      next(null, new Uint8Array([value]))
+    })
 
-    const { plaintext: test, messageHeader } = await decrypt(keyRing, ciphertext)
+    const { plaintext: test, messageHeader } = await decrypt(
+      fixtures.decryptKeyring(),
+      ciphertextStream
+    )
 
-    expect(messageHeader.suiteId).to.equal(suiteId)
-    expect(test.toString()).to.equal(plaintext)
+    expect(messageHeader.suiteId).to.equal(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
+    expect(messageHeader.encryptionContext).to.deep.equal(fixtures.encryptionContext())
+    expect(test.toString('base64')).to.equal(fixtures.base64Plaintext())
   })
 })

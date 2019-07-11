@@ -28,6 +28,7 @@ import {
   IWebCryptoAlgorithmSuite, WebCryptoEncryption, WebCryptoHash, // eslint-disable-line no-unused-vars
   WebCryptoECDHCurve, AlgorithmSuiteTypeWebCrypto // eslint-disable-line no-unused-vars
 } from './algorithm_suites'
+import { needs } from './needs'
 
 /* References to https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/algorithms-reference.html
  * These are the composed parameters for each algorithm suite specification for
@@ -41,6 +42,7 @@ const webCryptoAlgAes128GcmIv12Tag16: IWebCryptoAlgorithmSuite = {
   tagLength: 128,
   cacheSafe: false
 }
+/* Web browsers do not support 192 bit key lengths at this time. */
 const webCryptoAlgAes192GcmIv12Tag16: IWebCryptoAlgorithmSuite = {
   id: AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16,
   encryption: 'AES-GCM',
@@ -67,6 +69,7 @@ const webCryptoAlgAes128GcmIv12Tag16HkdfSha256: IWebCryptoAlgorithmSuite = {
   kdfHash: 'SHA-256',
   cacheSafe: true
 }
+/* Web browsers do not support 192 bit key lengths at this time. */
 const webCryptoAlgAes192GcmIv12Tag16HkdfSha256: IWebCryptoAlgorithmSuite = {
   id: AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256,
   encryption: 'AES-GCM',
@@ -99,6 +102,7 @@ const webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256: IWebCryptoAlgorithmSuit
   signatureCurve: 'P-256',
   signatureHash: 'SHA-256'
 }
+/* Web browsers do not support 192 bit key lengths at this time. */
 const webCryptoAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384: IWebCryptoAlgorithmSuite = {
   id: AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384,
   encryption: 'AES-GCM',
@@ -137,6 +141,28 @@ const webCryptoAlgorithms: WebCryptoAlgorithms = Object.freeze({
   [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384)
 })
 
+/* Web browsers do not support 192 bit key lengths at this time.
+ * To maintain type compatibility and TypeScript happiness between Algorithm Suites
+ * I need to have the same list of AlgorithmSuiteIdentifier.
+ * This list is maintained here to make sure that the error message is helpful.
+ */
+type WebCryptoAlgorithmSuiteIdentifier = Exclude<Exclude<Exclude<AlgorithmSuiteIdentifier,
+  AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16>,
+  AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256>,
+  AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384>
+type SupportedWebCryptoAlgorithms = Readonly<{[id in WebCryptoAlgorithmSuiteIdentifier]: IWebCryptoAlgorithmSuite}>
+const supportedWebCryptoAlgorithms: SupportedWebCryptoAlgorithms = Object.freeze({
+  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16]: Object.freeze(webCryptoAlgAes128GcmIv12Tag16),
+  // [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16]: Object.freeze(webCryptoAlgAes256GcmIv12Tag16),
+  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(webCryptoAlgAes128GcmIv12Tag16HkdfSha256),
+  // [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16HkdfSha256),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(webCryptoAlgAes256GcmIv12Tag16HkdfSha256),
+  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256]: Object.freeze(webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256),
+  // [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384)
+})
+
 export class WebCryptoAlgorithmSuite extends AlgorithmSuite implements IWebCryptoAlgorithmSuite {
   encryption!: WebCryptoEncryption
   kdfHash?: WebCryptoHash
@@ -145,6 +171,11 @@ export class WebCryptoAlgorithmSuite extends AlgorithmSuite implements IWebCrypt
   type: AlgorithmSuiteTypeWebCrypto = 'webCrypto'
   constructor (id: AlgorithmSuiteIdentifier) {
     super(webCryptoAlgorithms[id])
+    /* Precondition: Browsers do not support 192 bit keys so the AlgorithmSuiteIdentifier is removed.
+     * This is primarily an error in decrypt but this make it clear.
+     * The error can manifest deep in the decrypt loop making it hard to debug.
+     */
+    needs(supportedWebCryptoAlgorithms.hasOwnProperty(id), '192-bit AES keys are not supported')
     Object.setPrototypeOf(this, WebCryptoAlgorithmSuite.prototype)
     Object.freeze(this)
   }
