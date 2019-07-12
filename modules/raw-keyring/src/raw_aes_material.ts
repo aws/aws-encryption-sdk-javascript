@@ -31,7 +31,8 @@ import {
   WebCryptoAlgorithmSuite,
   KeyringTrace, // eslint-disable-line no-unused-vars
   KeyringTraceFlag,
-  needs
+  needs,
+  EncryptionContext // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 
 import {
@@ -48,6 +49,7 @@ export class NodeRawAesMaterial implements
   hasUnencryptedDataKey!: boolean
   unencryptedDataKeyLength!: number
   keyringTrace: KeyringTrace[] = []
+  encryptionContext: EncryptionContext = Object.freeze({})
   constructor (suiteId: WrappingSuiteIdentifier) {
     /* Precondition: NodeRawAesMaterial suiteId must be RawAesWrappingSuiteIdentifier. */
     needs(RawAesWrappingSuiteIdentifier[suiteId], 'suiteId not supported.')
@@ -81,6 +83,7 @@ export class WebCryptoRawAesMaterial implements
   getCryptoKey!: () => CryptoKey|MixedBackendCryptoKey
   hasCryptoKey!: boolean
   validUsages: ReadonlyArray<KeyUsage>
+  encryptionContext: EncryptionContext = Object.freeze({})
   constructor (suiteId: WrappingSuiteIdentifier) {
     /* Precondition: WebCryptoAlgorithmSuite suiteId must be RawAesWrappingSuiteIdentifier. */
     needs(RawAesWrappingSuiteIdentifier[suiteId], 'suiteId not supported.')

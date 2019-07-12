@@ -38,7 +38,7 @@ const { serializeMessageHeader, headerAuthIv } = serializeFactory(fromUtf8)
 
 export interface EncryptStreamInput {
   suiteId?: AlgorithmSuiteIdentifier
-  context?: EncryptionContext
+  encryptionContext?: EncryptionContext
   frameLength?: number
   plaintextLength?: number
 }
@@ -54,7 +54,7 @@ export function encryptStream (
   cmm: KeyringNode|NodeMaterialsManager,
   op: EncryptStreamInput = {}
 ): Duplex {
-  const { suiteId, context, frameLength = FRAME_LENGTH } = op
+  const { suiteId, encryptionContext = {}, frameLength = FRAME_LENGTH } = op
 
   /* If the cmm is a Keyring, wrap it with NodeDefaultCryptographicMaterialsManager. */
   cmm = cmm instanceof KeyringNode
@@ -65,11 +65,11 @@ export function encryptStream (
 
   const wrappingStream = new Duplexify()
 
-  cmm.getEncryptionMaterials({ suite, encryptionContext: context, frameLength })
-    .then(async ({ material, context }) => {
+  cmm.getEncryptionMaterials({ suite, encryptionContext, frameLength })
+    .then(async ({ material }) => {
       const { dispose, getSigner } = getEncryptHelper(material)
 
-      const { getCipher, messageHeader, rawHeader } = getEncryptionInfo(material, frameLength, context)
+      const { getCipher, messageHeader, rawHeader } = getEncryptionInfo(material, frameLength)
 
       wrappingStream.emit('MessageHeader', messageHeader)
 
@@ -90,8 +90,9 @@ export function encryptStream (
   return wrappingStream
 }
 
-export function getEncryptionInfo (material : NodeEncryptionMaterial, frameLength: number, context: EncryptionContext) {
+export function getEncryptionInfo (material : NodeEncryptionMaterial, frameLength: number) {
   const { kdfGetCipher } = getEncryptHelper(material)
+  const { encryptionContext } = material
 
   const messageId = randomBytes(MESSAGE_ID_LENGTH)
   const { id, ivLength } = material.suite
@@ -100,7 +101,7 @@ export function getEncryptionInfo (material : NodeEncryptionMaterial, frameLengt
     type: ObjectType.CUSTOMER_AE_DATA,
     suiteId: id,
     messageId,
-    encryptionContext: context,
+    encryptionContext,
     encryptedDataKeys: Object.freeze(material.encryptedDataKeys), // freeze me please
     contentType: ContentType.FRAMED_DATA,
     headerIvLength: ivLength,

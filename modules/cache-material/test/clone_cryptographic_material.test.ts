@@ -46,7 +46,7 @@ const cryptoKey: any = { type: 'secret', algorithm: { name: webCryptoSuite.encry
 
 describe('cloneMaterial', () => {
   it('clone NodeEncryptionMaterial', () => {
-    const material = new NodeEncryptionMaterial(nodeSuite)
+    const material = new NodeEncryptionMaterial(nodeSuite, { some: 'context' })
       .setUnencryptedDataKey(udk128, trace)
       .addEncryptedDataKey(edk1, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
       .addEncryptedDataKey(edk2, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
@@ -56,20 +56,22 @@ describe('cloneMaterial', () => {
     expect(test.getUnencryptedDataKey()).to.deep.equal(udk128)
     expect(test.keyringTrace).to.deep.equal(material.keyringTrace)
     expect(test.encryptedDataKeys).to.deep.equal(material.encryptedDataKeys)
+    expect(test.encryptionContext).to.deep.equal(material.encryptionContext)
   })
 
   it('clone NodeDecryptionMaterial', () => {
-    const material = new NodeDecryptionMaterial(nodeSuite)
+    const material = new NodeDecryptionMaterial(nodeSuite, { some: 'context' })
       .setUnencryptedDataKey(udk128, trace)
 
     const test = cloneMaterial(material)
     expect(test).to.be.instanceOf(NodeDecryptionMaterial)
     expect(test.getUnencryptedDataKey()).to.deep.equal(udk128)
     expect(test.keyringTrace).to.deep.equal(material.keyringTrace)
+    expect(test.encryptionContext).to.deep.equal(material.encryptionContext)
   })
 
   it('clone WebCryptoEncryptionMaterial', () => {
-    const material = new WebCryptoEncryptionMaterial(webCryptoSuite)
+    const material = new WebCryptoEncryptionMaterial(webCryptoSuite, { some: 'context' })
       .setUnencryptedDataKey(udk128, trace)
       .setCryptoKey(cryptoKey, trace)
       .addEncryptedDataKey(edk1, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
@@ -81,10 +83,11 @@ describe('cloneMaterial', () => {
     expect(test.getCryptoKey()).to.deep.equal(cryptoKey)
     expect(test.keyringTrace).to.deep.equal(material.keyringTrace)
     expect(test.encryptedDataKeys).to.deep.equal(material.encryptedDataKeys)
+    expect(test.encryptionContext).to.deep.equal(material.encryptionContext)
   })
 
   it('clone WebCryptoDecryptionMaterial', () => {
-    const material = new WebCryptoDecryptionMaterial(webCryptoSuite)
+    const material = new WebCryptoDecryptionMaterial(webCryptoSuite, { some: 'context' })
       .setUnencryptedDataKey(udk128, trace)
       .setCryptoKey(cryptoKey, trace)
 
@@ -93,5 +96,6 @@ describe('cloneMaterial', () => {
     expect(test.getUnencryptedDataKey()).to.deep.equal(udk128)
     expect(test.getCryptoKey()).to.deep.equal(cryptoKey)
     expect(test.keyringTrace).to.deep.equal(material.keyringTrace)
+    expect(test.encryptionContext).to.deep.equal(material.encryptionContext)
   })
 })

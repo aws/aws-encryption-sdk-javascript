@@ -84,13 +84,13 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
     return hashes.sort(compare)
   }
 
-  function encryptionContextHash (context?: EncryptionContext) {
+  function encryptionContextHash (context: EncryptionContext) {
     /* The AAD section is uInt16BE(length) + AAD
      * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
      * However, the RAW Keyring wants _only_ the ADD.
      * So, I just slice off the length.
      */
-    const serializedContext = serializeEncryptionContext(context || {}).slice(2)
+    const serializedContext = serializeEncryptionContext(context).slice(2)
     return sha512(serializedContext)
   }
 }
@@ -105,5 +105,5 @@ export interface CryptographicMaterialsCacheKeyHelpersInterface<S extends Suppor
     { suite, encryptedDataKeys, encryptionContext }: DecryptionRequest<S>
   ): Promise<string>
   encryptedDataKeysHash(encryptedDataKeys: ReadonlyArray<EncryptedDataKey>): Promise<Uint8Array[]>
-  encryptionContextHash(context?: EncryptionContext): Promise<Uint8Array>
+  encryptionContextHash(context: EncryptionContext): Promise<Uint8Array>
 }

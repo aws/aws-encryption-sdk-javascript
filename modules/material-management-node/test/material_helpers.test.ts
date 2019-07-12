@@ -25,7 +25,7 @@ import { Decipheriv, Cipheriv, createECDH } from 'crypto'
 describe('nodeKdf', () => {
   it('Check for early return (Postcondition): No Node.js KDF, just return the unencrypted data key.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new NodeEncryptionMaterial(suite)
+    const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(dataKey, trace)
@@ -36,7 +36,7 @@ describe('nodeKdf', () => {
 
   it('HKDF SHA256', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new NodeEncryptionMaterial(suite)
+    const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(dataKey, trace)
@@ -48,7 +48,7 @@ describe('nodeKdf', () => {
 
   it('HKDF SHA384', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
-    const material = new NodeEncryptionMaterial(suite)
+    const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(dataKey, trace)
@@ -88,7 +88,7 @@ describe('nodeKdf', () => {
 describe('getCryptoStream', () => {
   it('return a Cipheriv', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new NodeEncryptionMaterial(suite)
+    const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(dataKey, trace)
@@ -101,7 +101,7 @@ describe('getCryptoStream', () => {
 
   it('return a Decipheriv', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new NodeDecryptionMaterial(suite)
+    const material = new NodeDecryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
     material.setUnencryptedDataKey(dataKey, trace)
@@ -114,7 +114,7 @@ describe('getCryptoStream', () => {
 
   it('Precondition: The length of the IV must match the algorithm suite specification.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new NodeEncryptionMaterial(suite)
+    const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(dataKey, trace)
@@ -126,7 +126,7 @@ describe('getCryptoStream', () => {
 
   it('Precondition: The material must have not been zeroed.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new NodeEncryptionMaterial(suite)
+    const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(dataKey, trace)
@@ -141,7 +141,7 @@ describe('getCryptoStream', () => {
 describe('getEncryptHelper', () => {
   it('basic shape', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new NodeEncryptionMaterial(suite)
+    const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(dataKey, trace)
@@ -161,7 +161,7 @@ describe('getEncryptHelper', () => {
 
   it('signer', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
-    const material = new NodeEncryptionMaterial(suite)
+    const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
 
@@ -192,7 +192,7 @@ describe('getEncryptHelper', () => {
 describe('getDecryptionHelper', () => {
   it('first test', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new NodeDecryptionMaterial(suite)
+    const material = new NodeDecryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
     material.setUnencryptedDataKey(dataKey, trace)
@@ -212,7 +212,7 @@ describe('getDecryptionHelper', () => {
 
   it('verify', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
-    const material = new NodeDecryptionMaterial(suite)
+    const material = new NodeDecryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
 

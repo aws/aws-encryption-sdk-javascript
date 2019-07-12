@@ -76,7 +76,7 @@ export async function multiKeyringTest () {
   const cleartext = 'asdf'
 
   /* Encrypt the data. */
-  const { ciphertext } = await encrypt(keyring, cleartext, { context })
+  const { ciphertext } = await encrypt(keyring, cleartext, { encryptionContext: context })
 
   /* Decrypt the data.
    * This decrypt call could be done with **any** of the 3 keyrings.

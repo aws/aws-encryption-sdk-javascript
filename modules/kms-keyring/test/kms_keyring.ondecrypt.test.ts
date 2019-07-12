@@ -46,7 +46,7 @@ describe('KmsKeyring: _onDecrypt',
       const clientProvider: any = () => {
         return { decrypt }
         function decrypt ({ CiphertextBlob, EncryptionContext, GrantTokens }: any) {
-          expect(EncryptionContext === context).to.equal(true)
+          expect(EncryptionContext).to.deep.equal(context)
           expect(GrantTokens).to.equal(grantTokens)
           return {
             Plaintext: new Uint8Array(suite.keyLengthBytes),
@@ -70,9 +70,8 @@ describe('KmsKeyring: _onDecrypt',
       })
 
       const material = await testKeyring.onDecrypt(
-        new NodeDecryptionMaterial(suite),
-        [edk],
-        context
+        new NodeDecryptionMaterial(suite, context),
+        [edk]
       )
 
       expect(material.hasUnencryptedDataKey).to.equal(true)
@@ -95,7 +94,7 @@ describe('KmsKeyring: _onDecrypt',
       const clientProvider: any = () => {
         return { decrypt }
         function decrypt ({ CiphertextBlob, EncryptionContext, GrantTokens }: any) {
-          expect(EncryptionContext === context).to.equal(true)
+          expect(EncryptionContext).to.deep.equal(context)
           expect(GrantTokens).to.equal(grantTokens)
           return {
             Plaintext: new Uint8Array(suite.keyLengthBytes),
@@ -118,9 +117,8 @@ describe('KmsKeyring: _onDecrypt',
       })
 
       const material = await testKeyring.onDecrypt(
-        new NodeDecryptionMaterial(suite),
-        [edk],
-        context
+        new NodeDecryptionMaterial(suite, context),
+        [edk]
       )
 
       expect(material.hasUnencryptedDataKey).to.equal(true)
@@ -161,9 +159,8 @@ describe('KmsKeyring: _onDecrypt',
       })
 
       const material = await testKeyring.onDecrypt(
-        new NodeDecryptionMaterial(suite),
-        [edk],
-        context
+        new NodeDecryptionMaterial(suite, context),
+        [edk]
       )
 
       expect(material.hasUnencryptedDataKey).to.equal(false)

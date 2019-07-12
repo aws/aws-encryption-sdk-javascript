@@ -58,7 +58,7 @@ export interface EncryptResult {
 export async function encrypt (
   cmm: KeyringWebCrypto|WebCryptoMaterialsManager,
   plaintext: Uint8Array,
-  { suiteId, encryptionContext, frameLength = FRAME_LENGTH }: EncryptInput = {}
+  { suiteId, encryptionContext = {}, frameLength = FRAME_LENGTH }: EncryptInput = {}
 ): Promise<EncryptResult> {
   const backend = await getWebCryptoBackend()
   if (!backend) throw new Error('No supported crypto backend')
@@ -79,7 +79,7 @@ export async function encrypt (
     plaintextLength
   }
 
-  const { material, context } = await cmm.getEncryptionMaterials(encryptionRequest)
+  const { material } = await cmm.getEncryptionMaterials(encryptionRequest)
   const { kdfGetSubtleEncrypt, subtleSign, dispose } = await getEncryptHelper(material)
 
   const messageId = await backend.randomValues(MESSAGE_ID_LENGTH)
@@ -91,7 +91,7 @@ export async function encrypt (
     type: ObjectType.CUSTOMER_AE_DATA,
     suiteId: id,
     messageId,
-    encryptionContext: context,
+    encryptionContext: material.encryptionContext,
     encryptedDataKeys: material.encryptedDataKeys,
     contentType: ContentType.FRAMED_DATA,
     headerIvLength: ivLength,

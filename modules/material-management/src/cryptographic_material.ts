@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { MixedBackendCryptoKey, SupportedAlgorithmSuites } from './types' // eslint-disable-line no-unused-vars
+import { MixedBackendCryptoKey, SupportedAlgorithmSuites, EncryptionContext } from './types' // eslint-disable-line no-unused-vars
 import { EncryptedDataKey } from './encrypted_data_key'
 import { SignatureKey, VerificationKey } from './signature_key'
 import { frozenClass, readOnlyProperty } from './immutable_class'
@@ -21,6 +21,23 @@ import { KeyringTrace, KeyringTraceFlag } from './keyring_trace' // eslint-disab
 import { NodeAlgorithmSuite } from './node_algorithms'
 import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 import { needs } from './needs'
+
+/*
+ * This public interface to the CryptographicMaterial object is provided for
+ * developers of CMMs and keyrings only. If you are a user of the AWS Encryption
+ * SDK and you are not developing your own CMMs and/or keyrings, you do not
+ * need to use it and you should not do so.
+ *
+ * The CryptographicMaterial's purpose is to bind together all the required elements for
+ * encrypting or decrypting a payload.
+ * The functional data key (unencrypted or CryptoKey) is the most sensitive data and needs to
+ * be protected.  The longer this data persists in memory the
+ * greater the opportunity to be invalidated.  Because
+ * a Caching CMM exists is it important to insure that the
+ * unencrypted data key and it's meta data can not be manipulated,
+ * and that the unencrypted data key can be zeroed when
+ * it is no longer needed.
+ */
 
 let timingSafeEqual: (a: Uint8Array, b: Uint8Array) => boolean
 try {
@@ -53,23 +70,6 @@ function portableTimingSafeEqual (a: Uint8Array, b: Uint8Array) {
   return (diff === 0)
 }
 
-/*
- * This public interface to the CryptographicMaterial object is provided for
- * developers of CMMs and keyrings only. If you are a user of the AWS Encryption
- * SDK and you are not developing your own CMMs and/or keyrings, you do not
- * need to use it and you should not do so.
- *
- * The CryptographicMaterial's purpose is to bind together all the required elements for
- * encrypting or decrypting a payload.
- * The functional data key (unencrypted or CryptoKey) is the most sensitive data and needs to
- * be protected.  The longer this data persists in memory the
- * greater the opportunity to be invalidated.  Because
- * a Caching CMM exists is it important to insure that the
- * unencrypted data key and it's meta data can not be manipulated,
- * and that the unencrypted data key can be zeroed when
- * it is no longer needed.
- */
-
 export interface FunctionalCryptographicMaterial {
   hasValidKey: () => boolean
 }
@@ -82,6 +82,7 @@ export interface CryptographicMaterial<T extends CryptographicMaterial<T>> {
   hasUnencryptedDataKey: boolean
   unencryptedDataKeyLength: number
   keyringTrace: KeyringTrace[]
+  encryptionContext: Readonly<EncryptionContext>
 }
 
 export interface EncryptionMaterial<T extends CryptographicMaterial<T>> extends CryptographicMaterial<T> {
@@ -117,10 +118,14 @@ export class NodeEncryptionMaterial implements
   addEncryptedDataKey!: (edk: EncryptedDataKey, flags: KeyringTraceFlag) => NodeEncryptionMaterial
   setSignatureKey!: (key: SignatureKey) => NodeEncryptionMaterial
   signatureKey?: SignatureKey
-  constructor (suite: NodeAlgorithmSuite) {
+  encryptionContext: Readonly<EncryptionContext>
+  constructor (suite: NodeAlgorithmSuite, encryptionContext: EncryptionContext) {
     /* Precondition: NodeEncryptionMaterial suite must be NodeAlgorithmSuite. */
     needs(suite instanceof NodeAlgorithmSuite, 'Suite must be a NodeAlgorithmSuite')
     this.suite = suite
+    /* Precondition: NodeEncryptionMaterial encryptionContext must be an object, even if it is empty. */
+    needs(encryptionContext && typeof encryptionContext === 'object', 'Encryption context must be set')
+    this.encryptionContext = Object.freeze({ ...encryptionContext })
     // EncryptionMaterial have generated a data key on setUnencryptedDataKey
     const setFlags = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
     decorateCryptographicMaterial<NodeEncryptionMaterial>(this, setFlags)
@@ -146,10 +151,14 @@ export class NodeDecryptionMaterial implements
   keyringTrace: KeyringTrace[] = []
   setVerificationKey!: (key: VerificationKey) => NodeDecryptionMaterial
   verificationKey?: VerificationKey
-  constructor (suite: NodeAlgorithmSuite) {
+  encryptionContext: Readonly<EncryptionContext>
+  constructor (suite: NodeAlgorithmSuite, encryptionContext: EncryptionContext) {
     /* Precondition: NodeDecryptionMaterial suite must be NodeAlgorithmSuite. */
     needs(suite instanceof NodeAlgorithmSuite, 'Suite must be a NodeAlgorithmSuite')
     this.suite = suite
+    /* Precondition: NodeDecryptionMaterial encryptionContext must be an object, even if it is empty. */
+    needs(encryptionContext && typeof encryptionContext === 'object', 'Encryption context must be set')
+    this.encryptionContext = Object.freeze({ ...encryptionContext })
     // DecryptionMaterial have decrypted a data key on setUnencryptedDataKey
     const setFlags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
     decorateCryptographicMaterial<NodeDecryptionMaterial>(this, setFlags)
@@ -182,11 +191,15 @@ export class WebCryptoEncryptionMaterial implements
   getCryptoKey!: () => CryptoKey|MixedBackendCryptoKey
   hasCryptoKey!: boolean
   validUsages: ReadonlyArray<KeyUsage>
-  constructor (suite: WebCryptoAlgorithmSuite) {
+  encryptionContext: Readonly<EncryptionContext>
+  constructor (suite: WebCryptoAlgorithmSuite, encryptionContext: EncryptionContext) {
     /* Precondition: WebCryptoEncryptionMaterial suite must be WebCryptoAlgorithmSuite. */
     needs(suite instanceof WebCryptoAlgorithmSuite, 'Suite must be a WebCryptoAlgorithmSuite')
     this.suite = suite
     this.validUsages = Object.freeze(<KeyUsage[]>['deriveKey', 'encrypt'])
+    /* Precondition: WebCryptoEncryptionMaterial encryptionContext must be an object, even if it is empty. */
+    needs(encryptionContext && typeof encryptionContext === 'object', 'Encryption context must be set')
+    this.encryptionContext = Object.freeze({ ...encryptionContext })
     // EncryptionMaterial have generated a data key on setUnencryptedDataKey
     const setFlag = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
     decorateCryptographicMaterial<WebCryptoEncryptionMaterial>(this, setFlag)
@@ -218,11 +231,15 @@ export class WebCryptoDecryptionMaterial implements
   getCryptoKey!: () => CryptoKey|MixedBackendCryptoKey
   hasCryptoKey!: boolean
   validUsages: ReadonlyArray<KeyUsage>
-  constructor (suite: WebCryptoAlgorithmSuite) {
+  encryptionContext: Readonly<EncryptionContext>
+  constructor (suite: WebCryptoAlgorithmSuite, encryptionContext: EncryptionContext) {
     /* Precondition: WebCryptoDecryptionMaterial suite must be WebCryptoAlgorithmSuite. */
     needs(suite instanceof WebCryptoAlgorithmSuite, 'Suite must be a WebCryptoAlgorithmSuite')
     this.suite = suite
     this.validUsages = Object.freeze(<KeyUsage[]>['deriveKey', 'decrypt'])
+    /* Precondition: WebCryptoDecryptionMaterial encryptionContext must be an object, even if it is empty. */
+    needs(encryptionContext && typeof encryptionContext === 'object', 'Encryption context must be set')
+    this.encryptionContext = Object.freeze({ ...encryptionContext })
     // DecryptionMaterial have decrypted a data key on setUnencryptedDataKey
     const setFlag = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
     decorateCryptographicMaterial<WebCryptoDecryptionMaterial>(this, setFlag)

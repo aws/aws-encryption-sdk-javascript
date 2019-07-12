@@ -207,12 +207,12 @@ describe('Cryptographic Material Functions', () => {
   const edk1 = new EncryptedDataKey({ providerId: 'keyNamespace', providerInfo: 'keyName', encryptedDataKey: new Uint8Array([1]) })
   const edk2 = new EncryptedDataKey({ providerId: 'p2', providerInfo: 'pi2', encryptedDataKey: new Uint8Array([2]) })
 
-  const encryptionMaterial = new NodeEncryptionMaterial(nodeSuite)
+  const encryptionMaterial = new NodeEncryptionMaterial(nodeSuite, {})
     .setUnencryptedDataKey(udk128, trace)
     .addEncryptedDataKey(edk1, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
     .addEncryptedDataKey(edk2, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
 
-  const decryptionMaterial = new NodeDecryptionMaterial(nodeSuite)
+  const decryptionMaterial = new NodeDecryptionMaterial(nodeSuite, {})
     .setUnencryptedDataKey(udk128, trace)
 
   const context = {}

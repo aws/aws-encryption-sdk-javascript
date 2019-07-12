@@ -17,7 +17,7 @@ import { EncryptedDataKey } from './encrypted_data_key'
 import { immutableBaseClass, immutableClass } from './immutable_class'
 
 import { isEncryptionMaterial, isDecryptionMaterial } from './cryptographic_material'
-import { EncryptionContext, EncryptionMaterial, DecryptionMaterial, SupportedAlgorithmSuites } from './types' // eslint-disable-line no-unused-vars
+import { EncryptionMaterial, DecryptionMaterial, SupportedAlgorithmSuites } from './types' // eslint-disable-line no-unused-vars
 import { needs } from './needs'
 import { NodeAlgorithmSuite } from './node_algorithms' // eslint-disable-line no-unused-vars
 import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms' // eslint-disable-line no-unused-vars
@@ -30,9 +30,9 @@ import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms' // eslint-disa
  */
 
 export abstract class Keyring<S extends SupportedAlgorithmSuites> {
-  async onEncrypt (material: EncryptionMaterial<S>, context?: EncryptionContext): Promise<EncryptionMaterial<S>> {
+  async onEncrypt (material: EncryptionMaterial<S>): Promise<EncryptionMaterial<S>> {
     /* Precondition: material must be a type of isEncryptionMaterial.
-     * There are several security properties that NodeEncryptionMaterial and WebCryptoEncrypionMaterial
+     * There are several security properties that NodeEncryptionMaterial and WebCryptoEncryptionMaterial
      * posses.
      * The unencryptedDataKey can only be written once.
      * If a data key has not already been generated, there must be no EDKs.
@@ -40,7 +40,7 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
      */
     needs(isEncryptionMaterial(material), 'Unsupported type of material.')
 
-    const _material = await this._onEncrypt(material, context)
+    const _material = await this._onEncrypt(material)
 
     /* Postcondition: The EncryptionMaterial objects must be the same.
      * See cryptographic_materials.ts.  The CryptographicMaterial objects
@@ -58,7 +58,7 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
     return material
   }
 
-  abstract _onEncrypt(material: EncryptionMaterial<S>, context?: EncryptionContext): Promise<EncryptionMaterial<S>>
+  abstract _onEncrypt(material: EncryptionMaterial<S>): Promise<EncryptionMaterial<S>>
 
   /* NOTE: The order of EDK's passed to the onDecrypt function is a clear
    * intent on the part of the person who did the encryption.
@@ -71,7 +71,7 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
    * who called encrypt can control the order of EDK and in the
    * configuration of the KMS Keyring.
    */
-  async onDecrypt (material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[], context?: EncryptionContext): Promise<DecryptionMaterial<S>> {
+  async onDecrypt (material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[]): Promise<DecryptionMaterial<S>> {
     /* Precondition: material must be DecryptionMaterial. */
     needs(isDecryptionMaterial(material), 'Unsupported material type.')
 
@@ -81,7 +81,7 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
     /* Precondition: encryptedDataKeys must all be EncryptedDataKey. */
     needs(encryptedDataKeys.every(edk => edk instanceof EncryptedDataKey), 'Unsupported EncryptedDataKey type')
 
-    const _material = await this._onDecrypt(material, encryptedDataKeys, context)
+    const _material = await this._onDecrypt(material, encryptedDataKeys)
 
     /* Postcondition: The DecryptionMaterial objects must be the same.
      * See cryptographic_materials.ts.  The CryptographicMaterial objects
@@ -101,7 +101,7 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
     return material
   }
 
-  abstract _onDecrypt(material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[], context?: EncryptionContext): Promise<DecryptionMaterial<S>>
+  abstract _onDecrypt(material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[]): Promise<DecryptionMaterial<S>>
 }
 
 immutableBaseClass(Keyring)

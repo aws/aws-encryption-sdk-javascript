@@ -321,13 +321,13 @@ describe('decorateWebCryptoMaterial:Helpers', () => {
   describe('subtleFunctionForMaterial', () => {
     it('WebCryptoDecryptionMaterial is decrypt', () => {
       const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
-      const material = new WebCryptoDecryptionMaterial(suite)
+      const material = new WebCryptoDecryptionMaterial(suite, {})
       expect(subtleFunctionForMaterial(material)).to.equal('decrypt')
     })
 
     it('WebCryptoEncryptionMaterial is encrypt', () => {
       const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
-      const material = new WebCryptoEncryptionMaterial(suite)
+      const material = new WebCryptoEncryptionMaterial(suite, {})
       expect(subtleFunctionForMaterial(material)).to.equal('encrypt')
     })
     it('unsupported', () => {
@@ -339,25 +339,25 @@ describe('decorateWebCryptoMaterial:Helpers', () => {
   describe('keyUsageForMaterial', () => {
     it('ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256 is deriveKey', () => {
       const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
-      const material = new WebCryptoDecryptionMaterial(suite)
+      const material = new WebCryptoDecryptionMaterial(suite, {})
       expect(keyUsageForMaterial(material)).to.equal('deriveKey')
     })
 
     it('ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256 is decrypt', () => {
       const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
-      const material = new WebCryptoEncryptionMaterial(suite)
+      const material = new WebCryptoEncryptionMaterial(suite, {})
       expect(keyUsageForMaterial(material)).to.equal('deriveKey')
     })
 
     it('WebCryptoDecryptionMaterial is decrypt', () => {
       const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-      const material = new WebCryptoDecryptionMaterial(suite)
+      const material = new WebCryptoDecryptionMaterial(suite, {})
       expect(keyUsageForMaterial(material)).to.equal('decrypt')
     })
 
     it('WebCryptoEncryptionMaterial is encrypt', () => {
       const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-      const material = new WebCryptoEncryptionMaterial(suite)
+      const material = new WebCryptoEncryptionMaterial(suite, {})
       expect(keyUsageForMaterial(material)).to.equal('encrypt')
     })
 
@@ -375,7 +375,7 @@ describe('decorateWebCryptoMaterial:Helpers', () => {
   describe('isValidCryptoKey', () => {
     it('Suite with KDF is valid for both the derivable key and the derived key', () => {
       const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
-      const material = new WebCryptoEncryptionMaterial(suite)
+      const material = new WebCryptoEncryptionMaterial(suite, {})
       const keyKdf: any = { type: 'secret', algorithm: { name: suite.kdf }, usages: ['deriveKey'], extractable: false }
       const deriveKey: any = { type: 'secret', algorithm: { name: suite.encryption, length: suite.keyLength }, usages: ['encrypt'], extractable: false }
       expect(isValidCryptoKey(keyKdf, material)).to.equal(true)
@@ -384,7 +384,7 @@ describe('decorateWebCryptoMaterial:Helpers', () => {
 
     it('Suite without the KDF is only derivable with the key', () => {
       const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-      const material = new WebCryptoEncryptionMaterial(suite)
+      const material = new WebCryptoEncryptionMaterial(suite, {})
       const keyKdf: any = { type: 'secret', algorithm: { name: suite.kdf }, usages: ['deriveKey'], extractable: false }
       const key: any = { type: 'secret', algorithm: { name: suite.encryption, length: suite.keyLength }, usages: ['encrypt'], extractable: false }
       expect(isValidCryptoKey(keyKdf, material)).to.equal(false)
@@ -392,28 +392,28 @@ describe('decorateWebCryptoMaterial:Helpers', () => {
     })
     it('only type === secret is valid', () => {
       const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-      const material = new WebCryptoEncryptionMaterial(suite)
+      const material = new WebCryptoEncryptionMaterial(suite, {})
       const key: any = { type: 'private', algorithm: { name: suite.encryption, length: suite.keyLength }, usages: ['encrypt'], extractable: false }
       expect(isValidCryptoKey(key, material)).to.equal(false)
     })
 
     it('length must match', () => {
       const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-      const material = new WebCryptoEncryptionMaterial(suite)
+      const material = new WebCryptoEncryptionMaterial(suite, {})
       const key: any = { type: 'secret', algorithm: { name: suite.encryption, length: suite.keyLength - 1 }, usages: ['encrypt'], extractable: false }
       expect(isValidCryptoKey(key, material)).to.equal(false)
     })
 
     it('can not be extractable', () => {
       const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-      const material = new WebCryptoEncryptionMaterial(suite)
+      const material = new WebCryptoEncryptionMaterial(suite, {})
       const key: any = { type: 'secret', algorithm: { name: suite.encryption, length: suite.keyLength }, usages: ['encrypt'], extractable: true }
       expect(isValidCryptoKey(key, material)).to.equal(false)
     })
 
     it('usage must match', () => {
       const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-      const material = new WebCryptoEncryptionMaterial(suite)
+      const material = new WebCryptoEncryptionMaterial(suite, {})
       const key: any = { type: 'secret', algorithm: { name: suite.encryption, length: suite.keyLength }, usages: ['decrypt'], extractable: false }
       expect(isValidCryptoKey(key, material)).to.equal(false)
     })
@@ -422,52 +422,68 @@ describe('decorateWebCryptoMaterial:Helpers', () => {
 
 describe('NodeEncryptionMaterial', () => {
   const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-  const test: any = new NodeEncryptionMaterial(suite)
+  const test: any = new NodeEncryptionMaterial(suite, {})
   it('instance is frozen', () => expect(Object.isFrozen(test)).to.equal(true))
   it('has a suite', () => expect(test.suite === suite).to.equal(true))
   it('class is frozen', () => expect(Object.isFrozen(NodeAlgorithmSuite)).to.equal(true))
   it('class prototype is frozen', () => expect(Object.isFrozen(NodeAlgorithmSuite.prototype)).to.equal(true))
   it('Precondition: NodeEncryptionMaterial suite must be NodeAlgorithmSuite.', () => {
     const suite: any = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    expect(() => new NodeEncryptionMaterial(suite)).to.throw()
+    expect(() => new NodeEncryptionMaterial(suite, {})).to.throw()
+  })
+  it('Precondition: NodeEncryptionMaterial encryptionContext must be an object, even if it is empty.', () => {
+    expect(() => new NodeEncryptionMaterial(suite, undefined as any)).to.throw()
+    expect(() => new NodeEncryptionMaterial(suite, true as any)).to.throw()
   })
 })
 
 describe('NodeDecryptionMaterial', () => {
   const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-  const test: any = new NodeDecryptionMaterial(suite)
+  const test: any = new NodeDecryptionMaterial(suite, {})
   it('instance is frozen', () => expect(Object.isFrozen(test)).to.equal(true))
   it('has a suite', () => expect(test.suite === suite).to.equal(true))
   it('class is frozen', () => expect(Object.isFrozen(NodeAlgorithmSuite)).to.equal(true))
   it('class prototype is frozen', () => expect(Object.isFrozen(NodeAlgorithmSuite.prototype)).to.equal(true))
   it('Precondition: NodeDecryptionMaterial suite must be NodeAlgorithmSuite.', () => {
     const suite: any = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    expect(() => new NodeDecryptionMaterial(suite)).to.throw()
+    expect(() => new NodeDecryptionMaterial(suite, {})).to.throw()
+  })
+  it('Precondition: NodeDecryptionMaterial encryptionContext must be an object, even if it is empty.', () => {
+    expect(() => new NodeDecryptionMaterial(suite, undefined as any)).to.throw()
+    expect(() => new NodeDecryptionMaterial(suite, true as any)).to.throw()
   })
 })
 
 describe('WebCryptoEncryptionMaterial', () => {
   const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-  const test: any = new WebCryptoEncryptionMaterial(suite)
+  const test: any = new WebCryptoEncryptionMaterial(suite, {})
   it('instance is frozen', () => expect(Object.isFrozen(test)).to.equal(true))
   it('has a suite', () => expect(test.suite === suite).to.equal(true))
   it('class is frozen', () => expect(Object.isFrozen(WebCryptoAlgorithmSuite)).to.equal(true))
   it('class prototype is frozen', () => expect(Object.isFrozen(WebCryptoAlgorithmSuite.prototype)).to.equal(true))
   it('Precondition: WebCryptoEncryptionMaterial suite must be WebCryptoAlgorithmSuite.', () => {
     const suite: any = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    expect(() => new WebCryptoEncryptionMaterial(suite)).to.throw()
+    expect(() => new WebCryptoEncryptionMaterial(suite, {})).to.throw()
+  })
+  it('Precondition: WebCryptoEncryptionMaterial encryptionContext must be an object, even if it is empty.', () => {
+    expect(() => new WebCryptoEncryptionMaterial(suite, undefined as any)).to.throw()
+    expect(() => new WebCryptoEncryptionMaterial(suite, true as any)).to.throw()
   })
 })
 
 describe('WebCryptoDecryptionMaterial', () => {
   const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-  const test: any = new WebCryptoDecryptionMaterial(suite)
+  const test: any = new WebCryptoDecryptionMaterial(suite, {})
   it('instance is frozen', () => expect(Object.isFrozen(test)).to.equal(true))
   it('has a suite', () => expect(test.suite === suite).to.equal(true))
   it('class is frozen', () => expect(Object.isFrozen(WebCryptoAlgorithmSuite)).to.equal(true))
   it('class prototype is frozen', () => expect(Object.isFrozen(WebCryptoAlgorithmSuite.prototype)).to.equal(true))
   it('Precondition: WebCryptoDecryptionMaterial suite must be WebCryptoAlgorithmSuite.', () => {
     const suite: any = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    expect(() => new WebCryptoDecryptionMaterial(suite)).to.throw()
+    expect(() => new WebCryptoDecryptionMaterial(suite, {})).to.throw()
+  })
+  it('Precondition: WebCryptoDecryptionMaterial encryptionContext must be an object, even if it is empty.', () => {
+    expect(() => new WebCryptoDecryptionMaterial(suite, undefined as any)).to.throw()
+    expect(() => new WebCryptoDecryptionMaterial(suite, true as any)).to.throw()
   })
 })

@@ -39,7 +39,7 @@ export async function generateDataKey<Client extends KMS> (
   clientProvider: KmsClientSupplier<Client>,
   NumberOfBytes: number,
   KeyId: string,
-  EncryptionContext?: EncryptionContext,
+  EncryptionContext: EncryptionContext,
   GrantTokens?: string[]
 ): Promise<RequiredGenerateDataKeyOutput|false> {
   const region = regionFromKmsKeyArn(KeyId)
@@ -60,7 +60,7 @@ export async function encrypt<Client extends KMS> (
   clientProvider: KmsClientSupplier<Client>,
   Plaintext: Uint8Array,
   KeyId: string,
-  EncryptionContext?: EncryptionContext,
+  EncryptionContext: EncryptionContext,
   GrantTokens?: string[]
 ): Promise<RequiredEncryptOutput|false> {
   const region = regionFromKmsKeyArn(KeyId)
@@ -81,7 +81,7 @@ export async function encrypt<Client extends KMS> (
 export async function decrypt<Client extends KMS> (
   clientProvider: KmsClientSupplier<Client>,
   { providerId, providerInfo, encryptedDataKey }: EncryptedDataKey,
-  EncryptionContext?: EncryptionContext,
+  EncryptionContext: EncryptionContext,
   GrantTokens?: string[]
 ): Promise<RequiredDecryptOutput|false> {
   /* Precondition:  The EDK must be a KMS edk. */

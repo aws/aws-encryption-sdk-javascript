@@ -25,7 +25,6 @@ import {
   readOnlyProperty,
   bytes2JWK,
   keyUsageForMaterial,
-  EncryptionContext, // eslint-disable-line no-unused-vars
   importForWebCryptoEncryptionMaterial,
   MixedBackendCryptoKey, // eslint-disable-line no-unused-vars
   WebCryptoAlgorithmSuite // eslint-disable-line no-unused-vars
@@ -157,8 +156,8 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
   }
 
   _rawOnEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, RawRsaKeyringWebCrypto>(randomValuesOnly)
-  _onEncrypt = async (material: WebCryptoEncryptionMaterial, context?: EncryptionContext) => {
-    const _material = await this._rawOnEncrypt(material, context)
+  _onEncrypt = async (material: WebCryptoEncryptionMaterial) => {
+    const _material = await this._rawOnEncrypt(material)
     return importForWebCryptoEncryptionMaterial(_material)
   }
 

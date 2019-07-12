@@ -30,25 +30,23 @@ export type MixedBackendCryptoKey = {
 
 export interface EncryptionRequest<S extends NodeAlgorithmSuite|WebCryptoAlgorithmSuite> {
   readonly suite?: S
-  readonly encryptionContext?: EncryptionContext
+  readonly encryptionContext: EncryptionContext
   readonly frameLength?: number
   readonly plaintextLength?: number
 }
 
 export interface EncryptionResponse<S extends NodeAlgorithmSuite|WebCryptoAlgorithmSuite> {
-  material: EncryptionMaterial<S>,
-  context: EncryptionContext
+  material: EncryptionMaterial<S>
 }
 
 export interface DecryptionRequest<S extends NodeAlgorithmSuite|WebCryptoAlgorithmSuite> {
   readonly suite: S
-  readonly encryptionContext?: EncryptionContext
+  readonly encryptionContext: EncryptionContext
   readonly encryptedDataKeys: ReadonlyArray<EncryptedDataKey>
 }
 
 export interface DecryptionResponse<S extends NodeAlgorithmSuite|WebCryptoAlgorithmSuite> {
-  material: DecryptionMaterial<S>,
-  context: EncryptionContext
+  material: DecryptionMaterial<S>
 }
 
 export type SupportedAlgorithmSuites = NodeAlgorithmSuite|WebCryptoAlgorithmSuite

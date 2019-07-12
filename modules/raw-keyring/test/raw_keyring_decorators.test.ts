@@ -23,7 +23,7 @@ import { AlgorithmSuiteIdentifier, NodeEncryptionMaterial, NodeAlgorithmSuite, K
 describe('_onEncrypt', () => {
   it('will create UnencryptedDataKey and call _wrapKey', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new NodeEncryptionMaterial(suite)
+    const material = new NodeEncryptionMaterial(suite, {})
     let wrapCalled = 0
     const notRandomBytes = async (bytes: number) => new Uint8Array(Array(bytes).fill(1))
     const _wrapKey = (material: any) => {
@@ -54,7 +54,7 @@ describe('_onEncrypt', () => {
     const udk = new Uint8Array(Array(suite.keyLengthBytes).fill(2))
     const keyName = 'keyName'
     const keyNamespace = 'keyNamespace'
-    const material = new NodeEncryptionMaterial(suite)
+    const material = new NodeEncryptionMaterial(suite, {})
       .setUnencryptedDataKey(udk, { keyName, keyNamespace, flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
     let wrapCalled = 0
     const notRandomBytes = async () => { throw new Error('never') }
@@ -80,7 +80,7 @@ describe('_onDecrypt', () => {
   it('basic usage', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const udk = new Uint8Array(Array(suite.keyLengthBytes).fill(2))
-    const material = new NodeDecryptionMaterial(suite)
+    const material = new NodeDecryptionMaterial(suite, {})
     const keyName = 'keyName'
     const keyNamespace = 'keyNamespace'
 
@@ -125,7 +125,7 @@ describe('_onDecrypt', () => {
     const udk = new Uint8Array(Array(suite.keyLengthBytes).fill(2))
     const keyName = 'keyName'
     const keyNamespace = 'keyNamespace'
-    const material = new NodeDecryptionMaterial(suite)
+    const material = new NodeDecryptionMaterial(suite, {})
       .setUnencryptedDataKey(udk, { keyName, keyNamespace, flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY })
 
     const edk = new EncryptedDataKey({
@@ -163,7 +163,7 @@ describe('_onDecrypt', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const keyName = 'keyName'
     const keyNamespace = 'keyNamespace'
-    const material = new NodeDecryptionMaterial(suite)
+    const material = new NodeDecryptionMaterial(suite, {})
 
     const edk = new EncryptedDataKey({
       providerId: keyName,
@@ -200,7 +200,7 @@ describe('_onDecrypt', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const keyName = 'keyName'
     const keyNamespace = 'keyNamespace'
-    const material = new NodeDecryptionMaterial(suite)
+    const material = new NodeDecryptionMaterial(suite, {})
 
     const edk = new EncryptedDataKey({
       providerId: keyName,
