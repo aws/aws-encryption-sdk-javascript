@@ -21,6 +21,7 @@ import {
   AlgorithmSuiteIdentifier,
   getEncryptHelper,
   KeyringWebCrypto,
+  needs,
   WebCryptoMaterialsManager // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
 import {
@@ -35,7 +36,8 @@ import {
   serializeSignatureInfo,
   FRAME_LENGTH,
   MESSAGE_ID_LENGTH,
-  raw2der
+  raw2der,
+  Maximum
 } from '@aws-crypto/serialize'
 import { fromUtf8 } from '@aws-sdk/util-utf8-browser'
 import { getWebCryptoBackend } from '@aws-crypto/web-crypto-backend'
@@ -60,6 +62,10 @@ export async function encrypt (
   plaintext: Uint8Array,
   { suiteId, encryptionContext, frameLength = FRAME_LENGTH }: EncryptInput = {}
 ): Promise<EncryptResult> {
+
+  /* Precondition: The frameLength must be less than the maximum frame size for browser encryption. */
+  needs(frameLength > 0 && Maximum.FRAME_SIZE >= frameLength, 'frameLength out of bounds')
+
   const backend = await getWebCryptoBackend()
   if (!backend) throw new Error('No supported crypto backend')
 

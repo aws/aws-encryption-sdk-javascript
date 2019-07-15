@@ -16,7 +16,8 @@
 import {
   NodeDefaultCryptographicMaterialsManager, NodeAlgorithmSuite, AlgorithmSuiteIdentifier, // eslint-disable-line no-unused-vars
   KeyringNode, NodeEncryptionMaterial, getEncryptHelper, EncryptionContext, // eslint-disable-line no-unused-vars
-  NodeMaterialsManager // eslint-disable-line no-unused-vars
+  NodeMaterialsManager, // eslint-disable-line no-unused-vars
+  needs
 } from '@aws-crypto/material-management-node'
 import { getFramedEncryptStream } from './framed_encrypt_stream'
 import { SignatureStream } from './signature_stream'
@@ -26,7 +27,8 @@ import {
   MessageHeader, // eslint-disable-line no-unused-vars
   serializeFactory, kdfInfo, ContentType, SerializationVersion, ObjectType,
   FRAME_LENGTH,
-  MESSAGE_ID_LENGTH
+  MESSAGE_ID_LENGTH,
+  Maximum
 } from '@aws-crypto/serialize'
 
 // @ts-ignore
@@ -55,6 +57,9 @@ export function encryptStream (
   op: EncryptStreamInput = {}
 ): Duplex {
   const { suiteId, context, frameLength = FRAME_LENGTH } = op
+
+  /* Precondition: The frameLength must be less than the maximum frame size Node.js stream. */
+  needs(frameLength > 0 && Maximum.FRAME_SIZE >= frameLength, 'frameLength out of bounds')
 
   /* If the cmm is a Keyring, wrap it with NodeDefaultCryptographicMaterialsManager. */
   cmm = cmm instanceof KeyringNode
