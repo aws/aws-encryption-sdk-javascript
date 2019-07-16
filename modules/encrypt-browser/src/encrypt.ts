@@ -62,7 +62,6 @@ export async function encrypt (
   plaintext: Uint8Array,
   { suiteId, encryptionContext, frameLength = FRAME_LENGTH }: EncryptInput = {}
 ): Promise<EncryptResult> {
-
   /* Precondition: The frameLength must be less than the maximum frame size for browser encryption. */
   needs(frameLength > 0 && Maximum.FRAME_SIZE >= frameLength, 'frameLength out of bounds')
 
