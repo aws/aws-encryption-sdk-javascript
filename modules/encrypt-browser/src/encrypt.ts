@@ -63,7 +63,7 @@ export async function encrypt (
   { suiteId, encryptionContext, frameLength = FRAME_LENGTH }: EncryptInput = {}
 ): Promise<EncryptResult> {
   /* Precondition: The frameLength must be less than the maximum frame size for browser encryption. */
-  needs(frameLength > 0 && Maximum.FRAME_SIZE >= frameLength, 'frameLength out of bounds')
+  needs(frameLength > 0 && Maximum.FRAME_SIZE >= frameLength, `frameLength out of bounds: 0 > frameLength >= ${Maximum.FRAME_SIZE}`)
 
   const backend = await getWebCryptoBackend()
   if (!backend) throw new Error('No supported crypto backend')

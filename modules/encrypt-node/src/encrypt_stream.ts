@@ -59,7 +59,7 @@ export function encryptStream (
   const { suiteId, context, frameLength = FRAME_LENGTH } = op
 
   /* Precondition: The frameLength must be less than the maximum frame size Node.js stream. */
-  needs(frameLength > 0 && Maximum.FRAME_SIZE >= frameLength, 'frameLength out of bounds')
+  needs(frameLength > 0 && Maximum.FRAME_SIZE >= frameLength, `frameLength out of bounds: 0 > frameLength >= ${Maximum.FRAME_SIZE}`)
 
   /* If the cmm is a Keyring, wrap it with NodeDefaultCryptographicMaterialsManager. */
   cmm = cmm instanceof KeyringNode
