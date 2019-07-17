@@ -18,10 +18,24 @@ import {
   NodeHash // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 import {
-  CipherGCM, DecipherGCM, Signer, Verify, // eslint-disable-line no-unused-vars
+  Signer, Verify, // eslint-disable-line no-unused-vars
   createCipheriv, createDecipheriv, createSign, createVerify
 } from 'crypto'
 import { HKDF } from '@aws-crypto/hkdf-node'
+
+export interface AwsEsdkJsCipherGCM {
+  update(data: Buffer): Buffer
+  final(): Buffer
+  getAuthTag(): Buffer
+  setAAD(aad: Buffer): this
+}
+
+export interface AwsEsdkJsDecipherGCM {
+  update(data: Buffer): Buffer
+  final(): Buffer
+  setAuthTag(buffer: Buffer): this
+  setAAD(aad: Buffer): this
+}
 
 type KDFIndex = Readonly<{[K in NodeHash]: ReturnType<typeof HKDF>}>
 const kdfIndex: KDFIndex = Object.freeze({
@@ -30,7 +44,11 @@ const kdfIndex: KDFIndex = Object.freeze({
 })
 
 export interface GetCipher {
-  (info?: Uint8Array) : (iv: Uint8Array) => CipherGCM
+  (iv: Uint8Array): AwsEsdkJsCipherGCM
+}
+
+export interface CurryGetCipher {
+  (info?: Uint8Array): GetCipher
 }
 
 export interface GetSigner {
@@ -38,7 +56,7 @@ export interface GetSigner {
 }
 
 export interface NodeEncryptionMaterialHelper {
-  kdfGetCipher: GetCipher
+  kdfGetCipher: CurryGetCipher
   getSigner?: GetSigner
   dispose: () => void
 }
@@ -56,7 +74,7 @@ export const getEncryptHelper: GetEncryptHelper = (material: NodeEncryptionMater
    * Function overloads "works" but then I can not export
    * the function and have eslint be happy (Multiple exports of name)
    */
-  const kdfGetCipher = <GetCipher>getCryptoStream(material)
+  const kdfGetCipher = <CurryGetCipher>getCryptoStream(material)
   return Object.freeze({
     kdfGetCipher,
     getSigner: signatureHash ? getSigner : undefined,
@@ -93,14 +111,17 @@ export const getEncryptHelper: GetEncryptHelper = (material: NodeEncryptionMater
 }
 
 export interface GetDecipher {
-  (info?: Uint8Array) : (iv: Uint8Array) => DecipherGCM
+  (iv: Uint8Array): AwsEsdkJsDecipherGCM
+}
+export interface CurryGetDecipher {
+  (info?: Uint8Array) : GetDecipher
 }
 export interface GetVerify {
   () : Verify & {awsCryptoVerify: (signature: Buffer) => boolean}
 }
 
 export interface NodeDecryptionMaterialHelper {
-  kdfGetDecipher: GetDecipher
+  kdfGetDecipher: CurryGetDecipher
   getVerify?: GetVerify
   dispose: () => void
 }
@@ -119,7 +140,7 @@ export const getDecryptionHelper: GetDecryptionHelper = (material: NodeDecryptio
    * Function overloads "works" but then I can not export
    * the function and have eslint be happy (Multiple exports of name)
    */
-  const kdfGetDecipher = <GetDecipher>getCryptoStream(material)
+  const kdfGetDecipher = <CurryGetDecipher>getCryptoStream(material)
   return Object.freeze({
     kdfGetDecipher,
     getVerify: signatureHash ? getVerify : undefined,
@@ -158,7 +179,7 @@ export function getCryptoStream (material: NodeEncryptionMaterial|NodeDecryption
 
   return (info?: Uint8Array) => {
     const derivedKey = nodeKdf(material, info)
-    return (iv: Uint8Array) => {
+    return (iv: Uint8Array): AwsEsdkJsCipherGCM|AwsEsdkJsDecipherGCM => {
       /* Precondition: The length of the IV must match the algorithm suite specification. */
       needs(iv.byteLength === ivLength, 'Iv length does not match algorithm suite specification')
       /* Precondition: The material must have not been zeroed.

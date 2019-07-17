@@ -30,8 +30,7 @@ import {
   constants,
   publicEncrypt,
   privateDecrypt,
-  randomBytes,
-  KeyObject // eslint-disable-line no-unused-vars
+  randomBytes
 } from 'crypto'
 
 import {
@@ -52,8 +51,8 @@ import {
  * or more complicated options...  Thoughts?
  */
 interface RsaKey {
-  publicKey?: string | Buffer | KeyObject
-  privateKey?: string | Buffer | KeyObject
+  publicKey?: string | Buffer
+  privateKey?: string | Buffer
 }
 
 export type RawRsaKeyringNodeInput = {
