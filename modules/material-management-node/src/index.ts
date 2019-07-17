@@ -18,7 +18,11 @@ export {
   getEncryptHelper,
   getDecryptionHelper,
   GetSigner,
-  GetVerify
+  GetVerify,
+  GetCipher,
+  GetDecipher,
+  AwsEsdkJsCipherGCM,
+  AwsEsdkJsDecipherGCM
 } from './material_helpers'
 export {
   NodeDecryptionMaterial, NodeEncryptionMaterial, NodeAlgorithmSuite,
