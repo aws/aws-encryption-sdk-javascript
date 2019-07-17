@@ -18,6 +18,7 @@ import { encodeNamedCurves } from './ecc_encode'
 import { decodeNamedCurves } from './ecc_decode'
 import { frozenClass, readOnlyBinaryProperty, readOnlyProperty } from './immutable_class'
 import { publicKeyPem, privateKeyPem } from './pem_helpers'
+import { AwsEsdkJsCryptoKey } from './types' // eslint-disable-line no-unused-vars
 
 /*
  * This public interface to the SignatureKey object is provided for
@@ -27,10 +28,10 @@ import { publicKeyPem, privateKeyPem } from './pem_helpers'
  */
 
 export class SignatureKey {
-  public readonly privateKey!: string|CryptoKey
+  public readonly privateKey!: string|AwsEsdkJsCryptoKey
   public readonly compressPoint!: Uint8Array
   public readonly signatureCurve!: NodeECDHCurve|WebCryptoECDHCurve
-  constructor (privateKey: Uint8Array|CryptoKey, compressPoint: Uint8Array, suite: AlgorithmSuite) {
+  constructor (privateKey: Uint8Array|AwsEsdkJsCryptoKey, compressPoint: Uint8Array, suite: AlgorithmSuite) {
     const { signatureCurve: namedCurve } = suite
     /* Precondition: Do not create a SignatureKey for an algorithm suite that does not have an EC named curve. */
     if (!namedCurve) throw new Error('Unsupported Algorithm')
@@ -63,9 +64,9 @@ export class SignatureKey {
 frozenClass(SignatureKey)
 
 export class VerificationKey {
-  public readonly publicKey!: string|CryptoKey
+  public readonly publicKey!: string|AwsEsdkJsCryptoKey
   public readonly signatureCurve!: NodeECDHCurve|WebCryptoECDHCurve
-  constructor (publicKey: Uint8Array|CryptoKey, suite: AlgorithmSuite) {
+  constructor (publicKey: Uint8Array|AwsEsdkJsCryptoKey, suite: AlgorithmSuite) {
     const { signatureCurve: namedCurve } = suite
     /* Precondition: Do not create a VerificationKey for an algorithm suite that does not have an EC named curve. */
     if (!namedCurve) throw new Error('Unsupported Algorithm')
