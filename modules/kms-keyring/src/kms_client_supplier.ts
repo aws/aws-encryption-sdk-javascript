@@ -15,27 +15,25 @@
 
 import { needs } from '@aws-crypto/material-management'
 import {
-  KMS, // eslint-disable-line no-unused-vars
-  KMSConfiguration, // eslint-disable-line no-unused-vars
-  KMSOperations // eslint-disable-line no-unused-vars
+  AwsEsdkKMSInterface // eslint-disable-line no-unused-vars
 } from './kms_types'
 
-interface KMSConstructibleNonOption<Client extends KMS, Config extends KMSConfiguration> {
+interface KMSConstructibleNonOption<Client extends AwsEsdkKMSInterface, Config> {
   new(config: Config) : Client
 }
 
-interface KMSConstructibleOption<Client extends KMS, Config extends KMSConfiguration> {
+interface KMSConstructibleOption<Client extends AwsEsdkKMSInterface, Config> {
   new(config?: Config) : Client
 }
 
-export type KMSConstructible<Client extends KMS, Config extends KMSConfiguration> = KMSConstructibleNonOption<Client, Config> | KMSConstructibleOption<Client, Config>
+export type KMSConstructible<Client extends AwsEsdkKMSInterface, Config> = KMSConstructibleNonOption<Client, Config> | KMSConstructibleOption<Client, Config>
 
-export interface KmsClientSupplier<Client extends KMS> {
+export interface KmsClientSupplier<Client extends AwsEsdkKMSInterface> {
   /* KmsClientProvider is allowed to return undefined if, for example, user wants to exclude particular regions. */
   (region: string): Client | false
 }
 
-export function getClient<Client extends KMS, Config extends KMSConfiguration> (
+export function getClient<Client extends AwsEsdkKMSInterface, Config> (
   KMSClient: KMSConstructible<Client, Config>,
   defaultConfig?: Config
 ): KmsClientSupplier<Client> {
@@ -58,7 +56,7 @@ export function getClient<Client extends KMS, Config extends KMSConfiguration> (
   }
 }
 
-export function limitRegions<Client extends KMS> (
+export function limitRegions<Client extends AwsEsdkKMSInterface> (
   regions: string[],
   getClient: KmsClientSupplier<Client>
 ): KmsClientSupplier<Client> {
@@ -71,7 +69,7 @@ export function limitRegions<Client extends KMS> (
   }
 }
 
-export function excludeRegions<Client extends KMS> (
+export function excludeRegions<Client extends AwsEsdkKMSInterface> (
   regions: string[],
   getClient: KmsClientSupplier<Client>
 ): KmsClientSupplier<Client> {
@@ -84,7 +82,7 @@ export function excludeRegions<Client extends KMS> (
   }
 }
 
-export function cacheClients<Client extends KMS> (
+export function cacheClients<Client extends AwsEsdkKMSInterface> (
   getClient: KmsClientSupplier<Client>
 ): KmsClientSupplier<Client> {
   const clientsCache: {[key: string]: Client|false} = {}
@@ -103,7 +101,7 @@ export function cacheClients<Client extends KMS> (
  * This does *not* mean that this call is successful,
  * only that the region is backed by a functional KMS service.
  */
-function deferCache<Client extends KMS> (
+function deferCache<Client extends AwsEsdkKMSInterface> (
   clientsCache: {[key: string]: Client|false},
   region: string,
   client: Client|false
@@ -115,17 +113,17 @@ function deferCache<Client extends KMS> (
   }
   const { encrypt, decrypt, generateDataKey } = client
 
-  return (<KMSOperations[]>['encrypt', 'decrypt', 'generateDataKey']).reduce(wrapOperation, client)
+  return (<(keyof AwsEsdkKMSInterface)[]>['encrypt', 'decrypt', 'generateDataKey']).reduce(wrapOperation, client)
 
   /* Wrap each of the operations to cache the client on response */
-  function wrapOperation (client: Client, name: KMSOperations): Client {
-    // type params = Parameters<KMS[typeof name]>
-    // type retValue = ReturnType<KMS[typeof name]>
+  function wrapOperation (client: Client, name: keyof AwsEsdkKMSInterface): Client {
     const original = client[name]
-    client[name] = function (...args: any): Promise<any> {
+    client[name] = function wrappedOperation (this: Client, args: any): Promise<any> {
       // @ts-ignore (there should be a TypeScript solution for this)
-      const v2vsV3Response = original.apply(client, args)
-      const v2vsV3Promise = (v2vsV3Response.promise ? v2vsV3Response.promise() : v2vsV3Response)
+      const v2vsV3Response = original.call(client, args)
+      const v2vsV3Promise = 'promise' in v2vsV3Response
+        ? v2vsV3Response.promise()
+        : v2vsV3Response
       return v2vsV3Promise
         .then((response: any) => {
           clientsCache[region] = Object.assign(client, { encrypt, decrypt, generateDataKey })

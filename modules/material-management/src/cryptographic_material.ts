@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { MixedBackendCryptoKey, SupportedAlgorithmSuites } from './types' // eslint-disable-line no-unused-vars
+import { MixedBackendCryptoKey, SupportedAlgorithmSuites, AwsEsdkJsCryptoKey, AwsEsdkJsKeyUsage } from './types' // eslint-disable-line no-unused-vars
 import { EncryptedDataKey } from './encrypted_data_key'
 import { SignatureKey, VerificationKey } from './signature_key'
 import { frozenClass, readOnlyProperty } from './immutable_class'
@@ -97,10 +97,10 @@ export interface DecryptionMaterial<T extends CryptographicMaterial<T>> extends 
 }
 
 export interface WebCryptoMaterial<T extends CryptographicMaterial<T>> extends CryptographicMaterial<T> {
-  setCryptoKey: (dataKey: CryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => T
-  getCryptoKey: () => CryptoKey|MixedBackendCryptoKey
+  setCryptoKey: (dataKey: AwsEsdkJsCryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => T
+  getCryptoKey: () => AwsEsdkJsCryptoKey|MixedBackendCryptoKey
   hasCryptoKey: boolean
-  validUsages: ReadonlyArray<KeyUsage>
+  validUsages: ReadonlyArray<AwsEsdkJsKeyUsage>
 }
 
 export class NodeEncryptionMaterial implements
@@ -178,15 +178,15 @@ export class WebCryptoEncryptionMaterial implements
   addEncryptedDataKey!: (edk: EncryptedDataKey, flags: KeyringTraceFlag) => WebCryptoEncryptionMaterial
   setSignatureKey!: (key: SignatureKey) => WebCryptoEncryptionMaterial
   signatureKey?: SignatureKey
-  setCryptoKey!: (dataKey: CryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => WebCryptoEncryptionMaterial
-  getCryptoKey!: () => CryptoKey|MixedBackendCryptoKey
+  setCryptoKey!: (dataKey: AwsEsdkJsCryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => WebCryptoEncryptionMaterial
+  getCryptoKey!: () => AwsEsdkJsCryptoKey|MixedBackendCryptoKey
   hasCryptoKey!: boolean
-  validUsages: ReadonlyArray<KeyUsage>
+  validUsages: ReadonlyArray<AwsEsdkJsKeyUsage>
   constructor (suite: WebCryptoAlgorithmSuite) {
     /* Precondition: WebCryptoEncryptionMaterial suite must be WebCryptoAlgorithmSuite. */
     needs(suite instanceof WebCryptoAlgorithmSuite, 'Suite must be a WebCryptoAlgorithmSuite')
     this.suite = suite
-    this.validUsages = Object.freeze(<KeyUsage[]>['deriveKey', 'encrypt'])
+    this.validUsages = Object.freeze(<AwsEsdkJsKeyUsage[]>['deriveKey', 'encrypt'])
     // EncryptionMaterial have generated a data key on setUnencryptedDataKey
     const setFlag = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
     decorateCryptographicMaterial<WebCryptoEncryptionMaterial>(this, setFlag)
@@ -214,15 +214,15 @@ export class WebCryptoDecryptionMaterial implements
   keyringTrace: KeyringTrace[] = []
   setVerificationKey!: (key: VerificationKey) => WebCryptoDecryptionMaterial
   verificationKey?: VerificationKey
-  setCryptoKey!: (dataKey: CryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => WebCryptoDecryptionMaterial
-  getCryptoKey!: () => CryptoKey|MixedBackendCryptoKey
+  setCryptoKey!: (dataKey: AwsEsdkJsCryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => WebCryptoDecryptionMaterial
+  getCryptoKey!: () => AwsEsdkJsCryptoKey|MixedBackendCryptoKey
   hasCryptoKey!: boolean
-  validUsages: ReadonlyArray<KeyUsage>
+  validUsages: ReadonlyArray<AwsEsdkJsKeyUsage>
   constructor (suite: WebCryptoAlgorithmSuite) {
     /* Precondition: WebCryptoDecryptionMaterial suite must be WebCryptoAlgorithmSuite. */
     needs(suite instanceof WebCryptoAlgorithmSuite, 'Suite must be a WebCryptoAlgorithmSuite')
     this.suite = suite
-    this.validUsages = Object.freeze(<KeyUsage[]>['deriveKey', 'decrypt'])
+    this.validUsages = Object.freeze(<AwsEsdkJsKeyUsage[]>['deriveKey', 'decrypt'])
     // DecryptionMaterial have decrypted a data key on setUnencryptedDataKey
     const setFlag = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
     decorateCryptographicMaterial<WebCryptoDecryptionMaterial>(this, setFlag)
@@ -460,9 +460,9 @@ export function decorateDecryptionMaterial<T extends DecryptionMaterial<T>> (mat
 }
 
 export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>> (material: T, setFlags: KeyringTraceFlag) {
-  let cryptoKey: Readonly<CryptoKey|MixedBackendCryptoKey>|undefined
+  let cryptoKey: Readonly<AwsEsdkJsCryptoKey|MixedBackendCryptoKey>|undefined
 
-  const setCryptoKey = (dataKey: CryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => {
+  const setCryptoKey = (dataKey: AwsEsdkJsCryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => {
     /* Precondition: cryptoKey must not be set.  Modifying the cryptoKey is denied */
     needs(!cryptoKey, 'cryptoKey is already set.')
     /* Precondition: dataKey must be a supported type. */
@@ -504,7 +504,7 @@ export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>> (mater
     needs(cryptoKey, 'Crypto key is not set.')
     // In the case of MixedBackendCryptoKey the object
     // has already been frozen above so it is safe to return
-    return <Readonly<CryptoKey|MixedBackendCryptoKey>>cryptoKey
+    return <Readonly<AwsEsdkJsCryptoKey|MixedBackendCryptoKey>>cryptoKey
   }
   readOnlyProperty(material, 'getCryptoKey', getCryptoKey)
 
@@ -516,7 +516,7 @@ export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>> (mater
   return material
 }
 
-export function isCryptoKey (dataKey: any): dataKey is CryptoKey {
+export function isCryptoKey (dataKey: any): dataKey is AwsEsdkJsCryptoKey {
   return dataKey &&
     'algorithm' in dataKey &&
     'type' in dataKey &&
@@ -526,7 +526,7 @@ export function isCryptoKey (dataKey: any): dataKey is CryptoKey {
 }
 
 export function isValidCryptoKey<T extends WebCryptoMaterial<T>> (
-  dataKey: CryptoKey|MixedBackendCryptoKey,
+  dataKey: AwsEsdkJsCryptoKey|MixedBackendCryptoKey,
   material: T
 ) : boolean {
   if (!isCryptoKey(dataKey)) {
@@ -565,7 +565,7 @@ function isMixedBackendCryptoKey (dataKey: any): dataKey is MixedBackendCryptoKe
   return isCryptoKey(zeroByteCryptoKey) && isCryptoKey(nonZeroByteCryptoKey)
 }
 
-export function keyUsageForMaterial<T extends WebCryptoMaterial<T>> (material: T): KeyUsage {
+export function keyUsageForMaterial<T extends WebCryptoMaterial<T>> (material: T): AwsEsdkJsKeyUsage {
   const { suite } = material
   if (suite.kdf) return 'deriveKey'
   return subtleFunctionForMaterial(material)

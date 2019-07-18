@@ -13,80 +13,64 @@
  * limitations under the License.
  */
 
-type KMSv3Node = import('@aws-sdk/client-kms-node').KMS
-type KMSv3Browser = import('@aws-sdk/client-kms-browser').KMS
-type KMSv2 = import('aws-sdk').KMS
-type KMSv3 = KMSv3Browser | KMSv3Node
+import { EncryptionContext } from '@aws-crypto/material-management' // eslint-disable-line no-unused-vars
 
-type KMSConfigV3Browser = import('@aws-sdk/client-kms-browser').KMSConfiguration
-type KMSConfigV3Node = import('@aws-sdk/client-kms-node').KMSConfiguration
-type KMSConfigV2 = import('aws-sdk').KMS.Types.ClientConfiguration
-
-export type KMSConfiguration = KMSConfigV3Browser | KMSConfigV3Node | KMSConfigV2
-export type KMS = KMSv3 | KMSv2
-
-export type GenerateDataKeyInput<Client extends KMS> = Client extends KMSv3Node
-  ? import('@aws-sdk/client-kms-node').GenerateDataKeyInput
-  : Client extends KMSv3Browser
-  ? import('@aws-sdk/client-kms-browser').GenerateDataKeyInput
-  : Client extends KMSv2
-  ? import('aws-sdk').KMS.GenerateDataKeyRequest
-  : never
-
-export type EncryptInput<Client extends KMS> = Client extends KMSv3Node
-  ? import('@aws-sdk/client-kms-node').EncryptInput
-  : Client extends KMSv3Browser
-  ? import('@aws-sdk/client-kms-browser').EncryptInput
-  : Client extends KMSv2
-  ? import('aws-sdk').KMS.EncryptRequest
-  : never
-
-export type DecryptInput<Client extends KMS> = Client extends KMSv3Node
-  ? import('@aws-sdk/client-kms-node').DecryptInput
-  : Client extends KMSv3Browser
-  ? import('@aws-sdk/client-kms-browser').DecryptInput
-  : Client extends KMSv2
-  ? import('aws-sdk').KMS.DecryptRequest
-  : never
-
-export type GenerateDataKeyOutput<Client extends KMS> = Client extends KMSv3Node
-  ? import('@aws-sdk/client-kms-node').GenerateDataKeyOutput
-  : Client extends KMSv3Browser
-  ? import('@aws-sdk/client-kms-browser').GenerateDataKeyOutput
-  : Client extends KMSv2
-  ? import('aws-sdk').KMS.GenerateDataKeyResponse
-  : never
-
-export interface RequiredGenerateDataKeyOutput {
+export interface DecryptRequest {
   CiphertextBlob: Uint8Array
-  Plaintext: Uint8Array
-  KeyId: string
+  EncryptionContext?: EncryptionContext
+  GrantTokens?: string[]
 }
 
-export type EncryptOutput<Client extends KMS> = Client extends KMSv3Node
-  ? import('@aws-sdk/client-kms-node').EncryptOutput
-  : Client extends KMSv3Browser
-  ? import('@aws-sdk/client-kms-browser').EncryptOutput
-  : Client extends KMSv2
-  ? import('aws-sdk').KMS.EncryptResponse
-  : never
-
-export interface RequiredEncryptOutput {
-  CiphertextBlob: Uint8Array
-  KeyId: string
+interface Blob {}
+type Data = string | Buffer | Uint8Array | Blob
+export interface DecryptResponse {
+  KeyId?: string
+  Plaintext?: Data
 }
 
-export type DecryptOutput<Client extends KMS> = Client extends KMSv3Node
-  ? import('@aws-sdk/client-kms-node').DecryptOutput
-  : Client extends KMSv3Browser
-  ? import('@aws-sdk/client-kms-browser').DecryptOutput
-  : Client extends KMSv2
-  ? import('aws-sdk').KMS.DecryptResponse
-  : never
-
-export interface RequiredDecryptOutput {
-  KeyId: string
+export interface RequiredDecryptResponse extends Required<DecryptResponse>{
   Plaintext: Uint8Array
 }
 
-export type KMSOperations = keyof Pick<KMS, 'encrypt'| 'decrypt'| 'generateDataKey'>
+export interface EncryptRequest {
+  KeyId: string
+  Plaintext: Uint8Array
+  EncryptionContext?: EncryptionContext
+  GrantTokens?: string[]
+}
+export interface EncryptResponse {
+  CiphertextBlob?: Data
+  KeyId?: string
+}
+
+export interface RequiredEncryptResponse extends Required<EncryptResponse>{
+  CiphertextBlob: Uint8Array
+}
+
+export interface GenerateDataKeyRequest {
+  KeyId: string
+  EncryptionContext?: EncryptionContext
+  NumberOfBytes?: number
+  GrantTokens?: string[]
+}
+
+export interface GenerateDataKeyResponse {
+  CiphertextBlob?: Data
+  Plaintext?: Data
+  KeyId?: string
+}
+
+export interface RequiredGenerateDataKeyResponse extends Required<GenerateDataKeyResponse>{
+  CiphertextBlob: Uint8Array
+  Plaintext: Uint8Array
+}
+
+export interface AwsSdkV2Response<Response> {
+  promise(): Promise<Response>
+}
+
+export interface AwsEsdkKMSInterface {
+  decrypt(args: DecryptRequest): Promise<DecryptResponse>|AwsSdkV2Response<DecryptResponse>
+  encrypt(args: EncryptRequest): Promise<EncryptResponse>|AwsSdkV2Response<EncryptResponse>
+  generateDataKey(args: GenerateDataKeyRequest): Promise<GenerateDataKeyResponse>|AwsSdkV2Response<GenerateDataKeyResponse>
+}

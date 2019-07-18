@@ -98,3 +98,145 @@ export const subtleFallbackZeroByteEncryptFail = {
 } as any
 
 export const subtleFallbackNoWebCrypto = {} as any
+
+export const fakeWindowIE11OnComplete = {
+  msCrypto: {
+    getRandomValues: (values: Uint8Array) => {
+      return values.fill(1)
+    },
+    subtle: {
+      decrypt () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.result = true
+          obj.oncomplete()
+        })
+        return obj
+      },
+      digest () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.result = true
+          obj.oncomplete()
+        })
+        return obj
+      },
+      encrypt () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.result = true
+          obj.oncomplete()
+        })
+        return obj
+      },
+      exportKey () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.result = true
+          obj.oncomplete()
+        })
+        return obj
+      },
+      generateKey () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.result = true
+          obj.oncomplete()
+        })
+        return obj
+      },
+      importKey () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.result = true
+          obj.oncomplete()
+        })
+        return obj
+      },
+      sign () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.result = true
+          obj.oncomplete()
+        })
+        return obj
+      },
+      verify () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.result = true
+          obj.oncomplete()
+        })
+        return obj
+      }
+    }
+  },
+  MSInputMethodContext: {} as any
+} as any
+
+export const fakeWindowIE11OnError = {
+  msCrypto: {
+    getRandomValues: (values: Uint8Array) => {
+      return values.fill(1)
+    },
+    subtle: {
+      decrypt () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.onerror(new Error('stub error'))
+        })
+        return obj
+      },
+      digest () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.onerror(new Error('stub error'))
+        })
+        return obj
+      },
+      encrypt () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.onerror(new Error('stub error'))
+        })
+        return obj
+      },
+      exportKey () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.onerror(new Error('stub error'))
+        })
+        return obj
+      },
+      generateKey () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.onerror(new Error('stub error'))
+        })
+        return obj
+      },
+      importKey () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.onerror(new Error('stub error'))
+        })
+        return obj
+      },
+      sign () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.onerror(new Error('stub error'))
+        })
+        return obj
+      },
+      verify () {
+        const obj = {} as any
+        setTimeout(() => {
+          obj.onerror(new Error('stub error'))
+        })
+        return obj
+      }
+    }
+  },
+  MSInputMethodContext: {} as any
+} as any
