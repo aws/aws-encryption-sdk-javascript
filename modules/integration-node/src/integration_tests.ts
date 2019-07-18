@@ -15,13 +15,28 @@
 
 import {
   TestVectorInfo, // eslint-disable-line no-unused-vars
-  getTestVectorIterator
-} from './get_test_iterator'
-import { decryptMaterialsManagerNode } from './decrypt_materials_manager_node'
-import { decrypt } from '@aws-crypto/client-node'
+  getDecryptTestVectorIterator
+} from './get_decrypt_test_iterator'
+import {
+  EncryptTestVectorInfo, // eslint-disable-line no-unused-vars
+  getEncryptTestVectorIterator
+} from './get_encrypt_test_iterator'
+import { decryptMaterialsManagerNode, encryptMaterialsManagerNode } from './decrypt_materials_manager_node'
+import { decrypt, encrypt, needs } from '@aws-crypto/client-node'
+import { URL } from 'url'
+import got from 'got'
+
+const notSupportedDecryptMessages = [
+  'Not supported at this time.'
+]
+
+const notSupportedEncryptMessages = [
+  'frameLength out of bounds: 0 > frameLength >= 4294967295',
+  'Not supported at this time.'
+]
 
 // This is only viable for small streams, if we start get get larger streams, an stream equality should get written
-export async function testVector ({ name, keysInfo, plainTextStream, cipherStream }: TestVectorInfo): Promise<TestVectorResults> {
+export async function testDecryptVector ({ name, keysInfo, plainTextStream, cipherStream }: TestVectorInfo): Promise<TestVectorResults> {
   try {
     const cmm = decryptMaterialsManagerNode(keysInfo)
     const knowGood: Buffer[] = []
@@ -34,30 +49,80 @@ export async function testVector ({ name, keysInfo, plainTextStream, cipherStrea
   }
 }
 
-export async function integrationTestVectors (vectorFile: string, tolerateFailures: number = 0, testName?: string) {
-  const tests = await getTestVectorIterator(vectorFile)
+// This is only viable for small streams, if we start get get larger streams, an stream equality should get written
+export async function testEncryptVector ({ name, keysInfo, encryptOp, plainTextData }: EncryptTestVectorInfo, decryptOracle: URL): Promise<TestVectorResults> {
+  try {
+    const cmm = encryptMaterialsManagerNode(keysInfo)
+    const { ciphertext } = await encrypt(cmm, plainTextData, encryptOp)
+
+    const decryptResponse = await got.post(decryptOracle, {
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Accept': 'application/octet-stream'
+      },
+      body: ciphertext,
+      encoding: null
+    })
+    needs(decryptResponse.statusCode === 200, 'decrypt failure')
+    const { body } = decryptResponse
+    const result = plainTextData.equals(body)
+    return { result, name }
+  } catch (err) {
+    return { result: false, name, err }
+  }
+}
+
+export async function integrationDecryptTestVectors (vectorFile: string, tolerateFailures: number = 0, testName?: string) {
+  const tests = await getDecryptTestVectorIterator(vectorFile)
   let failureCount = 0
   for (const test of tests) {
     if (testName) {
       if (test.name !== testName) continue
     }
-    const { result, name, err } = await testVector(test)
+    const { result, name, err } = await testDecryptVector(test)
     if (result) {
       console.log({ name, result })
     } else {
-      if (err && err.message === 'Not supported at this time.') {
-        console.log({ name, result: 'Not supported at this time.' })
+      if (err && notSupportedDecryptMessages.includes(err.message)) {
+        console.log({ name, result: `Not supported: ${err.message}` })
         continue
       }
       console.log({ name, result, err })
     }
     if (!result) {
       failureCount += 1
-      if (!tolerateFailures) return process.exit(failureCount)
+      if (!tolerateFailures) return failureCount
       tolerateFailures--
     }
   }
-  return process.exit(failureCount)
+  return failureCount
+}
+
+export async function integrationEncryptTestVectors (manifestFile: string, keyFile: string, decryptOracle: string, tolerateFailures: number = 0, testName?: string) {
+  const decryptOracleUrl = new URL(decryptOracle)
+  const tests = await getEncryptTestVectorIterator(manifestFile, keyFile)
+  let failureCount = 0
+  for (const test of tests) {
+    if (testName) {
+      if (test.name !== testName) continue
+    }
+    const { result, name, err } = await testEncryptVector(test, decryptOracleUrl)
+    if (result) {
+      console.log({ name, result })
+    } else {
+      if (err && notSupportedEncryptMessages.includes(err.message)) {
+        console.log({ name, result: `Not supported: ${err.message}` })
+        continue
+      }
+      console.log({ name, result, err })
+    }
+    if (!result) {
+      failureCount += 1
+      if (!tolerateFailures) return failureCount
+      tolerateFailures--
+    }
+  }
+  return failureCount
 }
 
 interface TestVectorResults {
