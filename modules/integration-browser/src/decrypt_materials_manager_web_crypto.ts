@@ -48,6 +48,11 @@ const Bits2RawAesWrappingSuiteIdentifier: {[key: number]: WrappingSuiteIdentifie
   256: RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
 }
 
+export async function encryptMaterialsManagerWebCrypto (keyInfos: KeyInfoTuple[]) {
+  const [generator, ...children] = await Promise.all(keyInfos.map(keyringWebCrypto))
+  return new MultiKeyringWebCrypto({ generator, children })
+}
+
 export async function decryptMaterialsManagerWebCrypto (keyInfos: KeyInfoTuple[]) {
   const children = await Promise.all(keyInfos.map(keyringWebCrypto))
   return new MultiKeyringWebCrypto({ children })
@@ -67,11 +72,11 @@ async function keyringWebCrypto ([ info, key ]: KeyInfoTuple) {
 }
 
 function kmsKeyring (_keyInfo: KmsKeyInfo, key: KMSKey) {
-  const keyIds = [key['key-id']]
+  const generatorKeyId = key['key-id']
   const clientProvider: KmsWebCryptoClientSupplier = (region: string) => {
     return new KMS({ region, credentials })
   }
-  return new KmsKeyringBrowser({ keyIds, clientProvider })
+  return new KmsKeyringBrowser({ generatorKeyId, clientProvider })
 }
 
 async function aesKeyring (keyInfo:AesKeyInfo, key: AESKey) {
