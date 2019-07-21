@@ -15,13 +15,13 @@
 
 import { Open } from 'unzipper'
 import {
-  ManifestList, // eslint-disable-line no-unused-vars
+  DecryptManifestList, // eslint-disable-line no-unused-vars
   KeyList, // eslint-disable-line no-unused-vars
   KeyInfoTuple // eslint-disable-line no-unused-vars
 } from './types'
 import { Readable } from 'stream' // eslint-disable-line no-unused-vars
 
-export async function getTestVectorIterator (vectorFile: string) {
+export async function getDecryptTestVectorIterator (vectorFile: string) {
   const centralDirectory = await Open.file(vectorFile)
   // @ts-ignore
   const filesMap = new Map(centralDirectory.files.map(file => [file.path, file]))
@@ -40,7 +40,7 @@ export async function getTestVectorIterator (vectorFile: string) {
   })()
 
   const manifestBuffer = await readUriOnce('manifest.json')
-  const { keys: keysFile, tests }: ManifestList = JSON.parse(manifestBuffer.toString('utf8'))
+  const { keys: keysFile, tests }: DecryptManifestList = JSON.parse(manifestBuffer.toString('utf8'))
   const keysBuffer = await readUriOnce(keysFile)
   const { keys }: KeyList = JSON.parse(keysBuffer.toString('utf8'))
 

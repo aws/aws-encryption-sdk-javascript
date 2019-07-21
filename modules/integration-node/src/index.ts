@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-export * from './get_test_iterator'
+export * from './get_decrypt_test_iterator'
+export * from './get_encrypt_test_iterator'
 export * from './integration_tests'
 export * from './decrypt_materials_manager_node'
 export * from './types'
