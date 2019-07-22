@@ -19,7 +19,9 @@
     "coverage": "run-s coverage-*",
     "test": "npm run lint && npm run build && npm run coverage",
     "integration-browser": "npm run build; lerna run build_fixtures --stream --no-prefix -- -- -v ../../aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-1.3.8.zip -k",
-    "integration-node": "npm run build; lerna run integration_node --stream --no-prefix -- -- -v ../../aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-1.3.8.zip",
+    "integration-node-decrypt": "npm run build; lerna run integration_node --stream --no-prefix -- -- decrypt -v ../../aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-1.3.8.zip",
+    "integration-node-encrypt": "npm run build; lerna run integration_node --stream --no-prefix -- -- encrypt -m 'https://raw.githubusercontent.com/awslabs/aws-crypto-tools-test-vector-framework/master/features/CANONICAL-GENERATED-MANIFESTS/0003-awses-message-encryption.v1.json' -k 'https://raw.githubusercontent.com/awslabs/aws-crypto-tools-test-vector-framework/master/features/CANONICAL-GENERATED-MANIFESTS/0002-keys.v1.json' -o 'https://xi1mwx3ttb.execute-api.us-west-2.amazonaws.com/api/v0/decrypt'",
+    "integration-node": "run-s integration-node-*",
     "integration": "run-s integration-*"
   },
   "repository": {
