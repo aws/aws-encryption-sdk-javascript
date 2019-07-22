@@ -37,13 +37,13 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
   } = serializeFactory(fromUtf8)
 
   return {
-    buildEncryptionResponseCacheKey,
-    buildDecryptionResponseCacheKey,
+    buildEncryptionMaterialCacheKey,
+    buildDecryptionMaterialCacheKey,
     encryptedDataKeysHash,
     encryptionContextHash
   }
 
-  async function buildEncryptionResponseCacheKey (
+  async function buildEncryptionMaterialCacheKey (
     partition: string,
     { suite, encryptionContext }: EncryptionRequest<S>
   ) {
@@ -59,7 +59,7 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
     return toUtf8(key)
   }
 
-  async function buildDecryptionResponseCacheKey (
+  async function buildDecryptionMaterialCacheKey (
     partition: string,
     { suite, encryptedDataKeys, encryptionContext }: DecryptionRequest<S>
   ) {
@@ -96,11 +96,11 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
 }
 
 export interface CryptographicMaterialsCacheKeyHelpersInterface<S extends SupportedAlgorithmSuites> {
-  buildEncryptionResponseCacheKey(
+  buildEncryptionMaterialCacheKey(
     partition: string,
     { suite, encryptionContext }: EncryptionRequest<S>
   ): Promise<string>
-  buildDecryptionResponseCacheKey(
+  buildDecryptionMaterialCacheKey(
     partition: string,
     { suite, encryptedDataKeys, encryptionContext }: DecryptionRequest<S>
   ): Promise<string>

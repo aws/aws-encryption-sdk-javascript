@@ -26,8 +26,8 @@ import {
 import {
   CryptographicMaterialsCache, // eslint-disable-line no-unused-vars
   Entry, // eslint-disable-line no-unused-vars
-  EncryptionResponseEntry, // eslint-disable-line no-unused-vars
-  DecryptionResponseEntry // eslint-disable-line no-unused-vars
+  EncryptionMaterialEntry, // eslint-disable-line no-unused-vars
+  DecryptionMaterialEntry // eslint-disable-line no-unused-vars
 } from './cryptographic_materials_cache'
 
 export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithmSuites> (
@@ -71,13 +71,13 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
   })()
 
   return {
-    putEncryptionResponse (
+    putEncryptionMaterial (
       key: string,
       material: EncryptionMaterial<S>,
       plaintextLength: number,
       maxAge?: number
     ) {
-      /* Precondition: putEncryptionResponse plaintextLength can not be negative. */
+      /* Precondition: putEncryptionMaterial plaintextLength can not be negative. */
       needs(plaintextLength >= 0, 'Malformed plaintextLength')
       /* Precondition: Only cache EncryptionMaterial. */
       needs(isEncryptionMaterial(material), 'Malformed response.')
@@ -92,7 +92,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
 
       cache.set(key, entry, maxAge)
     },
-    putDecryptionResponse (
+    putDecryptionMaterial (
       key: string,
       material: DecryptionMaterial<S>,
       maxAge?: number
@@ -110,7 +110,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
 
       cache.set(key, entry, maxAge)
     },
-    getEncryptionResponse (key: string, plaintextLength: number) {
+    getEncryptionMaterial (key: string, plaintextLength: number) {
       /* Precondition: plaintextLength can not be negative. */
       needs(plaintextLength >= 0, 'Malformed plaintextLength')
       const entry = cache.get(key)
@@ -122,16 +122,16 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
       entry.bytesEncrypted += plaintextLength
       entry.messagesEncrypted += 1
 
-      return <EncryptionResponseEntry<S>>entry
+      return <EncryptionMaterialEntry<S>>entry
     },
-    getDecryptionResponse (key: string) {
+    getDecryptionMaterial (key: string) {
       const entry = cache.get(key)
       /* Check for early return (Postcondition): If this key does not have a DecryptionMaterial, return false. */
       if (!entry) return false
       /* Postcondition: Only return DecryptionMaterial. */
       needs(isDecryptionMaterial(entry.response), 'Malformed response.')
 
-      return <DecryptionResponseEntry<S>>entry
+      return <DecryptionMaterialEntry<S>>entry
     },
     del (key: string) {
       cache.del(key)

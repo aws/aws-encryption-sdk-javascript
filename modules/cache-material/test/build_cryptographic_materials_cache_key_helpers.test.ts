@@ -31,8 +31,8 @@ const sha512 = async (...data: (Uint8Array|string)[]) => data
 const {
   encryptionContextHash,
   encryptedDataKeysHash,
-  buildEncryptionResponseCacheKey,
-  buildDecryptionResponseCacheKey
+  buildEncryptionMaterialCacheKey,
+  buildDecryptionMaterialCacheKey
 } = buildCryptographicMaterialsCacheKeyHelpers(fromUtf8, toUtf8, sha512)
 
 describe('buildCryptographicMaterialsCacheKeyHelpers::encryptionContextHash', () => {
@@ -54,19 +54,19 @@ describe('buildCryptographicMaterialsCacheKeyHelpers::encryptedDataKeysHash', ()
   }
 })
 
-describe('buildCryptographicMaterialsCacheKeyHelpers::buildEncryptionResponseCacheKey', () => {
+describe('buildCryptographicMaterialsCacheKeyHelpers::buildEncryptionMaterialCacheKey', () => {
   for (const vector of encryptCacheKeyVectors) {
     it(`${vector.id}`, async () => {
-      const test = await buildEncryptionResponseCacheKey(...vector.arguments)
+      const test = await buildEncryptionMaterialCacheKey(...vector.arguments)
       expect(test).to.equal(Buffer.from(vector.id, 'base64').toString())
     })
   }
 })
 
-describe('buildCryptographicMaterialsCacheKeyHelpers::buildEncryptionResponseCacheKey', () => {
+describe('buildCryptographicMaterialsCacheKeyHelpers::buildEncryptionMaterialCacheKey', () => {
   for (const vector of decryptCacheKeyVectors) {
     it(`${vector.id}`, async () => {
-      const test = await buildDecryptionResponseCacheKey(...vector.arguments)
+      const test = await buildDecryptionMaterialCacheKey(...vector.arguments)
       expect(test).to.equal(Buffer.from(vector.id, 'base64').toString())
     })
   }

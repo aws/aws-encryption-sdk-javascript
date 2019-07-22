@@ -20,19 +20,19 @@ import {
 } from '@aws-crypto/material-management'
 
 export interface CryptographicMaterialsCache<S extends SupportedAlgorithmSuites> {
-  putEncryptionResponse(
+  putEncryptionMaterial(
     key: string,
     response: EncryptionMaterial<S>,
     plaintextLength: number,
     maxAge?: number
   ): void
-  putDecryptionResponse(
+  putDecryptionMaterial(
     key: string,
     response: DecryptionMaterial<S>,
     maxAge?: number
   ): void
-  getEncryptionResponse(key: string, plaintextLength: number): EncryptionResponseEntry<S>|false
-  getDecryptionResponse(key: string): DecryptionResponseEntry<S>|false
+  getEncryptionMaterial(key: string, plaintextLength: number): EncryptionMaterialEntry<S>|false
+  getDecryptionMaterial(key: string): DecryptionMaterialEntry<S>|false
   del(key: string): void
 }
 
@@ -43,10 +43,10 @@ export interface Entry<S extends SupportedAlgorithmSuites> {
   readonly now: number
 }
 
-export interface EncryptionResponseEntry<S extends SupportedAlgorithmSuites> extends Entry<S> {
+export interface EncryptionMaterialEntry<S extends SupportedAlgorithmSuites> extends Entry<S> {
   readonly response: EncryptionMaterial<S>
 }
 
-export interface DecryptionResponseEntry<S extends SupportedAlgorithmSuites> extends Entry<S> {
+export interface DecryptionMaterialEntry<S extends SupportedAlgorithmSuites> extends Entry<S> {
   readonly response: DecryptionMaterial<S>
 }

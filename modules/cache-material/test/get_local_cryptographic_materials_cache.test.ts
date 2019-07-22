@@ -31,19 +31,19 @@ const decryptionMaterial = new NodeDecryptionMaterial(nodeSuite, {})
 
 describe('getLocalCryptographicMaterialsCache', () => {
   const {
-    getEncryptionResponse,
-    getDecryptionResponse,
+    getEncryptionMaterial,
+    getDecryptionMaterial,
     del,
-    putEncryptionResponse,
-    putDecryptionResponse
+    putEncryptionMaterial,
+    putDecryptionMaterial
   } = getLocalCryptographicMaterialsCache(100)
 
-  it('putEncryptionResponse', () => {
+  it('putEncryptionMaterial', () => {
     const key = 'some encryption key'
     const response: any = encryptionMaterial
 
-    putEncryptionResponse(key, response, 1)
-    const test = getEncryptionResponse(key, 1)
+    putEncryptionMaterial(key, response, 1)
+    const test = getEncryptionMaterial(key, 1)
     if (!test) throw new Error('never')
     expect(test.bytesEncrypted).to.equal(2)
     expect(test.messagesEncrypted).to.equal(2)
@@ -51,22 +51,22 @@ describe('getLocalCryptographicMaterialsCache', () => {
     expect(Object.isFrozen(test.response)).to.equal(true)
   })
 
-  it('Precondition: putEncryptionResponse plaintextLength can not be negative.', () => {
+  it('Precondition: putEncryptionMaterial plaintextLength can not be negative.', () => {
     const response: any = encryptionMaterial
     const u: any = undefined
     const s: any = 'not-number'
     const n = -1
-    expect(() => putEncryptionResponse('key', response, u)).to.throw()
-    expect(() => putEncryptionResponse('key', response, s)).to.throw()
-    expect(() => putEncryptionResponse('key', response, n)).to.throw()
+    expect(() => putEncryptionMaterial('key', response, u)).to.throw()
+    expect(() => putEncryptionMaterial('key', response, s)).to.throw()
+    expect(() => putEncryptionMaterial('key', response, n)).to.throw()
   })
 
   it('Postcondition: Only return EncryptionMaterial.', () => {
     const key = 'some decryption key'
     const response: any = decryptionMaterial
 
-    putDecryptionResponse(key, response)
-    expect(() => getEncryptionResponse(key, 1)).to.throw()
+    putDecryptionMaterial(key, response)
+    expect(() => getEncryptionMaterial(key, 1)).to.throw()
   })
 
   it('Precondition: Only cache EncryptionMaterial that is cacheSafe.', () => {
@@ -74,15 +74,15 @@ describe('getLocalCryptographicMaterialsCache', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const response: any = new NodeEncryptionMaterial(suite, {})
 
-    expect(() => putEncryptionResponse(key, response, 1)).to.throw()
+    expect(() => putEncryptionMaterial(key, response, 1)).to.throw()
   })
 
-  it('putDecryptionResponse', () => {
+  it('putDecryptionMaterial', () => {
     const key = 'some decryption key'
     const response: any = decryptionMaterial
 
-    putDecryptionResponse(key, response)
-    const test = getDecryptionResponse(key)
+    putDecryptionMaterial(key, response)
+    const test = getDecryptionMaterial(key)
     if (!test) throw new Error('never')
     expect(test.bytesEncrypted).to.equal(0)
     expect(test.messagesEncrypted).to.equal(0)
@@ -94,7 +94,7 @@ describe('getLocalCryptographicMaterialsCache', () => {
     const key = 'some decryption key'
     const response: any = 'not material'
 
-    expect(() => putDecryptionResponse(key, response)).to.throw()
+    expect(() => putDecryptionMaterial(key, response)).to.throw()
   })
 
   it('Precondition: Only cache DecryptionMaterial that is cacheSafe.', () => {
@@ -102,20 +102,20 @@ describe('getLocalCryptographicMaterialsCache', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const response: any = new NodeEncryptionMaterial(suite, {})
 
-    expect(() => putDecryptionResponse(key, response)).to.throw()
+    expect(() => putDecryptionMaterial(key, response)).to.throw()
   })
 
   it('Precondition: plaintextLength can not be negative.', () => {
     const u: any = undefined
     const s: any = 'not-number'
     const n = -1
-    expect(() => getEncryptionResponse('key', u)).to.throw()
-    expect(() => getEncryptionResponse('key', s)).to.throw()
-    expect(() => getEncryptionResponse('key', n)).to.throw()
+    expect(() => getEncryptionMaterial('key', u)).to.throw()
+    expect(() => getEncryptionMaterial('key', s)).to.throw()
+    expect(() => getEncryptionMaterial('key', n)).to.throw()
   })
 
   it('Check for early return (Postcondition): If this key does not have an EncryptionMaterial, return false.', () => {
-    const test = getEncryptionResponse('does-not-exist', 1)
+    const test = getEncryptionMaterial('does-not-exist', 1)
     expect(test).to.equal(false)
   })
 
@@ -123,11 +123,11 @@ describe('getLocalCryptographicMaterialsCache', () => {
     const key = 'some encryption key'
     const response: any = 'not material'
 
-    expect(() => putEncryptionResponse(key, response, 1)).to.throw()
+    expect(() => putEncryptionMaterial(key, response, 1)).to.throw()
   })
 
   it('Check for early return (Postcondition): If this key does not have a DecryptionMaterial, return false.', () => {
-    const test = getDecryptionResponse('does-not-exist')
+    const test = getDecryptionMaterial('does-not-exist')
     expect(test).to.equal(false)
   })
 
@@ -135,8 +135,8 @@ describe('getLocalCryptographicMaterialsCache', () => {
     const key = 'some encryption key'
     const response: any = encryptionMaterial
 
-    putEncryptionResponse(key, response, 1)
-    expect(() => getDecryptionResponse(key))
+    putEncryptionMaterial(key, response, 1)
+    expect(() => getDecryptionMaterial(key))
   })
 
   it('delete non-existent key', () => {
@@ -147,8 +147,8 @@ describe('getLocalCryptographicMaterialsCache', () => {
     const key = 'some encryption key'
     const response: any = encryptionMaterial
 
-    putEncryptionResponse(key, response, 0)
-    const test = getEncryptionResponse(key, 0)
+    putEncryptionMaterial(key, response, 0)
+    const test = getEncryptionMaterial(key, 0)
     if (!test) throw new Error('never')
     expect(test.bytesEncrypted).to.equal(0)
     expect(test.messagesEncrypted).to.equal(2)
@@ -158,101 +158,101 @@ describe('getLocalCryptographicMaterialsCache', () => {
 })
 
 describe('cache eviction', () => {
-  it('putDecryptionResponse can exceed maxSize', () => {
+  it('putDecryptionMaterial can exceed maxSize', () => {
     const {
-      getDecryptionResponse,
-      putDecryptionResponse
+      getDecryptionMaterial,
+      putDecryptionMaterial
     } = getLocalCryptographicMaterialsCache(1)
 
     const key1 = 'key lost'
     const key2 = 'key replace'
     const response: any = decryptionMaterial
 
-    putDecryptionResponse(key1, response)
-    putDecryptionResponse(key2, response)
-    const lost = getDecryptionResponse(key1)
-    const found = getDecryptionResponse(key2)
+    putDecryptionMaterial(key1, response)
+    putDecryptionMaterial(key2, response)
+    const lost = getDecryptionMaterial(key1)
+    const found = getDecryptionMaterial(key2)
     expect(lost).to.equal(false)
     expect(found).to.not.equal(false)
   })
 
-  it('putDecryptionResponse can be deleted', () => {
+  it('putDecryptionMaterial can be deleted', () => {
     const {
-      getDecryptionResponse,
-      putDecryptionResponse,
+      getDecryptionMaterial,
+      putDecryptionMaterial,
       del
     } = getLocalCryptographicMaterialsCache(1)
 
     const key = 'key deleted'
     const response: any = decryptionMaterial
 
-    putDecryptionResponse(key, response)
+    putDecryptionMaterial(key, response)
     del(key)
-    const lost = getDecryptionResponse(key)
+    const lost = getDecryptionMaterial(key)
     expect(lost).to.equal(false)
   })
 
-  it('putDecryptionResponse can be garbage collected', async () => {
+  it('putDecryptionMaterial can be garbage collected', async () => {
     const {
-      getDecryptionResponse,
-      putDecryptionResponse
+      getDecryptionMaterial,
+      putDecryptionMaterial
     } = getLocalCryptographicMaterialsCache(1, 10)
 
     const key = 'key lost'
     const response: any = decryptionMaterial
 
-    putDecryptionResponse(key, response, 1)
+    putDecryptionMaterial(key, response, 1)
     await new Promise(resolve => setTimeout(resolve, 20))
-    const lost = getDecryptionResponse(key)
+    const lost = getDecryptionMaterial(key)
     expect(lost).to.equal(false)
   })
 
-  it('putEncryptionResponse can exceed maxSize', () => {
+  it('putEncryptionMaterial can exceed maxSize', () => {
     const {
-      getEncryptionResponse,
-      putEncryptionResponse
+      getEncryptionMaterial,
+      putEncryptionMaterial
     } = getLocalCryptographicMaterialsCache(1)
 
     const key1 = 'key lost'
     const key2 = 'key replace'
     const response: any = encryptionMaterial
 
-    putEncryptionResponse(key1, response, 0)
-    putEncryptionResponse(key2, response, 0)
-    const lost = getEncryptionResponse(key1, 0)
-    const found = getEncryptionResponse(key2, 0)
+    putEncryptionMaterial(key1, response, 0)
+    putEncryptionMaterial(key2, response, 0)
+    const lost = getEncryptionMaterial(key1, 0)
+    const found = getEncryptionMaterial(key2, 0)
     expect(lost).to.equal(false)
     expect(found).to.not.equal(false)
   })
 
-  it('putEncryptionResponse can be deleted', async () => {
+  it('putEncryptionMaterial can be deleted', async () => {
     const {
-      getEncryptionResponse,
-      putEncryptionResponse,
+      getEncryptionMaterial,
+      putEncryptionMaterial,
       del
     } = getLocalCryptographicMaterialsCache(1, 10)
 
     const key = 'key lost'
     const response: any = encryptionMaterial
 
-    putEncryptionResponse(key, response, 1, 1)
+    putEncryptionMaterial(key, response, 1, 1)
     del(key)
-    const lost = getEncryptionResponse(key, 1)
+    const lost = getEncryptionMaterial(key, 1)
     expect(lost).to.equal(false)
   })
 
-  it('putEncryptionResponse can be garbage collected', async () => {
+  it('putEncryptionMaterial can be garbage collected', async () => {
     const {
-      getEncryptionResponse,
-      putEncryptionResponse
+      getEncryptionMaterial,
+      putEncryptionMaterial
     } = getLocalCryptographicMaterialsCache(1, 10)
 
     const key = 'key lost'
     const response: any = encryptionMaterial
 
-    putEncryptionResponse(key, response, 1, 1)
+    putEncryptionMaterial(key, response, 1, 1)
     await new Promise(resolve => setTimeout(resolve, 20))
-    const lost = getEncryptionResponse(key, 1)
+    const lost = getEncryptionMaterial(key, 1)
     expect(lost).to.equal(false)
   })
 })
