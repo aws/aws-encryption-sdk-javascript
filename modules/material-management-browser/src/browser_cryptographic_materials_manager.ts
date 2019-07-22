@@ -105,7 +105,7 @@ export class WebCryptoDefaultCryptographicMaterialsManager implements WebCryptoM
     if (!namedCurve) return new WebCryptoDecryptionMaterial(suite, encryptionContext)
 
     /* Precondition: WebCryptoDefaultCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist. */
-    if (!encryptionContext) throw new Error('Context does not contain required public key.')
+    if (!encryptionContext) throw new Error('Encryption context does not contain required public key.')
 
     const { [ENCODED_SIGNER_KEY]: compressPoint } = encryptionContext
 
