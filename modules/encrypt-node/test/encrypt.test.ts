@@ -184,6 +184,11 @@ describe('encrypt structural testing', () => {
 
     expect(messageHeader).to.deep.equal(messageInfo.messageHeader)
   })
+
+  it('Precondition: The frameLength must be less than the maximum frame size Node.js stream.', async () => {
+    const frameLength = 0
+    expect(encrypt(keyRing, 'asdf', { frameLength })).to.rejectedWith(Error)
+  })
 })
 
 function finishedAsync (stream: any) {

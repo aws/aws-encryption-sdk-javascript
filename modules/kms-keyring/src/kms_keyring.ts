@@ -15,8 +15,8 @@
 
 import { KmsClientSupplier } from './kms_client_supplier' // eslint-disable-line no-unused-vars
 import {
-  KMS, // eslint-disable-line no-unused-vars
-  RequiredDecryptOutput // eslint-disable-line no-unused-vars
+  AwsEsdkKMSInterface, // eslint-disable-line no-unused-vars
+  RequiredDecryptResponse // eslint-disable-line no-unused-vars
 } from './kms_types'
 import {
   needs,
@@ -33,7 +33,7 @@ import {
 import { KMS_PROVIDER_ID, generateDataKey, encrypt, decrypt, kmsResponseToEncryptedDataKey } from './helpers'
 import { regionFromKmsKeyArn } from './region_from_kms_key_arn'
 
-export interface KmsKeyringInput<Client extends KMS> {
+export interface KmsKeyringInput<Client extends AwsEsdkKMSInterface> {
   clientProvider: KmsClientSupplier<Client>
   keyIds?: string[]
   generatorKeyId?: string
@@ -41,7 +41,7 @@ export interface KmsKeyringInput<Client extends KMS> {
   discovery?: boolean
 }
 
-export interface KeyRing<S extends SupportedAlgorithmSuites, Client extends KMS> extends Keyring<S> {
+export interface KeyRing<S extends SupportedAlgorithmSuites, Client extends AwsEsdkKMSInterface> extends Keyring<S> {
   keyIds: ReadonlyArray<string>
   generatorKeyId?: string
   clientProvider: KmsClientSupplier<Client>
@@ -51,7 +51,7 @@ export interface KeyRing<S extends SupportedAlgorithmSuites, Client extends KMS>
   _onDecrypt(material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[]): Promise<DecryptionMaterial<S>>
 }
 
-export interface KmsKeyRingConstructible<S extends SupportedAlgorithmSuites, Client extends KMS> {
+export interface KmsKeyRingConstructible<S extends SupportedAlgorithmSuites, Client extends AwsEsdkKMSInterface> {
   new(input: KmsKeyringInput<Client>): KeyRing<S, Client>
 }
 
@@ -59,7 +59,7 @@ export interface KeyRingConstructible<S extends SupportedAlgorithmSuites> {
   new(): Keyring<S>
 }
 
-export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client extends KMS> (
+export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client extends AwsEsdkKMSInterface> (
   BaseKeyring: KeyRingConstructible<S>
 ): KmsKeyRingConstructible<S, Client> {
   class KmsKeyring extends BaseKeyring implements KeyRing<S, Client> {
@@ -171,7 +171,7 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
         })
 
       for (const edk of decryptableEDKs) {
-        let dataKey: RequiredDecryptOutput|false = false
+        let dataKey: RequiredDecryptResponse|false = false
         try {
           dataKey = await decrypt(
             clientProvider,

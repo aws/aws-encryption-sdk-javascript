@@ -15,15 +15,37 @@
  */
 
 import yargs from 'yargs'
-import { integrationTestVectors } from './integration_tests'
+import { integrationDecryptTestVectors, integrationEncryptTestVectors } from './integration_tests'
 
-const argv = yargs
-  .option('vectorFile', {
-    alias: 'v',
-    describe: 'a vector zip file from aws-encryption-sdk-test-vectors',
-    demandOption: true,
-    type: 'string'
-  })
+const cli = yargs
+  .command('decrypt', 'verify decrypt vectors', y => y
+    .option('vectorFile', {
+      alias: 'v',
+      describe: 'a vector zip file from aws-encryption-sdk-test-vectors',
+      demandOption: true,
+      type: 'string'
+    })
+  )
+  .command('encrypt', 'verify encrypt manifest', y => y
+    .option('manifestFile', {
+      alias: 'm',
+      describe: 'a path/url to aws-crypto-tools-test-vector-framework canonical manifest',
+      demandOption: true,
+      type: 'string'
+    })
+    .option('keyFile', {
+      alias: 'k',
+      describe: 'a path/url to aws-crypto-tools-test-vector-framework canonical key list',
+      demandOption: true,
+      type: 'string'
+    })
+    .option('decryptOracle', {
+      alias: 'o',
+      describe: 'a url to the decrypt oracle',
+      demandOption: true,
+      type: 'string'
+    })
+  )
   .option('tolerateFailures', {
     alias: 'f',
     describe: 'an optional number of failures to tolerate before exiting',
@@ -35,7 +57,24 @@ const argv = yargs
     describe: 'an optional test name to execute',
     type: 'string'
   })
-  .argv
+  .demandCommand()
 
-const { vectorFile, tolerateFailures, testName } = argv
-integrationTestVectors(vectorFile, tolerateFailures, testName)
+;(async (argv) => {
+  const { _: [ command ], tolerateFailures, testName } = argv
+  /* I set the result to 1 so that if I fall through the exit condition is a failure */
+  let result = 1
+  if (command === 'decrypt') {
+    const { vectorFile } = argv
+    // @ts-ignore
+    result = await integrationDecryptTestVectors(vectorFile, tolerateFailures, testName)
+  } else if (command === 'encrypt') {
+    const { manifestFile, keyFile, decryptOracle } = argv
+    // @ts-ignore
+    result = await integrationEncryptTestVectors(manifestFile, keyFile, decryptOracle, tolerateFailures, testName)
+  } else {
+    console.log(`Unknown command ${command}`)
+    cli.showHelp()
+  }
+
+  if (result) process.exit(result)
+})(cli.argv)

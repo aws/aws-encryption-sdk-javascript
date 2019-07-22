@@ -23,9 +23,23 @@ import {
 
 export type EncryptionContext = {[index: string]: string}
 
+/* need to copy some things from DOM */
+export interface AwsEsdkJsKeyAlgorithm {
+  name: string
+}
+export type AwsEsdkJsKeyType = 'public' | 'private' | 'secret'
+export type AwsEsdkJsKeyUsage = 'encrypt' | 'decrypt' | 'sign' | 'verify' | 'deriveKey' | 'deriveBits' | 'wrapKey' | 'unwrapKey'
+
+export interface AwsEsdkJsCryptoKey {
+  readonly algorithm: AwsEsdkJsKeyAlgorithm
+  readonly extractable: boolean
+  readonly type: AwsEsdkJsKeyType
+  readonly usages: AwsEsdkJsKeyUsage[]
+}
+
 export type MixedBackendCryptoKey = {
-  nonZeroByteCryptoKey: CryptoKey
-  zeroByteCryptoKey: CryptoKey
+  nonZeroByteCryptoKey: AwsEsdkJsCryptoKey
+  zeroByteCryptoKey: AwsEsdkJsCryptoKey
 }
 
 export interface EncryptionRequest<S extends NodeAlgorithmSuite|WebCryptoAlgorithmSuite> {
