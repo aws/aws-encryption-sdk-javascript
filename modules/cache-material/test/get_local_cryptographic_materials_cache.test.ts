@@ -40,9 +40,7 @@ describe('getLocalCryptographicMaterialsCache', () => {
 
   it('putEncryptionResponse', () => {
     const key = 'some encryption key'
-    const response: any = {
-      material: encryptionMaterial
-    }
+    const response: any = encryptionMaterial
 
     putEncryptionResponse(key, response, 1)
     const test = getEncryptionResponse(key, 1)
@@ -54,9 +52,7 @@ describe('getLocalCryptographicMaterialsCache', () => {
   })
 
   it('Precondition: putEncryptionResponse plaintextLength can not be negative.', () => {
-    const response: any = {
-      material: encryptionMaterial
-    }
+    const response: any = encryptionMaterial
     const u: any = undefined
     const s: any = 'not-number'
     const n = -1
@@ -67,9 +63,7 @@ describe('getLocalCryptographicMaterialsCache', () => {
 
   it('Postcondition: Only return EncryptionMaterial.', () => {
     const key = 'some decryption key'
-    const response: any = {
-      material: decryptionMaterial
-    }
+    const response: any = decryptionMaterial
 
     putDecryptionResponse(key, response)
     expect(() => getEncryptionResponse(key, 1)).to.throw()
@@ -78,18 +72,14 @@ describe('getLocalCryptographicMaterialsCache', () => {
   it('Precondition: Only cache EncryptionMaterial that is cacheSafe.', () => {
     const key = 'some encryption key'
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const response: any = {
-      material: new NodeEncryptionMaterial(suite, {})
-    }
+    const response: any = new NodeEncryptionMaterial(suite, {})
 
     expect(() => putEncryptionResponse(key, response, 1)).to.throw()
   })
 
   it('putDecryptionResponse', () => {
     const key = 'some decryption key'
-    const response: any = {
-      material: decryptionMaterial
-    }
+    const response: any = decryptionMaterial
 
     putDecryptionResponse(key, response)
     const test = getDecryptionResponse(key)
@@ -102,9 +92,7 @@ describe('getLocalCryptographicMaterialsCache', () => {
 
   it('Precondition: Only cache DecryptionMaterial.', () => {
     const key = 'some decryption key'
-    const response: any = {
-      material: 'not material'
-    }
+    const response: any = 'not material'
 
     expect(() => putDecryptionResponse(key, response)).to.throw()
   })
@@ -112,9 +100,7 @@ describe('getLocalCryptographicMaterialsCache', () => {
   it('Precondition: Only cache DecryptionMaterial that is cacheSafe.', () => {
     const key = 'some decryption key'
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const response: any = {
-      material: new NodeEncryptionMaterial(suite, {})
-    }
+    const response: any = new NodeEncryptionMaterial(suite, {})
 
     expect(() => putDecryptionResponse(key, response)).to.throw()
   })
@@ -135,9 +121,7 @@ describe('getLocalCryptographicMaterialsCache', () => {
 
   it('Precondition: Only cache EncryptionMaterial.', () => {
     const key = 'some encryption key'
-    const response: any = {
-      material: 'not material'
-    }
+    const response: any = 'not material'
 
     expect(() => putEncryptionResponse(key, response, 1)).to.throw()
   })
@@ -149,9 +133,7 @@ describe('getLocalCryptographicMaterialsCache', () => {
 
   it('Postcondition: Only return DecryptionMaterial.', () => {
     const key = 'some encryption key'
-    const response: any = {
-      material: encryptionMaterial
-    }
+    const response: any = encryptionMaterial
 
     putEncryptionResponse(key, response, 1)
     expect(() => getDecryptionResponse(key))
@@ -163,9 +145,7 @@ describe('getLocalCryptographicMaterialsCache', () => {
 
   it('zero is an acceptable plaintextLength', () => {
     const key = 'some encryption key'
-    const response: any = {
-      material: encryptionMaterial
-    }
+    const response: any = encryptionMaterial
 
     putEncryptionResponse(key, response, 0)
     const test = getEncryptionResponse(key, 0)
@@ -186,9 +166,7 @@ describe('cache eviction', () => {
 
     const key1 = 'key lost'
     const key2 = 'key replace'
-    const response: any = {
-      material: decryptionMaterial
-    }
+    const response: any = decryptionMaterial
 
     putDecryptionResponse(key1, response)
     putDecryptionResponse(key2, response)
@@ -206,9 +184,7 @@ describe('cache eviction', () => {
     } = getLocalCryptographicMaterialsCache(1)
 
     const key = 'key deleted'
-    const response: any = {
-      material: decryptionMaterial
-    }
+    const response: any = decryptionMaterial
 
     putDecryptionResponse(key, response)
     del(key)
@@ -223,9 +199,7 @@ describe('cache eviction', () => {
     } = getLocalCryptographicMaterialsCache(1, 10)
 
     const key = 'key lost'
-    const response: any = {
-      material: decryptionMaterial
-    }
+    const response: any = decryptionMaterial
 
     putDecryptionResponse(key, response, 1)
     await new Promise(resolve => setTimeout(resolve, 20))
@@ -241,9 +215,7 @@ describe('cache eviction', () => {
 
     const key1 = 'key lost'
     const key2 = 'key replace'
-    const response: any = {
-      material: encryptionMaterial
-    }
+    const response: any = encryptionMaterial
 
     putEncryptionResponse(key1, response, 0)
     putEncryptionResponse(key2, response, 0)
@@ -261,9 +233,7 @@ describe('cache eviction', () => {
     } = getLocalCryptographicMaterialsCache(1, 10)
 
     const key = 'key lost'
-    const response: any = {
-      material: encryptionMaterial
-    }
+    const response: any = encryptionMaterial
 
     putEncryptionResponse(key, response, 1, 1)
     del(key)
@@ -278,9 +248,7 @@ describe('cache eviction', () => {
     } = getLocalCryptographicMaterialsCache(1, 10)
 
     const key = 'key lost'
-    const response: any = {
-      material: encryptionMaterial
-    }
+    const response: any = encryptionMaterial
 
     putEncryptionResponse(key, response, 1, 1)
     await new Promise(resolve => setTimeout(resolve, 20))

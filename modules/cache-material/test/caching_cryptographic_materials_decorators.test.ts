@@ -216,14 +216,6 @@ describe('Cryptographic Material Functions', () => {
     .setUnencryptedDataKey(udk128, trace)
 
   const context = {}
-  const encryptionResponse = {
-    material: encryptionMaterial,
-    context
-  }
-  const decryptionResponse = {
-    material: decryptionMaterial,
-    context
-  }
 
   const _maxAge = 10
   const _maxBytesEncrypted = 10
@@ -231,10 +223,10 @@ describe('Cryptographic Material Functions', () => {
   const _cache = getLocalCryptographicMaterialsCache(100)
   const _backingMaterialsManager = {
     getEncryptionMaterials () {
-      return encryptionResponse
+      return encryptionMaterial
     },
     decryptMaterials () {
-      return decryptionResponse
+      return decryptionMaterial
     }
   } as any
   const _partition = 'partition'
@@ -268,11 +260,9 @@ describe('Cryptographic Material Functions', () => {
         plaintextLength: 10
       })
       // The response must be cloned... i.e. not the same.
-      expect(test === encryptionResponse).to.equal(false)
-      // the material must be cloned... because after use it will be zeroed
-      expect(test.material === encryptionResponse.material).to.equal(false)
-      expect(test.context === encryptionResponse.context).to.equal(true)
-      expect(test.material.getUnencryptedDataKey()).to.deep.equal(encryptionMaterial.getUnencryptedDataKey())
+      expect(test === encryptionMaterial).to.equal(false)
+      expect(test.encryptionContext).to.deep.equal(encryptionMaterial.encryptionContext)
+      expect(test.getUnencryptedDataKey()).to.deep.equal(encryptionMaterial.getUnencryptedDataKey())
     })
   })
 
@@ -284,11 +274,9 @@ describe('Cryptographic Material Functions', () => {
         encryptedDataKeys: [edk1]
       })
       // The response must be cloned... i.e. not the same.
-      expect(test === decryptionResponse).to.equal(false)
-      // the material must be cloned... because after use it will be zeroed
-      expect(test.material === decryptionResponse.material).to.equal(false)
-      expect(test.context === decryptionResponse.context).to.equal(true)
-      expect(test.material.getUnencryptedDataKey()).to.deep.equal(decryptionMaterial.getUnencryptedDataKey())
+      expect(test === decryptionMaterial).to.equal(false)
+      expect(test.encryptionContext).to.deep.equal(decryptionMaterial.encryptionContext)
+      expect(test.getUnencryptedDataKey()).to.deep.equal(decryptionMaterial.getUnencryptedDataKey())
     })
   })
 })

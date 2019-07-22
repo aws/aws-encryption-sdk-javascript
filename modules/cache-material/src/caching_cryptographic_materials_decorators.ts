@@ -87,7 +87,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
       this._cache.del(cacheKey)
     }
 
-    const response = await this
+    const material = await this
       ._backingMaterialsManager
       /* Strip any information about the plaintext from the backing request,
        * because the resulting response may be used to encrypt multiple plaintexts.
@@ -95,7 +95,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
       .getEncryptionMaterials({ suite, encryptionContext, frameLength })
 
     /* Check for early return (Postcondition): If I can not cache the EncryptionResponse, just return it. */
-    if (!response.suite.cacheSafe) return response
+    if (!material.suite.cacheSafe) return material
 
     /* It is possible for an entry to exceed limits immediately.
      * The simplest case is to need to encrypt more than then maxBytesEncrypted.
@@ -103,16 +103,16 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
      * but do not put a know invalid item into the cache.
      */
     const testEntry = {
-      response,
+      response: material,
       now: Date.now(),
       messagesEncrypted: 1,
       bytesEncrypted: plaintextLength
     }
     if (!this._cacheEntryHasExceededLimits(testEntry)) {
-      this._cache.putEncryptionResponse(cacheKey, response, plaintextLength, this._maxAge)
+      this._cache.putEncryptionResponse(cacheKey, material, plaintextLength, this._maxAge)
     }
 
-    return cloneResponse(response)
+    return cloneResponse(material)
   }
 }
 
@@ -140,12 +140,12 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites> (
       this._cache.del(cacheKey)
     }
 
-    const response = await this
+    const material = await this
       ._backingMaterialsManager
       .decryptMaterials(request)
 
-    this._cache.putDecryptionResponse(cacheKey, response, this._maxAge)
-    return cloneResponse(response)
+    this._cache.putDecryptionResponse(cacheKey, material, this._maxAge)
+    return cloneResponse(material)
   }
 }
 

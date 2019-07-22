@@ -103,7 +103,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
     expect(encryptionContext).to.have.haveOwnProperty('some').and.to.equal('context')
   })
 
-  it('set a verificationKey from context', async () => {
+  it('set a verificationKey from encryption context', async () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
         throw new Error('I should never see this error')
@@ -179,7 +179,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
     expect(cmm._initializeDecryptionMaterial(suite, context)).to.rejectedWith(Error)
   })
 
-  it('can return an encryption response', async () => {
+  it('can return a encryption material', async () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (material: WebCryptoEncryptionMaterial): Promise<WebCryptoEncryptionMaterial> {
         const udk = synchronousRandomValues(suite.keyLengthBytes)
@@ -288,7 +288,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
     expect(cmm.getEncryptionMaterials({ encryptionContext })).to.rejectedWith(Error)
   })
 
-  it('can return a decryption response', async () => {
+  it('can return decryption material', async () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
         throw new Error('I should never see this error')
