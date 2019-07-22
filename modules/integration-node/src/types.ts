@@ -13,11 +13,21 @@
  * limitations under the License.
  */
 
-export interface ManifestList {
-  manifest: Manifest
+import { EncryptionContext } from '@aws-crypto/client-node' // eslint-disable-line no-unused-vars
+
+export interface DecryptManifestList {
+  manifest: DecryptManifest
   client: Client
   keys: string
-  tests: {[key: string]: Test}
+  tests: {[testName: string]: DecryptTest}
+}
+
+export interface EncryptManifestList {
+  manifest: EncryptManifest
+  client: Client
+  keys: string
+  plaintexts: {[name: string]: number}
+  tests: {[testName: string]: EncryptTest}
 }
 
 export interface KeyList {
@@ -29,6 +39,15 @@ interface Manifest {
   type: string
   version: number
 }
+
+interface DecryptManifest extends Manifest {
+  type: 'awses-decrypt'
+}
+
+interface EncryptManifest extends Manifest {
+  type: 'awses-encrypt'
+}
+
 interface Client {
   name: string
   version: string
@@ -62,7 +81,15 @@ export interface KmsKeyInfo extends KeyInfo {
   key: string
 }
 
-interface Test {
+interface EncryptTest {
+  plaintext: string
+  algorithm: string
+  'frame-size': number
+  'encryption-context': EncryptionContext
+  'master-keys': (RsaKeyInfo|AesKeyInfo|KmsKeyInfo)[]
+}
+
+interface DecryptTest {
   plaintext: string
   ciphertext: string
   'master-keys': (RsaKeyInfo|AesKeyInfo|KmsKeyInfo)[]
