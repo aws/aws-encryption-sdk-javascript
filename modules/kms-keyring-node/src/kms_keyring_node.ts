@@ -49,4 +49,4 @@ export class KmsKeyringNode extends KmsKeyringClass(KeyringNode as KeyRingConstr
 }
 immutableClass(KmsKeyringNode)
 
-export { getKmsClient, cacheKmsClients, limitRegions, excludeRegions, cacheClients }
+export { getKmsClient, cacheKmsClients, getClient, limitRegions, excludeRegions, cacheClients, KMS }
