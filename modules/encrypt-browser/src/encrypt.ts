@@ -84,7 +84,7 @@ export async function encrypt (
     plaintextLength
   }
 
-  const { material } = await cmm.getEncryptionMaterials(encryptionRequest)
+  const material = await cmm.getEncryptionMaterials(encryptionRequest)
   const { kdfGetSubtleEncrypt, subtleSign, dispose } = await getEncryptHelper(material)
 
   const messageId = await backend.randomValues(MESSAGE_ID_LENGTH)

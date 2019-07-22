@@ -203,7 +203,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
       some: 'context'
     }
 
-    const { material } = await cmm.getEncryptionMaterials({ suite, encryptionContext })
+    const material = await cmm.getEncryptionMaterials({ suite, encryptionContext })
     expect(Object.keys(material.encryptionContext)).lengthOf(2)
     if (!material.signatureKey) throw new Error('I should never see this error')
     expect(material.encryptionContext).to.have.haveOwnProperty(ENCODED_SIGNER_KEY).and.to.equal(toBase64(material.signatureKey.compressPoint))
@@ -233,7 +233,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
       some: 'context'
     }
 
-    const { material } = await cmm.getEncryptionMaterials({ encryptionContext })
+    const material = await cmm.getEncryptionMaterials({ encryptionContext })
     expect(Object.keys(material.encryptionContext)).lengthOf(2)
     if (!material.signatureKey) throw new Error('I should never see this error')
     expect(material.encryptionContext).to.have.haveOwnProperty(ENCODED_SIGNER_KEY).and.to.equal(toBase64(material.signatureKey.compressPoint))
@@ -309,7 +309,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
     const encryptionContext = { some: 'context', [ENCODED_SIGNER_KEY]: 'A29gmBT/NscB90u6npOulZQwAAiKVtoShudOm2J2sCgC' }
     const edk = new EncryptedDataKey({ providerId: ' keyNamespace', providerInfo: 'keyName', encryptedDataKey: new Uint8Array(5) })
 
-    const { material } = await cmm.decryptMaterials({ suite, encryptionContext, encryptedDataKeys: [edk] })
+    const material = await cmm.decryptMaterials({ suite, encryptionContext, encryptedDataKeys: [edk] })
     if (!material.verificationKey) throw new Error('I should never see this error')
     expect(material.encryptionContext).to.deep.equal(encryptionContext)
     expect(material.verificationKey.signatureCurve).to.equal(suite.signatureCurve)

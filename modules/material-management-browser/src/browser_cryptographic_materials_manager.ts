@@ -16,7 +16,7 @@
 import {
   WebCryptoMaterialsManager, EncryptionRequest, // eslint-disable-line no-unused-vars
   DecryptionRequest, EncryptionContext, // eslint-disable-line no-unused-vars
-  EncryptionResponse, DecryptionResponse, // eslint-disable-line no-unused-vars
+  EncryptionMaterial, DecryptionMaterial, // eslint-disable-line no-unused-vars
   WebCryptoAlgorithmSuite, WebCryptoEncryptionMaterial,
   WebCryptoDecryptionMaterial, SignatureKey, needs, readOnlyProperty,
   VerificationKey, AlgorithmSuiteIdentifier, immutableBaseClass,
@@ -29,8 +29,8 @@ import { fromBase64, toBase64 } from '@aws-sdk/util-base64-browser'
 
 export type WebCryptoEncryptionRequest = EncryptionRequest<WebCryptoAlgorithmSuite>
 export type WebCryptoDecryptionRequest = DecryptionRequest<WebCryptoAlgorithmSuite>
-export type WebCryptoEncryptionResponse = EncryptionResponse<WebCryptoAlgorithmSuite>
-export type WebCryptoDecryptionResponse = DecryptionResponse<WebCryptoAlgorithmSuite>
+export type WebCryptoEncryptionMaterial = EncryptionMaterial<WebCryptoAlgorithmSuite>
+export type WebCryptoDecryptionMaterial = DecryptionMaterial<WebCryptoAlgorithmSuite>
 export type WebCryptoGetEncryptionMaterials = GetEncryptionMaterials<WebCryptoAlgorithmSuite>
 export type WebCryptoGetDecryptMaterials = GetDecryptMaterials<WebCryptoAlgorithmSuite>
 
@@ -46,7 +46,7 @@ export class WebCryptoDefaultCryptographicMaterialsManager implements WebCryptoM
     needs(keyring instanceof KeyringWebCrypto, 'Unsupported type.')
     readOnlyProperty(this, 'keyring', keyring)
   }
-  async getEncryptionMaterials ({ suite, encryptionContext }: WebCryptoEncryptionRequest): Promise<WebCryptoEncryptionResponse> {
+  async getEncryptionMaterials ({ suite, encryptionContext }: WebCryptoEncryptionRequest): Promise<WebCryptoEncryptionMaterial> {
     suite = suite || new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
 
     const material = await this
@@ -59,10 +59,10 @@ export class WebCryptoDefaultCryptographicMaterialsManager implements WebCryptoM
     /* Postcondition: The WebCryptoEncryptionMaterial must contain at least 1 EncryptedDataKey. */
     needs(material.encryptedDataKeys.length, 'No EncryptedDataKeys: the ciphertext can never be decrypted.')
 
-    return { material }
+    return material
   }
 
-  async decryptMaterials ({ suite, encryptedDataKeys, encryptionContext }: WebCryptoDecryptionRequest): Promise<WebCryptoDecryptionResponse> {
+  async decryptMaterials ({ suite, encryptedDataKeys, encryptionContext }: WebCryptoDecryptionRequest): Promise<WebCryptoDecryptionMaterial> {
     const material = await this
       .keyring
       .onDecrypt(await this._initializeDecryptionMaterial(suite, encryptionContext), encryptedDataKeys.slice())
@@ -70,7 +70,7 @@ export class WebCryptoDefaultCryptographicMaterialsManager implements WebCryptoM
     /* Postcondition: The WebCryptoDecryptionMaterial must contain a valid dataKey. */
     needs(material.hasValidKey(), 'Unencrypted data key is invalid.')
 
-    return { material }
+    return material
   }
 
   async _initializeEncryptionMaterial (suite: WebCryptoAlgorithmSuite, encryptionContext: EncryptionContext) {

@@ -71,7 +71,7 @@ export function encryptStream (
   const wrappingStream = new Duplexify()
 
   cmm.getEncryptionMaterials({ suite, encryptionContext, frameLength })
-    .then(async ({ material }) => {
+    .then(async (material) => {
       const { dispose, getSigner } = getEncryptHelper(material)
 
       const { getCipher, messageHeader, rawHeader } = getEncryptionInfo(material, frameLength)

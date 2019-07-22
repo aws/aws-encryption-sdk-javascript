@@ -15,8 +15,8 @@
 
 import LRU from 'lru-cache'
 import {
-  EncryptionResponse, // eslint-disable-line no-unused-vars
-  DecryptionResponse, // eslint-disable-line no-unused-vars
+  EncryptionMaterial, // eslint-disable-line no-unused-vars
+  DecryptionMaterial, // eslint-disable-line no-unused-vars
   SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
   needs,
   isEncryptionMaterial,
@@ -38,7 +38,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
     max: maxSize,
     dispose (_key, value) {
       /* Zero out the unencrypted dataKey, when the material is removed from the cache. */
-      value.response.material.zeroUnencryptedDataKey()
+      value.response.zeroUnencryptedDataKey()
     }
   })
 
@@ -73,18 +73,18 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
   return {
     putEncryptionResponse (
       key: string,
-      response: EncryptionResponse<S>,
+      material: EncryptionMaterial<S>,
       plaintextLength: number,
       maxAge?: number
     ) {
       /* Precondition: putEncryptionResponse plaintextLength can not be negative. */
       needs(plaintextLength >= 0, 'Malformed plaintextLength')
       /* Precondition: Only cache EncryptionMaterial. */
-      needs(isEncryptionMaterial(response.material), 'Malformed response.')
+      needs(isEncryptionMaterial(material), 'Malformed response.')
       /* Precondition: Only cache EncryptionMaterial that is cacheSafe. */
-      needs(response.material.suite.cacheSafe, 'Can not cache non-cache safe material')
+      needs(material.suite.cacheSafe, 'Can not cache non-cache safe material')
       const entry = Object.seal({
-        response: Object.freeze(response),
+        response: material,
         bytesEncrypted: plaintextLength,
         messagesEncrypted: 1,
         now: Date.now()
@@ -94,15 +94,15 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
     },
     putDecryptionResponse (
       key: string,
-      response: DecryptionResponse<S>,
+      material: DecryptionMaterial<S>,
       maxAge?: number
     ) {
       /* Precondition: Only cache DecryptionMaterial. */
-      needs(isDecryptionMaterial(response.material), 'Malformed response.')
+      needs(isDecryptionMaterial(material), 'Malformed response.')
       /* Precondition: Only cache DecryptionMaterial that is cacheSafe. */
-      needs(response.material.suite.cacheSafe, 'Can not cache non-cache safe material')
+      needs(material.suite.cacheSafe, 'Can not cache non-cache safe material')
       const entry = Object.seal({
-        response: Object.freeze(response),
+        response: material,
         bytesEncrypted: 0,
         messagesEncrypted: 0,
         now: Date.now()
@@ -117,7 +117,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
       /* Check for early return (Postcondition): If this key does not have an EncryptionMaterial, return false. */
       if (!entry) return false
       /* Postcondition: Only return EncryptionMaterial. */
-      needs(isEncryptionMaterial(entry.response.material), 'Malformed response.')
+      needs(isEncryptionMaterial(entry.response), 'Malformed response.')
 
       entry.bytesEncrypted += plaintextLength
       entry.messagesEncrypted += 1
@@ -129,7 +129,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
       /* Check for early return (Postcondition): If this key does not have a DecryptionMaterial, return false. */
       if (!entry) return false
       /* Postcondition: Only return DecryptionMaterial. */
-      needs(isDecryptionMaterial(entry.response.material), 'Malformed response.')
+      needs(isDecryptionMaterial(entry.response), 'Malformed response.')
 
       return <DecryptionResponseEntry<S>>entry
     },

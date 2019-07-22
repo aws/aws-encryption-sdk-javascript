@@ -16,10 +16,10 @@
 import {
   GetEncryptionMaterials, // eslint-disable-line no-unused-vars
   GetDecryptMaterials, // eslint-disable-line no-unused-vars
-  DecryptionResponse, // eslint-disable-line no-unused-vars
+  DecryptionMaterial, // eslint-disable-line no-unused-vars
   SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
   EncryptionRequest, // eslint-disable-line no-unused-vars
-  EncryptionResponse, // eslint-disable-line no-unused-vars
+  EncryptionMaterial, // eslint-disable-line no-unused-vars
   MaterialsManager, // eslint-disable-line no-unused-vars
   DecryptionRequest, // eslint-disable-line no-unused-vars
   needs,
@@ -69,7 +69,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
   return async function getEncryptionMaterials (
     this: CachingMaterialsManager<S>,
     request: EncryptionRequest<S>
-  ): Promise<EncryptionResponse<S>> {
+  ): Promise<EncryptionMaterial<S>> {
     const { suite, encryptionContext, frameLength, plaintextLength } = request
     /* Check for early return (Postcondition): If I can not cache the EncryptionResponse, do not even look. */
     if ((suite && !suite.cacheSafe) || typeof plaintextLength !== 'number' || plaintextLength < 0) {
@@ -95,7 +95,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
       .getEncryptionMaterials({ suite, encryptionContext, frameLength })
 
     /* Check for early return (Postcondition): If I can not cache the EncryptionResponse, just return it. */
-    if (!response.material.suite.cacheSafe) return response
+    if (!response.suite.cacheSafe) return response
 
     /* It is possible for an entry to exceed limits immediately.
      * The simplest case is to need to encrypt more than then maxBytesEncrypted.
@@ -122,7 +122,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites> (
   return async function decryptMaterials (
     this: CachingMaterialsManager<S>,
     request: DecryptionRequest<S>
-  ): Promise<DecryptionResponse<S>> {
+  ): Promise<DecryptionMaterial<S>> {
     const { suite } = request
     /* Check for early return (Postcondition): If I can not cache the DecryptionResponse, do not even look. */
     if (!suite.cacheSafe) {
@@ -166,14 +166,13 @@ export function cacheEntryHasExceededLimits<S extends SupportedAlgorithmSuites> 
  * Because when the Encryption SDK is done with material, it will zero it out.
  * Plucking off the material and cloning just that and then returning the rest of the response
  * can just be handled in one place.
- * @param response EncryptionResponse|DecryptionResponse
+ * @param material EncryptionResponse|DecryptionResponse
  * @return EncryptionResponse|DecryptionResponse
  */
-function cloneResponse<S extends SupportedAlgorithmSuites, R extends EncryptionResponse<S>|DecryptionResponse<S>> (
-  response: R
-): R {
-  const { material } = response
-  return { ...response, material: cloneMaterial(material) }
+function cloneResponse<S extends SupportedAlgorithmSuites, M extends EncryptionMaterial<S>|DecryptionMaterial<S>> (
+  material: M
+): M {
+  return cloneMaterial(material)
 }
 
 export interface CachingMaterialsManagerInput<S extends SupportedAlgorithmSuites> extends Readonly<{

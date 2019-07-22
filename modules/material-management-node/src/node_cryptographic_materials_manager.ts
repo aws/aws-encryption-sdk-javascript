@@ -15,7 +15,7 @@
 
 import {
   NodeMaterialsManager, EncryptionRequest, DecryptionRequest, EncryptionContext, // eslint-disable-line no-unused-vars
-  EncryptionResponse, DecryptionResponse, // eslint-disable-line no-unused-vars
+  EncryptionMaterial, DecryptionMaterial, // eslint-disable-line no-unused-vars
   NodeAlgorithmSuite, NodeEncryptionMaterial, NodeDecryptionMaterial, SignatureKey,
   needs, VerificationKey, AlgorithmSuiteIdentifier,
   immutableClass, readOnlyProperty, KeyringNode,
@@ -28,8 +28,8 @@ import { createECDH } from 'crypto'
 
 export type NodeEncryptionRequest = EncryptionRequest<NodeAlgorithmSuite>
 export type NodeDecryptionRequest = DecryptionRequest<NodeAlgorithmSuite>
-export type NodeEncryptionResponse = EncryptionResponse<NodeAlgorithmSuite>
-export type NodeDecryptionResponse = DecryptionResponse<NodeAlgorithmSuite>
+export type NodeEncryptionMaterial = EncryptionMaterial<NodeAlgorithmSuite>
+export type NodeDecryptionMaterial = DecryptionMaterial<NodeAlgorithmSuite>
 export type NodeGetEncryptionMaterials = GetEncryptionMaterials<NodeAlgorithmSuite>
 export type NodeGetDecryptMaterials = GetDecryptMaterials<NodeAlgorithmSuite>
 
@@ -46,7 +46,7 @@ export class NodeDefaultCryptographicMaterialsManager implements NodeMaterialsMa
     readOnlyProperty(this, 'keyring', keyring)
   }
 
-  async getEncryptionMaterials ({ suite, encryptionContext }: NodeEncryptionRequest): Promise<NodeEncryptionResponse> {
+  async getEncryptionMaterials ({ suite, encryptionContext }: NodeEncryptionRequest): Promise<NodeEncryptionMaterial> {
     suite = suite || new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
 
     const material = await this
@@ -59,10 +59,10 @@ export class NodeDefaultCryptographicMaterialsManager implements NodeMaterialsMa
     /* Postcondition: The NodeEncryptionMaterial must contain at least 1 EncryptedDataKey. */
     needs(material.encryptedDataKeys.length, 'No EncryptedDataKeys: the ciphertext can never be decrypted.')
 
-    return { material }
+    return material
   }
 
-  async decryptMaterials ({ suite, encryptedDataKeys, encryptionContext }: NodeDecryptionRequest): Promise<NodeDecryptionResponse> {
+  async decryptMaterials ({ suite, encryptedDataKeys, encryptionContext }: NodeDecryptionRequest): Promise<NodeDecryptionMaterial> {
     const material = await this
       .keyring
       .onDecrypt(this._initializeDecryptionMaterial(suite, encryptionContext), encryptedDataKeys.slice())
@@ -73,7 +73,7 @@ export class NodeDefaultCryptographicMaterialsManager implements NodeMaterialsMa
      */
     needs(material.getUnencryptedDataKey(), 'Unencrypted data key is invalid.')
 
-    return { material }
+    return material
   }
 
   _initializeEncryptionMaterial (suite: NodeAlgorithmSuite, encryptionContext: EncryptionContext) {

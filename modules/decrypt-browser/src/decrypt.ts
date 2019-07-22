@@ -59,7 +59,7 @@ export async function decrypt (
   const { encryptionContext, encryptedDataKeys, suiteId, messageId } = messageHeader
   const suite = new WebCryptoAlgorithmSuite(suiteId)
 
-  const { material } = await cmm.decryptMaterials({ suite, encryptionContext, encryptedDataKeys })
+  const material = await cmm.decryptMaterials({ suite, encryptionContext, encryptedDataKeys })
   const { kdfGetSubtleDecrypt, subtleVerify, dispose } = await getDecryptionHelper(material)
   const info = kdfInfo(suiteId, messageId)
   const getSubtleDecrypt = kdfGetSubtleDecrypt(info)

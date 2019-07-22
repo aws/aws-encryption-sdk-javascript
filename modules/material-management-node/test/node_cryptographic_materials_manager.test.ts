@@ -258,7 +258,7 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
       providerId: 'p', providerInfo: 'p', encryptedDataKey: new Uint8Array(5)
     })]
 
-    const { material } = await cmm.decryptMaterials({ suite, encryptedDataKeys, encryptionContext: {} })
+    const material = await cmm.decryptMaterials({ suite, encryptedDataKeys, encryptionContext: {} })
     expect(material.hasUnencryptedDataKey).to.equal(true)
   })
 })
