@@ -69,10 +69,10 @@ describe('decrypt', () => {
   })
 
   it('Precondition: The sequence number is required to monotonically increase, starting from 1.', async () => {
-    expect(decrypt(
+    return expect(decrypt(
       fixtures.decryptKeyring(),
       fixtures.frameSequenceOutOfOrder(),
       { encoding: 'base64' }
-    )).to.rejectedWith(Error)
+    )).to.rejectedWith(Error, 'Encrypted body sequence out of order.')
   })
 })
