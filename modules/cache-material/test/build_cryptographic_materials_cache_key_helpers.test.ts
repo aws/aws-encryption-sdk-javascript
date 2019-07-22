@@ -38,7 +38,7 @@ const {
 describe('buildCryptographicMaterialsCacheKeyHelpers::encryptionContextHash', () => {
   for (const vector of encryptionContextVectors) {
     it(`${vector.name}`, async () => {
-      const test = await encryptionContextHash(vector.context)
+      const test = await encryptionContextHash(vector.encryptionContext)
       expect(test).to.deep.equal(vector.hash)
     })
   }
