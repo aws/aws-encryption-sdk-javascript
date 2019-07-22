@@ -34,7 +34,7 @@ import { needs } from './needs'
  * be protected.  The longer this data persists in memory the
  * greater the opportunity to be invalidated.  Because
  * a Caching CMM exists is it important to insure that the
- * unencrypted data key and it's meta data can not be manipulated,
+ * unencrypted data key and its meta data can not be manipulated,
  * and that the unencrypted data key can be zeroed when
  * it is no longer needed.
  */
