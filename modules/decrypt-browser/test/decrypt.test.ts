@@ -32,4 +32,15 @@ describe('decrypt', () => {
     expect(messageHeader.encryptionContext).to.deep.equal(fixtures.encryptionContext())
     expect(test).to.deep.equal(fixtures.plaintext())
   })
+
+  it('Precondition: The sequence number is required to monotonically increase, starting from 1.', async () => {
+    return decrypt(
+      fixtures.decryptKeyring(),
+      fixtures.frameSequenceOutOfOrder()
+    ).then(() => {
+      throw new Error('should not succeed')
+    }, err => {
+      expect(err).to.be.instanceOf(Error)
+    })
+  })
 })
