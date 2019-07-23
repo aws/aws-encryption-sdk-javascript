@@ -26,7 +26,9 @@ import {
   importForWebCryptoEncryptionMaterial
 } from '@aws-crypto/material-management-browser'
 import {
-  deserializeFactory
+  deserializeFactory,
+  decodeBodyHeader,
+  deserializeSignature
 } from '@aws-crypto/serialize'
 import { encrypt } from '../src/index'
 import { toUtf8, fromUtf8 } from '@aws-sdk/util-utf8-browser'
@@ -88,6 +90,35 @@ describe('encrypt structural testing', () => {
 
   it('Precondition: The frameLength must be less than the maximum frame size for browser encryption.', async () => {
     const frameLength = 0
-    expect(encrypt(keyRing, 'asdf', { frameLength })).to.rejectedWith(Error)
+    expect(encrypt(keyRing, fromUtf8('asdf'), { frameLength })).to.rejectedWith(Error)
+  })
+
+  it('can fully parse a framed message', async () => {
+    const plaintext = fromUtf8('asdf')
+    const frameLength = 1
+    const { cipherMessage } = await encrypt(keyRing, plaintext, { frameLength })
+
+    const headerInfo = deserializeMessageHeader(cipherMessage)
+    if (!headerInfo) throw new Error('this should never happen')
+
+    const tagLength = headerInfo.algorithmSuite.tagLength / 8
+    let readPos = headerInfo.headerLength + headerInfo.algorithmSuite.ivLength + tagLength
+    let i = 0
+    let bodyHeader: any
+    // for every frame...
+    for (; i < 4; i++) {
+      bodyHeader = decodeBodyHeader(cipherMessage, headerInfo, readPos)
+      if (!bodyHeader) throw new Error('this should never happen')
+      readPos = bodyHeader.readPos + bodyHeader.contentLength + tagLength
+    }
+
+    expect(i).to.equal(4) // 4 frames
+    expect(bodyHeader.isFinalFrame).to.equal(true) // we got to the end
+
+    // This implicitly tests that I have consumed all the data,
+    // because otherwise the footer section will be too large
+    const footerSection = cipherMessage.slice(readPos)
+    // This will throw if it does not deserialize correctly
+    deserializeSignature(footerSection)
   })
 })
