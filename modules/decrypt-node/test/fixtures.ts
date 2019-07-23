@@ -37,6 +37,19 @@ export function encryptionContext () {
   }
 }
 
+export function frameSequenceOutOfOrder () {
+  /* This is the string 'asdf' encrypted with ALG_AES128_GCM_IV12_TAG16.
+   * The data key is all zeros.
+   * The frames have been reordered in order to test decryption failure.
+   */
+  return 'AYAAFG/G0IFAKXNb9xuUlGZGldIAAAABAAFrAAFrAAMAAAACAAAAAAwAAAAB' + // header
+  'AAAAAAAAAAAAAAAAslUUXWAiznTYc7fZwFSbDw' + // header auth
+  'AAAAQAAAAAAAAAAAAAAAR9lLkID8B52uAln4zhh6ReJf' + // f
+  'AAAAMAAAAAAAAAAAAAAAPnL7BJ22Xgjm6rneeNHrus9w' + // d
+  'AAAAIAAAAAAAAAAAAAAAKiyryqy/AOiRH01aCOktajyw' + // s
+  'AAAAEAAAAAAAAAAAAAAAEPhwHD/lPe6S/+QmqmQq+xXQ' // a
+}
+
 export function decryptKeyring () {
   class TestKeyring extends KeyringNode {
     async _onEncrypt () : Promise<NodeEncryptionMaterial> {

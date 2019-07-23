@@ -21,6 +21,7 @@ import {
   AlgorithmSuiteIdentifier,
   getEncryptHelper,
   KeyringWebCrypto,
+  needs,
   WebCryptoMaterialsManager // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
 import {
@@ -35,7 +36,8 @@ import {
   serializeSignatureInfo,
   FRAME_LENGTH,
   MESSAGE_ID_LENGTH,
-  raw2der
+  raw2der,
+  Maximum
 } from '@aws-crypto/serialize'
 import { fromUtf8 } from '@aws-sdk/util-utf8-browser'
 import { getWebCryptoBackend } from '@aws-crypto/web-crypto-backend'
@@ -60,6 +62,9 @@ export async function encrypt (
   plaintext: Uint8Array,
   { suiteId, encryptionContext, frameLength = FRAME_LENGTH }: EncryptInput = {}
 ): Promise<EncryptResult> {
+  /* Precondition: The frameLength must be less than the maximum frame size for browser encryption. */
+  needs(frameLength > 0 && Maximum.FRAME_SIZE >= frameLength, `frameLength out of bounds: 0 > frameLength >= ${Maximum.FRAME_SIZE}`)
+
   const backend = await getWebCryptoBackend()
   if (!backend) throw new Error('No supported crypto backend')
 
@@ -119,14 +124,24 @@ export async function encrypt (
     const frameHeader = isFinalFrame
       ? serialize.finalFrameHeader(sequenceNumber, frameIv, finalFrameLength)
       : serialize.frameHeader(sequenceNumber, frameIv)
+    const contentString = messageAADContentString({ contentType: messageHeader.contentType, isFinalFrame })
     const messageAdditionalData = messageAAD(
       messageId,
-      messageAADContentString({ contentType: messageHeader.contentType, isFinalFrame }),
+      contentString,
       sequenceNumber,
-      plaintextLength
+      isFinalFrame ? finalFrameLength : frameLength
     )
 
-    const cipherBufferAndAuthTag = await getSubtleEncrypt(frameIv, messageAdditionalData)(plaintext)
+    /* Slicing an ArrayBuffer in a browser is suboptimal.
+     * It makes a copy.s
+     * So I just make a new view for the length of the frame.
+     */
+    const framePlaintext = new Uint8Array(
+      plaintext.buffer,
+      (sequenceNumber - 1) * frameLength,
+      isFinalFrame ? finalFrameLength : frameLength
+    )
+    const cipherBufferAndAuthTag = await getSubtleEncrypt(frameIv, messageAdditionalData)(framePlaintext)
 
     bodyContent.push(frameHeader, cipherBufferAndAuthTag)
   }

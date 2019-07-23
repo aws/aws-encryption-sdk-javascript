@@ -25,7 +25,7 @@ import Duplexify from 'duplexify'
 import { Duplex } from 'stream' // eslint-disable-line no-unused-vars
 
 // @ts-ignore
-import { pipeline } from 'readable-stream'
+import { pipeline, PassThrough } from 'readable-stream'
 
 export interface DecryptStreamOptions {
   maxBodySize?: number
@@ -44,7 +44,13 @@ export function decryptStream (
   const verifyStream = new VerifyStream({ maxBodySize })
   const decipherStream = getDecipherStream()
 
-  pipeline(parseHeaderStream, verifyStream, decipherStream)
+  /* pipeline will _either_ stream.destroy or the callback.
+   * decipherStream uses destroy to dispose the material.
+   * So I tack a pass though stream onto the end.
+   */
+  pipeline(parseHeaderStream, verifyStream, decipherStream, new PassThrough(), (err: Error) => {
+    if (err) stream.emit('error', err)
+  })
 
   const stream = new Duplexify(parseHeaderStream, decipherStream)
 

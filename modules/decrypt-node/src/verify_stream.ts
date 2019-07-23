@@ -16,10 +16,10 @@
 // @ts-ignore
 import { Transform as PortableTransform } from 'readable-stream'
 import { Transform } from 'stream' // eslint-disable-line no-unused-vars
-import { DecipherGCM } from 'crypto' // eslint-disable-line no-unused-vars
 import {
   needs,
-  GetVerify // eslint-disable-line no-unused-vars
+  GetVerify, // eslint-disable-line no-unused-vars
+  GetDecipher // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 import {
   deserializeSignature,
@@ -35,7 +35,7 @@ const PortableTransformWithType = (<new (...args: any[]) => Transform>PortableTr
 
 export interface VerifyInfo {
   headerInfo: HeaderInfo
-  getDecipher: (iv: Uint8Array) => DecipherGCM
+  getDecipher: GetDecipher
   dispose: () => void
   verify?: AWSVerify
 }
@@ -49,6 +49,7 @@ interface VerifyState {
   authTagBuffer: Buffer
   currentFrame?: BodyHeader
   signatureInfo: Buffer
+  sequenceNumber: number
 }
 
 export class VerifyStream extends PortableTransformWithType {
@@ -56,7 +57,8 @@ export class VerifyStream extends PortableTransformWithType {
   private _verifyState: VerifyState = {
     buffer: Buffer.alloc(0),
     authTagBuffer: Buffer.alloc(0),
-    signatureInfo: Buffer.alloc(0)
+    signatureInfo: Buffer.alloc(0),
+    sequenceNumber: 0
   }
   private _verify?: AWSVerify
   private _maxBodySize?: number
@@ -117,6 +119,17 @@ export class VerifyStream extends PortableTransformWithType {
        * This means that I must buffer the message until the AuthTag is reached.
        */
       needs(!this._maxBodySize || this._maxBodySize >= frameHeader.contentLength, 'maxBodySize exceeded.')
+
+      /* Keeping track of the sequence number myself. */
+      state.sequenceNumber += 1
+
+      /* Precondition: The sequence number is required to monotonically increase, starting from 1.
+       * This is to avoid a bad actor from abusing the sequence number on un-signed algorithm suites.
+       * If the frame size matched the data format (say NDJSON),
+       * then the data could be significantly altered just by rearranging the frames.
+       * Non-framed data returns a sequenceNumber of 1.
+       */
+      needs(frameHeader.sequenceNumber === state.sequenceNumber, 'Encrypted body sequence out of order.')
 
       if (this._verify) {
         this._verify.update(frameBuffer.slice(0, frameHeader.readPos))

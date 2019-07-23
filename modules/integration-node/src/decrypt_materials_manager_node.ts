@@ -39,6 +39,11 @@ const Bits2RawAesWrappingSuiteIdentifier: {[key: number]: WrappingSuiteIdentifie
   256: RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
 }
 
+export function encryptMaterialsManagerNode (keyInfos: KeyInfoTuple[]) {
+  const [generator, ...children] = keyInfos.map(keyringNode)
+  return new MultiKeyringNode({ generator, children })
+}
+
 export function decryptMaterialsManagerNode (keyInfos: KeyInfoTuple[]) {
   const children = keyInfos.map(keyringNode)
   return new MultiKeyringNode({ children })
@@ -58,8 +63,8 @@ function keyringNode ([ info, key ]: KeyInfoTuple) {
 }
 
 function kmsKeyring (_keyInfo: KmsKeyInfo, key: KMSKey) {
-  const keyIds = [key['key-id']]
-  return new KmsKeyringNode({ keyIds })
+  const generatorKeyId = key['key-id']
+  return new KmsKeyringNode({ generatorKeyId })
 }
 
 function aesKeyring (keyInfo:AesKeyInfo, key: AESKey) {

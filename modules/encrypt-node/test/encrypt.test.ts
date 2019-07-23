@@ -26,6 +26,8 @@ import {
 } from '@aws-crypto/material-management-node'
 import {
   deserializeFactory,
+  decodeBodyHeader,
+  deserializeSignature,
   MessageHeader // eslint-disable-line no-unused-vars
 } from '@aws-crypto/serialize'
 import { encrypt, encryptStream } from '../src/index'
@@ -183,6 +185,40 @@ describe('encrypt structural testing', () => {
     if (!messageInfo) throw new Error('I should never see this error')
 
     expect(messageHeader).to.deep.equal(messageInfo.messageHeader)
+  })
+
+  it('Precondition: The frameLength must be less than the maximum frame size Node.js stream.', async () => {
+    const frameLength = 0
+    expect(encrypt(keyRing, 'asdf', { frameLength })).to.rejectedWith(Error)
+  })
+
+  it('can fully parse a framed message', async () => {
+    const plaintext = 'asdf'
+    const frameLength = 1
+    const { ciphertext } = await encrypt(keyRing, plaintext, { frameLength })
+
+    const headerInfo = deserializeMessageHeader(ciphertext)
+    if (!headerInfo) throw new Error('this should never happen')
+
+    const tagLength = headerInfo.algorithmSuite.tagLength / 8
+    let readPos = headerInfo.headerLength + headerInfo.algorithmSuite.ivLength + tagLength
+    let i = 0
+    let bodyHeader: any
+    // for every frame...
+    for (; i < 5; i++) {
+      bodyHeader = decodeBodyHeader(ciphertext, headerInfo, readPos)
+      if (!bodyHeader) throw new Error('this should never happen')
+      readPos = bodyHeader.readPos + bodyHeader.contentLength + tagLength
+    }
+
+    expect(i).to.equal(5) // 4 frames
+    expect(bodyHeader.isFinalFrame).to.equal(true) // we got to the end
+
+    // This implicitly tests that I have consumed all the data,
+    // because otherwise the footer section will be too large
+    const footerSection = ciphertext.slice(readPos)
+    // This will throw if it does not deserialize correctly
+    deserializeSignature(footerSection)
   })
 })
 
