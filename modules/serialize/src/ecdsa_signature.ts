@@ -90,9 +90,21 @@ export function raw2der (rawSignature: Uint8Array, { signatureCurve }: WebCrypto
   /* Precondition: The total raw signature length is twice the key length bytes. */
   needs(byteLength === 2 * _keyLengthBytes, 'Malformed signature.')
 
-  // A little more portable than Buffer.from, but not much
-  const r = new asn.bignum.BN(rawSignature.slice(0, _keyLengthBytes)).toArrayLike(Buffer)
-  const s = new asn.bignum.BN(rawSignature.slice(_keyLengthBytes)).toArrayLike(Buffer)
+  /* A little more portable than Buffer.from, but not much.
+   * DER encoding stores integers as signed values.
+   * This means if the first bit is a 1,
+   * the value will be interpreted as negative.
+   * So an extra byte needs to be added on.
+   * This is a problem because "raw" encoding is just r|s.
+   * Without this "extra logic" a given DER signature `sig` *may*
+   * raw2der(der2raw(sig)) !== sig
+   * see: https://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf 8.3
+   * All of this means that s and r **MUST** be passed as BN,
+   * and NOT bytes.
+   * Otherwise you need to interpret this padding yourself.
+   */
+  const r = new asn.bignum.BN(rawSignature.slice(0, _keyLengthBytes))
+  const s = new asn.bignum.BN(rawSignature.slice(_keyLengthBytes))
 
   return ECDSASignature.encode({ r, s }, 'der')
 }

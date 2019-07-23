@@ -67,4 +67,12 @@ describe('decrypt', () => {
     expect(messageHeader.encryptionContext).to.deep.equal(fixtures.encryptionContext())
     expect(test.toString('base64')).to.equal(fixtures.base64Plaintext())
   })
+
+  it('Precondition: The sequence number is required to monotonically increase, starting from 1.', async () => {
+    return expect(decrypt(
+      fixtures.decryptKeyring(),
+      fixtures.frameSequenceOutOfOrder(),
+      { encoding: 'base64' }
+    )).to.rejectedWith(Error, 'Encrypted body sequence out of order.')
+  })
 })

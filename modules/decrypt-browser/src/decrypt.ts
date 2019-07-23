@@ -100,8 +100,21 @@ interface FramedDecryptOptions extends BodyDecryptOptions {
 async function bodyDecrypt ({ buffer, getSubtleDecrypt, headerInfo }: BodyDecryptOptions) {
   let readPos = headerInfo.headerIv.byteLength + headerInfo.rawHeader.byteLength + headerInfo.headerAuthTag.byteLength
   const clearBuffers: ArrayBuffer[] = []
+  let sequenceNumber = 0
   while (true) {
+    /* Keeping track of the sequence number myself. */
+    sequenceNumber += 1
+
     const { clearBlob, frameInfo } = await framedDecrypt({ buffer, getSubtleDecrypt, headerInfo, readPos })
+
+    /* Precondition: The sequenceNumber is required to monotonically increase, starting from 1.
+     * This is to avoid a bad actor from abusing the sequence number on un-signed algorithm suites.
+     * If the frame size matched the data format (say NDJSON),
+     * then the data could be significantly altered just by rearranging the frames.
+     * Non-framed data returns a sequenceNumber of 1.
+     */
+    needs(frameInfo.sequenceNumber === sequenceNumber, 'Encrypted body sequence out of order.')
+
     clearBuffers.push(clearBlob)
     readPos = frameInfo.readPos
     if (frameInfo.isFinalFrame) {
