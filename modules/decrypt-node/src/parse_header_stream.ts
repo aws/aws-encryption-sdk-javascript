@@ -108,7 +108,17 @@ export class ParseHeaderStream extends PortableTransformWithType {
         // The header is parsed, pass control
         const readPos = rawHeader.byteLength + headerIv.byteLength + headerAuthTag.byteLength
         const tail = headerBuffer.slice(readPos)
-        this._transform = (chunk: any, _enc: string, cb: Function) => cb(null, chunk)
+        /* needs calls in downstream _transform streams will throw.
+         * But streams are async.
+         * So this error should be turned into an `.emit('error', ex)`.
+         */
+        this._transform = (chunk: any, _enc: string, cb: Function) => {
+          try {
+            cb(null, chunk)
+          } catch (ex) {
+            this.emit('error', ex)
+          }
+        }
         // flush the tail.  Stream control is now in the verify and decrypt streams
         return setImmediate(() => this._transform(tail, encoding, callback))
       })
