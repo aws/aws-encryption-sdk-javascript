@@ -124,14 +124,24 @@ export async function encrypt (
     const frameHeader = isFinalFrame
       ? serialize.finalFrameHeader(sequenceNumber, frameIv, finalFrameLength)
       : serialize.frameHeader(sequenceNumber, frameIv)
+    const contentString = messageAADContentString({ contentType: messageHeader.contentType, isFinalFrame })
     const messageAdditionalData = messageAAD(
       messageId,
-      messageAADContentString({ contentType: messageHeader.contentType, isFinalFrame }),
+      contentString,
       sequenceNumber,
-      plaintextLength
+      isFinalFrame ? finalFrameLength : frameLength
     )
 
-    const cipherBufferAndAuthTag = await getSubtleEncrypt(frameIv, messageAdditionalData)(plaintext)
+    /* Slicing an ArrayBuffer in a browser is suboptimal.
+     * It makes a copy.s
+     * So I just make a new view for the length of the frame.
+     */
+    const framePlaintext = new Uint8Array(
+      plaintext.buffer,
+      (sequenceNumber - 1) * frameLength,
+      isFinalFrame ? finalFrameLength : frameLength
+    )
+    const cipherBufferAndAuthTag = await getSubtleEncrypt(frameIv, messageAdditionalData)(framePlaintext)
 
     bodyContent.push(frameHeader, cipherBufferAndAuthTag)
   }
