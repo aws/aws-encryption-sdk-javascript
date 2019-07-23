@@ -24,7 +24,6 @@ export interface DecryptManifestList {
 
 export interface EncryptManifestList {
   manifest: EncryptManifest
-  client: Client
   keys: string
   plaintexts: {[name: string]: number}
   tests: {[testName: string]: EncryptTest}
@@ -68,7 +67,7 @@ interface RawKeyInfo extends KeyInfo {
 export interface RsaKeyInfo extends RawKeyInfo {
   'encryption-algorithm': 'rsa',
   'padding-algorithm': 'pkcs1'|'oaep-mgf1'
-  'padding-hash': 'sha1'|'sha256'|'sha384'|'sha512'
+  'padding-hash'?: 'sha1'|'sha256'|'sha384'|'sha512'
 }
 
 export interface AesKeyInfo extends RawKeyInfo {
