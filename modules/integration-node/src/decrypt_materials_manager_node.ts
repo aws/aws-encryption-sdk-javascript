@@ -49,7 +49,7 @@ export function decryptMaterialsManagerNode (keyInfos: KeyInfoTuple[]) {
   return new MultiKeyringNode({ children })
 }
 
-function keyringNode ([ info, key ]: KeyInfoTuple) {
+export function keyringNode ([ info, key ]: KeyInfoTuple) {
   if (info.type === 'aws-kms' && key.type === 'aws-kms') {
     return kmsKeyring(info, key)
   }
@@ -62,12 +62,12 @@ function keyringNode ([ info, key ]: KeyInfoTuple) {
   throw new Error('Unsupported keyring type')
 }
 
-function kmsKeyring (_keyInfo: KmsKeyInfo, key: KMSKey) {
+export function kmsKeyring (_keyInfo: KmsKeyInfo, key: KMSKey) {
   const generatorKeyId = key['key-id']
   return new KmsKeyringNode({ generatorKeyId })
 }
 
-function aesKeyring (keyInfo:AesKeyInfo, key: AESKey) {
+export function aesKeyring (keyInfo:AesKeyInfo, key: AESKey) {
   const keyName = key['key-id']
   const keyNamespace = keyInfo['provider-id']
   const { encoding, material } = key
@@ -76,7 +76,7 @@ function aesKeyring (keyInfo:AesKeyInfo, key: AESKey) {
   return new RawAesKeyringNode({ keyName, keyNamespace, unencryptedMasterKey, wrappingSuite })
 }
 
-function rsaKeyring (keyInfo: RsaKeyInfo, key: RSAKey) {
+export function rsaKeyring (keyInfo: RsaKeyInfo, key: RSAKey) {
   const keyName = key['key-id']
   const keyNamespace = keyInfo['provider-id']
   const rsaKey = key.type === 'private'
@@ -86,7 +86,7 @@ function rsaKeyring (keyInfo: RsaKeyInfo, key: RSAKey) {
   return new RawRsaKeyringNode({ keyName, keyNamespace, rsaKey, padding })
 }
 
-function rsaPadding (keyInfo: RsaKeyInfo) {
+export function rsaPadding (keyInfo: RsaKeyInfo) {
   const paddingAlgorithm = keyInfo['padding-algorithm']
   const paddingHash = keyInfo['padding-hash']
 

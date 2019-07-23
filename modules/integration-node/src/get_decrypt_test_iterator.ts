@@ -13,7 +13,10 @@
  * limitations under the License.
  */
 
-import { Open } from 'unzipper'
+import {
+  Open,
+  File // eslint-disable-line no-unused-vars
+} from 'unzipper'
 import {
   DecryptManifestList, // eslint-disable-line no-unused-vars
   KeyList, // eslint-disable-line no-unused-vars
@@ -26,6 +29,11 @@ export async function getDecryptTestVectorIterator (vectorFile: string) {
   // @ts-ignore
   const filesMap = new Map(centralDirectory.files.map(file => [file.path, file]))
 
+  return _getDecryptTestVectorIterator(filesMap)
+}
+
+/* Just a simple more testable function */
+export async function _getDecryptTestVectorIterator (filesMap: Map<string, File>) {
   const readUriOnce = (() => {
     const cache: Map<string, Buffer> = new Map()
     return async (uri: string) => {
@@ -49,7 +57,7 @@ export async function getDecryptTestVectorIterator (vectorFile: string) {
       const { plaintext: plaintextFile, ciphertext, 'master-keys': masterKeys } = testInfo
       const plainTextInfo = filesMap.get(testUri2Path(plaintextFile))
       const cipherInfo = filesMap.get(testUri2Path(ciphertext))
-      if (!cipherInfo || !plainTextInfo) throw new Error(`no file for ${name}: ${ciphertext} | ${plaintextFile}`)
+      if (!cipherInfo || !plainTextInfo) throw new Error(`no file for ${name}: ${testUri2Path(ciphertext)} | ${testUri2Path(plaintextFile)}`)
       const cipherStream = cipherInfo.stream()
       const plainTextStream = plainTextInfo.stream()
       const keysInfo = <KeyInfoTuple[]>masterKeys.map(keyInfo => {
