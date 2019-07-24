@@ -20,6 +20,13 @@ import { writeFileSync } from 'fs'
 
 import { DecryptManifestList } from './types' // eslint-disable-line no-unused-vars
 
+/* This function interacts with manifest information
+ * and produces the fixtures in the `fixtures`
+ * that the karma server will consume to run tests.
+ * This gives us 2 useful freedoms.
+ * 1. The code is not tied to a specific copy of the manifest information
+ * 2. The tests can be run on a subset of tests for debugging.
+ */
 export async function buildDecryptFixtures (fixtures: string, vectorFile: string, testName: string, slice: string) {
   const [start = 0, end = 9999] = (slice || '').split(':').map(n => parseInt(n, 10))
 

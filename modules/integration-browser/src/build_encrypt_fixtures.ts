@@ -27,6 +27,13 @@ import { URL } from 'url'
 import { readFileSync, writeFileSync } from 'fs'
 import got from 'got'
 
+/* This function interacts with manifest information
+ * and produces the fixtures in the `fixtures`
+ * that the karma server will consume to run tests.
+ * This gives us 2 useful freedoms.
+ * 1. The code is not tied to a specific copy of the manifest information
+ * 2. The tests can be run on a subset of tests for debugging.
+ */
 export async function buildEncryptFixtures (fixtures: string, manifestFile: string, keyFile: string, testName: string, slice: string) {
   const [start = 0, end = 9999] = (slice || '').split(':').map(n => parseInt(n, 10))
   const { tests, plaintexts }: EncryptManifestList = await getParsedJSON(manifestFile)
@@ -37,6 +44,7 @@ export async function buildEncryptFixtures (fixtures: string, manifestFile: stri
   Object
     .keys(plaintexts)
     .forEach(name => {
+      /* https://github.com/awslabs/aws-crypto-tools-test-vector-framework/blob/master/features/0003-awses-message-encryption.md#plaintexts */
       plaintextBytes[name] = randomBytes(10).toString('base64')
     })
 
