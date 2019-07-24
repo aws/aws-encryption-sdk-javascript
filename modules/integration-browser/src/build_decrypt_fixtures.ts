@@ -14,51 +14,28 @@
  * limitations under the License.
  */
 
-const argv = require('yargs')
-  .option('vectorFile', {
-    alias: 'v',
-    describe: 'a vector zip file from aws-encryption-sdk-test-vectors',
-    demandOption: true,
-    type: 'string'
-  })
-  .option('testName', {
-    alias: 't',
-    describe: 'an optional test name to execute',
-    type: 'string'
-  })
-  .option('slice', {
-    alias: 's',
-    describe: 'an optional range start:end e.g. 100:200',
-    type: 'string'
-  })
-  .options('karma', {
-    alias: 'k',
-    describe: 'start karma and run the tests',
-    type: 'boolean'
-  })
-  .argv
+import { Open } from 'unzipper'
+import streamToPromise from 'stream-to-promise'
+import { writeFileSync } from 'fs'
 
-const { vectorFile, testName, slice, karma } = argv
-const {Open} = require('unzipper')
-const streamToPromise = require('stream-to-promise')
-const fs = require('fs')
-const path = require('path')
-const { spawnSync } = require('child_process')
-const fixtures = path.join(__dirname, './fixtures')
+import { DecryptManifestList } from './types' // eslint-disable-line no-unused-vars
 
-const [start=0, end=9999] = (slice || '').split(':').map(n => parseInt(n, 10))
+/* This function interacts with manifest information
+ * and produces the fixtures in the `fixtures`
+ * that the karma server will consume to run tests.
+ * This gives us 2 useful freedoms.
+ * 1. The code is not tied to a specific copy of the manifest information
+ * 2. The tests can be run on a subset of tests for debugging.
+ */
+export async function buildDecryptFixtures (fixtures: string, vectorFile: string, testName: string, slice: string) {
+  const [start = 0, end = 9999] = (slice || '').split(':').map(n => parseInt(n, 10))
 
-if (!fs.existsSync(fixtures)){
-  fs.mkdirSync(fixtures)
-}
-
-;(async () => {
   const centralDirectory = await Open.file(vectorFile)
   const filesMap = new Map(centralDirectory.files.map(file => [file.path, file]))
 
   const readUriOnce = (() => {
     const cache = new Map()
-    return async (uri) => {
+    return async (uri: string) => {
       const has = cache.get(uri)
       if (has) return has
       const fileInfo = filesMap.get(testUri2Path(uri))
@@ -70,7 +47,7 @@ if (!fs.existsSync(fixtures)){
   })()
 
   const manifestBuffer = await readUriOnce('manifest.json')
-  const { keys: keysFile, tests } = JSON.parse(manifestBuffer.toString('utf8'))
+  const { keys: keysFile, tests }: DecryptManifestList = JSON.parse(manifestBuffer.toString('utf8'))
   const keysBuffer = await readUriOnce(keysFile)
   const { keys } = JSON.parse(keysBuffer.toString('utf8'))
   const testNames = []
@@ -94,8 +71,8 @@ if (!fs.existsSync(fixtures)){
     const plainTextInfo = filesMap.get(testUri2Path(plaintextFile))
     const cipherInfo = filesMap.get(testUri2Path(ciphertext))
     if (!cipherInfo || !plainTextInfo) throw new Error(`no file for ${name}: ${ciphertext} | ${plaintextFile}`)
-    
-    const cipherText = await streamToPromise(cipherInfo.stream())
+
+    const cipherText = await streamToPromise(<NodeJS.ReadableStream>cipherInfo.stream())
     const plainText = await readUriOnce(plainTextInfo.path)
     const keysInfo = masterKeys.map(keyInfo => {
       const key = keys[keyInfo.key]
@@ -111,19 +88,12 @@ if (!fs.existsSync(fixtures)){
       plainText: plainText.toString('base64')
     })
 
-    fs.writeFileSync(`${fixtures}/${name}.json`, test)
+    writeFileSync(`${fixtures}/${name}.json`, test)
   }
 
-  fs.writeFileSync(`${fixtures}/tests.json`, JSON.stringify(testNames))
+  writeFileSync(`${fixtures}/decrypt_tests.json`, JSON.stringify(testNames))
+}
 
-  if (karma) {
-    spawnSync('npm', ['run', 'karma'], {
-      cwd: __dirname,
-      stdio: 'inherit'
-    })
-  }
-})()
-
-function testUri2Path (uri) {
+function testUri2Path (uri: string) {
   return uri.replace('file://', '')
 }
