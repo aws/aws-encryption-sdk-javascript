@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0-preview.3](/compare/@aws-crypto/integration-browser@0.2.0-preview.2...@aws-crypto/integration-browser@0.2.0-preview.3) (2019-07-24)
+
+
+### Bug Fixes
+
+* integration-browser should work from npm (#127) 334c130, closes #127
+
+
+### Features
+
+* Encryption tests for integration-browser (#159) 043506d, closes #159
+
+
+
+
+
 # [0.2.0-preview.2](/compare/@aws-crypto/integration-browser@0.2.0-preview.1...@aws-crypto/integration-browser@0.2.0-preview.2) (2019-06-22)
 
 

@@ -6,13 +6,20 @@ module.exports = function (config) {
     basePath: '',
     frameworks: ['jasmine'],
     files: [
-      'fixtures/tests.json',
+      'fixtures/decrypt_tests.json',
+      'fixtures/encrypt_tests.json',
+      'fixtures/decrypt_oracle.json',
       { pattern: 'fixtures/*.json', included: false, served: true, watched: false, nocache: true },
-      'build/module/integration.test.js'
+      'build/module/integration.decrypt.test.js',
+      'build/module/integration.encrypt.test.js',
     ],
     preprocessors: {
-      'build/module/integration.test.js': ['webpack', 'credentials'],
-      './fixtures/tests.json': ['json_fixtures']
+      'build/module/integration.decrypt.test.js': ['webpack', 'credentials'],
+      'build/module/integration.encrypt.test.js': ['webpack', 'credentials'],
+      './fixtures/decrypt_tests.json': ['json_fixtures'],
+      './fixtures/encrypt_tests.json': ['json_fixtures'],
+      './fixtures/decrypt_oracle.json': ['json_fixtures']
+
     },
     webpack: {
       mode: 'development',

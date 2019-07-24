@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.2](/compare/@aws-crypto/raw-keyring@0.1.0-preview.1...@aws-crypto/raw-keyring@0.1.0-preview.2) (2019-07-24)
+
+
+### Bug Fixes
+
+* material-management should not export DOM types (#147) 0f4dd7e, closes #147 #137
+
+
+
+
+
 # [0.1.0-preview.1](/compare/@aws-crypto/raw-keyring@0.1.0-preview.0...@aws-crypto/raw-keyring@0.1.0-preview.1) (2019-06-21)
 
 

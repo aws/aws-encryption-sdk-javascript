@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.2](/compare/@aws-crypto/decrypt-browser@0.1.0-preview.1...@aws-crypto/decrypt-browser@0.1.0-preview.2) (2019-07-24)
+
+
+### Bug Fixes
+
+* encrypt/decrypt browser 21d65d0
+* sequence number order (#158) b7dc81e, closes #158
+
+
+
+
+
 # [0.1.0-preview.1](/compare/@aws-crypto/decrypt-browser@0.1.0-preview.0...@aws-crypto/decrypt-browser@0.1.0-preview.1) (2019-06-21)
 
 

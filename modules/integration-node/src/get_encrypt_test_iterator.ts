@@ -28,9 +28,16 @@ import { readFileSync } from 'fs'
 import got from 'got'
 
 export async function getEncryptTestVectorIterator (manifestFile: string, keyFile: string) {
-  const { tests, plaintexts }: EncryptManifestList = await getParsedJSON(manifestFile)
-  const { keys }: KeyList = await getParsedJSON(keyFile)
+  const [manifest, keys]: [EncryptManifestList, KeyList] = await Promise.all([
+    getParsedJSON(manifestFile),
+    getParsedJSON(keyFile)
+  ])
 
+  return _getEncryptTestVectorIterator(manifest, keys)
+}
+
+/* Just a simple more testable function */
+export function _getEncryptTestVectorIterator ({ tests, plaintexts }: EncryptManifestList, { keys }: KeyList) {
   const plaintextBytes: {[name: string]: Buffer} = {}
 
   Object
