@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.2](/compare/@aws-crypto/web-crypto-backend@0.1.0-preview.1...@aws-crypto/web-crypto-backend@0.1.0-preview.2) (2019-07-24)
+
+
+### Bug Fixes
+
+* web-crypto-backend testing (#143) 36d6cba, closes #143
+
+
+
+
+
 # [0.1.0-preview.1](/compare/@aws-crypto/web-crypto-backend@0.1.0-preview.0...@aws-crypto/web-crypto-backend@0.1.0-preview.1) (2019-06-21)
 
 

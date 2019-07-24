@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0-preview.2](/compare/@aws-crypto/material-management@0.2.0-preview.1...@aws-crypto/material-management@0.2.0-preview.2) (2019-07-24)
+
+
+### Bug Fixes
+
+* 192 bit algorithm suite support in browsers (#131) 8a4d708, closes #131
+* Always explicitly catch exceptions. (#132) bf88871, closes #132
+* material-management should not export DOM types (#147) 0f4dd7e, closes #147 #137
+
+
+
+
+
 # [0.2.0-preview.1](/compare/@aws-crypto/material-management@0.2.0-preview.0...@aws-crypto/material-management@0.2.0-preview.1) (2019-06-21)
 
 

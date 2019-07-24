@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.2](/compare/@aws-crypto/encrypt-node@0.1.0-preview.1...@aws-crypto/encrypt-node@0.1.0-preview.2) (2019-07-24)
+
+
+### Bug Fixes
+
+* browser framed encryption (#156) a2f2ed9, closes #156 #155
+* encrypt/decrypt node (#133) 896883a, closes #133
+* frame length can not be 0 (#149) dc1f92e, closes #149 #129
+
+
+### Features
+
+* Node.js Typescript version dependency (#146) 9dfa857, closes #146 #135 #74
+
+
+
+
+
 # [0.1.0-preview.1](/compare/@aws-crypto/encrypt-node@0.1.0-preview.0...@aws-crypto/encrypt-node@0.1.0-preview.1) (2019-06-21)
 
 
