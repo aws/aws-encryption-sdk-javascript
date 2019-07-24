@@ -26,7 +26,7 @@ import {
   NodeDecryptionMaterial // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 
-describe('WebCryptoCachingMaterialsManager', () => {
+describe('NodeCachingMaterialsManager', () => {
   it('constructor will decorate', () => {
     class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
