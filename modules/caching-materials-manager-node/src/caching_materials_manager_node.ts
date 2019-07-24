@@ -31,15 +31,11 @@ import {
   NodeGetEncryptionMaterials, // eslint-disable-line no-unused-vars
   NodeGetDecryptMaterials // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
-
-import { createHash, randomBytes } from 'crypto'
+import { sha512 } from './sha512'
+import { randomBytes } from 'crypto'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const toUtf8 = (input: Uint8Array) => Buffer.from(input).toString('utf8')
-const sha512 = async (...data: (Uint8Array|string)[]) => data
-  .map(item => typeof item === 'string' ? Buffer.from(item, 'hex') : item)
-  .reduce((hash, item) => hash.update(item), createHash('sha512'))
-  .digest()
 
 const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(fromUtf8, toUtf8, sha512)
 
