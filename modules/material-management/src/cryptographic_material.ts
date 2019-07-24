@@ -33,7 +33,7 @@ import { needs } from './needs'
  * The functional data key (unencrypted or CryptoKey) is the most sensitive data and needs to
  * be protected.  The longer this data persists in memory the
  * greater the opportunity to be invalidated.  Because
- * a Caching CMM exists is it important to ensure that the
+ * a Caching CMM exists it is important to ensure that the
  * unencrypted data key and its meta data can not be manipulated,
  * and that the unencrypted data key can be zeroed when
  * it is no longer needed.
