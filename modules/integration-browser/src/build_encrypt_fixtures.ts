@@ -44,7 +44,9 @@ export async function buildEncryptFixtures (fixtures: string, manifestFile: stri
   Object
     .keys(plaintexts)
     .forEach(name => {
-      /* https://github.com/awslabs/aws-crypto-tools-test-vector-framework/blob/master/features/0003-awses-message-encryption.md#plaintexts */
+      /* Generate random bites as per spec.
+       * See: https://github.com/awslabs/aws-crypto-tools-test-vector-framework/blob/master/features/0003-awses-message-encryption.md#plaintexts
+       */
       plaintextBytes[name] = randomBytes(10).toString('base64')
     })
 
