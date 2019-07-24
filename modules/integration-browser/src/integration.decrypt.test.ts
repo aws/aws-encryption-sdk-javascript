@@ -28,7 +28,7 @@ const notSupportedMessages = [
   'Unsupported right now'
 ]
 describe('browser decryption vectors', function () {
-  const tests = __fixtures__['fixtures/tests']
+  const tests: string[] = __fixtures__['fixtures/decrypt_tests']
 
   for (const testName of tests) {
     it(testName, async () => {

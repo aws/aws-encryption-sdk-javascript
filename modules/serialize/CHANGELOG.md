@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.2](/compare/@aws-crypto/serialize@0.1.0-preview.1...@aws-crypto/serialize@0.1.0-preview.2) (2019-07-24)
+
+
+### Bug Fixes
+
+* Add tests for signature info (#134) c9b0318, closes #134
+* browser encrypt signature encoding (#157) 8e33d7d, closes #157 #154
+
+
+
+
+
 # [0.1.0-preview.1](/compare/@aws-crypto/serialize@0.1.0-preview.0...@aws-crypto/serialize@0.1.0-preview.1) (2019-06-21)
 
 
