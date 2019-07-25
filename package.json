@@ -15,7 +15,7 @@
     "mocha": "mocha --require source-map-support/register --require ts-node/register --exclude 'modules/*-+(browser|backend)/test/*test.ts'  modules/**/test/*test.ts",
     "karma": "karma start karma.conf.js",
     "coverage-browser": "npm run karma && nyc report -t .karma_output --check-coverage --extension .ts",
-    "coverage-node": "nyc --require ts-node/register --instrument --extension .ts --all --check-coverage -n --lines 99 'modules/**/src/*.ts' -x 'modules/**/test/*.ts' -x 'modules/*-+(browser|backend)/**/*.ts' npm run mocha",
+    "coverage-node": "nyc --require ts-node/register --instrument --extension .ts --all --check-coverage -n 'modules/**/src/*.ts' -x 'modules/**/test/*.ts' -x 'modules/*-+(browser|backend)/**/*.ts' npm run mocha",
     "coverage": "run-s coverage-* && nyc merge .karma_output .nyc_output/browser.json && nyc report --extension .ts --check-coverage",
     "report-coverage": "nyc report --extension .ts --check-coverage -r html",
     "test": "npm run lint && npm run build && npm run coverage",
