@@ -189,7 +189,21 @@ describe('MultiKeyring: onEncrypt', () => {
     const mkeyring = new MultiKeyringNode({ generator })
     const material = new NodeEncryptionMaterial(suite)
 
-    await expect(mkeyring.onEncrypt(material)).to.rejectedWith(Error)
+    await expect(mkeyring.onEncrypt(material)).to.rejectedWith(Error, 'Generator Keyring has not generated material.')
+  })
+
+  it('Precondition: Only Keyrings explicitly designated as generators can generate material.', async () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const child = keyRingFactory({
+      async onEncrypt (material: NodeEncryptionMaterial) {
+        return material
+      },
+      onDecrypt: never
+    })
+
+    const mkeyring = new MultiKeyringNode({  children:[ child ] })
+    const material = new NodeEncryptionMaterial(suite) //.setUnencryptedDataKey(unencryptedDataKey, keyringTrace0)
+    return expect(mkeyring.onEncrypt(material)).to.rejectedWith(Error, 'Only Keyrings explicitly designated as generators can generate material.')
   })
 
   it('Generator Keyrings do not *have* to generate material if material already exists', async () => {
@@ -204,6 +218,23 @@ describe('MultiKeyring: onEncrypt', () => {
     })
 
     const mkeyring = new MultiKeyringNode({ generator })
+    const material = new NodeEncryptionMaterial(suite).setUnencryptedDataKey(unencryptedDataKey, keyringTrace0)
+
+    await mkeyring.onEncrypt(material)
+  })
+
+  it('If material already exists, you do not need a generator.', async () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const unencryptedDataKey = new Uint8Array(suite.keyLengthBytes)
+    const [edk0, keyringTrace0] = makeEDKandTrace(0)
+    const child = keyRingFactory({
+      async onEncrypt (material: NodeEncryptionMaterial) {
+        return material.addEncryptedDataKey(edk0, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+      },
+      onDecrypt: never
+    })
+
+    const mkeyring = new MultiKeyringNode({ children: [ child ]  })
     const material = new NodeEncryptionMaterial(suite).setUnencryptedDataKey(unencryptedDataKey, keyringTrace0)
 
     await mkeyring.onEncrypt(material)

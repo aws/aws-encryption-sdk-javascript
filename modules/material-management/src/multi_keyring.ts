@@ -71,21 +71,28 @@ function buildPrivateOnEncrypt<S extends SupportedAlgorithmSuites> () {
     this: IMultiKeyring<S>,
     material: EncryptionMaterial<S>, context?: EncryptionContext
   ): Promise<EncryptionMaterial<S>> {
+    /* Precondition: Only Keyrings explicitly designated as generators can generate material.
+     * Technically, the precondition below will handle this.
+     * Since if I do not have an unencrypted data key,
+     * and I do not have a generator,
+     * then generated.hasUnencryptedDataKey === false will throw.
+     * But this is a much more meaningful error.
+     */
+    needs(!material.hasUnencryptedDataKey ? this.generator : true , 'Only Keyrings explicitly designated as generators can generate material.')
+
     const generated = this.generator
       ? await this.generator.onEncrypt(material, context)
       : material
 
     /* Precondition: A Generator Keyring *must* ensure generated material. */
-    needs(this.generator && generated.hasUnencryptedDataKey, 'Generator Keyring has not generated material.')
-    /* Precondition: Only Keyrings explicitly designated as generators can generate material. */
-    needs(generated.hasUnencryptedDataKey, 'Only Keyrings explicitly designated as generators can generate material.')
+    needs(generated.hasUnencryptedDataKey, 'Generator Keyring has not generated material.')
 
     /* By default this is a serial operation.  A keyring _may_ perform an expensive operation
-  * or create resource constraints such that encrypting with multiple keyrings could
-  * fail in unexpected ways.
-  * Additionally, "downstream" keyrings may make choices about the EncryptedDataKeys they
-  * append based on already appended EDK's.
-  */
+     * or create resource constraints such that encrypting with multiple keyrings could
+     * fail in unexpected ways.
+     * Additionally, "downstream" keyrings may make choices about the EncryptedDataKeys they
+     * append based on already appended EDK's.
+     */
     for (const keyring of this.children) {
       await keyring.onEncrypt(generated, context)
     }
