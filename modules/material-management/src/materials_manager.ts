@@ -14,7 +14,7 @@
  */
 
 import { EncryptionRequest, DecryptionRequest } from '.' // eslint-disable-line no-unused-vars
-import { EncryptionResponse, DecryptionResponse, SupportedAlgorithmSuites } from './types' // eslint-disable-line no-unused-vars
+import { EncryptionMaterial, DecryptionMaterial, SupportedAlgorithmSuites } from './types' // eslint-disable-line no-unused-vars
 import { NodeAlgorithmSuite } from './node_algorithms' // eslint-disable-line no-unused-vars
 import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms' // eslint-disable-line no-unused-vars
 
@@ -26,11 +26,11 @@ import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms' // eslint-disa
  */
 
 export interface GetEncryptionMaterials<S extends SupportedAlgorithmSuites> {
-  (request: EncryptionRequest<S>): Promise<EncryptionResponse<S>>
+  (request: EncryptionRequest<S>): Promise<EncryptionMaterial<S>>
 }
 
 export interface GetDecryptMaterials<S extends SupportedAlgorithmSuites> {
-  (request: DecryptionRequest<S>): Promise<DecryptionResponse<S>>
+  (request: DecryptionRequest<S>): Promise<DecryptionMaterial<S>>
 }
 
 export interface MaterialsManager<S extends SupportedAlgorithmSuites> {

@@ -70,7 +70,7 @@ describe('RawAesKeyringWebCrypto encrypt/decrypt', () => {
 
   it('can encrypt and create unencrypted data key', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const test = await keyring.onEncrypt(material)
     expect(test.hasValidKey()).to.equal(true)
     const udk = test.getUnencryptedDataKey()
@@ -82,7 +82,7 @@ describe('RawAesKeyringWebCrypto encrypt/decrypt', () => {
 
   it('can decrypt an EncryptedDataKey', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new WebCryptoDecryptionMaterial(suite)
+    const material = new WebCryptoDecryptionMaterial(suite, {})
     const test = await keyring.onDecrypt(material, [encryptedDataKey])
     expect(test.hasValidKey()).to.equal(true)
     // The UnencryptedDataKey should be zeroed, because the cryptoKey has been set

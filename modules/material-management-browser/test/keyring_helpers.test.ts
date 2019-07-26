@@ -90,7 +90,7 @@ describe('importForWebCryptoDecryptionMaterial', () => {
 
   it('Check for early return (Postcondition): If no key was able to be decrypted, return.', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoDecryptionMaterial(suite)
+    const material = new WebCryptoDecryptionMaterial(suite, {})
 
     await importForWebCryptoDecryptionMaterial(material)
     expect(material.hasCryptoKey).to.equal(false)
@@ -99,7 +99,7 @@ describe('importForWebCryptoDecryptionMaterial', () => {
 
 function getWebCryptoDecryptionMaterial () {
   const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-  const material = new WebCryptoDecryptionMaterial(suite)
+  const material = new WebCryptoDecryptionMaterial(suite, {})
   const udk = synchronousRandomValues(suite.keyLengthBytes)
   const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
   return material.setUnencryptedDataKey(udk, trace)
@@ -107,7 +107,7 @@ function getWebCryptoDecryptionMaterial () {
 
 function getWebCryptoEncryptionMaterial () {
   const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-  const material = new WebCryptoEncryptionMaterial(suite)
+  const material = new WebCryptoEncryptionMaterial(suite, {})
   const udk = synchronousRandomValues(suite.keyLengthBytes)
   const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
   return material.setUnencryptedDataKey(udk, trace)

@@ -116,7 +116,7 @@ describe('RawAesKeyringNode encrypt/decrypt', () => {
 
   it('can encrypt and create unencrypted data key', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new NodeEncryptionMaterial(suite)
+    const material = new NodeEncryptionMaterial(suite, {})
     const test = await keyring.onEncrypt(material)
     expect(test.hasValidKey()).to.equal(true)
     const udk = test.getUnencryptedDataKey()
@@ -129,7 +129,7 @@ describe('RawAesKeyringNode encrypt/decrypt', () => {
 
   it('can decrypt an EncryptedDataKey', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new NodeDecryptionMaterial(suite)
+    const material = new NodeDecryptionMaterial(suite, {})
     const test = await keyring.onDecrypt(material, [encryptedDataKey])
     expect(test.hasValidKey()).to.equal(true)
   })

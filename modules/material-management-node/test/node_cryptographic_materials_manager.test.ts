@@ -57,7 +57,7 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     expect(() => new NodeDefaultCryptographicMaterialsManager({} as any)).to.throw()
   })
 
-  it('should create a signature key and append it to context', async () => {
+  it('should create signature key and append the verification key to context and return NodeEncryptionMaterial', async () => {
     class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
@@ -70,14 +70,15 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
-    const material = new NodeEncryptionMaterial(suite)
     const context = { some: 'context' }
-    const test = await cmm._generateSigningKeyAndUpdateEncryptionContext(material, context)
-    expect(Object.keys(test)).lengthOf(2)
-    expect(Object.isFrozen(test)).to.equal(true)
+    const test = cmm._initializeEncryptionMaterial(suite, context)
+    expect(test).to.be.instanceOf(NodeEncryptionMaterial)
+    expect(test.suite).to.equal(suite)
+    expect(Object.keys(test.encryptionContext)).lengthOf(2)
+    expect(Object.isFrozen(test.encryptionContext)).to.equal(true)
     expect(Object.isFrozen(context)).to.equal(false)
-    expect(test).to.have.ownProperty('some').and.to.equal('context')
-    expect(test).to.have.ownProperty(ENCODED_SIGNER_KEY)
+    expect(test.encryptionContext).to.have.ownProperty('some').and.to.equal('context')
+    expect(test.encryptionContext).to.have.ownProperty(ENCODED_SIGNER_KEY)
   })
 
   it('Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve to generate a ECDH key.', async () => {
@@ -93,13 +94,14 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new NodeEncryptionMaterial(suite)
     const context = { some: 'context' }
-    const test = await cmm._generateSigningKeyAndUpdateEncryptionContext(material, context)
-    expect(Object.keys(test)).lengthOf(1)
-    expect(Object.isFrozen(test)).to.equal(true)
+    const test = cmm._initializeEncryptionMaterial(suite, context)
+    expect(test).to.be.instanceOf(NodeEncryptionMaterial)
+    expect(test.suite).to.equal(suite)
+    expect(Object.keys(test.encryptionContext)).lengthOf(1)
+    expect(Object.isFrozen(test.encryptionContext)).to.equal(true)
     expect(Object.isFrozen(context)).to.equal(false)
-    expect(test).to.have.ownProperty('some').and.to.equal('context')
+    expect(test.encryptionContext).to.have.ownProperty('some').and.to.equal('context')
   })
 
   it('Set the verification key.', async () => {
@@ -116,14 +118,14 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
 
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
 
-    const context = await cmm._generateSigningKeyAndUpdateEncryptionContext(
-      new NodeEncryptionMaterial(suite),
+    const { encryptionContext } = cmm._initializeEncryptionMaterial(
+      suite,
       { some: 'context' }
     )
 
-    const material = await cmm._loadVerificationKeyFromEncryptionContext(
-      new NodeDecryptionMaterial(suite),
-      context
+    const material = cmm._initializeDecryptionMaterial(
+      suite,
+      encryptionContext
     )
     expect(material.verificationKey).to.have.ownProperty('publicKey')
   })
@@ -141,10 +143,9 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new NodeDecryptionMaterial(suite)
     const context = { some: 'context' }
-    const test = await cmm._loadVerificationKeyFromEncryptionContext(material, context)
-    expect(test === material).to.equal(true)
+    const { encryptionContext } = cmm._initializeDecryptionMaterial(suite, context)
+    expect(encryptionContext).to.deep.equal(context)
   })
 
   it('Precondition: NodeDefaultCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist.', async () => {
@@ -160,9 +161,7 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
 
-    await expect(cmm._loadVerificationKeyFromEncryptionContext(
-      new NodeDecryptionMaterial(suite)
-    )).to.rejectedWith(Error)
+    expect(() => cmm._initializeDecryptionMaterial(suite, undefined as any)).to.throw()
   })
 
   it('Precondition: NodeDefaultCryptographicMaterialsManager The context must contain the public key.', async () => {
@@ -178,10 +177,10 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
 
-    await expect(cmm._loadVerificationKeyFromEncryptionContext(
-      new NodeDecryptionMaterial(suite),
+    expect(() => cmm._initializeDecryptionMaterial(
+      suite,
       { no: 'signature' }
-    )).to.rejectedWith(Error)
+    )).to.throw()
   })
 
   it('Postcondition: The NodeEncryptionMaterial must contain a valid dataKey.', async () => {
@@ -198,7 +197,7 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     const keyring = new TestKeyring()
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
-    await expect(cmm.getEncryptionMaterials({ suite })).to.rejectedWith(Error)
+    await expect(cmm.getEncryptionMaterials({ suite, encryptionContext: {} })).to.rejectedWith(Error)
   })
 
   it('Postcondition: The NodeEncryptionMaterial must contain at least 1 EncryptedDataKey.', async () => {
@@ -217,7 +216,7 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     const keyring = new TestKeyring()
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
-    await expect(cmm.getEncryptionMaterials({ suite })).to.rejectedWith(Error)
+    await expect(cmm.getEncryptionMaterials({ suite, encryptionContext: {} })).to.rejectedWith(Error)
   })
 
   it('Postcondition: The NodeDecryptionMaterial must contain a valid dataKey.', async () => {
@@ -237,7 +236,7 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
       providerId: 'p', providerInfo: 'p', encryptedDataKey: new Uint8Array(5)
     })]
 
-    await expect(cmm.decryptMaterials({ suite, encryptedDataKeys })).to.rejectedWith(Error)
+    await expect(cmm.decryptMaterials({ suite, encryptedDataKeys, encryptionContext: {} })).to.rejectedWith(Error)
   })
 
   it('Return decryption material', async () => {
@@ -259,7 +258,7 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
       providerId: 'p', providerInfo: 'p', encryptedDataKey: new Uint8Array(5)
     })]
 
-    const { material } = await cmm.decryptMaterials({ suite, encryptedDataKeys })
+    const material = await cmm.decryptMaterials({ suite, encryptedDataKeys, encryptionContext: {} })
     expect(material.hasUnencryptedDataKey).to.equal(true)
   })
 })

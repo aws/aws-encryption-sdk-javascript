@@ -52,7 +52,7 @@ export async function kmsSimpleTest () {
   const cleartext = 'asdf'
 
   /* Encrypt the data. */
-  const { ciphertext } = await encrypt(keyring, cleartext, { context })
+  const { ciphertext } = await encrypt(keyring, cleartext, { encryptionContext: context })
 
   /* Decrypt the data. */
   const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)

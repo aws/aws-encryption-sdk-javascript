@@ -92,10 +92,10 @@ describe('encrypt structural testing', () => {
   })
 
   it('encrypt a buffer', async () => {
-    const context = { simple: 'context' }
+    const encryptionContext = { simple: 'context' }
 
     const plaintext = Buffer.from('asdf')
-    const { ciphertext, messageHeader } = await encrypt(keyRing, plaintext, { context })
+    const { ciphertext, messageHeader } = await encrypt(keyRing, plaintext, { encryptionContext })
 
     /* The default algorithm suite will add a signature key to the context.
      * So I only check that the passed context elements exist.
@@ -111,7 +111,7 @@ describe('encrypt structural testing', () => {
   })
 
   it('encrypt a stream', async () => {
-    const context = { simple: 'context' }
+    const encryptionContext = { simple: 'context' }
 
     let pushed = false
     const plaintext = from((_: number, next: Function) => {
@@ -120,7 +120,7 @@ describe('encrypt structural testing', () => {
       next(null, 'asdf')
     })
 
-    const { ciphertext, messageHeader } = await encrypt(keyRing, plaintext, { context })
+    const { ciphertext, messageHeader } = await encrypt(keyRing, plaintext, { encryptionContext })
 
     /* The default algorithm suite will add a signature key to the context.
      * So I only check that the passed context elements exist.
@@ -141,7 +141,7 @@ describe('encrypt structural testing', () => {
   })
 
   it('encryptStream', async () => {
-    const context = { simple: 'context' }
+    const encryptionContext = { simple: 'context' }
 
     const data = randomBytes(300)
     const i = data.values()
@@ -157,7 +157,7 @@ describe('encrypt structural testing', () => {
     let messageHeader: any
     const buffer: Buffer[] = []
     const stream = plaintext
-      .pipe(encryptStream(keyRing, { context, frameLength: 5 }))
+      .pipe(encryptStream(keyRing, { encryptionContext, frameLength: 5 }))
       .on('MessageHeader', (header: MessageHeader) => {
         // MessageHeader should only be called once
         if (messageHeader) throw new Error('I should never see this error')

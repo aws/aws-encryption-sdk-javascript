@@ -86,7 +86,7 @@ export class ParseHeaderStream extends PortableTransformWithType {
 
     this.materialsManager
       .decryptMaterials({ suite, encryptionContext, encryptedDataKeys })
-      .then(({ material }) => {
+      .then((material) => {
         this._headerState.buffer = Buffer.alloc(0) // clear the Buffer...
 
         const { kdfGetDecipher, getVerify, dispose } = getDecryptionHelper(material)

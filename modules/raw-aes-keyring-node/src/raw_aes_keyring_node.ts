@@ -22,8 +22,7 @@ import {
   KeyringTraceFlag,
   immutableClass,
   readOnlyProperty,
-  NodeAlgorithmSuite, // eslint-disable-line no-unused-vars
-  EncryptionContext // eslint-disable-line no-unused-vars
+  NodeAlgorithmSuite // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 import { randomBytes, createCipheriv, createDecipheriv } from 'crypto'
 import {
@@ -75,27 +74,27 @@ export class RawAesKeyringNode extends KeyringNode {
        */
       .setUnencryptedDataKey(unencryptedMasterKey, { keyNamespace, keyName, flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
 
-    const _wrapKey = async (material: NodeEncryptionMaterial, context?: EncryptionContext) => {
+    const _wrapKey = async (material: NodeEncryptionMaterial) => {
       /* The AAD section is uInt16BE(length) + AAD
        * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
        * However, the RAW Keyring wants _only_ the ADD.
        * So, I just slice off the length.
        */
-      const { buffer, byteOffset, byteLength } = serializeEncryptionContext(context || {}).slice(2)
+      const { buffer, byteOffset, byteLength } = serializeEncryptionContext(material.encryptionContext).slice(2)
       const aad = Buffer.from(buffer, byteOffset, byteLength)
       const { keyNamespace, keyName } = this
 
       return aesGcmWrapKey(keyNamespace, keyName, material, aad, wrappingMaterial)
     }
 
-    const _unwrapKey = async (material: NodeDecryptionMaterial, edk: EncryptedDataKey, context?: EncryptionContext) => {
+    const _unwrapKey = async (material: NodeDecryptionMaterial, edk: EncryptedDataKey) => {
       const { keyNamespace, keyName } = this
       /* The AAD section is uInt16BE(length) + AAD
        * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
        * However, the RAW Keyring wants _only_ the ADD.
        * So, I just slice off the length.
        */
-      const { buffer, byteOffset, byteLength } = serializeEncryptionContext(context || {}).slice(2)
+      const { buffer, byteOffset, byteLength } = serializeEncryptionContext(material.encryptionContext).slice(2)
       const aad = Buffer.from(buffer, byteOffset, byteLength)
       // const aad = Buffer.concat(encodeEncryptionContext(context || {}))
 

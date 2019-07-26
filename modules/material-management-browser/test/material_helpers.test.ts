@@ -46,7 +46,7 @@ declare const CryptoKey: CryptoKey
 describe('_importCryptoKey', () => {
   it('can import WebCryptoEncryptionMaterial with a algorithm suite without a KDF', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -61,7 +61,7 @@ describe('_importCryptoKey', () => {
 
   it('can import WebCryptoEncryptionMaterial with a algorithm suite with a KDF', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -75,7 +75,7 @@ describe('_importCryptoKey', () => {
 
   it('can import WebCryptoDecryptionMaterial with a algorithm suite without a KDF', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoDecryptionMaterial(suite)
+    const material = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -89,7 +89,7 @@ describe('_importCryptoKey', () => {
 
   it('can import WebCryptoDecryptionMaterial with a algorithm suite with a KDF', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new WebCryptoDecryptionMaterial(suite)
+    const material = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -105,7 +105,7 @@ describe('_importCryptoKey', () => {
 describe('importCryptoKey', () => {
   it('can import when backend is isFullSupportWebCryptoBackend', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -118,7 +118,7 @@ describe('importCryptoKey', () => {
 
   it('can import when backend is mixed support', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -145,7 +145,7 @@ describe('importCryptoKey', () => {
 describe('WebCryptoKdf', () => {
   it('returns a valid kdf key', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -162,7 +162,7 @@ describe('WebCryptoKdf', () => {
 
   it('Check for early return (Postcondition): No WebCrypto KDF, just return the unencrypted data key.', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -179,7 +179,7 @@ describe('WebCryptoKdf', () => {
 
   it('Precondition: Valid HKDF values must exist for browsers.', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -192,7 +192,7 @@ describe('WebCryptoKdf', () => {
 
   it('Postcondition: The derived key must conform to the algorith suite specification.', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -213,7 +213,7 @@ describe('WebCryptoKdf', () => {
 describe('getSubtleFunction', () => {
   it('can get encrypt', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -236,7 +236,7 @@ describe('getSubtleFunction', () => {
 
   it('Precondition: The material must have a CryptoKey.', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -247,7 +247,7 @@ describe('getSubtleFunction', () => {
 
   it('Precondition: The cryptoKey and backend must match in terms of Mixed vs Full support.', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -270,7 +270,7 @@ describe('getSubtleFunction', () => {
 
   it('Precondition: The length of the IV must match the algorithm suite specification.', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     material.setUnencryptedDataKey(udk, trace)
@@ -290,8 +290,8 @@ describe('getSubtleFunction', () => {
 
   it('no kdf, simple backend, can encrypt/decrypt', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite)
-    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite)
+    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
+    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     const decryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
@@ -317,8 +317,8 @@ describe('getSubtleFunction', () => {
 
   it('KDF, simple backend, can encrypt/decrypt', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
-    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite)
-    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite)
+    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
+    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     const decryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
@@ -344,8 +344,8 @@ describe('getSubtleFunction', () => {
 
   it('no kdf, mixed backend, can encrypt/decrypt', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite)
-    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite)
+    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
+    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     const decryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
@@ -385,8 +385,8 @@ describe('getSubtleFunction', () => {
 
   it('kdf, mixed backend, can encrypt/decrypt', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
-    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite)
-    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite)
+    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
+    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     const decryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
@@ -431,7 +431,7 @@ describe('getSubtleFunction', () => {
 describe('getEncryptHelper/getDecryptionHelper', () => {
   it('encryption helpers without a signature', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
-    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite)
+    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     encryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
@@ -449,7 +449,7 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
 
   it('decryption helpers without a signature ', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
-    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite)
+    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
     decryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
@@ -467,7 +467,7 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
 
   it('encryption helpers with a signature', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
-    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite)
+    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const { signatureKey } = await sigKeys(suite)
     const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
@@ -488,7 +488,7 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
 
   it('decryption helpers with a signature ', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
-    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite)
+    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const { verificationKey } = await sigKeys(suite)
     const decryptionTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
@@ -509,22 +509,22 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
 
   it('Precondition: WebCryptoEncryptionMaterial must have a valid data key.', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
-    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite)
+    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
 
     expect(getEncryptHelper(encryptionMaterial)).to.rejectedWith(Error)
   })
 
   it('Precondition: WebCryptoDecryptionMaterial must have a valid data key.', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
-    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite)
+    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
 
     expect(getDecryptionHelper(decryptionMaterial)).to.rejectedWith(Error)
   })
 
   it('can verify what was signed', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
-    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite)
-    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite)
+    const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
+    const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const { signatureKey, verificationKey } = await sigKeys(suite)
     const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }

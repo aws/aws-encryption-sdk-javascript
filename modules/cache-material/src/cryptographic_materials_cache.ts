@@ -14,39 +14,39 @@
  */
 
 import {
-  EncryptionResponse, // eslint-disable-line no-unused-vars
-  DecryptionResponse, // eslint-disable-line no-unused-vars
+  EncryptionMaterial, // eslint-disable-line no-unused-vars
+  DecryptionMaterial, // eslint-disable-line no-unused-vars
   SupportedAlgorithmSuites // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 
 export interface CryptographicMaterialsCache<S extends SupportedAlgorithmSuites> {
-  putEncryptionResponse(
+  putEncryptionMaterial(
     key: string,
-    response: EncryptionResponse<S>,
+    response: EncryptionMaterial<S>,
     plaintextLength: number,
     maxAge?: number
   ): void
-  putDecryptionResponse(
+  putDecryptionMaterial(
     key: string,
-    response: DecryptionResponse<S>,
+    response: DecryptionMaterial<S>,
     maxAge?: number
   ): void
-  getEncryptionResponse(key: string, plaintextLength: number): EncryptionResponseEntry<S>|false
-  getDecryptionResponse(key: string): DecryptionResponseEntry<S>|false
+  getEncryptionMaterial(key: string, plaintextLength: number): EncryptionMaterialEntry<S>|false
+  getDecryptionMaterial(key: string): DecryptionMaterialEntry<S>|false
   del(key: string): void
 }
 
 export interface Entry<S extends SupportedAlgorithmSuites> {
-  readonly response: EncryptionResponse<S>|DecryptionResponse<S>
+  response: EncryptionMaterial<S>|DecryptionMaterial<S>
   bytesEncrypted: number
   messagesEncrypted: number
   readonly now: number
 }
 
-export interface EncryptionResponseEntry<S extends SupportedAlgorithmSuites> extends Entry<S> {
-  readonly response: EncryptionResponse<S>
+export interface EncryptionMaterialEntry<S extends SupportedAlgorithmSuites> extends Entry<S> {
+  readonly response: EncryptionMaterial<S>
 }
 
-export interface DecryptionResponseEntry<S extends SupportedAlgorithmSuites> extends Entry<S> {
-  readonly response: DecryptionResponse<S>
+export interface DecryptionMaterialEntry<S extends SupportedAlgorithmSuites> extends Entry<S> {
+  readonly response: DecryptionMaterial<S>
 }

@@ -17,7 +17,6 @@ import {
   EncryptionMaterial, // eslint-disable-line no-unused-vars
   DecryptionMaterial, // eslint-disable-line no-unused-vars
   SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
-  EncryptionContext, // eslint-disable-line no-unused-vars
   KeyringTrace, // eslint-disable-line no-unused-vars
   KeyringTraceFlag,
   EncryptedDataKey // eslint-disable-line no-unused-vars
@@ -36,8 +35,7 @@ export function _onEncrypt<S extends SupportedAlgorithmSuites, K extends RawKeyR
 ) {
   return async function _onEncrypt (
     this: K,
-    material: EncryptionMaterial<S>,
-    context?: EncryptionContext
+    material: EncryptionMaterial<S>
   ): Promise<EncryptionMaterial<S>> {
     if (!material.hasUnencryptedDataKey) {
       const trace: KeyringTrace = {
@@ -48,7 +46,7 @@ export function _onEncrypt<S extends SupportedAlgorithmSuites, K extends RawKeyR
       const udk = await randomBytes(material.suite.keyLengthBytes)
       material.setUnencryptedDataKey(udk, trace)
     }
-    return this._wrapKey(material, context)
+    return this._wrapKey(material)
   }
 }
 
@@ -56,8 +54,7 @@ export function _onDecrypt<S extends SupportedAlgorithmSuites, K extends RawKeyR
   return async function _onDecrypt (
     this: K,
     material: DecryptionMaterial<S>,
-    encryptedDataKeys: EncryptedDataKey[],
-    context?: EncryptionContext
+    encryptedDataKeys: EncryptedDataKey[]
   ): Promise<DecryptionMaterial<S>> {
     /* Check for early return (Postcondition): If the material is already valid, attempting to decrypt is a bad idea. */
     if (material.hasValidKey()) return material
@@ -67,7 +64,7 @@ export function _onDecrypt<S extends SupportedAlgorithmSuites, K extends RawKeyR
 
     for (const edk of edks) {
       try {
-        return await this._unwrapKey(material, edk, context)
+        return await this._unwrapKey(material, edk)
       } catch (e) {
         // there should be some debug here?  or wrap?
         // Failures decrypt should not short-circuit the process
@@ -81,11 +78,11 @@ export function _onDecrypt<S extends SupportedAlgorithmSuites, K extends RawKeyR
 }
 
 export interface WrapKey<S extends SupportedAlgorithmSuites> {
-  (material: EncryptionMaterial<S>, context?: EncryptionContext): Promise<EncryptionMaterial<S>>
+  (material: EncryptionMaterial<S>): Promise<EncryptionMaterial<S>>
 }
 
 export interface UnwrapKey<S extends SupportedAlgorithmSuites> {
-  (material: DecryptionMaterial<S>, edk: EncryptedDataKey, context?: EncryptionContext): Promise<DecryptionMaterial<S>>
+  (material: DecryptionMaterial<S>, edk: EncryptedDataKey): Promise<DecryptionMaterial<S>>
 }
 
 export interface FilterEncryptedDataKey {
