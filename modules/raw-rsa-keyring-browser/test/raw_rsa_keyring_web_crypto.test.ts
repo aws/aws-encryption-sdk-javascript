@@ -141,7 +141,7 @@ describe('RawRsaKeyringWebCrypto encrypt/decrypt', () => {
 
   it('can encrypt and create unencrypted data key', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     const test = await keyring.onEncrypt(material)
     expect(test.hasValidKey()).to.equal(true)
     const udk = test.getUnencryptedDataKey()
@@ -154,7 +154,7 @@ describe('RawRsaKeyringWebCrypto encrypt/decrypt', () => {
 
   it('can decrypt an EncryptedDataKey', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new WebCryptoDecryptionMaterial(suite)
+    const material = new WebCryptoDecryptionMaterial(suite, {})
     const test = await keyring.onDecrypt(material, [encryptedDataKey])
     expect(test.hasValidKey()).to.equal(true)
     // The UnencryptedDataKey should be zeroed, because the cryptoKey has been set
@@ -166,7 +166,7 @@ describe('RawRsaKeyringWebCrypto encrypt/decrypt', () => {
     const keyring = new RawRsaKeyringWebCrypto({ privateKey, keyName, keyNamespace })
 
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new WebCryptoEncryptionMaterial(suite)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
     expect(keyring.onEncrypt(material)).to.rejectedWith(Error)
   })
 
@@ -175,7 +175,7 @@ describe('RawRsaKeyringWebCrypto encrypt/decrypt', () => {
     const keyring = new RawRsaKeyringWebCrypto({ publicKey, keyName, keyNamespace })
 
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new WebCryptoDecryptionMaterial(suite)
+    const material = new WebCryptoDecryptionMaterial(suite, {})
     expect(keyring.onDecrypt(material, [encryptedDataKey])).to.rejectedWith(Error)
   })
 })

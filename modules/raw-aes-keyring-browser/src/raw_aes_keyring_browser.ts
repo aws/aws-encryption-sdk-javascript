@@ -23,7 +23,6 @@ import {
   immutableClass,
   readOnlyProperty,
   WebCryptoAlgorithmSuite, // eslint-disable-line no-unused-vars
-  EncryptionContext, // eslint-disable-line no-unused-vars
   getSubtleFunction,
   _importCryptoKey,
   importForWebCryptoEncryptionMaterial,
@@ -78,25 +77,25 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
        */
       .setCryptoKey(masterKey, { keyNamespace, keyName, flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
 
-    const _wrapKey = async (material: WebCryptoEncryptionMaterial, context?: EncryptionContext) => {
+    const _wrapKey = async (material: WebCryptoEncryptionMaterial) => {
       /* The AAD section is uInt16BE(length) + AAD
        * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
        * However, the RAW Keyring wants _only_ the ADD.
        * So, I just slice off the length.
        */
-      const aad = serializeEncryptionContext(context || {}).slice(2)
+      const aad = serializeEncryptionContext(material.encryptionContext).slice(2)
       const { keyNamespace, keyName } = this
 
       return aesGcmWrapKey(keyNamespace, keyName, material, aad, wrappingMaterial)
     }
 
-    const _unwrapKey = async (material: WebCryptoDecryptionMaterial, edk: EncryptedDataKey, context?: EncryptionContext) => {
+    const _unwrapKey = async (material: WebCryptoDecryptionMaterial, edk: EncryptedDataKey) => {
       /* The AAD section is uInt16BE(length) + AAD
        * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
        * However, the RAW Keyring wants _only_ the ADD.
        * So, I just slice off the length.
        */
-      const aad = serializeEncryptionContext(context || {}).slice(2)
+      const aad = serializeEncryptionContext(material.encryptionContext).slice(2)
       const { keyNamespace, keyName } = this
 
       return aesGcmUnwrapKey(keyNamespace, keyName, material, wrappingMaterial, edk, aad)
@@ -114,8 +113,8 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
   }
 
   _rawOnEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, RawAesKeyringWebCrypto>(randomValuesOnly)
-  _onEncrypt = async (material: WebCryptoEncryptionMaterial, context?: EncryptionContext) => {
-    const _material = await this._rawOnEncrypt(material, context)
+  _onEncrypt = async (material: WebCryptoEncryptionMaterial) => {
+    const _material = await this._rawOnEncrypt(material)
     return importForWebCryptoEncryptionMaterial(_material)
   }
 

@@ -19,7 +19,7 @@ import {
   KeyringNode,
   KeyringWebCrypto
 } from './keyring'
-import { EncryptionContext, SupportedAlgorithmSuites, EncryptionMaterial, DecryptionMaterial } from './types' // eslint-disable-line no-unused-vars
+import { SupportedAlgorithmSuites, EncryptionMaterial, DecryptionMaterial } from './types' // eslint-disable-line no-unused-vars
 import { needs } from './needs'
 import { EncryptedDataKey } from './encrypted_data_key' // eslint-disable-line no-unused-vars
 import { NodeAlgorithmSuite } from './node_algorithms' // eslint-disable-line no-unused-vars
@@ -69,7 +69,7 @@ function decorateProperties<S extends SupportedAlgorithmSuites> (
 function buildPrivateOnEncrypt<S extends SupportedAlgorithmSuites> () {
   return async function _onEncrypt (
     this: IMultiKeyring<S>,
-    material: EncryptionMaterial<S>, context?: EncryptionContext
+    material: EncryptionMaterial<S>
   ): Promise<EncryptionMaterial<S>> {
     /* Precondition: Only Keyrings explicitly designated as generators can generate material.
      * Technically, the precondition below will handle this.
@@ -81,7 +81,7 @@ function buildPrivateOnEncrypt<S extends SupportedAlgorithmSuites> () {
     needs(!material.hasUnencryptedDataKey ? this.generator : true, 'Only Keyrings explicitly designated as generators can generate material.')
 
     const generated = this.generator
-      ? await this.generator.onEncrypt(material, context)
+      ? await this.generator.onEncrypt(material)
       : material
 
     /* Precondition: A Generator Keyring *must* ensure generated material. */
@@ -94,7 +94,7 @@ function buildPrivateOnEncrypt<S extends SupportedAlgorithmSuites> () {
      * append based on already appended EDK's.
      */
     for (const keyring of this.children) {
-      await keyring.onEncrypt(generated, context)
+      await keyring.onEncrypt(generated)
     }
 
     // Keyrings are required to not create new EncryptionMaterial instances, but
@@ -108,8 +108,7 @@ function buildPrivateOnDecrypt<S extends SupportedAlgorithmSuites> () {
   return async function _onDecrypt (
     this: IMultiKeyring<S>,
     material: DecryptionMaterial<S>,
-    encryptedDataKeys: EncryptedDataKey[],
-    context?: EncryptionContext
+    encryptedDataKeys: EncryptedDataKey[]
   ): Promise<DecryptionMaterial<S>> {
     const children = this.children.slice()
     if (this.generator) children.unshift(this.generator)
@@ -119,7 +118,7 @@ function buildPrivateOnDecrypt<S extends SupportedAlgorithmSuites> () {
       if (material.hasValidKey()) return material
 
       try {
-        await keyring.onDecrypt(material, encryptedDataKeys, context)
+        await keyring.onDecrypt(material, encryptedDataKeys)
       } catch (e) {
       // there should be some debug here?  or wrap?
       // Failures onDecrypt should not short-circuit the process

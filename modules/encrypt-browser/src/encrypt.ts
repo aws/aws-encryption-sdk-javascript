@@ -60,7 +60,7 @@ export interface EncryptResult {
 export async function encrypt (
   cmm: KeyringWebCrypto|WebCryptoMaterialsManager,
   plaintext: Uint8Array,
-  { suiteId, encryptionContext, frameLength = FRAME_LENGTH }: EncryptInput = {}
+  { suiteId, encryptionContext = {}, frameLength = FRAME_LENGTH }: EncryptInput = {}
 ): Promise<EncryptResult> {
   /* Precondition: The frameLength must be less than the maximum frame size for browser encryption. */
   needs(frameLength > 0 && Maximum.FRAME_SIZE >= frameLength, `frameLength out of bounds: 0 > frameLength >= ${Maximum.FRAME_SIZE}`)
@@ -84,7 +84,7 @@ export async function encrypt (
     plaintextLength
   }
 
-  const { material, context } = await cmm.getEncryptionMaterials(encryptionRequest)
+  const material = await cmm.getEncryptionMaterials(encryptionRequest)
   const { kdfGetSubtleEncrypt, subtleSign, dispose } = await getEncryptHelper(material)
 
   const messageId = await backend.randomValues(MESSAGE_ID_LENGTH)
@@ -96,7 +96,7 @@ export async function encrypt (
     type: ObjectType.CUSTOMER_AE_DATA,
     suiteId: id,
     messageId,
-    encryptionContext: context,
+    encryptionContext: material.encryptionContext,
     encryptedDataKeys: material.encryptedDataKeys,
     contentType: ContentType.FRAMED_DATA,
     headerIvLength: ivLength,

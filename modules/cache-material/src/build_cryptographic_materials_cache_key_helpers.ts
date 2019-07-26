@@ -37,13 +37,13 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
   } = serializeFactory(fromUtf8)
 
   return {
-    buildEncryptionResponseCacheKey,
-    buildDecryptionResponseCacheKey,
+    buildEncryptionMaterialCacheKey,
+    buildDecryptionMaterialCacheKey,
     encryptedDataKeysHash,
     encryptionContextHash
   }
 
-  async function buildEncryptionResponseCacheKey (
+  async function buildEncryptionMaterialCacheKey (
     partition: string,
     { suite, encryptionContext }: EncryptionRequest<S>
   ) {
@@ -59,7 +59,7 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
     return toUtf8(key)
   }
 
-  async function buildDecryptionResponseCacheKey (
+  async function buildDecryptionMaterialCacheKey (
     partition: string,
     { suite, encryptedDataKeys, encryptionContext }: DecryptionRequest<S>
   ) {
@@ -84,26 +84,26 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
     return hashes.sort(compare)
   }
 
-  function encryptionContextHash (context?: EncryptionContext) {
+  function encryptionContextHash (context: EncryptionContext) {
     /* The AAD section is uInt16BE(length) + AAD
      * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
      * However, the RAW Keyring wants _only_ the ADD.
      * So, I just slice off the length.
      */
-    const serializedContext = serializeEncryptionContext(context || {}).slice(2)
+    const serializedContext = serializeEncryptionContext(context).slice(2)
     return sha512(serializedContext)
   }
 }
 
 export interface CryptographicMaterialsCacheKeyHelpersInterface<S extends SupportedAlgorithmSuites> {
-  buildEncryptionResponseCacheKey(
+  buildEncryptionMaterialCacheKey(
     partition: string,
     { suite, encryptionContext }: EncryptionRequest<S>
   ): Promise<string>
-  buildDecryptionResponseCacheKey(
+  buildDecryptionMaterialCacheKey(
     partition: string,
     { suite, encryptedDataKeys, encryptionContext }: DecryptionRequest<S>
   ): Promise<string>
   encryptedDataKeysHash(encryptedDataKeys: ReadonlyArray<EncryptedDataKey>): Promise<Uint8Array[]>
-  encryptionContextHash(context?: EncryptionContext): Promise<Uint8Array>
+  encryptionContextHash(context: EncryptionContext): Promise<Uint8Array>
 }

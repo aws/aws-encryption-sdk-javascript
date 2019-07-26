@@ -16,10 +16,10 @@
 import {
   GetEncryptionMaterials, // eslint-disable-line no-unused-vars
   GetDecryptMaterials, // eslint-disable-line no-unused-vars
-  DecryptionResponse, // eslint-disable-line no-unused-vars
+  DecryptionMaterial, // eslint-disable-line no-unused-vars
   SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
   EncryptionRequest, // eslint-disable-line no-unused-vars
-  EncryptionResponse, // eslint-disable-line no-unused-vars
+  EncryptionMaterial, // eslint-disable-line no-unused-vars
   MaterialsManager, // eslint-disable-line no-unused-vars
   DecryptionRequest, // eslint-disable-line no-unused-vars
   needs,
@@ -64,38 +64,38 @@ export function decorateProperties<S extends SupportedAlgorithmSuites> (
 }
 
 export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
-  { buildEncryptionResponseCacheKey }: CryptographicMaterialsCacheKeyHelpersInterface<S>
+  { buildEncryptionMaterialCacheKey }: CryptographicMaterialsCacheKeyHelpersInterface<S>
 ): GetEncryptionMaterials<S> {
   return async function getEncryptionMaterials (
     this: CachingMaterialsManager<S>,
     request: EncryptionRequest<S>
-  ): Promise<EncryptionResponse<S>> {
+  ): Promise<EncryptionMaterial<S>> {
     const { suite, encryptionContext, frameLength, plaintextLength } = request
-    /* Check for early return (Postcondition): If I can not cache the EncryptionResponse, do not even look. */
+    /* Check for early return (Postcondition): If I can not cache the EncryptionMaterial, do not even look. */
     if ((suite && !suite.cacheSafe) || typeof plaintextLength !== 'number' || plaintextLength < 0) {
       return this
         ._backingMaterialsManager
         .getEncryptionMaterials(request)
     }
 
-    const cacheKey = await buildEncryptionResponseCacheKey(this._partition, { suite, encryptionContext })
-    const entry = this._cache.getEncryptionResponse(cacheKey, plaintextLength)
-    /* Check for early return (Postcondition): If I have a valid EncryptionResponse, return it. */
+    const cacheKey = await buildEncryptionMaterialCacheKey(this._partition, { suite, encryptionContext })
+    const entry = this._cache.getEncryptionMaterial(cacheKey, plaintextLength)
+    /* Check for early return (Postcondition): If I have a valid EncryptionMaterial, return it. */
     if (entry && !this._cacheEntryHasExceededLimits(entry)) {
       return cloneResponse(entry.response)
     } else {
       this._cache.del(cacheKey)
     }
 
-    const response = await this
+    const material = await this
       ._backingMaterialsManager
       /* Strip any information about the plaintext from the backing request,
        * because the resulting response may be used to encrypt multiple plaintexts.
        */
       .getEncryptionMaterials({ suite, encryptionContext, frameLength })
 
-    /* Check for early return (Postcondition): If I can not cache the EncryptionResponse, just return it. */
-    if (!response.material.suite.cacheSafe) return response
+    /* Check for early return (Postcondition): If I can not cache the EncryptionMaterial, just return it. */
+    if (!material.suite.cacheSafe) return material
 
     /* It is possible for an entry to exceed limits immediately.
      * The simplest case is to need to encrypt more than then maxBytesEncrypted.
@@ -103,49 +103,49 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
      * but do not put a know invalid item into the cache.
      */
     const testEntry = {
-      response,
+      response: material,
       now: Date.now(),
       messagesEncrypted: 1,
       bytesEncrypted: plaintextLength
     }
     if (!this._cacheEntryHasExceededLimits(testEntry)) {
-      this._cache.putEncryptionResponse(cacheKey, response, plaintextLength, this._maxAge)
+      this._cache.putEncryptionMaterial(cacheKey, material, plaintextLength, this._maxAge)
     }
 
-    return cloneResponse(response)
+    return cloneResponse(material)
   }
 }
 
 export function decryptMaterials<S extends SupportedAlgorithmSuites> (
-  { buildDecryptionResponseCacheKey }: CryptographicMaterialsCacheKeyHelpersInterface<S>
+  { buildDecryptionMaterialCacheKey }: CryptographicMaterialsCacheKeyHelpersInterface<S>
 ): GetDecryptMaterials<S> {
   return async function decryptMaterials (
     this: CachingMaterialsManager<S>,
     request: DecryptionRequest<S>
-  ): Promise<DecryptionResponse<S>> {
+  ): Promise<DecryptionMaterial<S>> {
     const { suite } = request
-    /* Check for early return (Postcondition): If I can not cache the DecryptionResponse, do not even look. */
+    /* Check for early return (Postcondition): If I can not cache the DecryptionMaterial, do not even look. */
     if (!suite.cacheSafe) {
       return this
         ._backingMaterialsManager
         .decryptMaterials(request)
     }
 
-    const cacheKey = await buildDecryptionResponseCacheKey(this._partition, request)
-    const entry = this._cache.getDecryptionResponse(cacheKey)
-    /* Check for early return (Postcondition): If I have a valid DecryptionResponse, return it. */
+    const cacheKey = await buildDecryptionMaterialCacheKey(this._partition, request)
+    const entry = this._cache.getDecryptionMaterial(cacheKey)
+    /* Check for early return (Postcondition): If I have a valid DecryptionMaterial, return it. */
     if (entry && !this._cacheEntryHasExceededLimits(entry)) {
       return cloneResponse(entry.response)
     } else {
       this._cache.del(cacheKey)
     }
 
-    const response = await this
+    const material = await this
       ._backingMaterialsManager
       .decryptMaterials(request)
 
-    this._cache.putDecryptionResponse(cacheKey, response, this._maxAge)
-    return cloneResponse(response)
+    this._cache.putDecryptionMaterial(cacheKey, material, this._maxAge)
+    return cloneResponse(material)
   }
 }
 
@@ -166,14 +166,13 @@ export function cacheEntryHasExceededLimits<S extends SupportedAlgorithmSuites> 
  * Because when the Encryption SDK is done with material, it will zero it out.
  * Plucking off the material and cloning just that and then returning the rest of the response
  * can just be handled in one place.
- * @param response EncryptionResponse|DecryptionResponse
- * @return EncryptionResponse|DecryptionResponse
+ * @param material EncryptionMaterial|DecryptionMaterial
+ * @return EncryptionMaterial|DecryptionMaterial
  */
-function cloneResponse<S extends SupportedAlgorithmSuites, R extends EncryptionResponse<S>|DecryptionResponse<S>> (
-  response: R
-): R {
-  const { material } = response
-  return { ...response, material: cloneMaterial(material) }
+function cloneResponse<S extends SupportedAlgorithmSuites, M extends EncryptionMaterial<S>|DecryptionMaterial<S>> (
+  material: M
+): M {
+  return cloneMaterial(material)
 }
 
 export interface CachingMaterialsManagerInput<S extends SupportedAlgorithmSuites> extends Readonly<{

@@ -28,7 +28,6 @@ import {
   WebCryptoAlgorithmSuite, // eslint-disable-line no-unused-vars
   WebCryptoEncryptionMaterial, // eslint-disable-line no-unused-vars
   WebCryptoDecryptionMaterial, // eslint-disable-line no-unused-vars
-  EncryptionContext, // eslint-disable-line no-unused-vars
   EncryptedDataKey, // eslint-disable-line no-unused-vars
   immutableClass,
   importForWebCryptoEncryptionMaterial,
@@ -55,14 +54,14 @@ export class KmsKeyringBrowser extends KmsKeyringClass(KeyringWebCrypto as KeyRi
     super({ clientProvider, keyIds, generatorKeyId, grantTokens, discovery })
   }
 
-  async _onEncrypt (material: WebCryptoEncryptionMaterial, context?: EncryptionContext) {
-    const _material = await super._onEncrypt(material, context)
+  async _onEncrypt (material: WebCryptoEncryptionMaterial) {
+    const _material = await super._onEncrypt(material)
 
     return importForWebCryptoEncryptionMaterial(_material)
   }
 
-  async _onDecrypt (material: WebCryptoDecryptionMaterial, encryptedDataKeys: EncryptedDataKey[], context?: EncryptionContext) {
-    const _material = await super._onDecrypt(material, encryptedDataKeys, context)
+  async _onDecrypt (material: WebCryptoDecryptionMaterial, encryptedDataKeys: EncryptedDataKey[]) {
+    const _material = await super._onDecrypt(material, encryptedDataKeys)
 
     return importForWebCryptoDecryptionMaterial(_material)
   }

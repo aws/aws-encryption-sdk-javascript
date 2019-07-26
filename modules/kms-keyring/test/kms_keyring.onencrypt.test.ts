@@ -44,7 +44,7 @@ describe('KmsKeyring: _onEncrypt', () => {
     const clientProvider: any = () => {
       return { generateDataKey, encrypt }
       function generateDataKey ({ KeyId, EncryptionContext, GrantTokens }: any) {
-        expect(EncryptionContext === context).to.equal(true)
+        expect(EncryptionContext).to.deep.equal(context)
         expect(GrantTokens).to.equal(grantTokens)
         return {
           Plaintext: new Uint8Array(suite.keyLengthBytes),
@@ -53,7 +53,7 @@ describe('KmsKeyring: _onEncrypt', () => {
         }
       }
       function encrypt ({ KeyId, EncryptionContext, GrantTokens }: any) {
-        expect(EncryptionContext === context).to.equal(true)
+        expect(EncryptionContext).to.deep.equal(context)
         expect(GrantTokens).to.equal(grantTokens)
         return {
           KeyId,
@@ -70,7 +70,7 @@ describe('KmsKeyring: _onEncrypt', () => {
       grantTokens
     })
 
-    const material = await testKeyring.onEncrypt(new NodeEncryptionMaterial(suite), context)
+    const material = await testKeyring.onEncrypt(new NodeEncryptionMaterial(suite, context))
 
     expect(material.hasUnencryptedDataKey).to.equal(true)
 
@@ -114,7 +114,7 @@ describe('KmsKeyring: _onEncrypt', () => {
       grantTokens
     })
 
-    await expect(testKeyring.onEncrypt(new NodeEncryptionMaterial(suite), context))
+    await expect(testKeyring.onEncrypt(new NodeEncryptionMaterial(suite, context)))
       .to.rejectedWith(Error)
   })
 
@@ -136,7 +136,7 @@ describe('KmsKeyring: _onEncrypt', () => {
       grantTokens
     })
 
-    await expect(testKeyring.onEncrypt(new NodeEncryptionMaterial(suite), context))
+    await expect(testKeyring.onEncrypt(new NodeEncryptionMaterial(suite, context)))
       .to.rejectedWith(Error)
   })
 
@@ -160,7 +160,7 @@ describe('KmsKeyring: _onEncrypt', () => {
       generatorKeyId
     })
 
-    const seedMaterial = new NodeEncryptionMaterial(suite)
+    const seedMaterial = new NodeEncryptionMaterial(suite, {})
       .setUnencryptedDataKey(new Uint8Array(suite.keyLengthBytes), {
         keyName: 'keyName',
         keyNamespace: 'keyNamespace',
@@ -197,7 +197,7 @@ describe('KmsKeyring: _onEncrypt', () => {
       generatorKeyId
     })
 
-    const seedMaterial = new NodeEncryptionMaterial(suite)
+    const seedMaterial = new NodeEncryptionMaterial(suite, {})
       .setUnencryptedDataKey(new Uint8Array(suite.keyLengthBytes), {
         keyName: 'keyName',
         keyNamespace: 'keyNamespace',

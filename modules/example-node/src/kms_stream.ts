@@ -66,7 +66,7 @@ export async function kmsStreamTest (filename: string) {
 
   /* Create a simple pipeline to encrypt the package.json for this project. */
   const stream = createReadStream(filename)
-    .pipe(encryptStream(keyring, { context }))
+    .pipe(encryptStream(keyring, { encryptionContext: context }))
     .pipe(decryptStream(new KmsKeyringNode({ discovery: true })))
     .on('MessageHeader', ({ encryptionContext }: MessageHeader) => {
       /* Verify the encryption context.

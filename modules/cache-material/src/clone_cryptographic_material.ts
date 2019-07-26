@@ -19,24 +19,23 @@ import {
   WebCryptoEncryptionMaterial,
   WebCryptoDecryptionMaterial,
   isEncryptionMaterial,
-  isDecryptionMaterial
+  isDecryptionMaterial,
+  NodeAlgorithmSuite
 
 } from '@aws-crypto/material-management'
 
 type Material = NodeEncryptionMaterial|NodeDecryptionMaterial|WebCryptoEncryptionMaterial|WebCryptoDecryptionMaterial
 
 export function cloneMaterial<M extends Material> (source: M): M {
-  const clone = source instanceof NodeEncryptionMaterial
-    ? new NodeEncryptionMaterial(source.suite)
-    : source instanceof NodeDecryptionMaterial
-      ? new NodeDecryptionMaterial(source.suite)
-      : source instanceof WebCryptoEncryptionMaterial
-        ? new WebCryptoEncryptionMaterial(source.suite)
-        : source instanceof WebCryptoDecryptionMaterial
-          ? new WebCryptoDecryptionMaterial(source.suite)
-          : false
+  const { suite, encryptionContext } = source
 
-  if (!clone) throw new Error('Unsupported material type')
+  const clone = suite instanceof NodeAlgorithmSuite
+    ? source instanceof NodeEncryptionMaterial
+      ? new NodeEncryptionMaterial(suite, encryptionContext)
+      : new NodeDecryptionMaterial(suite, encryptionContext)
+    : source instanceof WebCryptoEncryptionMaterial
+      ? new WebCryptoEncryptionMaterial(suite, encryptionContext)
+      : new WebCryptoDecryptionMaterial(suite, encryptionContext)
 
   const udk = new Uint8Array(source.getUnencryptedDataKey())
   clone.setUnencryptedDataKey(udk, source.keyringTrace[0])
@@ -61,6 +60,8 @@ export function cloneMaterial<M extends Material> (source: M): M {
     if (source.suite.signatureCurve && source.verificationKey) {
       clone.setVerificationKey(source.verificationKey)
     }
+  } else {
+    throw new Error('Material mismatch')
   }
 
   return <M>clone

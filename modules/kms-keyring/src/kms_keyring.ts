@@ -24,7 +24,6 @@ import {
   EncryptionMaterial, // eslint-disable-line no-unused-vars
   DecryptionMaterial, // eslint-disable-line no-unused-vars
   SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
-  EncryptionContext, // eslint-disable-line no-unused-vars
   KeyringTrace, // eslint-disable-line no-unused-vars
   KeyringTraceFlag,
   EncryptedDataKey, // eslint-disable-line no-unused-vars
@@ -48,8 +47,8 @@ export interface KeyRing<S extends SupportedAlgorithmSuites, Client extends AwsE
   clientProvider: KmsClientSupplier<Client>
   grantTokens?: string[]
   isDiscovery: boolean
-  _onEncrypt(material: EncryptionMaterial<S>, context?: EncryptionContext): Promise<EncryptionMaterial<S>>
-  _onDecrypt(material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[], context?: EncryptionContext): Promise<DecryptionMaterial<S>>
+  _onEncrypt(material: EncryptionMaterial<S>): Promise<EncryptionMaterial<S>>
+  _onDecrypt(material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[]): Promise<DecryptionMaterial<S>>
 }
 
 export interface KmsKeyRingConstructible<S extends SupportedAlgorithmSuites, Client extends AwsEsdkKMSInterface> {
@@ -92,14 +91,20 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
     }
 
     /* Keyrings *must* preserve the order of EDK's.  The generatorKeyId is the first on this list. */
-    async _onEncrypt (material: EncryptionMaterial<S>, context?: EncryptionContext) {
+    async _onEncrypt (material: EncryptionMaterial<S>) {
       /* Check for early return (Postcondition): Discovery Keyrings do not encrypt. */
       if (this.isDiscovery) return material
 
       const keyIds = this.keyIds.slice()
       const { clientProvider, generatorKeyId, grantTokens } = this
       if (generatorKeyId && !material.hasUnencryptedDataKey) {
-        const dataKey = await generateDataKey(clientProvider, material.suite.keyLengthBytes, generatorKeyId, context, grantTokens)
+        const dataKey = await generateDataKey(
+          clientProvider,
+          material.suite.keyLengthBytes,
+          generatorKeyId,
+          material.encryptionContext,
+          grantTokens
+        )
         /* Precondition: A generatorKeyId must generate if we do not have an unencrypted data key.
         * Client supplier is allowed to return undefined if, for example, user wants to exclude particular
         * regions. But if we are here it means that user configured keyring with a KMS key that was
@@ -130,7 +135,13 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
 
       const flags = KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
       for (const kmsKey of keyIds) {
-        const kmsEDK = await encrypt(clientProvider, unencryptedDataKey, kmsKey, context, grantTokens)
+        const kmsEDK = await encrypt(
+          clientProvider,
+          unencryptedDataKey,
+          kmsKey,
+          material.encryptionContext,
+          grantTokens
+        )
 
         /* clientProvider may not return a client, in this case there is not an EDK to add */
         if (kmsEDK) material.addEncryptedDataKey(kmsResponseToEncryptedDataKey(kmsEDK), flags)
@@ -139,7 +150,7 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
       return material
     }
 
-    async _onDecrypt (material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[], context?: EncryptionContext) {
+    async _onDecrypt (material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[]) {
       const keyIds = this.keyIds.slice()
       const { clientProvider, generatorKeyId, grantTokens } = this
       if (generatorKeyId) keyIds.unshift(generatorKeyId)
@@ -162,7 +173,12 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
       for (const edk of decryptableEDKs) {
         let dataKey: RequiredDecryptResponse|false = false
         try {
-          dataKey = await decrypt(clientProvider, edk, context, grantTokens)
+          dataKey = await decrypt(
+            clientProvider,
+            edk,
+            material.encryptionContext,
+            grantTokens
+          )
         } catch (e) {
           // there should be some debug here?  or wrap?
           // Failures decrypt should not short-circuit the process
