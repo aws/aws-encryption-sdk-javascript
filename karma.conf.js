@@ -29,7 +29,7 @@ module.exports = function (config) {
                 options: {
                   configFile: 'tsconfig.module.json',
                   compilerOptions: {
-                    rootDir: './'
+                    sourceRoot: 'modules/'
                   }
                 }
               }
