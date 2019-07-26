@@ -202,7 +202,7 @@ describe('MultiKeyring: onEncrypt', () => {
     })
 
     const mkeyring = new MultiKeyringNode({  children:[ child ] })
-    const material = new NodeEncryptionMaterial(suite) //.setUnencryptedDataKey(unencryptedDataKey, keyringTrace0)
+    const material = new NodeEncryptionMaterial(suite)
     return expect(mkeyring.onEncrypt(material)).to.rejectedWith(Error, 'Only Keyrings explicitly designated as generators can generate material.')
   })
 
