@@ -78,7 +78,7 @@ function buildPrivateOnEncrypt<S extends SupportedAlgorithmSuites> () {
      * then generated.hasUnencryptedDataKey === false will throw.
      * But this is a much more meaningful error.
      */
-    needs(!material.hasUnencryptedDataKey ? this.generator : true , 'Only Keyrings explicitly designated as generators can generate material.')
+    needs(!material.hasUnencryptedDataKey ? this.generator : true, 'Only Keyrings explicitly designated as generators can generate material.')
 
     const generated = this.generator
       ? await this.generator.onEncrypt(material, context)
