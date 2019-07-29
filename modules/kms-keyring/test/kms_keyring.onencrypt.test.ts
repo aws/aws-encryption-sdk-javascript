@@ -94,6 +94,28 @@ describe('KmsKeyring: _onEncrypt', () => {
     expect(traceEncrypt.flags & KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX).to.equal(KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
   })
 
+  it('Check for early return (Postcondition): Discovery Keyrings do not encrypt.', async () => {
+    const encryptionContext = { some: 'context' }
+    const grantTokens = ['grant']
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+
+    const clientProvider: any = () => {
+      return false
+    }
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
+
+    const testKeyring = new TestKmsKeyring({
+      clientProvider,
+      discovery: true,
+      grantTokens
+    })
+
+    const material = await testKeyring.onEncrypt(new NodeEncryptionMaterial(suite, encryptionContext))
+
+    expect(material.hasUnencryptedDataKey).to.equal(false)
+    expect(material.encryptedDataKeys).to.have.lengthOf(0)
+  })
+
   it('Precondition: A generatorKeyId must generate if we do not have an unencrypted data key.', async () => {
     const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const encryptKmsKey = 'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012'
@@ -116,6 +138,35 @@ describe('KmsKeyring: _onEncrypt', () => {
 
     await expect(testKeyring.onEncrypt(new NodeEncryptionMaterial(suite, context)))
       .to.rejectedWith(Error)
+  })
+
+  it('Postcondition: The generated unencryptedDataKey length must match the algorithm specification.', async () => {
+    const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const encryptionContext = { some: 'context' }
+    const grantTokens = ['grant']
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+
+    const clientProvider: any = () => {
+      return { generateDataKey }
+      function generateDataKey ({ KeyId, EncryptionContext, GrantTokens }: any) {
+        expect(EncryptionContext).to.deep.equal(encryptionContext)
+        expect(GrantTokens).to.equal(grantTokens)
+        return {
+          Plaintext: new Uint8Array(suite.keyLengthBytes - 5),
+          KeyId,
+          CiphertextBlob: new Uint8Array(5)
+        }
+      }
+    }
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
+
+    const testKeyring = new TestKmsKeyring({
+      clientProvider,
+      generatorKeyId,
+      grantTokens
+    })
+
+    return expect(testKeyring.onEncrypt(new NodeEncryptionMaterial(suite, encryptionContext))).to.rejectedWith(Error, 'Key length does not agree with the algorithm specification.')
   })
 
   it('Precondition: If a generator does not exist, an unencryptedDataKey *must* already exist.', async () => {
