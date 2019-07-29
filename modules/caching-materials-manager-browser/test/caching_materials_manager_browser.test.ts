@@ -59,4 +59,28 @@ describe('WebCryptoCachingMaterialsManager', () => {
     expect(test._maxBytesEncrypted).to.equal(maxBytesEncrypted)
     expect(test._maxMessagesEncrypted).to.equal(maxMessagesEncrypted)
   })
+
+  it('Precondition: A partition value must exist for WebCryptoCachingMaterialsManager.', () => {
+    class TestKeyring extends KeyringWebCrypto {
+      async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
+        throw new Error('never')
+      }
+      async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
+        throw new Error('never')
+      }
+    }
+
+    const keyring = new TestKeyring()
+    const cache = 'cache' as any
+    const maxAge = 10
+    const test = new WebCryptoCachingMaterialsManager({
+      backingMaterials: keyring,
+      cache,
+      maxAge
+    })
+    /* Binary data is being transformed to utf-8.
+     * This means it is highly likely to be less than 64 characters long.
+     */
+    expect(test._partition).to.be.a('string').and.to.have.length.greaterThan(50)
+  })
 })
