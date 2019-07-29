@@ -127,6 +127,8 @@ const validSuite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES1
 const rawSignature = new Uint8Array([22, 77, 187, 192, 175, 104, 2, 240, 55, 2, 6, 138, 103, 148, 214, 240, 244, 65, 224, 254, 60, 52, 218, 22, 250, 245, 216, 228, 151, 151, 220, 234, 125, 9, 97, 8, 132, 123, 79, 193, 216, 207, 214, 0, 73, 183, 149, 173, 26, 173, 251, 132, 140, 139, 44, 122, 11, 50, 163, 105, 138, 221, 223, 29])
 const derSignature = new Uint8Array([48, 68, 2, 32, 22, 77, 187, 192, 175, 104, 2, 240, 55, 2, 6, 138, 103, 148, 214, 240, 244, 65, 224, 254, 60, 52, 218, 22, 250, 245, 216, 228, 151, 151, 220, 234, 2, 32, 125, 9, 97, 8, 132, 123, 79, 193, 216, 207, 214, 0, 73, 183, 149, 173, 26, 173, 251, 132, 140, 139, 44, 122, 11, 50, 163, 105, 138, 221, 223, 29])
 
+const invalidLengthRawSignature = new Uint8Array([0, 22, 77, 187, 192, 175, 104, 2, 240, 55, 2, 6, 138, 103, 148, 214, 240, 244, 65, 224, 254, 60, 52, 218, 22, 250, 245, 216, 228, 151, 151, 220, 234, 125, 9, 97, 8, 132, 123, 79, 193, 216, 207, 214, 0, 73, 183, 149, 173, 26, 173, 251, 132, 140, 139, 44, 122, 11, 50, 163, 105, 138, 221, 223, 29, 0])
+
 /*
 // All signatures should be verified with this public key (spki in bytes)
 const publicKeyBytes = new Uint8Array([48,118,48,16,6,7,42,134,72,206,61,2,1,6,5,43,129,4,0,34,3,98,0,4,182,142,16,181,73,22,77,38,171,216,20,142,20,154,218,20,31,70,13,88,242,169,247,248,184,238,221,100,191,26,82,176,137,96,163,242,244,215,25,250,144,157,65,246,201,220,219,188,122,115,129,227,74,201,236,240,93,173,108,36,49,249,149,224,67,76,66,192,255,173,90,184,124,191,154,165,137,251,173,181,109,109,75,167,34,202,198,114,192,197,215,224,199,45,105,126])
@@ -201,6 +203,11 @@ describe('raw2der', () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     expect(() => raw2der(rawSignature, suite)).to.throw()
   })
+
+  it('Precondition: The total raw signature length is twice the key length bytes.', () => {
+    expect(() => raw2der(invalidLengthRawSignature, suite)).to.throw('Malformed signature.')
+  })
+
   const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
 
   it('transform to der signature with no padding', () => {

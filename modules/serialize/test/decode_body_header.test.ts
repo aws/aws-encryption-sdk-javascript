@@ -17,7 +17,12 @@
 
 import { expect } from 'chai'
 import 'mocha'
-import { decodeFrameBodyHeader, decodeNonFrameBodyHeader, decodeBodyHeader } from '../src/decode_body_header'
+import {
+  decodeFrameBodyHeader,
+  decodeNonFrameBodyHeader,
+  decodeBodyHeader,
+  decodeFinalFrameBodyHeader
+} from '../src/decode_body_header'
 import { concatBuffers } from '../src'
 import * as fixtures from './fixtures'
 import { ContentType } from '../src/identifiers'
@@ -56,7 +61,7 @@ describe('decodeBodyHeader', () => {
     expect(test.contentType).to.eql(ContentType.NO_FRAMING)
   })
 
-  it('throws for unknown contentType', () => {
+  it('Precondition: The contentType must be a supported format.', () => {
     const headerInfo = {
       messageHeader: {
         contentType: 'does not exist'
@@ -67,7 +72,7 @@ describe('decodeBodyHeader', () => {
       }
     } as any
 
-    expect(() => decodeBodyHeader(fixtures.basicNonFrameHeader(), headerInfo, 0)).to.throw()
+    expect(() => decodeBodyHeader(fixtures.basicNonFrameHeader(), headerInfo, 0)).to.throw('Unknown contentType')
   })
 })
 
@@ -116,12 +121,11 @@ describe('decodeFrameBodyHeader', () => {
     expect(test.contentType).to.eql(ContentType.FRAMED_DATA)
   })
 
-  it('Check for early return (Postcondition): There must be enough data to decodeFrameBodyHeader.', () => {
-    const frameHeader = fixtures.basicFrameHeader()
+  it('Precondition: The contentType must be FRAMED_DATA.', () => {
     const headerInfo = {
       messageHeader: {
         frameLength: 99,
-        contentType: ContentType.FRAMED_DATA
+        contentType: 'not FRAMED_DATA'
       },
       algorithmSuite: {
         ivLength: 12,
@@ -129,14 +133,11 @@ describe('decodeFrameBodyHeader', () => {
       }
     } as any
 
-    for (let i = 0; frameHeader.byteLength > i; i++) {
-      const test = decodeFrameBodyHeader(frameHeader.slice(0, i), headerInfo, 0)
-      expect(test).to.eql(false)
-    }
+    expect(() => decodeFrameBodyHeader(fixtures.basicFrameHeader(), headerInfo, 0)).to.throw('Unknown contentType')
   })
 
-  it('Check for early return (Postcondition): There must be enough data to decodeFinalFrameBodyHeader.', () => {
-    const frameHeader = fixtures.finalFrameHeader()
+  it('Check for early return (Postcondition): There must be enough data to decodeFrameBodyHeader.', () => {
+    const frameHeader = fixtures.basicFrameHeader()
     const headerInfo = {
       messageHeader: {
         frameLength: 99,
@@ -182,34 +183,7 @@ describe('decodeFrameBodyHeader', () => {
     expect(test.contentType).to.eql(ContentType.FRAMED_DATA)
   })
 
-  it('return final frame header from readPos', () => {
-    const headerInfo = {
-      messageHeader: {
-        frameLength: 99,
-        contentType: ContentType.FRAMED_DATA
-      },
-      algorithmSuite: {
-        ivLength: 12,
-        tagLength: 16
-      }
-    } as any
-    const buffer = concatBuffers(
-      new Uint8Array(10), // pre
-      fixtures.finalFrameHeader(),
-      new Uint8Array(10) // post
-    )
-
-    const test = decodeFrameBodyHeader(buffer, headerInfo, 10)
-    if (!test) throw new Error('failure')
-    expect(test.sequenceNumber).to.eql(1)
-    expect(test.iv).to.eql(fixtures.basicFrameIV())
-    expect(test.readPos).to.eql(34)
-    expect(test.tagLength).to.eql(16)
-    expect(test.isFinalFrame).to.eql(true)
-    expect(test.contentType).to.eql(ContentType.FRAMED_DATA)
-  })
-
-  it('return undefined for partial basic frame from readPos', () => {
+  it('return false for partial basic frame from readPos', () => {
     const buffer = concatBuffers(new Uint8Array(10), fixtures.basicFrameHeader())
     const headerInfo = {
       messageHeader: {
@@ -228,7 +202,7 @@ describe('decodeFrameBodyHeader', () => {
     }
   })
 
-  it('return undefined for partial frame from readPos', () => {
+  it('return false for partial frame from readPos', () => {
     const buffer = concatBuffers(new Uint8Array(10), fixtures.finalFrameHeader())
     const headerInfo = {
       messageHeader: {
@@ -262,6 +236,21 @@ describe('decodeFrameBodyHeader', () => {
     const buffer = fixtures.basicFrameHeader()
     expect(() => decodeFrameBodyHeader(buffer, headerInfo, buffer.byteLength + 1)).to.throw()
     expect(() => decodeFrameBodyHeader(buffer, headerInfo, -1)).to.throw()
+  })
+
+  it('Postcondition: decodeFrameBodyHeader sequenceNumber must be greater than 0.', () => {
+    const headerInfo = {
+      messageHeader: {
+        frameLength: 99,
+        contentType: ContentType.FRAMED_DATA
+      },
+      algorithmSuite: {
+        ivLength: 12,
+        tagLength: 16
+      }
+    } as any
+
+    expect(() => decodeFrameBodyHeader(fixtures.invalidSequenceNumberFrameHeader(), headerInfo, 0)).to.throw('Malformed sequenceNumber.')
   })
 
   it('ArrayBuffer for a Uint8Array or Buffer may be larger than the Uint8Array or Buffer that it is a view over is.', () => {
@@ -304,6 +293,118 @@ describe('decodeFrameBodyHeader', () => {
   })
 })
 
+describe('decodeFinalFrameBodyHeader', () => {
+  it('return final frame header from readPos', () => {
+    const headerInfo = {
+      messageHeader: {
+        frameLength: 99,
+        contentType: ContentType.FRAMED_DATA
+      },
+      algorithmSuite: {
+        ivLength: 12,
+        tagLength: 16
+      }
+    } as any
+    const buffer = concatBuffers(
+      new Uint8Array(10), // pre
+      fixtures.finalFrameHeader(),
+      new Uint8Array(10) // post
+    )
+
+    const test = decodeFinalFrameBodyHeader(buffer, headerInfo, 10)
+    if (!test) throw new Error('failure')
+    expect(test.sequenceNumber).to.eql(1)
+    expect(test.iv).to.eql(fixtures.basicFrameIV())
+    expect(test.readPos).to.eql(34)
+    expect(test.tagLength).to.eql(16)
+    expect(test.isFinalFrame).to.eql(true)
+    expect(test.contentType).to.eql(ContentType.FRAMED_DATA)
+  })
+
+  it('Precondition: The contentType must be FRAMED_DATA to be a Final Frame.', () => {
+    const headerInfo = {
+      messageHeader: {
+        frameLength: 99,
+        contentType: 'not FRAMED_DATA'
+      },
+      algorithmSuite: {
+        ivLength: 12,
+        tagLength: 16
+      }
+    } as any
+
+    expect(() => decodeFinalFrameBodyHeader(fixtures.finalFrameHeader(), headerInfo, 0)).to.throw('Unknown contentType')
+  })
+
+  it('Precondition: decodeFinalFrameBodyHeader readPos must be within the byte length of the buffer given.', () => {
+    const headerInfo = {
+      messageHeader: {
+        frameLength: 99,
+        contentType: ContentType.FRAMED_DATA
+      },
+      algorithmSuite: {
+        ivLength: 12,
+        tagLength: 16
+      }
+    } as any
+
+    const buffer = fixtures.finalFrameHeader()
+    expect(() => decodeFinalFrameBodyHeader(buffer, headerInfo, buffer.byteLength + 1)).to.throw('readPos out of bounds.')
+    expect(() => decodeFinalFrameBodyHeader(buffer, headerInfo, -1)).to.throw('readPos out of bounds.')
+  })
+
+  it('Postcondition: sequenceEnd must be SEQUENCE_NUMBER_END.', () => {
+    const headerInfo = {
+      messageHeader: {
+        frameLength: 99,
+        contentType: ContentType.FRAMED_DATA
+      },
+      algorithmSuite: {
+        ivLength: 12,
+        tagLength: 16
+      }
+    } as any
+
+    const buffer = fixtures.invalidSequenceEndFinalFrameHeader()
+    expect(() => decodeFinalFrameBodyHeader(buffer, headerInfo, 0)).to.throw('Malformed sequenceEnd')
+  })
+
+  it('Postcondition: decodeFinalFrameBodyHeader sequenceNumber must be greater than 0.', () => {
+    const headerInfo = {
+      messageHeader: {
+        frameLength: 99,
+        contentType: ContentType.FRAMED_DATA
+      },
+      algorithmSuite: {
+        ivLength: 12,
+        tagLength: 16
+      }
+    } as any
+
+    const buffer = fixtures.invalidSequenceNumberFinalFrameHeader()
+    expect(() => decodeFinalFrameBodyHeader(buffer, headerInfo, 0)).to.throw('Malformed sequenceNumber.')
+  })
+
+  it('Check for early return (Postcondition): There must be enough data to decodeFinalFrameBodyHeader.', () => {
+    const frameHeader = fixtures.finalFrameHeader()
+    const headerInfo = {
+      messageHeader: {
+        frameLength: 99,
+        contentType: ContentType.FRAMED_DATA
+      },
+      algorithmSuite: {
+        ivLength: 12,
+        tagLength: 16
+      }
+    } as any
+
+    for (let i = 0; frameHeader.byteLength > i; i++) {
+      const test = decodeFinalFrameBodyHeader(frameHeader.slice(0, i), headerInfo, 0)
+      expect(test).to.eql(false)
+    }
+  })
+})
+
 describe('decodeNonFrameBodyHeader', () => {
   it('return non frame header', () => {
     const headerInfo = {
@@ -326,6 +427,21 @@ describe('decodeNonFrameBodyHeader', () => {
     expect(test.tagLength).to.eql(16)
     expect(test.isFinalFrame).to.eql(true)
     expect(test.contentType).to.eql(ContentType.NO_FRAMING)
+  })
+
+  it('Precondition: The contentType must be NO_FRAMING.', () => {
+    const headerInfo = {
+      messageHeader: {
+        contentType: 'not NO_FRAMING'
+      },
+      algorithmSuite: {
+        ivLength: 12,
+        tagLength: 16
+      }
+    } as any
+
+    const buffer = fixtures.basicNonFrameHeader()
+    expect(() => decodeNonFrameBodyHeader(buffer, headerInfo, 0)).to.throw('Unknown contentType')
   })
 
   it('Check for early return (Postcondition): There must be enough data to decodeNonFrameBodyHeader.', () => {
