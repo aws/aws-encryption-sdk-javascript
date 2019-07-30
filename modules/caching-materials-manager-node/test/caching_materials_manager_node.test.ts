@@ -78,7 +78,7 @@ describe('NodeCachingMaterialsManager', () => {
       cache,
       maxAge
     })
-    /* Binary data is being transformed to base64. 
+    /* Binary data is being transformed to base64.
      * 64 bits of base64 encoded data is 88 characters.
      */
     expect(test._partition).to.be.a('string').and.to.have.lengthOf(88)
