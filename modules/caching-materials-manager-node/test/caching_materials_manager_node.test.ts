@@ -78,9 +78,9 @@ describe('NodeCachingMaterialsManager', () => {
       cache,
       maxAge
     })
-    /* Binary data is being transformed to utf-8.
-     * This means it is highly likely to be less than 64 characters long.
+    /* Binary data is being transformed to base64. 
+     * 64 bits of base64 encoded data is 88 characters.
      */
-    expect(test._partition).to.be.a('string').and.to.have.length.greaterThan(50)
+    expect(test._partition).to.be.a('string').and.to.have.lengthOf(88)
   })
 })
