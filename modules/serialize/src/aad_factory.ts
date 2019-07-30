@@ -44,7 +44,7 @@ export function aadFactory (fromUtf8: (input: string) => Uint8Array) {
           ? ContentAADString.FINAL_FRAME_STRING_ID
           : ContentAADString.FRAME_STRING_ID
       default:
-        throw new Error('Unrecognized context type')
+        throw new Error('Unrecognized content type')
     }
   }
 
