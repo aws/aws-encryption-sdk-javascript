@@ -33,7 +33,7 @@ describe('decrypt', () => {
     expect(test).to.deep.equal(fixtures.plaintext())
   })
 
-  it('Precondition: The sequence number is required to monotonically increase, starting from 1.', async () => {
+  it('Precondition: The sequenceNumber is required to monotonically increase, starting from 1.', async () => {
     return decrypt(
       fixtures.decryptKeyring(),
       fixtures.frameSequenceOutOfOrder()
@@ -41,6 +41,18 @@ describe('decrypt', () => {
       throw new Error('should not succeed')
     }, err => {
       expect(err).to.be.instanceOf(Error)
+    })
+  })
+
+  it('Postcondition: subtleVerify must validate the signature.', async () => {
+    return decrypt(
+      fixtures.decryptKeyring(),
+      fixtures.invalidSignatureCiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384()
+    ).then(() => {
+      throw new Error('should not succeed')
+    }, err => {
+      expect(err).to.be.instanceOf(Error)
+      expect(err.message).to.equal('Invalid Signature')
     })
   })
 })
