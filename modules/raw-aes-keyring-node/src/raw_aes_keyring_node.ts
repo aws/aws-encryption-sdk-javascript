@@ -66,9 +66,9 @@ export class RawAesKeyringNode extends KeyringNode {
     const { keyName, keyNamespace, unencryptedMasterKey, wrappingSuite } = input
     /* Precondition: AesKeyringNode needs identifying information for encrypt and decrypt. */
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
-    /* Precondition: wrappingSuite must be a valid RawAesWrappingSuite. */
+    /* Precondition: RawAesKeyringNode requires wrappingSuite to be a valid RawAesWrappingSuite. */
     const wrappingMaterial = new NodeRawAesMaterial(wrappingSuite)
-      /* Precondition: unencryptedMasterKey must correspond to the algorithm suite specification.
+      /* Precondition: unencryptedMasterKey must correspond to the NodeAlgorithmSuite specification.
        * Note: the KeyringTrace and flag are _only_ set because I am reusing an existing implementation.
        * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
        */
