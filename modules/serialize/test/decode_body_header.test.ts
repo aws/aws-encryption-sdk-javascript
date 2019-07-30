@@ -366,7 +366,7 @@ describe('decodeFinalFrameBodyHeader', () => {
     } as any
 
     const buffer = fixtures.invalidSequenceEndFinalFrameHeader()
-    expect(() => decodeFinalFrameBodyHeader(buffer, headerInfo, 0)).to.throw('Malformed sequenceEnd')
+    expect(() => decodeFinalFrameBodyHeader(buffer, headerInfo, 0)).to.throw('Malformed final frame: Invalid sequence number end value')
   })
 
   it('Postcondition: decodeFinalFrameBodyHeader sequenceNumber must be greater than 0.', () => {
