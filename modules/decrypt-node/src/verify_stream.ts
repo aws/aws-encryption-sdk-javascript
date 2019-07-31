@@ -64,7 +64,7 @@ export class VerifyStream extends PortableTransformWithType {
   private _maxBodySize?: number
   constructor ({ maxBodySize }: VerifyStreamOptions) {
     super()
-    /* Precondition: MaxBodySize must be falsey or a number. */
+    /* Precondition: VerifyStream requires maxBodySize must be falsey or a number. */
     needs(!maxBodySize || typeof maxBodySize === 'number', 'Unsupported MaxBodySize.')
     Object.defineProperty(this, '_maxBodySize', { value: maxBodySize, enumerable: true })
 
