@@ -128,7 +128,7 @@ export function flattenMixedCryptoKey (key?: CryptoKey|MixedBackendCryptoKey): C
   if (isCryptoKey(key)) return [key]
   const { nonZeroByteCryptoKey, zeroByteCryptoKey } = key
   const keys = [nonZeroByteCryptoKey, zeroByteCryptoKey]
-  /* Precondition: Not all keys are CryptoKeys. */
+  /* Postcondition: Not all keys are CryptoKeys. */
   needs(keys.every(isCryptoKey), 'Not all keys are CryptoKeys.')
   return keys
 }
