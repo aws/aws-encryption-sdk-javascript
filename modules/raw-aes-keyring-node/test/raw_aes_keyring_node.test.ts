@@ -51,7 +51,7 @@ describe('RawAesKeyringNode::constructor', () => {
     expect(() => new RawAesKeyringNode({ keyName, unencryptedMasterKey, wrappingSuite })).to.throw()
   })
 
-  it('Precondition: wrappingSuite must be a valid RawAesWrappingSuite.', async () => {
+  it('Precondition: RawAesKeyringNode requires wrappingSuite to be a valid RawAesWrappingSuite.', async () => {
     expect(() => new RawAesKeyringNode({
       keyName,
       keyNamespace,
@@ -60,7 +60,7 @@ describe('RawAesKeyringNode::constructor', () => {
     })).to.throw()
   })
 
-  it('Precondition: unencryptedMasterKey must correspond to the algorithm suite specification.', async () => {
+  it('Precondition: unencryptedMasterKey must correspond to the NodeAlgorithmSuite specification.', async () => {
     expect(() => new RawAesKeyringNode({
       keyName,
       keyNamespace,
