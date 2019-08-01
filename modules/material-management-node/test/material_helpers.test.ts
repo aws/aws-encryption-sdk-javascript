@@ -112,7 +112,12 @@ describe('getCryptoStream', () => {
     expect(decipher).to.be.instanceOf(Decipheriv)
   })
 
-  it('Precondition: The length of the IV must match the algorithm suite specification.', () => {
+  it('Precondition: material must be either NodeEncryptionMaterial or NodeDecryptionMaterial.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    expect(() => getCryptoStream({ suite } as any)).to.throw('Unsupported cryptographic material.')
+  })
+
+  it('Precondition: The length of the IV must match the NodeAlgorithmSuite specification.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
@@ -187,6 +192,36 @@ describe('getEncryptHelper', () => {
     const sig = signer.awsCryptoSign()
     expect(sig).instanceOf(Buffer)
   })
+
+  it('Precondition: NodeEncryptionMaterial must have a valid data key.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const material = new NodeEncryptionMaterial(suite, {})
+
+    expect(() => getEncryptHelper(material)).to.throw('Material has no unencrypted data key.')
+  })
+
+  it('Precondition: The NodeEncryptionMaterial must have not been zeroed.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
+    const material = new NodeEncryptionMaterial(suite, {})
+    const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+
+    const ecdh = createECDH(suite.signatureCurve || '')
+    ecdh.generateKeys()
+    const sigKey = new SignatureKey(ecdh.getPrivateKey(), ecdh.getPublicKey(), suite)
+
+    material
+      .setUnencryptedDataKey(dataKey, trace)
+      .setSignatureKey(sigKey)
+
+    const helper = getEncryptHelper(material)
+    material.zeroUnencryptedDataKey()
+
+    expect(() => {
+      if (!helper.getSigner) throw new Error('this should never happen')
+      helper.getSigner()
+    }).to.throw('Unencrypted data key has been zeroed.')
+  })
 })
 
 describe('getDecryptionHelper', () => {
@@ -238,5 +273,11 @@ describe('getDecryptionHelper', () => {
     verify.update('data')
     const isValid = verify.awsCryptoVerify(Buffer.alloc(5))
     expect(isValid).to.equal(false)
+  })
+
+  it('Precondition: NodeDecryptionMaterial must have a valid data key.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
+    const material = new NodeDecryptionMaterial(suite, {})
+    expect(() => getDecryptionHelper(material)).to.throw('Material has no unencrypted data key.')
   })
 })
