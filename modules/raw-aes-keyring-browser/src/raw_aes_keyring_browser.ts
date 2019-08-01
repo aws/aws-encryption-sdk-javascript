@@ -69,9 +69,9 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
     const { keyName, keyNamespace, masterKey, wrappingSuite } = input
     /* Precondition: AesKeyringWebCrypto needs identifying information for encrypt and decrypt. */
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
-    /* Precondition: wrappingSuite must be a valid RawAesWrappingSuite. */
+    /* Precondition: RawAesKeyringWebCrypto requires a wrappingSuite to be a valid RawAesWrappingSuite. */
     const wrappingMaterial = new WebCryptoRawAesMaterial(wrappingSuite)
-      /* Precondition: unencryptedMasterKey must correspond to the algorithm suite specification.
+      /* Precondition: unencryptedMasterKey must correspond to the WebCryptoAlgorithmSuite specification.
        * Note: the KeyringTrace and flag are _only_ set because I am reusing an existing implementation.
        * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
        */

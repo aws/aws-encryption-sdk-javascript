@@ -44,7 +44,7 @@ export class ParseHeaderStream extends PortableTransformWithType {
   private _headerState: HeaderState
   private _maxBodySize?: number
   constructor (cmm: NodeMaterialsManager, { maxBodySize }: ParseHeaderOptions = {}) {
-    /* Precondition: MaxBodySize must be falsey or a number. */
+    /* Precondition: ParseHeaderStream requires maxBodySize must be falsey or a number. */
     needs(!maxBodySize || typeof maxBodySize === 'number', 'Unsupported MaxBodySize.')
     super()
     Object.defineProperty(this, 'materialsManager', { value: cmm, enumerable: true })
