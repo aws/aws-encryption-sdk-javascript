@@ -54,6 +54,12 @@ describe('KmsKeyring: constructor', () => {
     expect(test.isDiscovery).to.equal(true)
   })
 
+  it('Precondition: This is an abstract class. (But TypeScript does not have a clean way to model this)', () => {
+    const clientProvider: any = () => {}
+    const KmsKeyring = KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>)
+    expect(() => new KmsKeyring({ clientProvider })).to.throw('new KmsKeyring is not allowed')
+  })
+
   it('Precondition: A noop KmsKeyring is not allowed.', () => {
     class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
     const clientProvider: any = () => {}

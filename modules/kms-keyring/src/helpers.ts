@@ -42,7 +42,7 @@ export async function generateDataKey<Client extends AwsEsdkKMSInterface> (
   const region = regionFromKmsKeyArn(KeyId)
   const client = clientProvider(region)
 
-  /* Check for early return (Postcondition): Client region was not provided. */
+  /* Check for early return (Postcondition): clientProvider did not return a client for generateDataKey. */
   if (!client) return false
   const v2vsV3Response = client.generateDataKey({ KeyId, GrantTokens, NumberOfBytes, EncryptionContext })
   const v2vsV3Promise = 'promise' in v2vsV3Response
@@ -63,7 +63,7 @@ export async function encrypt<Client extends AwsEsdkKMSInterface> (
   const region = regionFromKmsKeyArn(KeyId)
   const client = clientProvider(region)
 
-  /* Check for early return (Postcondition): Client region was not provided. */
+  /* Check for early return (Postcondition): clientProvider did not return a client for encrypt. */
   if (!client) return false
 
   const v2vsV3Response = client.encrypt({ KeyId, Plaintext, EncryptionContext, GrantTokens })
@@ -85,7 +85,7 @@ export async function decrypt<Client extends AwsEsdkKMSInterface> (
   needs(providerId === KMS_PROVIDER_ID, 'Unsupported providerId')
   const region = regionFromKmsKeyArn(providerInfo)
   const client = clientProvider(region)
-  /* Check for early return (Postcondition): Client region was not provided. */
+  /* Check for early return (Postcondition): clientProvider did not return a client for decrypt. */
   if (!client) return false
 
   const v2vsV3Response = client.decrypt({ CiphertextBlob: encryptedDataKey, EncryptionContext, GrantTokens })
