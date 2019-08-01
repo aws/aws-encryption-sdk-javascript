@@ -268,7 +268,7 @@ describe('getSubtleFunction', () => {
     expect(() => getSubtleFunction(mixedSupportBackend, backend, 'encrypt')).to.throw()
   })
 
-  it('Precondition: The length of the IV must match the algorithm suite specification.', async () => {
+  it('Precondition: The length of the IV must match the WebCryptoAlgorithmSuite specification.', async () => {
     const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)

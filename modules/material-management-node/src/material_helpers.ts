@@ -180,7 +180,7 @@ export function getCryptoStream (material: NodeEncryptionMaterial|NodeDecryption
   return (info?: Uint8Array) => {
     const derivedKey = nodeKdf(material, info)
     return (iv: Uint8Array): AwsEsdkJsCipherGCM|AwsEsdkJsDecipherGCM => {
-      /* Precondition: The length of the IV must match the algorithm suite specification. */
+      /* Precondition: The length of the IV must match the NodeAlgorithmSuite specification. */
       needs(iv.byteLength === ivLength, 'Iv length does not match algorithm suite specification')
       /* Precondition: The material must have not been zeroed.
       * hasUnencryptedDataKey will check that the unencrypted data key has been set

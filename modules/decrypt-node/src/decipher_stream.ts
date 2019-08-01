@@ -144,7 +144,16 @@ export function getDecipherStream () {
        * This means that _transform will never be called.
        */
       needs(frameComplete || contentLength === 0, 'AuthTag before frame.')
-      /* Precondition: I must have received all content for this frame. */
+      /* Precondition UNTESTED: I must have received all content for this frame.
+       * Both contentLength and frameComplete are private variables.
+       * As such manipulating them separately outside of the _transform function
+       * should not be possible.
+       * I do not know of this condition would ever be false while the above is true.
+       * But I do not want to remove the check as there may be a more complicated case
+       * that makes this possible.
+       * If such a case is found.
+       * Write a test.
+       */
       needs(contentLength === 0, 'Lengths do not match')
 
       // flush content from state.
