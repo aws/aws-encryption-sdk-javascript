@@ -81,6 +81,6 @@ describe('WebCryptoCachingMaterialsManager', () => {
     /* Binary data is being transformed to utf-8.
      * This means it is highly likely to be less than 64 characters long.
      */
-    expect(test._partition).to.be.a('string').and.to.have.length.greaterThan(50)
+    expect(test._partition).to.be.a('string').and.to.have.lengthOf(88)
   })
 })
