@@ -141,7 +141,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
   function mayEvictTail () {
     // @ts-ignore
     const { tail } = cache.dumpLru()
-    /* Check for early return (Postcondition): If there is no tail, then the cache is empty. */
+    /* Check for early return (Postcondition) UNTESTED: If there is no tail, then the cache is empty. */
     if (!tail) return
     /* The underlying Yallist tail Node has a `value`.
      * This value is a lru-cache Entry and has a `key`.

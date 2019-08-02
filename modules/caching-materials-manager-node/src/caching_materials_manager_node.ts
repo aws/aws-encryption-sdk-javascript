@@ -56,7 +56,7 @@ export class NodeCachingMaterialsManager implements CachingMaterialsManager<Node
      * The maximum hash function at this time is 512.
      * So I create 64 bytes of random data.
      */
-    const { partition = randomBytes(64).toString('utf8') } = input
+    const { partition = randomBytes(64).toString('base64') } = input
 
     decorateProperties(this, {
       ...input,

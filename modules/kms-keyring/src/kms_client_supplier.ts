@@ -60,7 +60,7 @@ export function limitRegions<Client extends AwsEsdkKMSInterface> (
   regions: string[],
   getClient: KmsClientSupplier<Client>
 ): KmsClientSupplier<Client> {
-  /* Precondition: region be a string. */
+  /* Precondition: limitRegions requires that region be a string. */
   needs(regions.every(r => !!r && typeof r === 'string'), 'Can only limit on region strings')
 
   return (region: string) => {
@@ -73,7 +73,7 @@ export function excludeRegions<Client extends AwsEsdkKMSInterface> (
   regions: string[],
   getClient: KmsClientSupplier<Client>
 ): KmsClientSupplier<Client> {
-  /* Precondition: region be a string. */
+  /* Precondition: excludeRegions requires region be a string. */
   needs(regions.every(r => !!r && typeof r === 'string'), 'Can only exclude on region strings')
 
   return (region: string) => {
@@ -101,7 +101,7 @@ export function cacheClients<Client extends AwsEsdkKMSInterface> (
  * This does *not* mean that this call is successful,
  * only that the region is backed by a functional KMS service.
  */
-function deferCache<Client extends AwsEsdkKMSInterface> (
+export function deferCache<Client extends AwsEsdkKMSInterface> (
   clientsCache: {[key: string]: Client|false},
   region: string,
   client: Client|false

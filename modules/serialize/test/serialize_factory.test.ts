@@ -99,7 +99,7 @@ describe('serializeFactory:encodeEncryptionContext', () => {
     expect(test[1]).to.deep.equal(new Uint8Array([ 0, 4, 115, 111, 109, 101, 0, 6, 112, 117, 98, 108, 105, 99 ]))
   })
 
-  it('should sort by key', () => {
+  it('Precondition: The serialized encryption context entries must be sorted by UTF-8 key value.', () => {
     const fromUtf8 = (input: string) => Buffer.from(input)
     const { encodeEncryptionContext } = serializeFactory(fromUtf8)
     const test = encodeEncryptionContext({ some: 'public', information: '\u00bd + \u00bc = \u00be' })

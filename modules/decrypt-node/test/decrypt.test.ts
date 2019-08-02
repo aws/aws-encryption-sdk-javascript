@@ -75,4 +75,12 @@ describe('decrypt', () => {
       { encoding: 'base64' }
     )).to.rejectedWith(Error, 'Encrypted body sequence out of order.')
   })
+
+  it('Postcondition: The signature must be valid.', async () => {
+    await expect(decrypt(
+      fixtures.decryptKeyring(),
+      fixtures.invalidSignatureCiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(),
+      { encoding: 'base64' }
+    )).to.rejectedWith(Error, 'Invalid Signature')
+  })
 })

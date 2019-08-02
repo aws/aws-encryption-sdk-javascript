@@ -159,7 +159,7 @@ describe('_onDecrypt', () => {
     expect(filterCalled).to.equal(0)
   })
 
-  it('Check for early return (Postcondition): If the material is already valid, attempting to decrypt is a bad idea.', async () => {
+  it('Check for early return (Postcondition): If there are not EncryptedDataKeys for this keyring, do nothing.', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const keyName = 'keyName'
     const keyNamespace = 'keyNamespace'

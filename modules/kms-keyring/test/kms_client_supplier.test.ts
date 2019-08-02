@@ -17,7 +17,7 @@
 
 import { expect } from 'chai'
 import 'mocha'
-import { getClient, limitRegions, excludeRegions, cacheClients } from '../src/kms_client_supplier'
+import { getClient, limitRegions, excludeRegions, cacheClients, deferCache } from '../src/kms_client_supplier'
 
 describe('getClient', () => {
   it('return a client', () => {
@@ -121,7 +121,7 @@ describe('limitRegions', () => {
     expect(assertCount).to.equal(0)
   })
 
-  it('Precondition: region be a string.', () => {
+  it('Precondition: limitRegions requires that region be a string.', () => {
     expect(() => limitRegions(['us-east-2', ''], (() => {}) as any)).to.throw()
     expect(() => limitRegions(['us-east-2', {}] as any, (() => {}) as any)).to.throw()
   })
@@ -162,7 +162,7 @@ describe('excludeRegions', () => {
     expect(assertCount).to.equal(1)
   })
 
-  it('Precondition: region be a string.', () => {
+  it('Precondition: excludeRegions requires region be a string.', () => {
     expect(() => excludeRegions(['us-east-2', ''], (() => {}) as any)).to.throw()
     expect(() => excludeRegions(['us-east-2', {}] as any, (() => {}) as any)).to.throw()
   })
@@ -233,5 +233,41 @@ describe('cacheClients', () => {
     const test2 = getKmsClient(region)
     expect(test === test2).to.equal(true)
     expect(assertCount).to.equal(1)
+  })
+})
+
+describe('deferCache', () => {
+  const noop = async () => ({})
+  const client: any = {
+    encrypt: noop,
+    decrypt: noop,
+    generateDataKey: noop
+  }
+  const clientsCache: any = {}
+  const region = 'region'
+  it('modifies the original instance', async () => {
+    const wrappedClient = deferCache(clientsCache, region, client)
+    expect(wrappedClient === client).to.equal(true)
+    expect(client).to.haveOwnProperty('encrypt').and.to.not.equal(noop)
+    expect(client).to.haveOwnProperty('decrypt').and.to.not.equal(noop)
+    expect(client).to.haveOwnProperty('generateDataKey').and.to.not.equal(noop)
+    expect(clientsCache).to.not.haveOwnProperty(region)
+  })
+
+  it('resets the functions and caches the client', async () => {
+    // Each of the 3 functions are the same cache functions...
+    await client.decrypt()
+
+    expect(client).to.haveOwnProperty('encrypt').and.to.equal(noop)
+    expect(client).to.haveOwnProperty('decrypt').and.to.equal(noop)
+    expect(client).to.haveOwnProperty('generateDataKey').and.to.equal(noop)
+    expect(clientsCache).to.haveOwnProperty(region).and.to.equal(client)
+  })
+
+  it('Check for early return (Postcondition): No client, then I cache false and move on.', async () => {
+    const noClientRegion = 'noClientRegion'
+    const wrappedClient = deferCache(clientsCache, noClientRegion, false)
+    expect(wrappedClient).to.equal(false)
+    expect(clientsCache).to.haveOwnProperty(noClientRegion).and.to.equal(false)
   })
 })
