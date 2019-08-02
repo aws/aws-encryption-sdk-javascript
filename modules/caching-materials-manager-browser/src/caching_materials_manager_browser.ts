@@ -32,6 +32,7 @@ import {
   WebCryptoGetDecryptMaterials // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
 import { fromUtf8, toUtf8 } from '@aws-sdk/util-utf8-browser'
+import { toBase64 } from '@aws-sdk/util-base64-browser'
 import { synchronousRandomValues } from '@aws-crypto/web-crypto-backend'
 import { sha512 } from './sha512'
 
@@ -54,7 +55,7 @@ export class WebCryptoCachingMaterialsManager implements CachingMaterialsManager
      * The maximum hash function at this time is 512.
      * So I create 64 bytes of random data.
      */
-    const { partition = toUtf8(synchronousRandomValues(64)) } = input
+    const { partition = toBase64(synchronousRandomValues(64)) } = input
 
     decorateProperties(this, {
       ...input,

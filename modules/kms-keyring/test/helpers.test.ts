@@ -68,7 +68,7 @@ describe('generateDataKey', () => {
     expect(test.CiphertextBlob).to.deep.equal(new Uint8Array([1, 2, 3, 4]))
   })
 
-  it('Check for early return (Postcondition): Client region was not provided.', async () => {
+  it('Check for early return (Postcondition): clientProvider did not return a client for generateDataKey.', async () => {
     const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const GrantTokens = ['grantToken']
     const NumberOfBytes = 128
@@ -133,7 +133,7 @@ describe('encrypt', () => {
     expect(test.CiphertextBlob).to.deep.equal(CiphertextBlob)
   })
 
-  it('Check for early return (Postcondition): Client region was not provided.', async () => {
+  it('Check for early return (Postcondition): clientProvider did not return a client for encrypt.', async () => {
     const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const GrantTokens = ['grantToken']
     const Plaintext = new Uint8Array(5)
@@ -231,7 +231,7 @@ describe('decrypt', () => {
     throw new Error('never')
   })
 
-  it('Check for early return (Postcondition): Client region was not provided.', async () => {
+  it('Check for early return (Postcondition): clientProvider did not return a client for decrypt.', async () => {
     const GrantTokens = ['grantToken']
     const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const edk = new EncryptedDataKey({
