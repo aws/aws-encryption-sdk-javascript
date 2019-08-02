@@ -109,7 +109,8 @@ describe('deserializeFactory:deserializeEncryptedDataKeys', () => {
       .to.deep.equal(new Uint8Array([6, 7, 8, 9, 0]))
   })
 
-  it('Check for early return (Postcondition): readElement will return false if there is not enough data.', () => {
+  it(`Check for early return (Postcondition): Need to have at least Uint16 (2) bytes of data.
+      Check for early return (Postcondition): readElement will return false if there is not enough data.`, () => {
     const { deserializeEncryptedDataKeys } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
     const buffer = fixtures.encryptedDataKey()
 
@@ -241,7 +242,10 @@ describe('deserializeFactory:deserializeMessageHeader', () => {
       .and.to.eql(4096)
   })
 
-  it('Check for early return (Postcondition): Not Enough Data. Need to have at least 22 bytes of data to begin parsing. ; Check for early return (Postcondition): Not Enough Data. Need to have all of the context in bytes before we can parse the next section. ;Check for early return (Postcondition): Not Enough Data. deserializeEncryptedDataKeys will return false if it does not have enough data. ; Check for early return (Postcondition): Not Enough Data. Need to have the remaining fixed length data to parse. ', () => {
+  it(`Check for early return (Postcondition): Not Enough Data. Need to have at least 22 bytes of data to begin parsing.
+      Check for early return (Postcondition): Not Enough Data. Need to have all of the context in bytes before we can parse the next section.
+      Check for early return (Postcondition): Not Enough Data. deserializeEncryptedDataKeys will return false if it does not have enough data.
+      Check for early return (Postcondition): Not Enough Data. Need to have the remaining fixed length data to parse. `, () => {
     const { deserializeMessageHeader } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
     const basicMessageHeader = fixtures.basicMessageHeader()
     const headerIv = new Uint8Array(12).fill(1)
@@ -411,5 +415,37 @@ describe('deserializeFactory:deserializeMessageHeader', () => {
       .and.to.eql(12)
     expect(messageHeader).to.have.property('frameLength')
       .and.to.eql(4096)
+  })
+
+  it('Precondition: suiteId must match supported algorithm suite', () => {
+    const { deserializeMessageHeader } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
+    const suiteIdNotValidMessageHeader = fixtures.suiteIdNotValidMessageHeader()
+    expect(() => deserializeMessageHeader(suiteIdNotValidMessageHeader)).to.throw('Unsupported algorithm suite.')
+  })
+
+  it('Postcondition: reservedBytes are defined as 0,0,0,0', () => {
+    const { deserializeMessageHeader } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
+    const reservedBytesNoZeroMessageHeader = fixtures.reservedBytesNoZeroMessageHeader()
+    const headerIv = new Uint8Array(12).fill(1)
+    const headerAuthTag = new Uint8Array(16).fill(2)
+    const buffer = concatBuffers(
+      reservedBytesNoZeroMessageHeader,
+      headerIv,
+      headerAuthTag
+    )
+    expect(() => deserializeMessageHeader(buffer)).to.throw('Malformed Header')
+  })
+
+  it('Postcondition: The headerIvLength must match the algorithm suite specification.', () => {
+    const { deserializeMessageHeader } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
+    const reservedBytesNoZeroMessageHeader = fixtures.ivLengthMismatchMessageHeader()
+    const headerIv = new Uint8Array(12).fill(1)
+    const headerAuthTag = new Uint8Array(16).fill(2)
+    const buffer = concatBuffers(
+      reservedBytesNoZeroMessageHeader,
+      headerIv,
+      headerAuthTag
+    )
+    expect(() => deserializeMessageHeader(buffer)).to.throw('Malformed Header')
   })
 })

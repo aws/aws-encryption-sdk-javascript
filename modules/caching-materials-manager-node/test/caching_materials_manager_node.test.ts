@@ -59,4 +59,28 @@ describe('NodeCachingMaterialsManager', () => {
     expect(test._maxBytesEncrypted).to.equal(maxBytesEncrypted)
     expect(test._maxMessagesEncrypted).to.equal(maxMessagesEncrypted)
   })
+
+  it('Precondition: A partition value must exist for NodeCachingMaterialsManager.', () => {
+    class TestKeyring extends KeyringNode {
+      async _onEncrypt (): Promise<NodeEncryptionMaterial> {
+        throw new Error('never')
+      }
+      async _onDecrypt (): Promise<NodeDecryptionMaterial> {
+        throw new Error('never')
+      }
+    }
+
+    const keyring = new TestKeyring()
+    const cache = 'cache' as any
+    const maxAge = 10
+    const test = new NodeCachingMaterialsManager({
+      backingMaterials: keyring,
+      cache,
+      maxAge
+    })
+    /* Binary data is being transformed to base64.
+     * 64 bits of base64 encoded data is 88 characters.
+     */
+    expect(test._partition).to.be.a('string').and.to.have.lengthOf(88)
+  })
 })

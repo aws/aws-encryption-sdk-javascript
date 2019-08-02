@@ -148,7 +148,8 @@ export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: Head
 
   /* The precondition SEQUENCE_NUMBER_END: Uint32(FFFF) is handled above. */
   const sequenceEnd = dataView.getUint32(readPos, false) // big endian
-  needs(sequenceEnd === SequenceIdentifier.SEQUENCE_NUMBER_END, '')
+  /* Postcondition: sequenceEnd must be SEQUENCE_NUMBER_END. */
+  needs(sequenceEnd === SequenceIdentifier.SEQUENCE_NUMBER_END, 'Malformed final frame: Invalid sequence number end value')
   const sequenceNumber = dataView.getUint32(readPos += 4, false) // big endian
   /* Postcondition: decodeFinalFrameBodyHeader sequenceNumber must be greater than 0. */
   needs(sequenceNumber > 0, 'Malformed sequenceNumber.')

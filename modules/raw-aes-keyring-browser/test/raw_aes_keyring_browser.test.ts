@@ -70,7 +70,7 @@ describe('RawAesKeyringWebCrypto::constructor', () => {
     expect(() => new RawAesKeyringWebCrypto({ keyName, masterKey, wrappingSuite })).to.throw()
   })
 
-  it('Precondition: wrappingSuite must be a valid RawAesWrappingSuite.', async () => {
+  it('Precondition: RawAesKeyringWebCrypto requires a wrappingSuite to be a valid RawAesWrappingSuite.', async () => {
     const masterKey = await RawAesKeyringWebCrypto.importCryptoKey(udk, wrappingSuite)
     expect(() => new RawAesKeyringWebCrypto({
       keyName,
@@ -80,7 +80,7 @@ describe('RawAesKeyringWebCrypto::constructor', () => {
     })).to.throw()
   })
 
-  it('Precondition: unencryptedMasterKey must correspond to the algorithm suite specification.', async () => {
+  it('Precondition: unencryptedMasterKey must correspond to the WebCryptoAlgorithmSuite specification.', async () => {
     const masterKey = await RawAesKeyringWebCrypto
       .importCryptoKey(udk, wrappingSuite)
     expect(() => new RawAesKeyringWebCrypto({

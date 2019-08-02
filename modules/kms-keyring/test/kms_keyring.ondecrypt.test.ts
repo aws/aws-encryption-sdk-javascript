@@ -166,4 +166,117 @@ describe('KmsKeyring: _onDecrypt',
       expect(material.hasUnencryptedDataKey).to.equal(false)
       expect(material.keyringTrace).to.have.lengthOf(0)
     })
+
+    it('Check for early return (Postcondition): clientProvider may not return a client.', async () => {
+      const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+      const encryptKmsKey = 'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012'
+      const keyIds = [encryptKmsKey]
+      const encryptionContext = { some: 'context' }
+      const grantTokens = ['grant']
+      const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+
+      const clientProvider: any = () => false
+      class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
+
+      const testKeyring = new TestKmsKeyring({
+        clientProvider,
+        generatorKeyId,
+        keyIds,
+        grantTokens
+      })
+
+      const edk = new EncryptedDataKey({
+        providerId: 'aws-kms',
+        providerInfo: generatorKeyId,
+        encryptedDataKey: Buffer.from(generatorKeyId)
+      })
+
+      const material = await testKeyring.onDecrypt(
+        new NodeDecryptionMaterial(suite, encryptionContext),
+        [edk]
+      )
+
+      expect(material.hasUnencryptedDataKey).to.equal(false)
+      expect(material.keyringTrace).to.have.lengthOf(0)
+    })
+
+    it('Postcondition: The KeyId from KMS must match the encoded KeyID.', async () => {
+      const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+      const encryptKmsKey = 'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012'
+      const keyIds = [encryptKmsKey]
+      const encryptionContext = { some: 'context' }
+      const grantTokens = ['grant']
+      const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+
+      const clientProvider: any = () => {
+        return { decrypt }
+        function decrypt ({ EncryptionContext, GrantTokens }: any) {
+          expect(EncryptionContext).to.deep.equal(encryptionContext)
+          expect(GrantTokens).to.equal(grantTokens)
+          return {
+            Plaintext: new Uint8Array(suite.keyLengthBytes),
+            KeyId: 'Not the Encrypted ARN'
+          }
+        }
+      }
+      class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
+
+      const testKeyring = new TestKmsKeyring({
+        clientProvider,
+        generatorKeyId,
+        keyIds,
+        grantTokens
+      })
+
+      const edk = new EncryptedDataKey({
+        providerId: 'aws-kms',
+        providerInfo: generatorKeyId,
+        encryptedDataKey: Buffer.from(generatorKeyId)
+      })
+
+      return expect(testKeyring.onDecrypt(
+        new NodeDecryptionMaterial(suite, encryptionContext),
+        [edk]
+      )).to.rejectedWith(Error, 'KMS Decryption key does not match serialized provider.')
+    })
+
+    it('Postcondition: The decrypted unencryptedDataKey length must match the algorithm specification.', async () => {
+      const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+      const encryptKmsKey = 'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012'
+      const keyIds = [encryptKmsKey]
+      const encryptionContext = { some: 'context' }
+      const grantTokens = ['grant']
+      const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+
+      const clientProvider: any = () => {
+        return { decrypt }
+        function decrypt ({ CiphertextBlob, EncryptionContext, GrantTokens }: any) {
+          expect(EncryptionContext).to.deep.equal(encryptionContext)
+          expect(GrantTokens).to.equal(grantTokens)
+          return {
+            Plaintext: new Uint8Array(suite.keyLengthBytes - 5),
+            KeyId: Buffer.from(<Uint8Array>CiphertextBlob).toString('utf8')
+          }
+        }
+      }
+      class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
+
+      const testKeyring = new TestKmsKeyring({
+        clientProvider,
+        generatorKeyId,
+        keyIds,
+        grantTokens
+      })
+
+      const edk = new EncryptedDataKey({
+        providerId: 'aws-kms',
+        providerInfo: generatorKeyId,
+        encryptedDataKey: Buffer.from(generatorKeyId)
+      })
+
+      return expect(testKeyring.onDecrypt(
+        new NodeDecryptionMaterial(suite, encryptionContext),
+        [edk]
+      )).to.rejectedWith(Error, 'Key length does not agree with the algorithm specification.')
+    })
   })
