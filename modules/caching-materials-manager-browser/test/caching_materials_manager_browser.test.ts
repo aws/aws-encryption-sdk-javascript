@@ -78,8 +78,7 @@ describe('WebCryptoCachingMaterialsManager', () => {
       cache,
       maxAge
     })
-    /* Binary data is being transformed to utf-8.
-     * This means it is highly likely to be less than 64 characters long.
+    /* 64 Bytes of data encoded as base64 will be 88 characters long.
      */
     expect(test._partition).to.be.a('string').and.to.have.lengthOf(88)
   })
