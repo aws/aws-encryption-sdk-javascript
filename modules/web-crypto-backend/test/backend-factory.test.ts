@@ -19,7 +19,13 @@ import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import sinon from 'sinon'
 import 'mocha'
-import { pluckSubtleCrypto, windowRequiresFallback, webCryptoBackendFactory } from '../src/backend-factory'
+import {
+  pluckSubtleCrypto,
+  windowRequiresFallback,
+  webCryptoBackendFactory,
+  getNonZeroByteBackend,
+  getZeroByteSubtle
+} from '../src/backend-factory'
 import * as browserWindow from '@aws-sdk/util-locate-window'
 
 import * as fixtures from './fixtures'
@@ -187,5 +193,27 @@ describe('webCryptoBackendFactory', () => {
       expect(test).to.have.property('zeroByteSubtle').and.to.eql(fixtures.subtleFallbackSupportsZeroByteGCM)
       expect(test).to.have.property('randomValues')
     })
+  })
+})
+
+describe('getNonZeroByteBackend', () => {
+  it('gets a subtle backend', () => {
+    const test = getNonZeroByteBackend(fixtures.subtleFallbackSupportsZeroByteGCM)
+    expect(test === fixtures.subtleFallbackSupportsZeroByteGCM.subtle).to.equal(true)
+  })
+
+  it('Precondition: A backend must be passed to get a non zero byte backend.', () => {
+    expect(() => getNonZeroByteBackend(false)).to.throw('No supported backend.')
+  })
+})
+
+describe('getZeroByteSubtle', () => {
+  it('gets a subtle backend', () => {
+    const test = getZeroByteSubtle(fixtures.subtleFallbackSupportsZeroByteGCM)
+    expect(test === fixtures.subtleFallbackSupportsZeroByteGCM.subtle).to.equal(true)
+  })
+
+  it('Precondition: A backend must be passed to get a zero byte backend.', () => {
+    expect(() => getZeroByteSubtle(false)).to.throw('No supported backend.')
   })
 })

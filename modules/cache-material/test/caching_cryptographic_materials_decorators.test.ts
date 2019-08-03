@@ -264,6 +264,135 @@ describe('Cryptographic Material Functions', () => {
       expect(test.encryptionContext).to.deep.equal(encryptionMaterial.encryptionContext)
       expect(test.getUnencryptedDataKey()).to.deep.equal(encryptionMaterial.getUnencryptedDataKey())
     })
+
+    it('Check for early return (Postcondition): If I can not cache the EncryptionMaterial, do not even look.', async () => {
+      const testCMM = {
+        _partition,
+        _maxAge,
+        _maxBytesEncrypted,
+        _maxMessagesEncrypted,
+        _cache: {
+          getEncryptionMaterial () {
+            throw new Error('should not happen')
+          }
+        },
+        _backingMaterialsManager,
+        _cacheEntryHasExceededLimits: cacheEntryHasExceededLimits(),
+        getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
+        decryptMaterials: decryptMaterials(cacheKeyHelpers)
+      } as any
+
+      const testSuiteCacheSafe = await testCMM.getEncryptionMaterials({
+        suite: new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16),
+        encryptionContext: context,
+        frameLength: 10,
+        plaintextLength: 10
+      })
+      // The response was not cloned... because it did not come from the cache
+      expect(testSuiteCacheSafe === encryptionMaterial).to.equal(true)
+
+      const testPlaintext = await testCMM.getEncryptionMaterials({
+        suite: nodeSuite,
+        encryptionContext: context,
+        frameLength: 10
+      })
+      // The response was not cloned... because it did not come from the cache
+      expect(testPlaintext === encryptionMaterial).to.equal(true)
+    })
+
+    it('Check for early return (Postcondition): If I have a valid EncryptionMaterial, return it.', async () => {
+      let assertCount = 0
+      const testCMM = {
+        _partition,
+        _maxAge,
+        _maxBytesEncrypted,
+        _maxMessagesEncrypted,
+        _cache: {
+          getEncryptionMaterial () {
+            assertCount += 1
+            return {
+              response: encryptionMaterial
+            }
+          }
+        },
+        _backingMaterialsManager,
+        _cacheEntryHasExceededLimits: () => {
+          assertCount += 1
+          return false
+        },
+        getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
+        decryptMaterials: () => {
+          throw new Error('this should never happen')
+        }
+      } as any
+
+      await testCMM.getEncryptionMaterials({
+        suite: nodeSuite,
+        encryptionContext: context,
+        frameLength: 10,
+        plaintextLength: 10
+      })
+
+      expect(assertCount).to.equal(2)
+    })
+
+    it('Check for early return (Postcondition): If I can not cache the EncryptionMaterial, just return it.', async () => {
+      let assertCount = 0
+
+      const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+
+      const nodeSuite = new NodeAlgorithmSuite(suiteId)
+      const udk128 = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+      const trace = {
+        keyNamespace: 'keyNamespace',
+        keyName: 'keyName',
+        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
+      }
+
+      const edk1 = new EncryptedDataKey({ providerId: 'keyNamespace', providerInfo: 'keyName', encryptedDataKey: new Uint8Array([1]) })
+      const edk2 = new EncryptedDataKey({ providerId: 'p2', providerInfo: 'pi2', encryptedDataKey: new Uint8Array([2]) })
+
+      const encryptionMaterial = new NodeEncryptionMaterial(nodeSuite, {})
+        .setUnencryptedDataKey(udk128, trace)
+        .addEncryptedDataKey(edk1, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+        .addEncryptedDataKey(edk2, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+
+      const testCMM = {
+        _partition,
+        _maxAge,
+        _maxBytesEncrypted,
+        _maxMessagesEncrypted,
+        _cache: {
+          getEncryptionMaterial () {
+            throw new Error('this should never happen')
+          },
+          del () {}
+        },
+        _backingMaterialsManager: {
+          getEncryptionMaterials () {
+            assertCount += 1
+            return encryptionMaterial
+          }
+        },
+        _cacheEntryHasExceededLimits: () => {
+          throw new Error('this should never happen')
+        },
+        getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
+        decryptMaterials: () => {
+          throw new Error('this should never happen')
+        }
+      } as any
+
+      const test = await testCMM.getEncryptionMaterials({
+        suite: nodeSuite,
+        encryptionContext: context,
+        frameLength: 10,
+        plaintextLength: 10
+      })
+
+      expect(assertCount).to.equal(1)
+      expect(test === encryptionMaterial).to.equal(true)
+    })
   })
 
   describe('decryptionMaterial', () => {
@@ -277,6 +406,64 @@ describe('Cryptographic Material Functions', () => {
       expect(test === decryptionMaterial).to.equal(false)
       expect(test.encryptionContext).to.deep.equal(decryptionMaterial.encryptionContext)
       expect(test.getUnencryptedDataKey()).to.deep.equal(decryptionMaterial.getUnencryptedDataKey())
+    })
+
+    it('Check for early return (Postcondition): If I can not cache the DecryptionMaterial, do not even look.', async () => {
+      const testCMM = {
+        _partition,
+        _maxAge,
+        _maxBytesEncrypted,
+        _maxMessagesEncrypted,
+        _cache: {
+          getDecryptionMaterial () {
+            throw new Error('should not happen')
+          }
+        },
+        _backingMaterialsManager,
+        _cacheEntryHasExceededLimits: cacheEntryHasExceededLimits(),
+        getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
+        decryptMaterials: decryptMaterials(cacheKeyHelpers)
+      } as any
+
+      const testSuiteCacheSafe = await testCMM.decryptMaterials({
+        suite: new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16),
+        encryptionContext: context,
+        encryptedDataKeys: [edk1]
+      })
+      // The response was not cloned... because it did not come from the cache
+      expect(testSuiteCacheSafe === decryptionMaterial).to.equal(true)
+    })
+
+    it('Check for early return (Postcondition): If I have a valid DecryptionMaterial, return it.', async () => {
+      let assertCount = 0
+      const testCMM = {
+        _partition,
+        _maxAge,
+        _maxBytesEncrypted,
+        _maxMessagesEncrypted,
+        _cache: {
+          getDecryptionMaterial () {
+            assertCount += 1
+            return {
+              response: decryptionMaterial
+            }
+          }
+        },
+        _backingMaterialsManager,
+        _cacheEntryHasExceededLimits: () => {
+          assertCount += 1
+          return false
+        },
+        getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
+        decryptMaterials: decryptMaterials(cacheKeyHelpers)
+      } as any
+
+      await testCMM.decryptMaterials({
+        suite: nodeSuite,
+        encryptionContext: context,
+        encryptedDataKeys: [edk1]
+      })
+      expect(assertCount).to.equal(2)
     })
   })
 })
