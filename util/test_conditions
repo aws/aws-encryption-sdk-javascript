@@ -15,16 +15,18 @@
  */
 
 /* This file is to help line up the formal conditions listed in source with tests.
-  * I look for `sourceGrep` and `testGrep` make make sure that the conditions found,
-  * are in both sets.
-  */
+ * I look for `sourceGrep` and `testGrep` make make sure that the conditions found,
+ * are in both sets.
+ */
 
 const { exec } = require('child_process')
 const { promisify } = require('util')
 const execAsync = promisify(exec)
 
-const sourceGrep = 'grep -E \'Precondition|Postcondition\' modules/**/src/*.ts'
-const testGrep = 'grep -E \'Precondition|Postcondition\' modules/**/test/*.ts'
+const ignoreIssueCount = parseInt(process.argv[2] || 0, 10)
+
+const sourceGrep = 'grep -E \'Precondition:|Postcondition(:|\\):)\' modules/**/src/*.ts'
+const testGrep = 'grep -E \'Precondition:|Postcondition(:|\\):)\' modules/**/test/*.ts'
 
 Promise.all([
   execAsync(sourceGrep).then(clean),
@@ -36,12 +38,15 @@ Promise.all([
     const testSet = new Set(flatMapForTests(tests))
 
     if (source.length > sourceSet.size) {
-      console.log('Duplicate source conditions', getDuplicates(source))
-      issues += 1
+      const duplicateSources = getDuplicates(source)
+      console.log('Duplicate source conditions', duplicateSources)
+      issues += duplicateSources.length
     }
-    if (tests.length > testSet.size) {
-      console.log('Duplicate test conditions', getDuplicates(tests))
-      issues += 1
+    // A single test _may_ be multiple conditions.
+    const duplicateTests = getDuplicates(tests)
+    if (duplicateTests.length) {
+      console.log('Duplicate test conditions', duplicateTests)
+      issues += duplicateTests.length
     }
 
     for (const sourceCondition of sourceSet) {
@@ -58,12 +63,16 @@ Promise.all([
       }
     }
 
-    process.exit(issues)
+    if (issues) {
+      console.error(`Issue count found: ${issues}`)
+    }
+
+    process.exit(Math.max(0, issues - ignoreIssueCount))
   })
 
-const remove = /(\*\/)|(\/\*)|(it\(')|(', \(\) => \{)|(', async \(\) => \{)/g
+const remove = /(\*\/)|(\/\*)|(it\([`'])|([`'], \(\) => \{)|([`'], async \(\) => \{)/g
 
-function clean ({ stdout, stderr }) {
+function clean ({ stdout }) {
   return stdout.split('\n')
     .map(l => l.replace(remove, ''))
     // Do not try and clean up ' and things like that...
