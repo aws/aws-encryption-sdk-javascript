@@ -27,7 +27,7 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 
 describe('flattenMixedCryptoKey', () => {
-  it('Check for early return (Postcondition): empty inputs should return an empty array.', () => {
+  it('Check for early return (Postcondition): nothing is an empty array.', () => {
     const test = flattenMixedCryptoKey()
     expect(test).to.be.an('array').with.lengthOf(0)
   })

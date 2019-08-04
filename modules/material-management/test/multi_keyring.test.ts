@@ -290,7 +290,7 @@ describe('MultiKeyring: onDecrypt', () => {
     expect(test.getUnencryptedDataKey()).to.deep.equal(unencryptedDataKey)
   })
 
-  it('does not call subsequent Keyrings after receiving DecryptionMaterial', async () => {
+  it('Check for early return (Postcondition): Do not attempt to decrypt once I have a valid key.', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const unencryptedDataKey = new Uint8Array(suite.keyLengthBytes)
     const [edk0, keyringTrace0] = makeEDKandTrace(0)
@@ -338,13 +338,14 @@ describe('MultiKeyring: onDecrypt', () => {
     })
 
     let called = false
-    const childNotSucceded = keyRingFactory({
+    const childNotSucceeded = keyRingFactory({
       async onDecrypt () {
+        // Because this keyring does not return a value, it will result in an error
         called = true
       },
       onEncrypt: never
     })
-    const children = [childNotSucceded, child]
+    const children = [childNotSucceeded, child]
 
     const mkeyring = new MultiKeyringNode({ children })
 
@@ -356,6 +357,23 @@ describe('MultiKeyring: onDecrypt', () => {
     // Make sure the unencrypted data key match
     expect(test.getUnencryptedDataKey()).to.deep.equal(unencryptedDataKey)
     expect(called).to.equal(true)
+  })
+
+  it('Postcondition: Need either a valid data key or no errors.', async () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const [edk0] = makeEDKandTrace(0)
+    const material = new NodeDecryptionMaterial(suite, {})
+    const childNotSucceeded = keyRingFactory({
+      async onDecrypt () {
+        // Because this keyring does not return a value, it will result in an error
+      },
+      onEncrypt: never
+    })
+    const children = [childNotSucceeded]
+
+    const mkeyring = new MultiKeyringNode({ children })
+
+    await expect(mkeyring.onDecrypt(material, [edk0])).to.rejectedWith(Error, 'Keyring errors and no keyring was successfully able to decrypt the encrypted data key.')
   })
 })
 
