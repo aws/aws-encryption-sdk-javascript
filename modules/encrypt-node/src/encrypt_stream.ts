@@ -56,7 +56,7 @@ export function encryptStream (
   cmm: KeyringNode|NodeMaterialsManager,
   op: EncryptStreamInput = {}
 ): Duplex {
-  const { suiteId, encryptionContext = {}, frameLength = FRAME_LENGTH } = op
+  const { suiteId, encryptionContext = {}, frameLength = FRAME_LENGTH, plaintextLength } = op
 
   /* Precondition: The frameLength must be less than the maximum frame size Node.js stream. */
   needs(frameLength > 0 && Maximum.FRAME_SIZE >= frameLength, `frameLength out of bounds: 0 > frameLength >= ${Maximum.FRAME_SIZE}`)
@@ -70,7 +70,7 @@ export function encryptStream (
 
   const wrappingStream = new Duplexify()
 
-  cmm.getEncryptionMaterials({ suite, encryptionContext, frameLength })
+  cmm.getEncryptionMaterials({ suite, encryptionContext, plaintextLength })
     .then(async (material) => {
       const { dispose, getSigner } = getEncryptHelper(material)
 
