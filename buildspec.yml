@@ -11,4 +11,5 @@ phases:
     build:
         commands:
             - npm test
+            - npm run test_conditions
             - npm run integration
