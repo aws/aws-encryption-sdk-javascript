@@ -69,7 +69,7 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
   const plainText = new Uint8Array([1, 2, 3, 4, 5])
 
   /* Encrypt the data. */
-  const { cipherMessage } = await encrypt(keyring, plainText, { encryptionContext: context })
+  const { ciphertext } = await encrypt(keyring, plainText, { encryptionContext: context })
 
   /* Log the plain text
    * only for testing and to show that it works.
@@ -80,11 +80,11 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
   /* Log the base64-encoded ciphertext
    * so that you can try decrypting it with another AWS Encryption SDK implementation.
    */
-  const cipherMessageBase64 = toBase64(cipherMessage)
-  console.log(cipherMessageBase64)
-  document.write(cipherMessageBase64)
+  const ciphertextBase64 = toBase64(ciphertext)
+  console.log(ciphertextBase64)
+  document.write(ciphertextBase64)
 
-  const { clearMessage, messageHeader } = await decrypt(keyring, cipherMessage)
+  const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
 
   /* Grab the encryption context so you can verify it. */
   const { encryptionContext } = messageHeader
@@ -105,6 +105,6 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
   /* Log the clear message
    * only for testing and to show that it works.
    */
-  document.write('</br>clearMessage:' + clearMessage)
-  console.log(clearMessage)
+  document.write('</br>plaintext:' + plaintext)
+  console.log(plaintext)
 })()

@@ -69,10 +69,10 @@ const plainText = new Uint8Array([1, 2, 3, 4, 5])
  * the Encryption SDK returns an "encrypted message" that includes the ciphertext, 
  * the encryption context, and the encrypted data keys.
  */ 
-const { cipherMessage } = await encrypt(keyring, plainText, { encryptionContext: context })
+const { ciphertext } = await encrypt(keyring, plainText, { encryptionContext: context })
 
 /* Decrypt the ciphertext using the same keyring */
-const { clearMessage, messageHeader } = await decrypt(keyring, cipherMessage)
+const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
 
 /* Get the encryption context */
 const { encryptionContext } = messageHeader
@@ -87,8 +87,8 @@ Object
     })
 
 /* If the encryption context is verified, log the plaintext. */
-document.write('</br>Decrypted:' + clearMessage)
-console.log(clearMessage)
+document.write('</br>Decrypted:' + plaintext)
+console.log(plaintext)
 
 ```
 

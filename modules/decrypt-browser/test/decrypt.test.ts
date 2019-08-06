@@ -23,7 +23,7 @@ import * as fixtures from './fixtures'
 
 describe('decrypt', () => {
   it('buffer', async () => {
-    const { clearMessage: test, messageHeader } = await decrypt(
+    const { plaintext: test, messageHeader } = await decrypt(
       fixtures.decryptKeyring(),
       fixtures.ciphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384()
     )

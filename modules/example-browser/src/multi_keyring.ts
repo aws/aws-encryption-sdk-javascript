@@ -122,7 +122,7 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   const plainText = new Uint8Array([1, 2, 3, 4, 5])
 
   /* Encrypt the data. */
-  const { cipherMessage } = await encrypt(keyring, plainText, { encryptionContext: context })
+  const { ciphertext } = await encrypt(keyring, plainText, { encryptionContext: context })
 
   /* Log the plain text
    * only for testing and to show that it works.
@@ -133,9 +133,9 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   /* Log the base64-encoded ciphertext
    * so that you can try decrypting it with another AWS Encryption SDK implementation.
    */
-  const cipherMessageBase64 = toBase64(cipherMessage)
-  console.log(cipherMessageBase64)
-  document.write(cipherMessageBase64)
+  const ciphertextBase64 = toBase64(ciphertext)
+  console.log(ciphertextBase64)
+  document.write(ciphertextBase64)
 
   /* Decrypt the data.
    * This decrypt call could be done with **any** of the 3 keyrings.
@@ -144,7 +144,7 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
    * decrypt(aesKeyring, ciphertext)
    * would both work as well.
    */
-  const { clearMessage, messageHeader } = await decrypt(keyring, cipherMessage)
+  const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
 
   /* Grab the encryption context so you can verify it. */
   const { encryptionContext } = messageHeader
@@ -165,6 +165,6 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   /* Log the clear message
    * only for testing and to show that it works.
    */
-  document.write('</br>Decrypted:' + clearMessage)
-  console.log(clearMessage)
+  document.write('</br>Decrypted:' + plaintext)
+  console.log(plaintext)
 })()
