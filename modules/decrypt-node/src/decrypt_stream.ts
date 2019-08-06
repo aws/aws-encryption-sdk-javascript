@@ -40,7 +40,7 @@ export function decryptStream (
     ? new NodeDefaultCryptographicMaterialsManager(cmm)
     : cmm
 
-  const parseHeaderStream = new ParseHeaderStream(cmm, { maxBodySize })
+  const parseHeaderStream = new ParseHeaderStream(cmm)
   const verifyStream = new VerifyStream({ maxBodySize })
   const decipherStream = getDecipherStream()
 
