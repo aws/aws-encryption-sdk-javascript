@@ -123,7 +123,7 @@ export function verify (...args: RsaWrappingKeyAlgorithm[]) {
 }
 
 export function flattenMixedCryptoKey (key?: CryptoKey|MixedBackendCryptoKey): CryptoKey[] {
-  /* Check for early return (Postcondition): nothing is an empty array. */
+  /* Check for early return (Postcondition): empty inputs should return an empty array. */
   if (!key) return []
   if (isCryptoKey(key)) return [key]
   const { nonZeroByteCryptoKey, zeroByteCryptoKey } = key
