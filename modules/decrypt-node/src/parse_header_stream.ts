@@ -19,10 +19,9 @@ import { Transform } from 'stream' // eslint-disable-line no-unused-vars
 import {
   NodeAlgorithmSuite,
   NodeMaterialsManager, // eslint-disable-line no-unused-vars
-  getDecryptionHelper,
-  needs
+  getDecryptionHelper
 } from '@aws-crypto/material-management-node'
-import { deserializeFactory, kdfInfo, ContentType } from '@aws-crypto/serialize'
+import { deserializeFactory, kdfInfo } from '@aws-crypto/serialize'
 import { VerifyInfo } from './verify_stream' // eslint-disable-line no-unused-vars
 
 const toUtf8 = (input: Uint8Array) => Buffer
@@ -35,20 +34,12 @@ interface HeaderState {
   buffer: Buffer
 }
 
-export interface ParseHeaderOptions {
-  maxBodySize?: number
-}
-
 export class ParseHeaderStream extends PortableTransformWithType {
   private materialsManager!: NodeMaterialsManager
   private _headerState: HeaderState
-  private _maxBodySize?: number
-  constructor (cmm: NodeMaterialsManager, { maxBodySize }: ParseHeaderOptions = {}) {
-    /* Precondition: ParseHeaderStream requires maxBodySize must be falsey or a number. */
-    needs(!maxBodySize || typeof maxBodySize === 'number', 'Unsupported MaxBodySize.')
+  constructor (cmm: NodeMaterialsManager) {
     super()
     Object.defineProperty(this, 'materialsManager', { value: cmm, enumerable: true })
-    Object.defineProperty(this, '_maxBodySize', { value: maxBodySize, enumerable: true })
     this._headerState = {
       buffer: Buffer.alloc(0)
     }
@@ -67,22 +58,7 @@ export class ParseHeaderStream extends PortableTransformWithType {
     const { rawHeader, headerIv, headerAuthTag } = headerInfo
 
     const suite = new NodeAlgorithmSuite(algorithmSuite.id)
-    const { encryptionContext, encryptedDataKeys, contentType, frameLength } = messageHeader
-
-    /* Framed messages store the frame size in the header.
-     * It is easy to confirm here.
-     * For non-framed messages, the size is in the body header.
-     * The check in verify stream _should_ be adequate from a logical perspective.
-     * However, doing this check here allows framed messages to exit before the CMM is called.
-     * This means that decryption of the Encrypted Data Key is never even attempted.
-     */
-    if (contentType === ContentType.FRAMED_DATA) {
-      /* Precondition: If maxBodySize was set I can not buffer a frame more data than maxBodySize.
-       * Before returning *any* cleartext, the stream **MUST** verify the decryption.
-       * This means that I must buffer the message until the AuthTag is reached.
-       */
-      needs(!this._maxBodySize || this._maxBodySize >= frameLength, 'maxBodySize exceeded.')
-    }
+    const { encryptionContext, encryptedDataKeys } = messageHeader
 
     this.materialsManager
       .decryptMaterials({ suite, encryptionContext, encryptedDataKeys })
