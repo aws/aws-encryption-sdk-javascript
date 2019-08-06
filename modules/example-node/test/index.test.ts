@@ -22,6 +22,7 @@ import { kmsSimpleTest } from '../src/kms_simple'
 import { kmsStreamTest } from '../src/kms_stream'
 import { aesTest } from '../src/aes_simple'
 import { multiKeyringTest } from '../src/multi_keyring'
+import { cachingMaterialsManagerNodeSimpleTest } from '../src/caching_materials_manager'
 import { readFileSync } from 'fs'
 
 describe('test', () => {
@@ -52,6 +53,12 @@ describe('test', () => {
 
   it('multi keyring', async () => {
     const { cleartext, plaintext } = await multiKeyringTest()
+
+    expect(plaintext.toString()).to.equal(cleartext)
+  })
+
+  it('caching materials manager node', async () => {
+    const { cleartext, plaintext } = await cachingMaterialsManagerNodeSimpleTest()
 
     expect(plaintext.toString()).to.equal(cleartext)
   })

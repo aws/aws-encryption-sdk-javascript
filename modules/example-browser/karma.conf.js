@@ -1,17 +1,20 @@
+const webpack = require('webpack')
+const {defaultProvider} = require('@aws-sdk/credential-provider-node')
+
 // Karma configuration
 process.env.CHROME_BIN = require('puppeteer').executablePath()
 
-module.exports = function (config) {
+module.exports =  function (config) {
   config.set({
     basePath: '',
     frameworks: ['mocha', 'chai'],
     files: [
-      'modules/*-browser/test/**/*.ts',
-      'modules/web-crypto-backend/test/**/*.ts',
+      'test/**/*.ts',
+      // 'src/**/*.ts'
     ],
     preprocessors: {
-      'modules/*-browser/test/**/*.ts': ['webpack', 'credentials'],
-      'modules/web-crypto-backend/test/**/*.ts': ['webpack', 'credentials'],
+      // 'src/**/*.ts': ['credentials'],
+      'test/**/*.ts': ['webpack', 'credentials']
     },
     webpack: {
       resolve: {
@@ -28,7 +31,7 @@ module.exports = function (config) {
                 options: {
                   configFile: 'tsconfig.module.json',
                   compilerOptions: {
-                    sourceRoot: 'modules/'
+                    rootDir: './'
                   }
                 }
               }
@@ -55,7 +58,7 @@ module.exports = function (config) {
       devtool: 'inline-source-map',
       node: {
         fs: 'empty'
-      }
+      },
     },
     coverageIstanbulReporter: {
       reports: [ 'json' ],
@@ -68,8 +71,7 @@ module.exports = function (config) {
       'karma-mocha',
       'karma-chai',
       'karma-webpack',
-      'karma-coverage-istanbul-reporter',
-      'karma-json-fixtures-preprocessor'
+      'karma-coverage-istanbul-reporter'
     ],
     reporters: ['progress', 'coverage-istanbul'],
     port: 9876,
@@ -80,7 +82,7 @@ module.exports = function (config) {
     customLaunchers: {
       ChromeHeadlessDisableCors: {
         base: 'ChromeHeadless',
-        flags: ['--disable-web-security', '--no-sandbox']
+        flags: ['--disable-web-security']
       }
     },
     singleRun: true,

@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-/* This is a simple example of using a multi-keyring KMS keyring
- * to combine a KMS keyring and a raw AES keyring
+/* This is a simple example of using a KMS Keyring
  * to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser.
  */
 
@@ -22,12 +21,10 @@ import {
   KmsKeyringBrowser,
   KMS,
   getClient,
-  RawAesKeyringWebCrypto,
-  RawAesWrappingSuiteIdentifier,
-  MultiKeyringWebCrypto,
   encrypt,
   decrypt,
-  synchronousRandomValues
+  WebCryptoCachingMaterialsManager,
+  getLocalCryptographicMaterialsCache
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
@@ -40,7 +37,7 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
 declare const credentials: {accessKeyId: string, secretAccessKey:string, sessionToken:string }
 
 /* This is done to facilitate testing. */
-export async function testMultiKeyringExample () {
+export async function testCachingMaterialsManagerExample () {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
@@ -56,11 +53,10 @@ export async function testMultiKeyringExample () {
   const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
 
   /* Need a client provider that will inject correct credentials.
-   * The credentials here are injected by webpack
-   * from your environment when the bundle is created.
+   * The credentials here are injected by webpack from your environment bundle is created
    * The credential values are pulled using @aws-sdk/credential-provider-node.
    * See kms.webpack.config
-   * You should inject your credential into the browser in a secure manner
+   * You should inject your credential into the browser in a secure manner,
    * that works with your application.
    */
   const { accessKeyId, secretAccessKey, sessionToken } = credentials
@@ -68,8 +64,7 @@ export async function testMultiKeyringExample () {
   /* getClient takes a KMS client constructor
    * and optional configuration values.
    * The credentials can be injected here,
-   * because browser does not have a standard credential discover process
-   * the way Node.js does.
+   * because browser do not have a standard credential discover process the way Node.js does.
    */
   const clientProvider = getClient(KMS, {
     credentials: {
@@ -80,30 +75,50 @@ export async function testMultiKeyringExample () {
   })
 
   /* The KMS keyring must be configured with the desired CMKs */
-  const kmsKeyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
+  const keyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
 
-  /* You need to specify a name
-   * and a namespace for raw encryption key providers.
-   * The name and namespace that you use in the decryption keyring *must* be an exact,
-   * *case-sensitive* match for the name and namespace in the encryption keyring.
+  /* Create a cache to hold the material.
+   * In this case we use the local cache provided by the Encryption SDK.
+   * The number is the maximum number of entries that will be cached.
+   * Both encrypt and decrypt requests count independently towards this total.
+   * Elements will be actively removed from the cache.
+   * The default frequency is to check one item every minute.
+   * This can be configure by passing a `proactiveFrequency`
+   * as the second paramter to however often you want to check in milliseconds.
    */
-  const keyName = 'aes-name'
-  const keyNamespace = 'aes-namespace'
+  const cache = getLocalCryptographicMaterialsCache(100)
 
-  /* The wrapping suite defines the AES-GCM algorithm suite to use. */
-  const wrappingSuite = RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
+  /* The partition name lets multiple caching CMMs share the same local cryptographic cache.
+   * If you want these CMMs to all cache the same items,
+   * make the partition name the same.
+   * If no partition is supplied a random one will be generated.
+   * This is so that sharing elements in the cache MUST be an intentional operation.
+   */
+  const partition = 'local partition name'
 
-  // Get your plaintext master key from its storage location.
-  const unencryptedMasterKey = synchronousRandomValues(32)
+  /* maxAge is the time in milliseconds that an entry will be cached.
+   * Elements are actively removed from the cache.
+   */
+  const maxAge = 1000 * 60
 
-  /* The plaintext master key must be imported into a WebCrypto CryptoKey. */
-  const masterKey = await RawAesKeyringWebCrypto.importCryptoKey(unencryptedMasterKey, wrappingSuite)
+  /* The maximum amount of bytes that will be encrypted under a single data key.
+   * This value is optional, but you should be configured to a lower value.
+   */
+  const maxBytesEncrypted = 100
 
-  /* Configure the Raw AES keyring. */
-  const aesKeyring = new RawAesKeyringWebCrypto({ keyName, keyNamespace, wrappingSuite, masterKey })
+  /* The maximum number of messages that will be encrypted under a single data key.
+   * This value is optional, but you should be configured to a lower value.
+   */
+  const maxMessagesEncrypted = 100
 
-  /* Combine the two keyrings into a multi-keyring. */
-  const keyring = new MultiKeyringWebCrypto({ generator: kmsKeyring, children: [ aesKeyring ] })
+  const cmm = new WebCryptoCachingMaterialsManager({
+    backingMaterials: keyring,
+    cache,
+    partition,
+    maxAge,
+    maxBytesEncrypted,
+    maxMessagesEncrypted
+  })
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
@@ -113,8 +128,10 @@ export async function testMultiKeyringExample () {
    * For example, if you are are only expecting data from 'us-west-2',
    * the origin can identify a malicious actor.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
+   *
+   * DATA KEYS FOR MESSAGES WILL ***ONLY*** BE SHARED FOR EXACT MATCHES OF ENCRYPTION CONTEXT.
    */
-  const context = {
+  const encryptionContext = {
     stage: 'demo',
     purpose: 'simple demonstration app',
     origin: 'us-west-2'
@@ -123,8 +140,13 @@ export async function testMultiKeyringExample () {
   /* Find data to encrypt. */
   const plainText = new Uint8Array([1, 2, 3, 4, 5])
 
-  /* Encrypt the data. */
-  const { cipherMessage } = await encrypt(keyring, plainText, { encryptionContext: context })
+  /* Encrypt the data.
+   * Data keys for messages will only be shared if a plaintextlength is passed
+   * HOWEVER, FOR THE BROWSER, ALL CRYPTOGRAPHIC OPERATIONS ARE ONE-SHOT.
+   * This means that the plaintextLength is _always_ know.
+   * So it is not a passable option to avoid mismatches.
+   */
+  const { cipherMessage } = await encrypt(cmm, plainText, { encryptionContext })
 
   /* Log the plain text
    * only for testing and to show that it works.
@@ -140,16 +162,13 @@ export async function testMultiKeyringExample () {
   document.write(cipherMessageBase64)
 
   /* Decrypt the data.
-   * This decrypt call could be done with **any** of the 3 keyrings.
-   * Here we use the multi-keyring, but
-   * decrypt(kmsKeyring, ciphertext)
-   * decrypt(aesKeyring, ciphertext)
-   * would both work as well.
+   * NOTE: THIS REQUEST IS ***NOT*** CACHED BECAUSE OF THE ENCRYPT REQUEST ABOVE!
+   * Encrypt and decrypt materials are stored separately.
    */
-  const { clearMessage, messageHeader } = await decrypt(keyring, cipherMessage)
+  const { clearMessage, messageHeader } = await decrypt(cmm, cipherMessage)
 
   /* Grab the encryption context so you can verify it. */
-  const { encryptionContext } = messageHeader
+  const { encryptionContext: decryptedContext } = messageHeader
 
   /* Verify the encryption context.
    * If you use an algorithm suite with signing,
@@ -159,9 +178,9 @@ export async function testMultiKeyringExample () {
    * Instead, verify that the key-value pairs you expect match.
    */
   Object
-    .entries(context)
+    .entries(encryptionContext)
     .forEach(([key, value]) => {
-      if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
+      if (decryptedContext[key] !== value) throw new Error('Encryption Context does not match expected values')
     })
 
   /* Log the clear message

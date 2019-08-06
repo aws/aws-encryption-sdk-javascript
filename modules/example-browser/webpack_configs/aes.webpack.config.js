@@ -25,6 +25,8 @@ module.exports = {
   },
   output: {
     filename: 'aes_simple_bundle.js',
-    path: path.resolve(__dirname, '..', 'build')
+    path: path.resolve(__dirname, '..', 'build'),
+    library: 'test',
+    libraryTarget: 'var'
   }
 }
