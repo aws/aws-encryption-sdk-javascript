@@ -358,23 +358,6 @@ describe('MultiKeyring: onDecrypt', () => {
     expect(test.getUnencryptedDataKey()).to.deep.equal(unencryptedDataKey)
     expect(called).to.equal(true)
   })
-
-  it('Postcondition: Need either a valid data key or no errors.', async () => {
-    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const [edk0] = makeEDKandTrace(0)
-    const material = new NodeDecryptionMaterial(suite, {})
-    const childNotSucceeded = keyRingFactory({
-      async onDecrypt () {
-        // Because this keyring does not return a value, it will result in an error
-      },
-      onEncrypt: never
-    })
-    const children = [childNotSucceeded]
-
-    const mkeyring = new MultiKeyringNode({ children })
-
-    await expect(mkeyring.onDecrypt(material, [edk0])).to.rejectedWith(Error, 'Keyring errors and no keyring was successfully able to decrypt the encrypted data key.')
-  })
 })
 
 function makeEDKandTrace (num: number): [EncryptedDataKey, KeyringTrace] {

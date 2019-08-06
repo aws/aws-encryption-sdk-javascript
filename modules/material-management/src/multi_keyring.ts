@@ -113,8 +113,6 @@ function buildPrivateOnDecrypt<S extends SupportedAlgorithmSuites> () {
     const children = this.children.slice()
     if (this.generator) children.unshift(this.generator)
 
-    let keyringError = false
-
     for (const keyring of children) {
     /* Check for early return (Postcondition): Do not attempt to decrypt once I have a valid key. */
       if (material.hasValidKey()) return material
@@ -122,20 +120,12 @@ function buildPrivateOnDecrypt<S extends SupportedAlgorithmSuites> () {
       try {
         await keyring.onDecrypt(material, encryptedDataKeys)
       } catch (e) {
+      // there should be some debug here?  or wrap?
       // Failures onDecrypt should not short-circuit the process
       // If the caller does not have access they may have access
       // through another Keyring.
-        keyringError = true
       }
     }
-
-    /* Postcondition: Need either a valid data key or no errors.
-     * If I have a key, decrypt errors should be ignored.
-     * However, if I was unable to decrypt a key AND I have errors,
-     * these errors should bubble up.
-     */
-    needs(material.hasValidKey() || !keyringError, 'Keyring errors and no keyring was successfully able to decrypt the encrypted data key.')
-
     return material
   }
 }
