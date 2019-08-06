@@ -171,6 +171,8 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
           return this.isDiscovery || keyIds.includes(providerInfo)
         })
 
+      let cmkErrors: Error[] = []
+
       for (const edk of decryptableEDKs) {
         let dataKey: RequiredDecryptResponse|false = false
         try {
@@ -181,10 +183,11 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
             grantTokens
           )
         } catch (e) {
-          // there should be some debug here?  or wrap?
-          // Failures decrypt should not short-circuit the process
-          // If the caller does not have access they may have access
-          // through another Keyring.
+          /* Failures onDecrypt should not short-circuit the process
+           * If the caller does not have access they may have access
+           * through another Keyring.
+           */
+          cmkErrors.push(e)
         }
 
         /* Check for early return (Postcondition): clientProvider may not return a client. */
@@ -202,6 +205,20 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
         material.setUnencryptedDataKey(dataKey.Plaintext, trace)
         return material
       }
+
+      /* Postcondition: A CMK must provide a valid data key.
+       * If I have a data key,
+       * decrypt errors can be ignored.
+       * However, if I was unable to decrypt a data key AND I have errors,
+       * these errors should bubble up.
+       * Otherwise, the only error customers will see is that
+       * the material does not have an unencrypted data key.
+       * So I return a concatenated Error message
+       */
+      needs(material.hasValidKey() || (!material.hasValidKey() && !cmkErrors.length)
+        , cmkErrors
+          .reduce((m, e, i) => `${m} Error #${i + 1} \n ${e.stack} \n`,
+            'Unable to decrypt data key and one or more KMS CMKs had an error. \n '))
 
       return material
     }

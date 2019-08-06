@@ -113,6 +113,8 @@ function buildPrivateOnDecrypt<S extends SupportedAlgorithmSuites> () {
     const children = this.children.slice()
     if (this.generator) children.unshift(this.generator)
 
+    let childKeyringErrors: Error[] = []
+
     for (const keyring of children) {
     /* Check for early return (Postcondition): Do not attempt to decrypt once I have a valid key. */
       if (material.hasValidKey()) return material
@@ -120,12 +122,28 @@ function buildPrivateOnDecrypt<S extends SupportedAlgorithmSuites> () {
       try {
         await keyring.onDecrypt(material, encryptedDataKeys)
       } catch (e) {
-      // there should be some debug here?  or wrap?
-      // Failures onDecrypt should not short-circuit the process
-      // If the caller does not have access they may have access
-      // through another Keyring.
+      /* Failures onDecrypt should not short-circuit the process
+       * If the caller does not have access they may have access
+       * through another Keyring.
+       */
+        childKeyringErrors.push(e)
       }
     }
+
+    /* Postcondition: A child keyring must provide a valid data key.
+     * If I have a data key,
+     * decrypt errors can be ignored.
+     * However, if I was unable to decrypt a data key AND I have errors,
+     * these errors should bubble up.
+     * Otherwise, the only error customers will see is that
+     * the material does not have an unencrypted data key.
+     * So I return a concatenated Error message
+     */
+    needs(material.hasValidKey() || (!material.hasValidKey() && !childKeyringErrors.length)
+      , childKeyringErrors
+        .reduce((m, e, i) => `${m} Error #${i + 1} \n ${e.stack} \n`,
+          'Unable to decrypt data key and one or more child keyrings had an error. \n '))
+
     return material
   }
 }

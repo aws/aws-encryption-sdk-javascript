@@ -138,10 +138,20 @@ describe('KmsKeyring: _onDecrypt',
       const discovery = true
       const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
+      let edkCount = 0
       const clientProvider: any = () => {
         return { decrypt }
-        function decrypt () {
-          throw new Error('failed to decrypt')
+        function decrypt ({ CiphertextBlob, EncryptionContext, GrantTokens }: any) {
+          if (edkCount === 0) {
+            edkCount += 1
+            throw new Error('failed to decrypt')
+          }
+          expect(EncryptionContext).to.deep.equal(context)
+          expect(GrantTokens).to.equal(grantTokens)
+          return {
+            Plaintext: new Uint8Array(suite.keyLengthBytes),
+            KeyId: Buffer.from(<Uint8Array>CiphertextBlob).toString('utf8')
+          }
         }
       }
       class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
@@ -160,11 +170,11 @@ describe('KmsKeyring: _onDecrypt',
 
       const material = await testKeyring.onDecrypt(
         new NodeDecryptionMaterial(suite, context),
-        [edk]
+        [edk, edk]
       )
 
-      expect(material.hasUnencryptedDataKey).to.equal(false)
-      expect(material.keyringTrace).to.have.lengthOf(0)
+      expect(material.hasUnencryptedDataKey).to.equal(true)
+      expect(material.keyringTrace).to.have.lengthOf(1)
     })
 
     it('Check for early return (Postcondition): clientProvider may not return a client.', async () => {
@@ -278,5 +288,38 @@ describe('KmsKeyring: _onDecrypt',
         new NodeDecryptionMaterial(suite, encryptionContext),
         [edk]
       )).to.rejectedWith(Error, 'Key length does not agree with the algorithm specification.')
+    })
+
+    it('Postcondition: A CMK must provide a valid data key.', async () => {
+      const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+      const context = { some: 'context' }
+      const grantTokens = ['grant']
+      const discovery = true
+      const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+
+      const clientProvider: any = () => {
+        return { decrypt }
+        function decrypt () {
+          throw new Error('failed to decrypt')
+        }
+      }
+      class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
+
+      const testKeyring = new TestKmsKeyring({
+        clientProvider,
+        grantTokens,
+        discovery
+      })
+
+      const edk = new EncryptedDataKey({
+        providerId: 'aws-kms',
+        providerInfo: generatorKeyId,
+        encryptedDataKey: Buffer.from(generatorKeyId)
+      })
+
+      await expect(testKeyring.onDecrypt(
+        new NodeDecryptionMaterial(suite, context),
+        [edk, edk]
+      )).to.rejectedWith(Error, 'Unable to decrypt data key and one or more KMS CMKs had an error.')
     })
   })
