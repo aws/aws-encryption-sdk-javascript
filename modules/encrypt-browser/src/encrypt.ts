@@ -80,7 +80,6 @@ export async function encrypt (
   const encryptionRequest: WebCryptoEncryptionRequest = {
     suite,
     encryptionContext,
-    frameLength,
     plaintextLength
   }
 
