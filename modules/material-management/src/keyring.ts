@@ -50,7 +50,7 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
      */
     needs(material === _material, 'New EncryptionMaterial instances can not be created.')
 
-    /* Postcondition: If this keyring generated data key, it must be the right length.
+    /* Postcondition UNTESTED: If this keyring generated data key, it must be the right length.
      * See cryptographic_materials.ts This is handled in setUnencryptedDataKey
      * this condition is listed here to keep help keep track of important conditions
     */

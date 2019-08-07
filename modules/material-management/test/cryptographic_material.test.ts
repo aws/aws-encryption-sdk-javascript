@@ -97,12 +97,24 @@ describe('decorateCryptographicMaterial', () => {
     expect(() => test.unencryptedDataKeyLength).to.throw()
   })
 
-  it('Precondition: If the unencryptedDataKey has not been set, it should not be settable later.', () => {
+  it('Precondition: the unencryptedDataKey must not be Zeroed out.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
+    const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    test.setUnencryptedDataKey(dataKey, trace)
+    test.zeroUnencryptedDataKey()
+    expect(() => test.unencryptedDataKeyLength).to.throw('unencryptedDataKey has been zeroed.')
+  })
+
+  it(`Precondition: If the unencryptedDataKey has not been set, it should not be settable later.
+      Precondition: If the udkForVerification has not been set, it should not be settable later.`, () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
     test.zeroUnencryptedDataKey()
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    // It is very hard to test this perfectly.  However, this tests the spirit.
     expect(() => test.setUnencryptedDataKey(dataKey, trace)).to.throw()
   })
 
@@ -116,8 +128,32 @@ describe('decorateCryptographicMaterial', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    test.setUnencryptedDataKey(dataKey, { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
-    expect(() => test.setUnencryptedDataKey(dataKey)).to.throw()
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    test.setUnencryptedDataKey(dataKey, trace)
+    expect(() => test.setUnencryptedDataKey(dataKey, trace)).to.throw('unencryptedDataKey has already been set')
+  })
+
+  it('Precondition: dataKey should have an ArrayBuffer that *only* stores the key.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
+    const dataKey = new Uint8Array(new ArrayBuffer(suite.keyLengthBytes + 10), 5, suite.keyLengthBytes).fill(1)
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    expect(() => test.setUnencryptedDataKey(dataKey, trace)).to.throw('Unencrypted Master Key must be an isolated buffer.')
+  })
+
+  it('Precondition: Trace must be set, and the flag must indicate that the data key was generated.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
+    const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
+    expect(() => test.setUnencryptedDataKey(dataKey, {} as any)).to.throw('Malformed KeyringTrace')
+  })
+
+  it('Precondition: On set the required KeyringTraceFlag must be set.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
+    const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX }
+    expect(() => test.setUnencryptedDataKey(dataKey, trace)).to.throw('Required KeyringTraceFlag not set')
   })
 
   it('Precondition: The unencryptedDataKey must not have been modified.', () => {
@@ -170,6 +206,13 @@ describe('decorateEncryptionMaterial', () => {
     const edk: any = {}
     const test: any = decorateEncryptionMaterial((<any>{ suite, keyringTrace: [], hasUnencryptedDataKey: true }))
     expect(() => test.addEncryptedDataKey(edk, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)).to.throw()
+  })
+
+  it('Precondition: flags must indicate that the key was encrypted.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const test: any = decorateEncryptionMaterial((<any>{ suite, keyringTrace: [], hasUnencryptedDataKey: true }))
+    const edk = new EncryptedDataKey({ providerId: 'p', providerInfo: 'p', encryptedDataKey: new Uint8Array(3) })
+    expect(() => test.addEncryptedDataKey(edk, KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX)).to.throw('Encrypted data key flag must be set.')
   })
 
   it('Precondition: The SignatureKey stored must agree with the algorithm specification.', () => {
@@ -307,6 +350,27 @@ describe('decorateWebCryptoMaterial', () => {
     expect(() => test.setCryptoKey(key, trace)).to.throw()
     expect(() => test.setCryptoKey(key1, trace)).to.throw()
     expect(() => test.setCryptoKey(key2, trace)).to.throw()
+  })
+
+  it('Precondition: If the CryptoKey is the only version, the trace information must be set here.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const test: any = decorateWebCryptoMaterial((<any>{ suite, validUsages: ['deriveKey'], keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    decorateCryptographicMaterial(test, KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+
+    const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
+    expect(() => test.setCryptoKey(key, { keyNamespace: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY })).to.throw('Malformed KeyringTrace')
+    expect(() => test.setCryptoKey(key, { keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY })).to.throw('Malformed KeyringTrace')
+    expect(() => test.setCryptoKey(key)).to.throw('Malformed KeyringTrace')
+  })
+
+  it('Precondition: On setting the CryptoKey the required KeyringTraceFlag must be set.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const test: any = decorateWebCryptoMaterial((<any>{ suite, validUsages: ['deriveKey'], keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+    decorateCryptographicMaterial(test, KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
+
+    const key: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX }
+    expect(() => test.setCryptoKey(key, trace)).to.throw('Required KeyringTraceFlag not set')
   })
 
   it('Precondition: dataKey must be a supported type.', () => {

@@ -118,15 +118,4 @@ describe('getDecipherStream', () => {
 
     await expect(test._onAuthTag(Buffer.from([]), () => {})).to.rejectedWith(Error, 'AuthTag before frame.')
   })
-
-  it('Precondition: I must have received all content for this frame.', async () => {
-    /* The fact that I can not figure out how to test this,
-     * makes me want to remove the condition.
-     * However, it is very important to make sure that the entire frame has been accumulated.
-     * I suspect that the fact that frameComplete is a closure,
-     * means that this is impossible.
-     * This kind of non-test is also included in the cryptographic materials
-     * for a similar kind of closure around the udkForVerification.
-     */
-  })
 })
