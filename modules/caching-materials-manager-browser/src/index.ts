@@ -14,3 +14,4 @@
  */
 
 export * from './caching_materials_manager_browser'
+export { getLocalCryptographicMaterialsCache } from '@aws-crypto/cache-material'

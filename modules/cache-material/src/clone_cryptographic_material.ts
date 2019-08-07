@@ -37,12 +37,15 @@ export function cloneMaterial<M extends Material> (source: M): M {
       ? new WebCryptoEncryptionMaterial(suite, encryptionContext)
       : new WebCryptoDecryptionMaterial(suite, encryptionContext)
 
-  const udk = new Uint8Array(source.getUnencryptedDataKey())
-  clone.setUnencryptedDataKey(udk, source.keyringTrace[0])
+  if (source.hasUnencryptedDataKey) {
+    const udk = new Uint8Array(source.getUnencryptedDataKey())
+    clone.setUnencryptedDataKey(udk, source.keyringTrace[0])
+  }
+
   if ((<WebCryptoDecryptionMaterial>source).hasCryptoKey) {
     const cryptoKey = (<WebCryptoDecryptionMaterial>source).getCryptoKey()
     ;(<WebCryptoDecryptionMaterial>clone)
-      .setCryptoKey(cryptoKey, clone.keyringTrace[0])
+      .setCryptoKey(cryptoKey, source.keyringTrace[0])
   }
 
   if (isEncryptionMaterial(source) && isEncryptionMaterial(clone)) {
