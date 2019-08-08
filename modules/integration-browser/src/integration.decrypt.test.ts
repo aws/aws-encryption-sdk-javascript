@@ -40,8 +40,8 @@ describe('browser decryption vectors', function () {
       const good = fromBase64(plainText)
       try {
         const cmm = await decryptMaterialsManagerWebCrypto(keysInfo)
-        const { clearMessage } = await decrypt(cmm, cipher)
-        expect(good).toEqual(clearMessage)
+        const { plaintext } = await decrypt(cmm, cipher)
+        expect(good).toEqual(plaintext)
       } catch (e) {
         if (!notSupportedMessages.includes(e.message)) throw e
       }

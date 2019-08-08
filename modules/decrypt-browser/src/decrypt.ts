@@ -40,7 +40,7 @@ const { messageAADContentString, messageAAD } = aadFactory(fromUtf8)
 
 export interface DecryptResult {
   messageHeader: MessageHeader
-  clearMessage: Uint8Array
+  plaintext: Uint8Array
 }
 
 export async function decrypt (
@@ -67,7 +67,7 @@ export async function decrypt (
   // The tag is appended to the Data
   await getSubtleDecrypt(headerIv, rawHeader)(headerAuthTag) // will throw if invalid
 
-  const { clearMessage, readPos } = await bodyDecrypt({ buffer: ciphertext, getSubtleDecrypt, headerInfo })
+  const { plaintext, readPos } = await bodyDecrypt({ buffer: ciphertext, getSubtleDecrypt, headerInfo })
 
   dispose()
 
@@ -81,9 +81,9 @@ export async function decrypt (
     const isValid = await subtleVerify(rawSignature, data)
     /* Postcondition: subtleVerify must validate the signature. */
     needs(isValid, 'Invalid Signature')
-    return { messageHeader, clearMessage }
+    return { messageHeader, plaintext }
   } else {
-    return { messageHeader, clearMessage }
+    return { messageHeader, plaintext }
   }
 }
 
@@ -118,8 +118,8 @@ async function bodyDecrypt ({ buffer, getSubtleDecrypt, headerInfo }: BodyDecryp
     clearBuffers.push(clearBlob)
     readPos = frameInfo.readPos
     if (frameInfo.isFinalFrame) {
-      const clearMessage = concatBuffers(...clearBuffers)
-      return { clearMessage, readPos }
+      const plaintext = concatBuffers(...clearBuffers)
+      return { plaintext, readPos }
     }
   }
 }
