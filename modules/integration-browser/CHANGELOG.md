@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0-preview.4](/compare/@aws-crypto/integration-browser@0.2.0-preview.3...@aws-crypto/integration-browser@0.2.0-preview.4) (2019-08-08)
+
+
+### Bug Fixes
+
+* encrypt/decrypt interface should be the same (#189) ff78f94, closes #189 #182
+
+
+
+
+
 # [0.2.0-preview.3](/compare/@aws-crypto/integration-browser@0.2.0-preview.2...@aws-crypto/integration-browser@0.2.0-preview.3) (2019-07-24)
 
 

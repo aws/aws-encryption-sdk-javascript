@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.3](/compare/@aws-crypto/caching-materials-manager-node@0.1.0-preview.2...@aws-crypto/caching-materials-manager-node@0.1.0-preview.3) (2019-08-08)
+
+
+### Bug Fixes
+
+* caching cmm export and material (#186) d2b352c, closes #186
+
+
+
+
+
 # [0.1.0-preview.2](/compare/@aws-crypto/caching-materials-manager-node@0.1.0-preview.1...@aws-crypto/caching-materials-manager-node@0.1.0-preview.2) (2019-07-24)
 
 **Note:** Version bump only for package @aws-crypto/caching-materials-manager-node
