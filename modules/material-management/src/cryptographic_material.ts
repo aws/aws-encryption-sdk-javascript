@@ -58,7 +58,7 @@ function portableTimingSafeEqual (a: Uint8Array, b: Uint8Array) {
    * Side channel attacks are pernicious and subtle.
    */
   eval('') // eslint-disable-line no-eval
-  /* Check for early return (Postcondition): Size is well-know information
+  /* Check for early return (Postcondition) UNTESTED: Size is well-know information.
    * and does not leak information about contents.
    */
   if (a.byteLength !== b.byteLength) return false
@@ -338,8 +338,9 @@ export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>
     udkForVerification.fill(0)
     unencryptedDataKeyZeroed = true
 
-    /* Postcondition: Both unencryptedDataKey and udkForVerification must be either set or unset.
+    /* Postcondition UNTESTED: Both unencryptedDataKey and udkForVerification must be either set or unset.
      * If it is ever the case that only one was unset, then something is wrong in a profound way.
+     * It is not clear how this could ever happen, unless someone is manipulating the OS...
      */
     needs(unsetCount === 0 || unsetCount === 2, 'Either unencryptedDataKey or udkForVerification was not set.')
     return material
@@ -493,7 +494,7 @@ export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>> (mater
     if (!material.hasUnencryptedDataKey) {
       /* Precondition: If the CryptoKey is the only version, the trace information must be set here. */
       needs(trace && trace.keyName && trace.keyNamespace, 'Malformed KeyringTrace')
-      /* Precondition: On set the required KeyringTraceFlag must be set. */
+      /* Precondition: On setting the CryptoKey the required KeyringTraceFlag must be set. */
       needs(trace.flags & setFlags, 'Required KeyringTraceFlag not set')
       /* If I a setting a cryptoKey without an unencrypted data key,
        * an unencrypted data should never be set.

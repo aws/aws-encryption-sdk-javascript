@@ -83,4 +83,21 @@ describe('decrypt', () => {
       { encoding: 'base64' }
     )).to.rejectedWith(Error, 'Invalid Signature')
   })
+
+  it('can decrypt maxBodySize message with a single final frame.', async () => {
+    const { plaintext: test } = await decrypt(
+      fixtures.decryptKeyring(),
+      fixtures.base64Ciphertext4BytesWith4KFrameLength(),
+      { encoding: 'base64', maxBodySize: 4 }
+    )
+    expect(test).to.deep.equal(Buffer.from('asdf'))
+  })
+
+  it('will not decrypt data that exceeds maxBodySize.', async () => {
+    return expect(decrypt(
+      fixtures.decryptKeyring(),
+      fixtures.base64Ciphertext4BytesWith4KFrameLength(),
+      { encoding: 'base64', maxBodySize: 3 }
+    )).to.rejectedWith(Error, 'maxBodySize exceeded.')
+  })
 })

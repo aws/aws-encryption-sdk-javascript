@@ -45,7 +45,6 @@ export type MixedBackendCryptoKey = {
 export interface EncryptionRequest<S extends NodeAlgorithmSuite|WebCryptoAlgorithmSuite> {
   readonly suite?: S
   readonly encryptionContext: EncryptionContext
-  readonly frameLength?: number
   readonly plaintextLength?: number
 }
 
