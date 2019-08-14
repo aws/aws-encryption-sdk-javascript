@@ -89,6 +89,7 @@ export async function cachingMaterialsManagerNodeSimpleTest () {
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    *
    * DATA KEYS FOR MESSAGES WILL ***ONLY*** BE SHARED FOR EXACT MATCHES OF ENCRYPTION CONTEXT.
+   * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/data-caching-details.html#caching-encryption-context
    */
   const encryptionContext = {
     stage: 'demo',
