@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.3](/compare/@aws-crypto/raw-aes-keyring-browser@0.1.0-preview.2...@aws-crypto/raw-aes-keyring-browser@0.1.0-preview.3) (2019-08-08)
+
+
+### Bug Fixes
+
+* Encryption Context changes (#148) 5a7e9ca, closes #148 #54
+
+
+
+
+
 # [0.1.0-preview.2](/compare/@aws-crypto/raw-aes-keyring-browser@0.1.0-preview.1...@aws-crypto/raw-aes-keyring-browser@0.1.0-preview.2) (2019-07-24)
 
 **Note:** Version bump only for package @aws-crypto/raw-aes-keyring-browser

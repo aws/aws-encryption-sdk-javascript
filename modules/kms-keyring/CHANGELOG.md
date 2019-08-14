@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.3](/compare/@aws-crypto/kms-keyring@0.1.0-preview.2...@aws-crypto/kms-keyring@0.1.0-preview.3) (2019-08-08)
+
+
+### Bug Fixes
+
+* Encryption Context changes (#148) 5a7e9ca, closes #148 #54
+
+
+
+
+
 # [0.1.0-preview.2](/compare/@aws-crypto/kms-keyring@0.1.0-preview.1...@aws-crypto/kms-keyring@0.1.0-preview.2) (2019-07-24)
 
 

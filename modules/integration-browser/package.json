@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/integration-browser",
-  "version": "0.2.0-preview.3",
+  "version": "0.2.0-preview.4",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "standard src/*.ts test/**/*.ts",
@@ -15,7 +15,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/client-browser": "^0.1.0-preview.3",
+    "@aws-crypto/client-browser": "^0.1.0-preview.4",
     "@aws-sdk/karma-credential-loader": "0.1.0-preview.2",
     "@aws-sdk/util-base64-browser": "0.1.0-preview.1",
     "@aws-sdk/util-utf8-browser": "0.1.0-preview.1",

@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0-preview.3](/compare/@aws-crypto/material-management@0.2.0-preview.2...@aws-crypto/material-management@0.2.0-preview.3) (2019-08-08)
+
+
+### Bug Fixes
+
+* Conditions for materials-management (#185) 7f7228b, closes #185
+* Encryption Context changes (#148) 5a7e9ca, closes #148 #54
+* framLength is not passed to the CMM (#190) b60f653, closes #190 #161
+* Multi keyrings should not require a generator (#165) 11ff819, closes #165
+
+
+
+
+
 # [0.2.0-preview.2](/compare/@aws-crypto/material-management@0.2.0-preview.1...@aws-crypto/material-management@0.2.0-preview.2) (2019-07-24)
 
 
