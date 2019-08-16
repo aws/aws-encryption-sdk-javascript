@@ -25,27 +25,27 @@ import { testRSA } from '../src/rsa_simple'
 
 describe('test', () => {
   it('testAES', async () => {
-    const { plainText, clearMessage } = await testAES()
-    expect(plainText).to.deep.equal(clearMessage)
+    const { plainText, plaintext } = await testAES()
+    expect(plainText).to.deep.equal(plaintext)
   })
 
   it('testCachingMaterialsManagerExample', async () => {
-    const { plainText, clearMessage } = await testCachingMaterialsManagerExample()
-    expect(plainText).to.deep.equal(clearMessage)
+    const { plainText, plaintext } = await testCachingMaterialsManagerExample()
+    expect(plainText).to.deep.equal(plaintext)
   })
 
   it('testKmsSimpleExample', async () => {
-    const { plainText, clearMessage } = await testKmsSimpleExample()
-    expect(plainText).to.deep.equal(clearMessage)
+    const { plainText, plaintext } = await testKmsSimpleExample()
+    expect(plainText).to.deep.equal(plaintext)
   })
 
   it('testMultiKeyringExample', async () => {
-    const { plainText, clearMessage } = await testMultiKeyringExample()
-    expect(plainText).to.deep.equal(clearMessage)
+    const { plainText, plaintext } = await testMultiKeyringExample()
+    expect(plainText).to.deep.equal(plaintext)
   })
 
   it('testRSA', async () => {
-    const { plainText, clearMessage } = await testRSA()
-    expect(plainText).to.deep.equal(clearMessage)
+    const { plainText, plaintext } = await testRSA()
+    expect(plainText).to.deep.equal(plaintext)
   })
 })
