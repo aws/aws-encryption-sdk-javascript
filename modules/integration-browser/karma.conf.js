@@ -47,7 +47,7 @@ module.exports = function (config) {
     customLaunchers: {
       ChromeHeadlessDisableCors: {
         base: 'ChromeHeadless',
-        flags: ['--disable-web-security']
+        flags: ['--disable-web-security', '--no-sandbox']
       }
     },
     singleRun: true,
