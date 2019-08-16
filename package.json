@@ -21,10 +21,10 @@
     "test": "npm run lint && npm run build && npm run coverage",
     "integration-browser-decrypt": "npm run build; lerna run build_fixtures --stream --no-prefix -- -- decrypt -v $npm_package_config_localTestVectors --karma",
     "integration-browser-encrypt": "npm run build; lerna run build_fixtures --stream --no-prefix -- -- encrypt -m $npm_package_config_encryptManifestList -k $npm_package_config_encryptKeyManifest -o $npm_package_config_decryptOracle --karma",
-    "integration-browser": "run-s integration-browser-*",
+    "browser-integration": "run-s integration-browser-*",
     "integration-node-decrypt": "npm run build; lerna run integration_node --stream --no-prefix -- -- decrypt -v $npm_package_config_localTestVectors",
     "integration-node-encrypt": "npm run build; lerna run integration_node --stream --no-prefix -- -- encrypt -m $npm_package_config_encryptManifestList -k $npm_package_config_encryptKeyManifest -o $npm_package_config_decryptOracle",
-    "integration-node": "run-s integration-node-*",
+    "node-integration": "run-s integration-node-*",
     "integration": "run-s integration-*",
     "test_conditions": "./util/bootstrap_tsconfig"
   },
