@@ -108,5 +108,5 @@ export async function testAES () {
   console.log(plaintext)
 
   /* Return the values to make testing easy. */
-  return { plainText, plaintext  }
+  return { plainText, plaintext }
 }

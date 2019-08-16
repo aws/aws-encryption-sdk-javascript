@@ -134,5 +134,5 @@ export async function testKmsSimpleExample () {
   console.log(plaintext)
 
   /* Return the values to make testing easy. */
-  return { plainText, plaintext  }
+  return { plainText, plaintext }
 }

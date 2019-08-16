@@ -171,5 +171,5 @@ export async function testMultiKeyringExample () {
   console.log(plaintext)
 
   /* Return the values to make testing easy. */
-  return { plainText, plaintext  }
+  return { plainText, plaintext }
 }
