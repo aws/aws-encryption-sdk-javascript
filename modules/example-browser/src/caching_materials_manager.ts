@@ -147,7 +147,7 @@ export async function testCachingMaterialsManagerExample () {
    * This means that the plaintextLength is _always_ know.
    * So it is not a passable option to avoid mismatches.
    */
-  const { cipherMessage } = await encrypt(cmm, plainText, { encryptionContext })
+  const { ciphertext } = await encrypt(cmm, plainText, { encryptionContext })
 
   /* Log the plain text
    * only for testing and to show that it works.
@@ -158,15 +158,15 @@ export async function testCachingMaterialsManagerExample () {
   /* Log the base64-encoded ciphertext
    * so that you can try decrypting it with another AWS Encryption SDK implementation.
    */
-  const cipherMessageBase64 = toBase64(cipherMessage)
-  console.log(cipherMessageBase64)
-  document.write(cipherMessageBase64)
+  const ciphertextBase64 = toBase64(ciphertext)
+  console.log(ciphertextBase64)
+  document.write(ciphertextBase64)
 
   /* Decrypt the data.
    * NOTE: THIS REQUEST IS ***NOT*** CACHED BECAUSE OF THE ENCRYPT REQUEST ABOVE!
    * Encrypt and decrypt materials are stored separately.
    */
-  const { clearMessage, messageHeader } = await decrypt(cmm, cipherMessage)
+  const { plaintext, messageHeader } = await decrypt(cmm, ciphertext)
 
   /* Grab the encryption context so you can verify it. */
   const { encryptionContext: decryptedContext } = messageHeader
@@ -187,9 +187,9 @@ export async function testCachingMaterialsManagerExample () {
   /* Log the clear message
    * only for testing and to show that it works.
    */
-  document.write('</br>Decrypted:' + clearMessage)
-  console.log(clearMessage)
+  document.write('</br>Decrypted:' + plaintext)
+  console.log(plaintext)
 
   /* Return the values to make testing easy. */
-  return { plainText, clearMessage }
+  return { plainText, plaintext }
 }
