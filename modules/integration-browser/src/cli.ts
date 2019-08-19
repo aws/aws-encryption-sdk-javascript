@@ -81,6 +81,8 @@ if (!existsSync(fixtures)) {
 
   if (command === 'decrypt') {
     const { vectorFile } = argv
+    const vectorPath = join(__dirname, vectorFile as string)
+    if (!existsSync(vectorPath)) throw new Error(`No file found at ${vectorPath}`)
     // @ts-ignore
     await buildDecryptFixtures(fixtures, vectorFile, testName, slice)
   } else if (command === 'encrypt') {
