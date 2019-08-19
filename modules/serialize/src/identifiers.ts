@@ -62,8 +62,23 @@ Object.freeze(SequenceIdentifier)
 export enum Maximum {
   // Maximum number of messages which are allowed to be encrypted under a single cached data key
   MESSAGES_PER_KEY = 2 ** 32, // eslint-disable-line no-unused-vars
-  // Maximum number of bytes which are allowed to be encrypted under a single cached data key
-  BYTES_PER_KEY = 2 ** 63 - 1, // eslint-disable-line no-unused-vars
+  /* Maximum number of bytes which are allowed to be encrypted under a single data key
+   * The _real_ maximum is 2 ** 63 - 1,
+   * However Javascript can only perform safe operations on values
+   * up to Number.MAX_SAFE_INTEGER === 9007199254740991 === 2 ** 53 - 1.
+   * e.g
+   * Number.MAX_SAFE_INTEGER + 1 === Number.MAX_SAFE_INTEGER + 2 => true
+   * Number.MAX_SAFE_INTEGER + 1 > Number.MAX_SAFE_INTEGER + 2 => false
+   * Number.MAX_SAFE_INTEGER + 1 < Number.MAX_SAFE_INTEGER + 2 => false
+   *
+   * This means that after 2 ** 53 - 1 the process of accumulating a byte count
+   * will never yield an accurate comparison and so, never halt.
+   *
+   * The choice here to use 2 ** 53 - 1 instead of Number.MAX_SAFE_INTEGER is deliberate.
+   * This is because in the future Number.MAX_SAFE_INTEGER could be raised to 2 ** 66
+   * or some value larger 2 ** 63.
+   */
+  BYTES_PER_KEY = 2 ** 53 - 1, // eslint-disable-line no-unused-vars
   // Maximum number of frames allowed in one message as defined in specification
   FRAME_COUNT = 2 ** 32 - 1, // eslint-disable-line no-unused-vars
   // Maximum bytes allowed in a single frame as defined in specification
