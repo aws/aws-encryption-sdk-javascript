@@ -26,7 +26,7 @@
     "integration-node-encrypt": "npm run build; lerna run integration_node --stream --no-prefix -- -- encrypt -m $npm_package_config_encryptManifestList -k $npm_package_config_encryptKeyManifest -o $npm_package_config_decryptOracle",
     "node-integration": "run-s integration-node-*",
     "integration": "run-s integration-*",
-    "test_conditions": "./util/bootstrap_tsconfig"
+    "test_conditions": "./util/test_conditions"
   },
   "config": {
     "localTestVectors": "../../aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-1.3.8.zip",
