@@ -142,10 +142,12 @@ export async function testCachingMaterialsManagerExample () {
   const plainText = new Uint8Array([1, 2, 3, 4, 5])
 
   /* Encrypt the data.
-   * Data keys for messages will only be shared if a plaintextlength is passed
-   * HOWEVER, FOR THE BROWSER, ALL CRYPTOGRAPHIC OPERATIONS ARE ONE-SHOT.
-   * This means that the plaintextLength is _always_ know.
-   * So it is not a passable option to avoid mismatches.
+   * The caching CMM only reuses data keys
+   * when it know the length (or an estimate) of the plaintext.
+   * However, in the browser,
+   * you must provide all of the plaintext to the encrypt function.
+   * Therefore, the encrypt function in the browser knows the length of the plaintext
+   * and does not accept a plaintextLength option.
    */
   const { ciphertext } = await encrypt(cmm, plainText, { encryptionContext })
 
@@ -163,8 +165,9 @@ export async function testCachingMaterialsManagerExample () {
   document.write(ciphertextBase64)
 
   /* Decrypt the data.
-   * NOTE: THIS REQUEST IS ***NOT*** CACHED BECAUSE OF THE ENCRYPT REQUEST ABOVE!
-   * Encrypt and decrypt materials are stored separately.
+   * NOTE: This decrypt request will not use the data key
+   * that was cached during the encrypt operation.
+   * Data keys for encrypt and decrypt operations are cached separately.
    */
   const { plaintext, messageHeader } = await decrypt(cmm, ciphertext)
 

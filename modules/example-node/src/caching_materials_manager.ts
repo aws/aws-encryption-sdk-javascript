@@ -101,16 +101,25 @@ export async function cachingMaterialsManagerNodeSimpleTest () {
   const cleartext = 'asdf'
 
   /* Encrypt the data.
-   * DATA KEYS FOR MESSAGES WILL ***ONLY*** BE SHARED IF A PLAINTEXTLENGTH IS PASSED.
+   * The caching CMM only reuses data keys
+   * when it know the length (or an estimate) of the plaintext.
    * If you do not know the length,
    * because the data is a stream
-   * you should provide an estimate that is the largest expected value.
+   * provide an estimate of the largest expected value.
+   * 
+   * If your estimate is smaller than the actual plaintext length
+   * the AWS Encryption SDK will throw an exception.
+   * 
+   * If the plaintext is not a stream,
+   * the AWS Encryption SDK uses the actual plaintext length
+   * instead of any length you provide.
    */
   const { ciphertext } = await encrypt(cmm, cleartext, { encryptionContext, plaintextLength: 4 })
 
   /* Decrypt the data.
-   * NOTE: THIS REQUEST IS ***NOT*** CACHED BECAUSE OF THE ENCRYPT REQUEST ABOVE!
-   * Encrypt and decrypt materials are stored separately.
+   * NOTE: This decrypt request will not use the data key
+   * that was cached during the encrypt operation.
+   * Data keys for encrypt and decrypt operations are cached separately.
    */
   const { plaintext, messageHeader } = await decrypt(cmm, ciphertext)
 
