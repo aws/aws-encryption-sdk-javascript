@@ -30,6 +30,24 @@ describe('getFramedEncryptStream', () => {
     expect(test._transform).is.a('function')
   })
 
+  it('Precondition: plaintextLength must be withing bounds.', () => {
+    const getCipher: any = () => {}
+    expect(() => getFramedEncryptStream(getCipher, {} as any, () => {}, -1)).to.throw(Error, 'plaintextLength out of bounds.')
+    expect(() => getFramedEncryptStream(getCipher, {} as any, () => {}, Number.MAX_SAFE_INTEGER + 1)).to.throw(Error, 'plaintextLength out of bounds.')
+
+    /* Math is hard.
+     * I want to make sure that I don't have an errant off by 1 error.
+     */
+    expect(() => getFramedEncryptStream(getCipher, {} as any, () => {}, Number.MAX_SAFE_INTEGER)).to.not.throw(Error)
+  })
+
+  it('Precondition: Must not process more than plaintextLength.', () => {
+    const getCipher: any = () => {}
+    const test = getFramedEncryptStream(getCipher, { } as any, () => {}, 8)
+
+    expect(() => test._transform(Buffer.from(Array(9)), 'binary', () => {})).to.throw(Error, 'Encrypted data exceeded plaintextLength.')
+  })
+
   it('Check for early return (Postcondition): Have not accumulated a frame.', () => {
     const getCipher: any = () => {}
     const frameLength = 10

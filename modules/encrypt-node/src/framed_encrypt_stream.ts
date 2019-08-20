@@ -15,7 +15,8 @@
 
 import {
   serializeFactory, aadFactory,
-  MessageHeader // eslint-disable-line no-unused-vars
+  MessageHeader, // eslint-disable-line no-unused-vars
+  Maximum
 } from '@aws-crypto/serialize'
 // @ts-ignore
 import { Transform as PortableTransform } from 'readable-stream'
@@ -49,10 +50,16 @@ const ioTick = () => new Promise(resolve => setImmediate(resolve))
 const noop = () => {}
 type ErrBack = (err?: Error) => void
 
-export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: MessageHeader, dispose: Function) {
+export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: MessageHeader, dispose: Function, plaintextLength?: number) {
   let accumulatingFrame: AccumulatingFrame = { contentLength: 0, content: [], sequenceNumber: 1 }
   let pathologicalDrain: Function = noop
   const { frameLength } = messageHeader
+
+  /* Precondition: plaintextLength must be withing bounds.
+   * The Maximum.BYTES_PER_CACHED_KEY_LIMIT is set to be within Number.MAX_SAFE_INTEGER
+   * See serialize/identifiers.ts enum Maximum for more details.
+   */
+  needs(!plaintextLength || (plaintextLength >= 0 && Maximum.BYTES_PER_CACHED_KEY_LIMIT >= plaintextLength), 'plaintextLength out of bounds.')
 
   /* Keeping the messageHeader, accumulatingFrame and pathologicalDrain private is the intention here.
    * It is already unlikely that these values could be touched in the current composition of streams,
@@ -62,6 +69,11 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
   return new (class FramedEncryptStream extends (<new (...args: any[]) => Transform>PortableTransform) {
     _transform (chunk: Buffer, encoding: string, callback: ErrBack) {
       const contentLeft = frameLength - accumulatingFrame.contentLength
+
+      /* Precondition: Must not process more than plaintextLength.
+       * The plaintextLength is the MAXIMUM value that can be encrypted.
+       */
+      needs(!plaintextLength || (plaintextLength -= chunk.length) >= 0, 'Encrypted data exceeded plaintextLength.')
 
       /* Check for early return (Postcondition): Have not accumulated a frame. */
       if (contentLeft > chunk.length) {
