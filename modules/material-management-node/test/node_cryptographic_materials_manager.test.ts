@@ -183,6 +183,24 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     )).to.throw()
   })
 
+  it('Precondition: NodeDefaultCryptographicMaterialsManager should reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.', async () => {
+    class TestKeyring extends KeyringNode {
+      async _onEncrypt (): Promise<NodeEncryptionMaterial> {
+        throw new Error('this should never happen')
+      }
+      async _onDecrypt (): Promise<NodeDecryptionMaterial> {
+        throw new Error('this should never happen')
+      }
+    }
+    const keyring = new TestKeyring()
+    const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
+    const encryptionContext = {
+      [ENCODED_SIGNER_KEY]: 'something'
+    }
+
+    await expect(cmm.getEncryptionMaterials({ encryptionContext })).to.rejectedWith(Error, 'Reserved encryptionContext value')
+  })
+
   it('Postcondition: The NodeEncryptionMaterial must contain a valid dataKey.', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
 

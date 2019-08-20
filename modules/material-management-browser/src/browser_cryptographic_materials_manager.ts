@@ -49,11 +49,23 @@ export class WebCryptoDefaultCryptographicMaterialsManager implements WebCryptoM
   async getEncryptionMaterials ({ suite, encryptionContext }: WebCryptoEncryptionRequest): Promise<WebCryptoEncryptionMaterial> {
     suite = suite || new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
 
+    /* Precondition: WebCryptoDefaultCryptographicMaterialsManager should reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.
+     * A CryptographicMaterialsManager can change entries to the encryptionContext
+     * but changing these values has consequences.
+     * The DefaultCryptographicMaterialsManager uses the value in the encryption context to store public signing key.
+     * If the caller is using this value in their encryption context the Default CMM is probably not the CMM they want to use.
+     */
+    needs(!encryptionContext.hasOwnProperty(ENCODED_SIGNER_KEY), `Reserved encryptionContext value ${ENCODED_SIGNER_KEY} not allowed.`)
+
     const material = await this
       .keyring
       .onEncrypt(await this._initializeEncryptionMaterial(suite, encryptionContext))
 
-    /* Postcondition: The WebCryptoEncryptionMaterial must contain a valid dataKey. */
+    /* Postcondition: The WebCryptoEncryptionMaterial must contain a valid dataKey.
+     * This verifies that the data key matches the algorithm suite specification
+     * and that the unencrypted data key is non-NULL.
+     * See: cryptographic_materials.ts, `getUnencryptedDataKey`
+     */
     needs(material.hasValidKey(), 'Unencrypted data key is invalid.')
 
     /* Postcondition: The WebCryptoEncryptionMaterial must contain at least 1 EncryptedDataKey. */
@@ -67,7 +79,12 @@ export class WebCryptoDefaultCryptographicMaterialsManager implements WebCryptoM
       .keyring
       .onDecrypt(await this._initializeDecryptionMaterial(suite, encryptionContext), encryptedDataKeys.slice())
 
-    /* Postcondition: The WebCryptoDecryptionMaterial must contain a valid dataKey. */
+    /* Postcondition: The WebCryptoDecryptionMaterial must contain a valid dataKey.
+     * See: cryptographic_materials.ts, `getUnencryptedDataKey` also verifies
+     * that the unencrypted data key has not been manipulated,
+     * that the data key matches the algorithm suite specification
+     * and that the unencrypted data key is non-NULL.
+     */
     needs(material.hasValidKey(), 'Unencrypted data key is invalid.')
 
     return material

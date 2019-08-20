@@ -49,11 +49,23 @@ export class NodeDefaultCryptographicMaterialsManager implements NodeMaterialsMa
   async getEncryptionMaterials ({ suite, encryptionContext }: NodeEncryptionRequest): Promise<NodeEncryptionMaterial> {
     suite = suite || new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
 
+    /* Precondition: NodeDefaultCryptographicMaterialsManager should reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.
+     * A CryptographicMaterialsManager can change entries to the encryptionContext
+     * but changing these values has consequences.
+     * The DefaultCryptographicMaterialsManager uses the value in the encryption context to store public signing key.
+     * If the caller is using this value in their encryption context the Default CMM is probably not the CMM they want to use.
+     */
+    needs(!encryptionContext.hasOwnProperty(ENCODED_SIGNER_KEY), `Reserved encryptionContext value ${ENCODED_SIGNER_KEY} not allowed.`)
+
     const material = await this
       .keyring
       .onEncrypt(this._initializeEncryptionMaterial(suite, encryptionContext))
 
-    /* Postcondition: The NodeEncryptionMaterial must contain a valid dataKey. */
+    /* Postcondition: The NodeEncryptionMaterial must contain a valid dataKey.
+     * This verifies that the data key matches the algorithm suite specification
+     * and that the unencrypted data key is non-NULL.
+     * See: cryptographic_materials.ts, `getUnencryptedDataKey`
+     */
     needs(material.getUnencryptedDataKey(), 'Unencrypted data key is invalid.')
 
     /* Postcondition: The NodeEncryptionMaterial must contain at least 1 EncryptedDataKey. */
@@ -69,7 +81,9 @@ export class NodeDefaultCryptographicMaterialsManager implements NodeMaterialsMa
 
     /* Postcondition: The NodeDecryptionMaterial must contain a valid dataKey.
      * See: cryptographic_materials.ts, `getUnencryptedDataKey` also verifies
-     * that the unencrypted data key has not been manipulated.
+     * that the unencrypted data key has not been manipulated,
+     * that the data key matches the algorithm suite specification
+     * and that the unencrypted data key is non-NULL.
      */
     needs(material.getUnencryptedDataKey(), 'Unencrypted data key is invalid.')
 
