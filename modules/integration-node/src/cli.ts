@@ -64,12 +64,10 @@ const cli = yargs
   /* I set the result to 1 so that if I fall through the exit condition is a failure */
   let result = 1
   if (command === 'decrypt') {
-    const { vectorFile } = argv
-    // @ts-ignore
+    const { vectorFile } = argv as unknown as { vectorFile: string}
     result = await integrationDecryptTestVectors(vectorFile, tolerateFailures, testName)
   } else if (command === 'encrypt') {
-    const { manifestFile, keyFile, decryptOracle } = argv
-    // @ts-ignore
+    const { manifestFile, keyFile, decryptOracle } = argv as unknown as { manifestFile: string, keyFile: string, decryptOracle: string}
     result = await integrationEncryptTestVectors(manifestFile, keyFile, decryptOracle, tolerateFailures, testName)
   } else {
     console.log(`Unknown command ${command}`)
@@ -78,3 +76,7 @@ const cli = yargs
 
   if (result) process.exit(result)
 })(cli.argv)
+.catch(err => {
+  console.log(err)
+  process.exit(1)
+})

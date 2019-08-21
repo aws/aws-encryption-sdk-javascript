@@ -73,22 +73,22 @@ if (!existsSync(fixtures)) {
 }
 
 ;(async (argv) => {
-  const { _: [ command ], testName, slice, karma, decryptOracle = '' } = argv
+  const { _: [ command ], testName, slice, karma } = argv
 
   writeFileSync(`${fixtures}/decrypt_tests.json`, JSON.stringify([]))
   writeFileSync(`${fixtures}/encrypt_tests.json`, JSON.stringify([]))
-  writeFileSync(`${fixtures}/decrypt_oracle.json`, JSON.stringify(decryptOracle))
 
   if (command === 'decrypt') {
-    const { vectorFile } = argv
-    const vectorPath = join(__dirname, vectorFile as string)
-    if (!existsSync(vectorPath)) throw new Error(`No file found at ${vectorPath}`)
-    // @ts-ignore
-    await buildDecryptFixtures(fixtures, vectorFile, testName, slice)
+    // It is not clear how to get yargs/typescript to play nicely with sub commands
+    const { vectorFile } = argv as unknown as { vectorFile: string}
+    if (!existsSync(vectorFile)) throw new Error(`No file found at ${vectorFile}`)
+    await buildDecryptFixtures(fixtures, vectorFile as string, testName, slice)
   } else if (command === 'encrypt') {
-    const { manifestFile, keyFile } = argv
-    // @ts-ignore
-    await buildEncryptFixtures(fixtures, manifestFile, keyFile, testName, slice)
+    // It is not clear how to get yargs/typescript to play nicely with sub commands
+    const { manifestFile, keyFile, decryptOracle } = argv as unknown as { manifestFile: string, keyFile: string, decryptOracle: string}
+    writeFileSync(`${fixtures}/decrypt_oracle.json`, JSON.stringify(decryptOracle))
+
+    await buildEncryptFixtures(fixtures, manifestFile as string, keyFile as string, testName, slice)
   } else {
     console.log(`Unknown command ${command}`)
     cli.showHelp()
@@ -101,3 +101,7 @@ if (!existsSync(fixtures)) {
     })
   }
 })(cli.argv)
+.catch(err => {
+  console.log(err)
+  process.exit(1)
+})
