@@ -76,7 +76,7 @@ const cli = yargs
 
   if (result) process.exit(result)
 })(cli.argv)
-.catch(err => {
-  console.log(err)
-  process.exit(1)
-})
+  .catch(err => {
+    console.log(err)
+    process.exit(1)
+  })
