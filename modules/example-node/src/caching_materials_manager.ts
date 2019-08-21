@@ -106,10 +106,10 @@ export async function cachingMaterialsManagerNodeSimpleTest () {
    * If you do not know the length,
    * because the data is a stream
    * provide an estimate of the largest expected value.
-   * 
+   *
    * If your estimate is smaller than the actual plaintext length
    * the AWS Encryption SDK will throw an exception.
-   * 
+   *
    * If the plaintext is not a stream,
    * the AWS Encryption SDK uses the actual plaintext length
    * instead of any length you provide.
