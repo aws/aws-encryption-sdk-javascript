@@ -49,7 +49,7 @@ export class NodeDefaultCryptographicMaterialsManager implements NodeMaterialsMa
   async getEncryptionMaterials ({ suite, encryptionContext }: NodeEncryptionRequest): Promise<NodeEncryptionMaterial> {
     suite = suite || new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
 
-    /* Precondition: NodeDefaultCryptographicMaterialsManager should reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.
+    /* Precondition: NodeDefaultCryptographicMaterialsManager must reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.
      * A CryptographicMaterialsManager can change entries to the encryptionContext
      * but changing these values has consequences.
      * The DefaultCryptographicMaterialsManager uses the value in the encryption context to store public signing key.

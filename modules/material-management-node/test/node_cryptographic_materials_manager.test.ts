@@ -183,7 +183,7 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     )).to.throw()
   })
 
-  it('Precondition: NodeDefaultCryptographicMaterialsManager should reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.', async () => {
+  it('Precondition: NodeDefaultCryptographicMaterialsManager must reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.', async () => {
     class TestKeyring extends KeyringNode {
       async _onEncrypt (): Promise<NodeEncryptionMaterial> {
         throw new Error('this should never happen')

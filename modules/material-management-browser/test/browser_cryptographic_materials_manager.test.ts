@@ -240,7 +240,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
     expect(material.encryptionContext).to.have.haveOwnProperty('some').and.to.equal('context')
   })
 
-  it('Precondition: WebCryptoDefaultCryptographicMaterialsManager should reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.', async () => {
+  it('Precondition: WebCryptoDefaultCryptographicMaterialsManager must reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.', async () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
         throw new Error('I should never see this error')

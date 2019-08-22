@@ -49,7 +49,7 @@ export class WebCryptoDefaultCryptographicMaterialsManager implements WebCryptoM
   async getEncryptionMaterials ({ suite, encryptionContext }: WebCryptoEncryptionRequest): Promise<WebCryptoEncryptionMaterial> {
     suite = suite || new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
 
-    /* Precondition: WebCryptoDefaultCryptographicMaterialsManager should reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.
+    /* Precondition: WebCryptoDefaultCryptographicMaterialsManager must reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.
      * A CryptographicMaterialsManager can change entries to the encryptionContext
      * but changing these values has consequences.
      * The DefaultCryptographicMaterialsManager uses the value in the encryption context to store public signing key.
