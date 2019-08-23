@@ -393,6 +393,69 @@ describe('Cryptographic Material Functions', () => {
       expect(assertCount).to.equal(1)
       expect(test === encryptionMaterial).to.equal(true)
     })
+
+    it('Postcondition: If the material has exceeded limits it MUST NOT be cloned.', async () => {
+      let assertCount = 0
+
+      const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
+
+      const nodeSuite = new NodeAlgorithmSuite(suiteId)
+      const udk128 = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+      const trace = {
+        keyNamespace: 'keyNamespace',
+        keyName: 'keyName',
+        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
+      }
+
+      const edk1 = new EncryptedDataKey({ providerId: 'keyNamespace', providerInfo: 'keyName', encryptedDataKey: new Uint8Array([1]) })
+      const edk2 = new EncryptedDataKey({ providerId: 'p2', providerInfo: 'pi2', encryptedDataKey: new Uint8Array([2]) })
+
+      const encryptionMaterial = new NodeEncryptionMaterial(nodeSuite, {})
+        .setUnencryptedDataKey(udk128, trace)
+        .addEncryptedDataKey(edk1, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+        .addEncryptedDataKey(edk2, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+
+      const testCMM = {
+        _partition,
+        _maxAge,
+        _maxBytesEncrypted,
+        _maxMessagesEncrypted,
+        _cache: {
+          getEncryptionMaterial () {
+            assertCount += 1
+            return false
+          },
+          del () {}
+        },
+        _backingMaterialsManager: {
+          getEncryptionMaterials () {
+            assertCount += 1
+            return encryptionMaterial
+          }
+        },
+        _cacheEntryHasExceededLimits: () => {
+          // This is the test.
+          // If the entry is cashable,
+          // but has exceeded limit...
+          assertCount += 1
+          return true
+        },
+        getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
+        decryptMaterials: () => {
+          throw new Error('this should never happen')
+        }
+      } as any
+
+      const test = await testCMM.getEncryptionMaterials({
+        suite: nodeSuite,
+        encryptionContext: context,
+        frameLength: 10,
+        plaintextLength: 10
+      })
+
+      expect(assertCount).to.equal(3)
+      expect(test === encryptionMaterial).to.equal(true)
+    })
   })
 
   describe('decryptionMaterial', () => {
