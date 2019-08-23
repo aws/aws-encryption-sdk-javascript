@@ -27,7 +27,7 @@ import { DecryptManifestList } from './types' // eslint-disable-line no-unused-v
  * 1. The code is not tied to a specific copy of the manifest information
  * 2. The tests can be run on a subset of tests for debugging.
  */
-export async function buildDecryptFixtures (fixtures: string, vectorFile: string, testName: string, slice: string) {
+export async function buildDecryptFixtures (fixtures: string, vectorFile: string, testName?: string, slice?: string) {
   const [start = 0, end = 9999] = (slice || '').split(':').map(n => parseInt(n, 10))
 
   const centralDirectory = await Open.file(vectorFile)
