@@ -78,7 +78,7 @@ export enum Maximum {
    * The choice here to use 2 ** 53 - 1 instead of Number.MAX_SAFE_INTEGER is deliberate.
    * This is because in the future Number.MAX_SAFE_INTEGER could be raised to 2 ** 66
    * or some value larger 2 ** 63.
-   * 
+   *
    * This is *not* the maximum amount of data that can be encrypted under a single data key
    * or under a single AES operation.
    * The maximum amount of data that can be safely encrypted under a single AES operation is 2 ** 36 -32.
