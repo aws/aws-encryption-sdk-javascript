@@ -63,7 +63,7 @@ export enum Maximum {
   // Maximum number of messages which are allowed to be encrypted under a single cached data key
   MESSAGES_PER_KEY = 2 ** 32, // eslint-disable-line no-unused-vars
   /* Maximum number of bytes which are allowed to be encrypted
-   * under a cached single data key across messages.
+   * under a single cached data key across messages.
    * The _real_ maximum is 2 ** 63 - 1,
    * However Javascript can only perform safe operations on values
    * up to Number.MAX_SAFE_INTEGER === 9007199254740991 === 2 ** 53 - 1.
