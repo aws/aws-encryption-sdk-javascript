@@ -34,7 +34,7 @@ import got from 'got'
  * 1. The code is not tied to a specific copy of the manifest information
  * 2. The tests can be run on a subset of tests for debugging.
  */
-export async function buildEncryptFixtures (fixtures: string, manifestFile: string, keyFile: string, testName: string, slice: string) {
+export async function buildEncryptFixtures (fixtures: string, manifestFile: string, keyFile: string, testName?: string, slice?: string) {
   const [start = 0, end = 9999] = (slice || '').split(':').map(n => parseInt(n, 10))
   const { tests, plaintexts }: EncryptManifestList = await getParsedJSON(manifestFile)
   const { keys }: KeyList = await getParsedJSON(keyFile)
