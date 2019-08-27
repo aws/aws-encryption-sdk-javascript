@@ -61,10 +61,10 @@ Object.freeze(SequenceIdentifier)
 
 export enum Maximum {
   // Maximum number of messages which are allowed to be encrypted under a single cached data key
-  MESSAGES_PER_KEY = 2 ** 32, // eslint-disable-line no-unused-vars
+  MESSAGES_PER_CACHED_KEY_LIMIT = 2 ** 32, // eslint-disable-line no-unused-vars
   /* Maximum number of bytes that are allowed to be encrypted
    * under a single cached data key across messages.
-   * The _real_ maximum is 2 ** 63 - 1,
+   * The maximum value in some versions of the AWS Encryption SDK is 2 ** 63 - 1,
    * However Javascript can only perform safe operations on values
    * up to Number.MAX_SAFE_INTEGER === 9007199254740991 === 2 ** 53 - 1.
    * e.g
@@ -78,18 +78,8 @@ export enum Maximum {
    * The choice here to use 2 ** 53 - 1 instead of Number.MAX_SAFE_INTEGER is deliberate.
    * This is because in the future Number.MAX_SAFE_INTEGER could be raised to 2 ** 66
    * or some value larger 2 ** 63.
-   *
-   * This is *not* the maximum amount of data that can be encrypted under a single data key
-   * or under a single AES operation.
-   * The maximum amount of data that can be safely encrypted under a single AES operation is 2 ** 36 -32.
-   * However the AWS Encryption SDK for Javascript does not support non-framed encryption.
-   * Therefore the largest single AES operation supported
-   * by the AWS Encryption SDK for Javascript is the maximum frame size 2 **32 -1.
-   * The maximum amount of data that can be encrypted by the AWS Encryption SDK
-   * is the maximum number of frames at the maximum frame size.
-   * (number of frames) * (frame size) == (2 ** 32 - 1) * (2 ** 32 -1) ~ 2 ** 64 ~ 1.8e19 bytes.
    */
-  BYTES_PER_KEY = 2 ** 53 - 1, // eslint-disable-line no-unused-vars
+  BYTES_PER_CACHED_KEY_LIMIT = 2 ** 53 - 1, // eslint-disable-line no-unused-vars
   // Maximum number of frames allowed in one message as defined in specification
   FRAME_COUNT = 2 ** 32 - 1, // eslint-disable-line no-unused-vars
   // Maximum bytes allowed in a single frame as defined in specification
