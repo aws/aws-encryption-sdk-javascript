@@ -64,7 +64,7 @@ export enum Maximum {
   MESSAGES_PER_CACHED_KEY_LIMIT = 2 ** 32, // eslint-disable-line no-unused-vars
   /* Maximum number of bytes that are allowed to be encrypted
    * under a single cached data key across messages.
-   * The maximum value in some versions of the AWS Encryption SDK is 2 ** 63 - 1,
+   * The maximum value defined in the AWS Encryption SDK specification is 2 ** 63 - 1.
    * However Javascript can only perform safe operations on values
    * up to Number.MAX_SAFE_INTEGER === 9007199254740991 === 2 ** 53 - 1.
    * e.g
