@@ -31,6 +31,7 @@ import {
   WebCryptoAlgorithmSuite,
   AwsEsdkJsCryptoKey, // eslint-disable-line no-unused-vars
   AwsEsdkJsKeyUsage, // eslint-disable-line no-unused-vars
+  AwsEsdkKeyObject, // eslint-disable-line no-unused-vars
   KeyringTrace, // eslint-disable-line no-unused-vars
   KeyringTraceFlag,
   needs,
@@ -45,8 +46,8 @@ import {
 export class NodeRawAesMaterial implements
   Readonly<CryptographicMaterial<NodeRawAesMaterial>> {
   suite: NodeAlgorithmSuite
-  setUnencryptedDataKey!: (dataKey: Uint8Array, trace: KeyringTrace) => NodeRawAesMaterial
-  getUnencryptedDataKey!: () => Uint8Array
+  setUnencryptedDataKey!: (dataKey: Uint8Array|AwsEsdkKeyObject, trace: KeyringTrace) => NodeRawAesMaterial
+  getUnencryptedDataKey!: () => Uint8Array|AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => NodeRawAesMaterial
   hasUnencryptedDataKey!: boolean
   unencryptedDataKeyLength!: number
@@ -75,8 +76,8 @@ export class WebCryptoRawAesMaterial implements
   Readonly<CryptographicMaterial<WebCryptoRawAesMaterial>>,
   Readonly<WebCryptoMaterial<WebCryptoRawAesMaterial>> {
   suite: WebCryptoAlgorithmSuite
-  setUnencryptedDataKey!: (dataKey: Uint8Array, trace: KeyringTrace) => WebCryptoRawAesMaterial
-  getUnencryptedDataKey!: () => Uint8Array
+  setUnencryptedDataKey!: (dataKey: Uint8Array|AwsEsdkKeyObject, trace: KeyringTrace) => WebCryptoRawAesMaterial
+  getUnencryptedDataKey!: () => Uint8Array|AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => WebCryptoRawAesMaterial
   hasUnencryptedDataKey!: boolean
   unencryptedDataKeyLength!: number

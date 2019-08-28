@@ -15,6 +15,9 @@
 
 import {
   needs, NodeEncryptionMaterial, NodeDecryptionMaterial,
+  unwrapDataKey,
+  wrapWithKeyObjectIfSupported,
+  AwsEsdkKeyObject, // eslint-disable-line no-unused-vars
   NodeHash // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 import {
@@ -191,12 +194,13 @@ export function getCryptoStream (material: NodeEncryptionMaterial|NodeDecryption
       */
       needs(material.hasUnencryptedDataKey, 'Unencrypted data key has been zeroed.')
 
-      return createCryptoStream(cipherName, derivedKey, iv)
+      // createDecipheriv is incorrectly typed in @types/node. It should take key: CipherKey, not key: BinaryLike
+      return createCryptoStream(cipherName, derivedKey as any, iv)
     }
   }
 }
 
-export function nodeKdf (material: NodeEncryptionMaterial|NodeDecryptionMaterial, info?: Uint8Array): Uint8Array {
+export function nodeKdf (material: NodeEncryptionMaterial|NodeDecryptionMaterial, info?: Uint8Array): Uint8Array|AwsEsdkKeyObject {
   const dataKey = material.getUnencryptedDataKey()
 
   const { kdf, kdfHash, keyLengthBytes } = material.suite
@@ -212,10 +216,17 @@ export function nodeKdf (material: NodeEncryptionMaterial|NodeDecryptionMaterial
     info instanceof Uint8Array,
     'Invalid HKDF values.'
   )
+  /* The unwrap is done once we *know* that a KDF in required.
+   * If we unwrapped before everything will work,
+   * but we may be creating new copies of the unencrypted data key (export).
+   */
+  const { buffer: dkBuffer, byteOffset: dkByteOffset, byteLength: dkByteLength } = unwrapDataKey(dataKey)
   // info and kdfHash are now defined
-  const toExtract = Buffer.from(dataKey.buffer, dataKey.byteOffset, dataKey.byteLength)
+  const toExtract = Buffer.from(dkBuffer, dkByteOffset, dkByteLength)
   const { buffer, byteOffset, byteLength } = <Uint8Array> info
   const infoBuff = Buffer.from(buffer, byteOffset, byteLength)
 
-  return kdfIndex[<NodeHash>kdfHash](toExtract)(keyLengthBytes, infoBuff)
+  const derivedBytes = kdfIndex[<NodeHash>kdfHash](toExtract)(keyLengthBytes, infoBuff)
+
+  return wrapWithKeyObjectIfSupported(derivedBytes)
 }

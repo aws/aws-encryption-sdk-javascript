@@ -25,6 +25,7 @@ import {
   WebCryptoAlgorithmSuite, // eslint-disable-line no-unused-vars
   getSubtleFunction,
   _importCryptoKey,
+  unwrapDataKey,
   importForWebCryptoEncryptionMaterial,
   importForWebCryptoDecryptionMaterial
 } from '@aws-crypto/material-management-browser'
@@ -161,7 +162,7 @@ async function aesGcmWrapKey (
 
   const kdfGetSubtleEncrypt = getSubtleFunction(wrappingMaterial, backend, 'encrypt')
   const info = new Uint8Array()
-  const dataKey = material.getUnencryptedDataKey()
+  const dataKey = unwrapDataKey(material.getUnencryptedDataKey())
   const buffer = await kdfGetSubtleEncrypt(info)(iv, aad)(dataKey)
   const ciphertext = new Uint8Array(buffer, 0, buffer.byteLength - material.suite.tagLength / 8)
   const authTag = new Uint8Array(buffer, buffer.byteLength - material.suite.tagLength / 8)

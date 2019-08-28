@@ -65,3 +65,27 @@ export type DecryptionMaterial<Suite> =
   Suite extends NodeAlgorithmSuite ? NodeDecryptionMaterial :
   Suite extends WebCryptoAlgorithmSuite ? WebCryptoDecryptionMaterial :
   never
+
+export type AwsEsdkKeyObjectType = 'secret' | 'public' | 'private'
+export type AwsEsdkKeyFormat = 'pem' | 'der'
+export type AwsEsdkKeyType = 'rsa' | 'dsa' | 'ec'
+export interface AwsEsdkKeyExportOptions<T extends AwsEsdkKeyFormat> {
+  type: 'pkcs1' | 'spki' | 'pkcs8' | 'sec1'
+  format: T
+  cipher?: string
+  passphrase?: string | Buffer
+}
+
+export interface AwsEsdkKeyObject {
+  asymmetricKeyType?: AwsEsdkKeyType
+  /**
+   * For asymmetric keys, this property represents the size of the embedded key in
+   * bytes. This property is `undefined` for symmetric keys.
+   */
+  asymmetricKeySize?: number
+  export(options: AwsEsdkKeyExportOptions<'pem'>): string | Buffer
+  export(options?: AwsEsdkKeyExportOptions<'der'>): Buffer
+  symmetricSize?: number
+  type: AwsEsdkKeyObjectType
+}
+export type AwsEsdkCreateSecretKey = (key: Uint8Array) => AwsEsdkKeyObject
