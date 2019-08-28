@@ -240,6 +240,25 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
     expect(material.encryptionContext).to.have.haveOwnProperty('some').and.to.equal('context')
   })
 
+  it('Precondition: WebCryptoDefaultCryptographicMaterialsManager must reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.', async () => {
+    class TestKeyring extends KeyringWebCrypto {
+      async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
+        throw new Error('I should never see this error')
+      }
+      async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
+        throw new Error('I should never see this error')
+      }
+    }
+
+    const keyring = new TestKeyring()
+    const cmm = new WebCryptoDefaultCryptographicMaterialsManager(keyring)
+    const encryptionContext = {
+      [ENCODED_SIGNER_KEY]: 'context'
+    }
+
+    expect(cmm.getEncryptionMaterials({ encryptionContext })).to.rejectedWith(Error, 'Reserved encryptionContext value')
+  })
+
   it('Postcondition: The WebCryptoEncryptionMaterial must contain a valid dataKey.', async () => {
     class TestKeyring extends KeyringWebCrypto {
       async _onEncrypt (material: WebCryptoEncryptionMaterial): Promise<WebCryptoEncryptionMaterial> {

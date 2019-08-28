@@ -110,9 +110,15 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
     }
     if (!this._cacheEntryHasExceededLimits(testEntry)) {
       this._cache.putEncryptionMaterial(cacheKey, material, plaintextLength, this._maxAge)
+      return cloneResponse(material)
+    } else {
+      /* Postcondition: If the material has exceeded limits it MUST NOT be cloned.
+       * If it is cloned, and the clone is returned,
+       * then there exist a copy of the unencrypted data key.
+       * It is true that this data would be caught by GC, it is better to just not rely on that.
+       */
+      return material
     }
-
-    return cloneResponse(material)
   }
 }
 
