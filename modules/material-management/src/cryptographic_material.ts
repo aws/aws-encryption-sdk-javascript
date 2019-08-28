@@ -80,7 +80,6 @@ export interface CryptographicMaterial<T extends CryptographicMaterial<T>> {
   getUnencryptedDataKey: () => Uint8Array
   zeroUnencryptedDataKey: () => T
   hasUnencryptedDataKey: boolean
-  unencryptedDataKeyLength: number
   keyringTrace: KeyringTrace[]
   encryptionContext: Readonly<EncryptionContext>
 }
@@ -112,7 +111,6 @@ export class NodeEncryptionMaterial implements
   getUnencryptedDataKey!: () => Uint8Array
   zeroUnencryptedDataKey!: () => NodeEncryptionMaterial
   hasUnencryptedDataKey!: boolean
-  unencryptedDataKeyLength!: number
   keyringTrace: KeyringTrace[] = []
   encryptedDataKeys!: EncryptedDataKey[]
   addEncryptedDataKey!: (edk: EncryptedDataKey, flags: KeyringTraceFlag) => NodeEncryptionMaterial
@@ -147,7 +145,6 @@ export class NodeDecryptionMaterial implements
   getUnencryptedDataKey!: () => Uint8Array
   zeroUnencryptedDataKey!: () => NodeDecryptionMaterial
   hasUnencryptedDataKey!: boolean
-  unencryptedDataKeyLength!: number
   keyringTrace: KeyringTrace[] = []
   setVerificationKey!: (key: VerificationKey) => NodeDecryptionMaterial
   verificationKey?: VerificationKey
@@ -181,7 +178,6 @@ export class WebCryptoEncryptionMaterial implements
   getUnencryptedDataKey!: () => Uint8Array
   zeroUnencryptedDataKey!: () => WebCryptoEncryptionMaterial
   hasUnencryptedDataKey!: boolean
-  unencryptedDataKeyLength!: number
   keyringTrace: KeyringTrace[] = []
   encryptedDataKeys!: EncryptedDataKey[]
   addEncryptedDataKey!: (edk: EncryptedDataKey, flags: KeyringTraceFlag) => WebCryptoEncryptionMaterial
@@ -223,7 +219,6 @@ export class WebCryptoDecryptionMaterial implements
   getUnencryptedDataKey!: () => Uint8Array
   zeroUnencryptedDataKey!: () => WebCryptoDecryptionMaterial
   hasUnencryptedDataKey!: boolean
-  unencryptedDataKeyLength!: number
   keyringTrace: KeyringTrace[] = []
   setVerificationKey!: (key: VerificationKey) => WebCryptoDecryptionMaterial
   verificationKey?: VerificationKey
@@ -345,21 +340,6 @@ export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>
     needs(unsetCount === 0 || unsetCount === 2, 'Either unencryptedDataKey or udkForVerification was not set.')
     return material
   }
-  Object.defineProperty(material, 'unencryptedDataKeyLength', {
-    get: () => {
-      /* Precondition: The unencryptedDataKey must be set to have a length. */
-      needs(unencryptedDataKey, 'unencryptedDataKey has not been set')
-      /* Precondition: the unencryptedDataKey must not be Zeroed out.
-       * returning information about the data key,
-       * while not the worst thing may indicate misuse.
-       * Checking the algorithm specification is the proper way
-       * to do this
-       */
-      needs(!unencryptedDataKeyZeroed, 'unencryptedDataKey has been zeroed.')
-      return unencryptedDataKey.byteLength
-    },
-    enumerable: true
-  })
 
   readOnlyProperty(material, 'setUnencryptedDataKey', setUnencryptedDataKey)
   readOnlyProperty(material, 'getUnencryptedDataKey', getUnencryptedDataKey)

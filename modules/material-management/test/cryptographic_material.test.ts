@@ -56,7 +56,6 @@ describe('decorateCryptographicMaterial', () => {
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     test.setUnencryptedDataKey(dataKey, { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
     expect(test.hasUnencryptedDataKey).to.equal(true)
-    expect(test.unencryptedDataKeyLength).to.equal(dataKey.byteLength)
     expect(test.getUnencryptedDataKey()).to.deep.equal(dataKey)
   })
 
@@ -84,27 +83,11 @@ describe('decorateCryptographicMaterial', () => {
     test.setUnencryptedDataKey(dataKey, { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
     test.zeroUnencryptedDataKey()
     expect(() => test.getUnencryptedDataKey()).to.throw()
-    expect(() => test.unencryptedDataKeyLength).to.throw()
   })
 
   it('Precondition: unencryptedDataKey must be set before we can return it.', () => {
     const test: any = decorateCryptographicMaterial((<any>{}), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
     expect(() => test.getUnencryptedDataKey()).to.throw()
-  })
-
-  it('Precondition: The unencryptedDataKey must be set to have a length.', () => {
-    const test: any = decorateCryptographicMaterial((<any>{}), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
-    expect(() => test.unencryptedDataKeyLength).to.throw()
-  })
-
-  it('Precondition: the unencryptedDataKey must not be Zeroed out.', () => {
-    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
-    const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
-    test.setUnencryptedDataKey(dataKey, trace)
-    test.zeroUnencryptedDataKey()
-    expect(() => test.unencryptedDataKeyLength).to.throw('unencryptedDataKey has been zeroed.')
   })
 
   it(`Precondition: If the unencryptedDataKey has not been set, it should not be settable later.
