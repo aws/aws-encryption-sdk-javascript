@@ -183,7 +183,7 @@ describe('decorateCryptographicMaterial', () => {
     expect(() => {
       const udk = unwrapDataKey(material.getUnencryptedDataKey())
       if (supportsKeyObject) {
-       /* This should NOT be true.
+        /* This should NOT be true.
         * If the udk is a KeyObject then the change above was on independent memory.
         * This check follows the code, and is *intended* to fail.
         */
