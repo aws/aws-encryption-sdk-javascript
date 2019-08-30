@@ -216,7 +216,7 @@ export function nodeKdf (material: NodeEncryptionMaterial|NodeDecryptionMaterial
     info instanceof Uint8Array,
     'Invalid HKDF values.'
   )
-  /* The unwrap is done once we *know* that a KDF in required.
+  /* The unwrap is done once we *know* that a KDF is required.
    * If we unwrapped before everything will work,
    * but we may be creating new copies of the unencrypted data key (export).
    */

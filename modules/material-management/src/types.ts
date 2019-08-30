@@ -66,6 +66,10 @@ export type DecryptionMaterial<Suite> =
   Suite extends WebCryptoAlgorithmSuite ? WebCryptoDecryptionMaterial :
   never
 
+/* These are copies of the v12 Node.js types.
+ * I copied them here to avoid exporting v12 types
+ * and forcing consumers to install/use v12 in their projects.
+ */
 export type AwsEsdkKeyObjectType = 'secret' | 'public' | 'private'
 export type AwsEsdkKeyFormat = 'pem' | 'der'
 export type AwsEsdkKeyType = 'rsa' | 'dsa' | 'ec'
