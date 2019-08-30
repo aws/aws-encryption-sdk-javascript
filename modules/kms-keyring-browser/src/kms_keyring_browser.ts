@@ -36,7 +36,7 @@ import {
 } from '@aws-crypto/material-management-browser'
 import { KMS } from 'aws-sdk' // eslint-disable-line no-unused-vars
 
-const getKmsClient = getClient(KMS)
+const getKmsClient = getClient(KMS, { customUserAgent: 'AwsEncryptionSdkJavascriptBrowser' })
 const cacheKmsClients = cacheClients(getKmsClient)
 
 export type KmsKeyringWebCryptoInput = Partial<KmsKeyringInput<KMS>>
