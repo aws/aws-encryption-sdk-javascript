@@ -18,7 +18,7 @@
 import { expect } from 'chai'
 import 'mocha'
 import { _onEncrypt, _onDecrypt } from '../src/raw_keyring_decorators'
-import { AlgorithmSuiteIdentifier, NodeEncryptionMaterial, NodeAlgorithmSuite, KeyringTraceFlag, NodeDecryptionMaterial, EncryptedDataKey } from '@aws-crypto/material-management'
+import { AlgorithmSuiteIdentifier, NodeEncryptionMaterial, NodeAlgorithmSuite, KeyringTraceFlag, NodeDecryptionMaterial, EncryptedDataKey, unwrapDataKey } from '@aws-crypto/material-management'
 
 describe('_onEncrypt', () => {
   it('will create UnencryptedDataKey and call _wrapKey', async () => {
@@ -41,7 +41,7 @@ describe('_onEncrypt', () => {
     } as any
 
     const test = await testKeyring._onEncrypt(material)
-    expect(test.getUnencryptedDataKey()).to.deep.equal(new Uint8Array(Array(suite.keyLengthBytes).fill(1)))
+    expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(new Uint8Array(Array(suite.keyLengthBytes).fill(1)))
     expect(test.keyringTrace).to.have.lengthOf(1)
     expect(test.keyringTrace[0].keyName).to.equal(keyName)
     expect(test.keyringTrace[0].keyNamespace).to.equal(keyNamespace)
@@ -55,7 +55,7 @@ describe('_onEncrypt', () => {
     const keyName = 'keyName'
     const keyNamespace = 'keyNamespace'
     const material = new NodeEncryptionMaterial(suite, {})
-      .setUnencryptedDataKey(udk, { keyName, keyNamespace, flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
+      .setUnencryptedDataKey(new Uint8Array(udk), { keyName, keyNamespace, flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
     let wrapCalled = 0
     const notRandomBytes = async () => { throw new Error('never') }
     const _wrapKey = (material: any) => {
@@ -71,7 +71,7 @@ describe('_onEncrypt', () => {
     } as any
 
     const test = await testKeyring._onEncrypt(material)
-    expect(test.getUnencryptedDataKey()).to.deep.equal(udk)
+    expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(udk)
     expect(wrapCalled).to.equal(1)
   })
 })
@@ -99,7 +99,7 @@ describe('_onDecrypt', () => {
     const _unwrapKey = (material: NodeDecryptionMaterial) => {
       unwrapCalled += 1
       return material
-        .setUnencryptedDataKey(udk, { keyName, keyNamespace, flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY })
+        .setUnencryptedDataKey(new Uint8Array(udk), { keyName, keyNamespace, flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY })
     }
 
     const testKeyring = {
@@ -111,7 +111,7 @@ describe('_onDecrypt', () => {
     } as any
 
     const test = await testKeyring._onDecrypt(material, [edk])
-    expect(test.getUnencryptedDataKey()).to.deep.equal(udk)
+    expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(udk)
     expect(test.keyringTrace).to.have.lengthOf(1)
     expect(test.keyringTrace[0].keyName).to.equal(keyName)
     expect(test.keyringTrace[0].keyNamespace).to.equal(keyNamespace)
@@ -126,7 +126,7 @@ describe('_onDecrypt', () => {
     const keyName = 'keyName'
     const keyNamespace = 'keyNamespace'
     const material = new NodeDecryptionMaterial(suite, {})
-      .setUnencryptedDataKey(udk, { keyName, keyNamespace, flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY })
+      .setUnencryptedDataKey(new Uint8Array(udk), { keyName, keyNamespace, flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY })
 
     const edk = new EncryptedDataKey({
       providerId: keyName,
@@ -154,7 +154,7 @@ describe('_onDecrypt', () => {
     } as any
 
     const test = await testKeyring._onDecrypt(material, [edk])
-    expect(test.getUnencryptedDataKey()).to.deep.equal(udk)
+    expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(udk)
     expect(unwrapCalled).to.equal(0)
     expect(filterCalled).to.equal(0)
   })

@@ -26,6 +26,7 @@ import {
   bytes2JWK,
   keyUsageForMaterial,
   importForWebCryptoEncryptionMaterial,
+  unwrapDataKey,
   MixedBackendCryptoKey, // eslint-disable-line no-unused-vars
   WebCryptoAlgorithmSuite // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
@@ -78,7 +79,7 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
       const { encryption } = material.suite
       const importFormat = 'jwk'
       const keyUsages: KeyUsage[] = ['wrapKey'] // limit the use of this key (*not* decrypt, encrypt, deriveKey)
-      const jwk = bytes2JWK(material.getUnencryptedDataKey())
+      const jwk = bytes2JWK(unwrapDataKey(material.getUnencryptedDataKey()))
       const cryptoKey = await subtle.importKey(importFormat, jwk, encryption, extractable, keyUsages)
 
       const wrapFormat = 'raw'
