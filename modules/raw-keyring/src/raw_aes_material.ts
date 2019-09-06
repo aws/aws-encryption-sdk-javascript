@@ -50,7 +50,6 @@ export class NodeRawAesMaterial implements
   getUnencryptedDataKey!: () => Uint8Array|AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => NodeRawAesMaterial
   hasUnencryptedDataKey!: boolean
-  unencryptedDataKeyLength!: number
   keyringTrace: KeyringTrace[] = []
   encryptionContext: EncryptionContext = Object.freeze({})
   constructor (suiteId: WrappingSuiteIdentifier) {
@@ -80,7 +79,6 @@ export class WebCryptoRawAesMaterial implements
   getUnencryptedDataKey!: () => Uint8Array|AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => WebCryptoRawAesMaterial
   hasUnencryptedDataKey!: boolean
-  unencryptedDataKeyLength!: number
   keyringTrace: KeyringTrace[] = []
   setCryptoKey!: (dataKey: AwsEsdkJsCryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => WebCryptoRawAesMaterial
   getCryptoKey!: () => AwsEsdkJsCryptoKey|MixedBackendCryptoKey
