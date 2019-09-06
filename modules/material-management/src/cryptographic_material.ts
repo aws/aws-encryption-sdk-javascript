@@ -68,36 +68,37 @@ export const supportsKeyObject = (function () {
  * it is no longer needed.
  */
 
-let timingSafeEqual: (a: Uint8Array, b: Uint8Array) => boolean
-try {
-  /* It is possible for `require` to return an empty object, or an object
-   * that does not implement `timingSafeEqual`.
-   * in this case I need a fallback
-   */
-  const { timingSafeEqual: nodeTimingSafeEqual } = require('crypto')
-  timingSafeEqual = nodeTimingSafeEqual || portableTimingSafeEqual
-} catch (e) {
-  timingSafeEqual = portableTimingSafeEqual
-}
-/* https://codahale.com/a-lesson-in-timing-attacks/ */
-function portableTimingSafeEqual (a: Uint8Array, b: Uint8Array) {
-  /* It is *possible* that a runtime could optimize this constant time function.
-   * Adding `eval` should prevent the optimization, but this is no grantee.
-   * If you copy this function for your own use, make sure to educate yourself.
-   * Side channel attacks are pernicious and subtle.
-   */
-  eval('') // eslint-disable-line no-eval
-  /* Check for early return (Postcondition) UNTESTED: Size is well-know information.
-   * and does not leak information about contents.
-   */
-  if (a.byteLength !== b.byteLength) return false
-
-  let diff = 0
-  for (let i = 0; i < b.length; i++) {
-    diff |= a[i] ^ b[i]
+const timingSafeEqual: (a: Uint8Array, b: Uint8Array) => boolean = (function () {
+  try {
+    /* It is possible for `require` to return an empty object, or an object
+     * that does not implement `timingSafeEqual`.
+     * in this case I need a fallback
+     */
+    const { timingSafeEqual: nodeTimingSafeEqual } = require('crypto')
+    return nodeTimingSafeEqual || portableTimingSafeEqual
+  } catch (e) {
+    return portableTimingSafeEqual
   }
-  return (diff === 0)
-}
+  /* https://codahale.com/a-lesson-in-timing-attacks/ */
+  function portableTimingSafeEqual (a: Uint8Array, b: Uint8Array) {
+    /* It is *possible* that a runtime could optimize this constant time function.
+      * Adding `eval` should prevent the optimization, but this is no grantee.
+      * If you copy this function for your own use, make sure to educate yourself.
+      * Side channel attacks are pernicious and subtle.
+      */
+    eval('') // eslint-disable-line no-eval
+    /* Check for early return (Postcondition) UNTESTED: Size is well-know information.
+      * and does not leak information about contents.
+      */
+    if (a.byteLength !== b.byteLength) return false
+
+    let diff = 0
+    for (let i = 0; i < b.length; i++) {
+      diff |= a[i] ^ b[i]
+    }
+    return (diff === 0)
+  }
+})()
 
 export interface FunctionalCryptographicMaterial {
   hasValidKey: () => boolean
