@@ -22,6 +22,7 @@ import {
   isValidCryptoKey,
   keyUsageForMaterial,
   subtleFunctionForMaterial,
+  unwrapDataKey,
   WebCryptoMaterial // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 
@@ -246,7 +247,7 @@ export async function _importCryptoKey<T extends WebCryptoMaterial<T>> (
 ) {
   const { suite } = material
   const extractable = false
-  const udk = material.getUnencryptedDataKey()
+  const udk = unwrapDataKey(material.getUnencryptedDataKey())
 
   if (suite.kdf) {
     /* For several browsers, import for a key to derive with HKDF

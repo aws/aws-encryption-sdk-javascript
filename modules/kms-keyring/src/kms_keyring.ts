@@ -28,7 +28,8 @@ import {
   KeyringTraceFlag,
   EncryptedDataKey, // eslint-disable-line no-unused-vars
   immutableClass,
-  readOnlyProperty
+  readOnlyProperty,
+  unwrapDataKey
 } from '@aws-crypto/material-management'
 import { KMS_PROVIDER_ID, generateDataKey, encrypt, decrypt, kmsResponseToEncryptedDataKey } from './helpers'
 import { regionFromKmsKeyArn } from './region_from_kms_key_arn'
@@ -131,7 +132,7 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
       * Furthermore *only* CMK's explicitly designated as generators can generate data keys.
       * See cryptographic_materials as getUnencryptedDataKey will throw in this case.
       */
-      const unencryptedDataKey = material.getUnencryptedDataKey()
+      const unencryptedDataKey = unwrapDataKey(material.getUnencryptedDataKey())
 
       const flags = KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
       for (const kmsKey of keyIds) {

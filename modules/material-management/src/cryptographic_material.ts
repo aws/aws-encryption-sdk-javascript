@@ -13,7 +13,15 @@
  * limitations under the License.
  */
 
-import { MixedBackendCryptoKey, SupportedAlgorithmSuites, AwsEsdkJsCryptoKey, AwsEsdkJsKeyUsage, EncryptionContext } from './types' // eslint-disable-line no-unused-vars
+import {
+  MixedBackendCryptoKey, // eslint-disable-line no-unused-vars
+  SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
+  AwsEsdkJsCryptoKey, // eslint-disable-line no-unused-vars
+  AwsEsdkJsKeyUsage, // eslint-disable-line no-unused-vars
+  EncryptionContext, // eslint-disable-line no-unused-vars
+  AwsEsdkKeyObject, // eslint-disable-line no-unused-vars
+  AwsEsdkCreateSecretKey // eslint-disable-line no-unused-vars
+} from './types'
 import { EncryptedDataKey } from './encrypted_data_key'
 import { SignatureKey, VerificationKey } from './signature_key'
 import { frozenClass, readOnlyProperty } from './immutable_class'
@@ -21,6 +29,27 @@ import { KeyringTrace, KeyringTraceFlag } from './keyring_trace' // eslint-disab
 import { NodeAlgorithmSuite } from './node_algorithms'
 import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 import { needs } from './needs'
+
+/* KeyObject were introduced in v11.
+ * They protect the data key better than a Buffer.
+ * Their use is preferred.
+ * When they are available, the AWS Encryption SDK will proscribe their use.
+ * See: https://nodejs.org/api/crypto.html#crypto_class_keyobject
+ */
+interface AwsEsdkKeyObjectInstanceOf {
+  new (): AwsEsdkKeyObject
+}
+type AwsEsdkCrypto = {KeyObject: AwsEsdkKeyObjectInstanceOf, createSecretKey: AwsEsdkCreateSecretKey, }
+export const supportsKeyObject = (function () {
+  try {
+    const { KeyObject, createSecretKey } = require('crypto') as AwsEsdkCrypto
+    if (!KeyObject || !createSecretKey) return false
+
+    return { KeyObject, createSecretKey }
+  } catch (ex) {
+    return false
+  }
+})()
 
 /*
  * This public interface to the CryptographicMaterial object is provided for
@@ -76,11 +105,10 @@ export interface FunctionalCryptographicMaterial {
 
 export interface CryptographicMaterial<T extends CryptographicMaterial<T>> {
   suite: SupportedAlgorithmSuites
-  setUnencryptedDataKey: (dataKey: Uint8Array, trace: KeyringTrace) => T
-  getUnencryptedDataKey: () => Uint8Array
+  setUnencryptedDataKey: (dataKey: Uint8Array|AwsEsdkKeyObject, trace: KeyringTrace) => T
+  getUnencryptedDataKey: () => Uint8Array|AwsEsdkKeyObject
   zeroUnencryptedDataKey: () => T
   hasUnencryptedDataKey: boolean
-  unencryptedDataKeyLength: number
   keyringTrace: KeyringTrace[]
   encryptionContext: Readonly<EncryptionContext>
 }
@@ -108,11 +136,10 @@ export class NodeEncryptionMaterial implements
   Readonly<EncryptionMaterial<NodeEncryptionMaterial>>,
   FunctionalCryptographicMaterial {
   suite: NodeAlgorithmSuite
-  setUnencryptedDataKey!: (dataKey: Uint8Array, trace: KeyringTrace) => NodeEncryptionMaterial
-  getUnencryptedDataKey!: () => Uint8Array
+  setUnencryptedDataKey!: (dataKey: Uint8Array|AwsEsdkKeyObject, trace: KeyringTrace) => NodeEncryptionMaterial
+  getUnencryptedDataKey!: () => Uint8Array|AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => NodeEncryptionMaterial
   hasUnencryptedDataKey!: boolean
-  unencryptedDataKeyLength!: number
   keyringTrace: KeyringTrace[] = []
   encryptedDataKeys!: EncryptedDataKey[]
   addEncryptedDataKey!: (edk: EncryptedDataKey, flags: KeyringTraceFlag) => NodeEncryptionMaterial
@@ -143,11 +170,10 @@ export class NodeDecryptionMaterial implements
   Readonly<DecryptionMaterial<NodeDecryptionMaterial>>,
   FunctionalCryptographicMaterial {
   suite: NodeAlgorithmSuite
-  setUnencryptedDataKey!: (dataKey: Uint8Array, trace: KeyringTrace) => NodeDecryptionMaterial
-  getUnencryptedDataKey!: () => Uint8Array
+  setUnencryptedDataKey!: (dataKey: Uint8Array|AwsEsdkKeyObject, trace: KeyringTrace) => NodeDecryptionMaterial
+  getUnencryptedDataKey!: () => Uint8Array|AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => NodeDecryptionMaterial
   hasUnencryptedDataKey!: boolean
-  unencryptedDataKeyLength!: number
   keyringTrace: KeyringTrace[] = []
   setVerificationKey!: (key: VerificationKey) => NodeDecryptionMaterial
   verificationKey?: VerificationKey
@@ -177,11 +203,10 @@ export class WebCryptoEncryptionMaterial implements
   Readonly<WebCryptoMaterial<WebCryptoEncryptionMaterial>>,
   FunctionalCryptographicMaterial {
   suite: WebCryptoAlgorithmSuite
-  setUnencryptedDataKey!: (dataKey: Uint8Array, trace: KeyringTrace) => WebCryptoEncryptionMaterial
-  getUnencryptedDataKey!: () => Uint8Array
+  setUnencryptedDataKey!: (dataKey: Uint8Array|AwsEsdkKeyObject, trace: KeyringTrace) => WebCryptoEncryptionMaterial
+  getUnencryptedDataKey!: () => Uint8Array|AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => WebCryptoEncryptionMaterial
   hasUnencryptedDataKey!: boolean
-  unencryptedDataKeyLength!: number
   keyringTrace: KeyringTrace[] = []
   encryptedDataKeys!: EncryptedDataKey[]
   addEncryptedDataKey!: (edk: EncryptedDataKey, flags: KeyringTraceFlag) => WebCryptoEncryptionMaterial
@@ -219,11 +244,10 @@ export class WebCryptoDecryptionMaterial implements
   Readonly<WebCryptoMaterial<WebCryptoDecryptionMaterial>>,
   FunctionalCryptographicMaterial {
   suite: WebCryptoAlgorithmSuite
-  setUnencryptedDataKey!: (dataKey: Uint8Array, trace: KeyringTrace) => WebCryptoDecryptionMaterial
-  getUnencryptedDataKey!: () => Uint8Array
+  setUnencryptedDataKey!: (dataKey: Uint8Array|AwsEsdkKeyObject, trace: KeyringTrace) => WebCryptoDecryptionMaterial
+  getUnencryptedDataKey!: () => Uint8Array|AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => WebCryptoDecryptionMaterial
   hasUnencryptedDataKey!: boolean
-  unencryptedDataKeyLength!: number
   keyringTrace: KeyringTrace[] = []
   setVerificationKey!: (key: VerificationKey) => WebCryptoDecryptionMaterial
   verificationKey?: VerificationKey
@@ -264,50 +288,37 @@ export function isDecryptionMaterial (obj: any): obj is WebCryptoDecryptionMater
 
 export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>> (material: T, setFlags: KeyringTraceFlag) {
   let unencryptedDataKeyZeroed = false
-  let unencryptedDataKey: Uint8Array
+  let unencryptedDataKey: AwsEsdkKeyObject | Uint8Array
   // This copy of the unencryptedDataKey is stored to insure that the
   // unencrypted data key is *never* modified.  Since the
   // unencryptedDataKey is returned by reference, any change
   // to it would be propagated to any cached versions.
   let udkForVerification: Uint8Array
 
-  const setUnencryptedDataKey = (dataKey: Uint8Array, trace: KeyringTrace) => {
-    /* Precondition: unencryptedDataKey must not be set.  Modifying the unencryptedDataKey is denied */
-    needs(!unencryptedDataKey, 'unencryptedDataKey has already been set')
-    /* Precondition: dataKey must be Binary Data */
-    needs(dataKey instanceof Uint8Array, 'dataKey must be a Uint8Array')
-    /* Precondition: dataKey should have an ArrayBuffer that *only* stores the key.
-     * This is a simple check to make sure that the key is not stored on
-     * a large potentially shared ArrayBuffer.
-     * If this was the case, it may be possible to find or manipulate.
-     */
-    needs(dataKey.byteOffset === 0, 'Unencrypted Master Key must be an isolated buffer.')
-    /* Precondition: The data key length must agree with algorithm specification.
-     * If this is not the case, it either means ciphertext was tampered
-     * with or the keyring implementation is not setting the length properly.
-     */
-    needs(dataKey.byteLength === material.suite.keyLengthBytes, 'Key length does not agree with the algorithm specification.')
-
-    /* Precondition: Trace must be set, and the flag must indicate that the data key was generated. */
-    needs(trace && trace.keyName && trace.keyNamespace, 'Malformed KeyringTrace')
-    /* Precondition: On set the required KeyringTraceFlag must be set. */
-    needs(trace.flags & setFlags, 'Required KeyringTraceFlag not set')
+  const setUnencryptedDataKey = (dataKey: Uint8Array|AwsEsdkKeyObject, trace: KeyringTrace) => {
+    /* Avoid making unnecessary copies of the dataKey. */
+    const tempUdk = dataKey instanceof Uint8Array ? dataKey : unwrapDataKey(dataKey)
+    /* All security conditions are tested here and failures will throw. */
+    verifyUnencryptedDataKeyForSet(tempUdk, trace)
+    unencryptedDataKey = wrapWithKeyObjectIfSupported(dataKey)
+    udkForVerification = new Uint8Array(tempUdk)
     material.keyringTrace.push(trace)
-
-    unencryptedDataKey = dataKey
-    udkForVerification = new Uint8Array(dataKey)
 
     return material
   }
-  const getUnencryptedDataKey = (): Uint8Array => {
+  const getUnencryptedDataKey = (): Uint8Array|AwsEsdkKeyObject => {
     /* Precondition: unencryptedDataKey must be set before we can return it. */
     needs(unencryptedDataKey, 'unencryptedDataKey has not been set')
     /* Precondition: unencryptedDataKey must not be Zeroed out.
      * Returning a null key would be incredibly bad.
      */
     needs(!unencryptedDataKeyZeroed, 'unencryptedDataKey has been zeroed.')
-    /* Precondition: The unencryptedDataKey must not have been modified. */
-    needs(timingSafeEqual(udkForVerification, unencryptedDataKey), 'unencryptedDataKey has been corrupted.')
+    /* Precondition: The unencryptedDataKey must not have been modified.
+     * If the unencryptedDataKey is a KeyObject,
+     * then the security around modification is handled in C.
+     * Do not duplicate the secret just to check...
+     */
+    needs(!(unencryptedDataKey instanceof Uint8Array) || timingSafeEqual(udkForVerification, unwrapDataKey(unencryptedDataKey)), 'unencryptedDataKey has been corrupted.')
     return unencryptedDataKey
   }
   Object.defineProperty(material, 'hasUnencryptedDataKey', {
@@ -334,6 +345,12 @@ export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>
       udkForVerification = new Uint8Array()
       unsetCount += 1
     }
+    /* The KeyObject manages its own ref counter.
+     * Once there are no more users, it will clean the memory.
+     */
+    if (!(unencryptedDataKey instanceof Uint8Array)) {
+      unencryptedDataKey = new Uint8Array()
+    }
     unencryptedDataKey.fill(0)
     udkForVerification.fill(0)
     unencryptedDataKeyZeroed = true
@@ -345,27 +362,35 @@ export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>
     needs(unsetCount === 0 || unsetCount === 2, 'Either unencryptedDataKey or udkForVerification was not set.')
     return material
   }
-  Object.defineProperty(material, 'unencryptedDataKeyLength', {
-    get: () => {
-      /* Precondition: The unencryptedDataKey must be set to have a length. */
-      needs(unencryptedDataKey, 'unencryptedDataKey has not been set')
-      /* Precondition: the unencryptedDataKey must not be Zeroed out.
-       * returning information about the data key,
-       * while not the worst thing may indicate misuse.
-       * Checking the algorithm specification is the proper way
-       * to do this
-       */
-      needs(!unencryptedDataKeyZeroed, 'unencryptedDataKey has been zeroed.')
-      return unencryptedDataKey.byteLength
-    },
-    enumerable: true
-  })
 
   readOnlyProperty(material, 'setUnencryptedDataKey', setUnencryptedDataKey)
   readOnlyProperty(material, 'getUnencryptedDataKey', getUnencryptedDataKey)
   readOnlyProperty(material, 'zeroUnencryptedDataKey', zeroUnencryptedDataKey)
 
   return material
+
+  function verifyUnencryptedDataKeyForSet (dataKey: Uint8Array, trace: KeyringTrace) {
+    /* Precondition: unencryptedDataKey must not be set.  Modifying the unencryptedDataKey is denied */
+    needs(!unencryptedDataKey, 'unencryptedDataKey has already been set')
+    /* Precondition: dataKey must be Binary Data */
+    needs(dataKey instanceof Uint8Array, 'dataKey must be a Uint8Array')
+    /* Precondition: dataKey should have an ArrayBuffer that *only* stores the key.
+     * This is a simple check to make sure that the key is not stored on
+     * a large potentially shared ArrayBuffer.
+     * If this was the case, it may be possible to find or manipulate.
+     */
+    needs(dataKey.byteOffset === 0, 'Unencrypted Master Key must be an isolated buffer.')
+    /* Precondition: The data key length must agree with algorithm specification.
+     * If this is not the case, it either means ciphertext was tampered
+     * with or the keyring implementation is not setting the length properly.
+     */
+    needs(dataKey.byteLength === material.suite.keyLengthBytes, 'Key length does not agree with the algorithm specification.')
+
+    /* Precondition: Trace must be set, and the flag must indicate that the data key was generated. */
+    needs(trace && trace.keyName && trace.keyNamespace, 'Malformed KeyringTrace')
+    /* Precondition: On set the required KeyringTraceFlag must be set. */
+    needs(trace.flags & setFlags, 'Required KeyringTraceFlag not set')
+  }
 }
 
 export function decorateEncryptionMaterial<T extends EncryptionMaterial<T>> (material: T) {
@@ -594,4 +619,26 @@ export function subtleFunctionForMaterial<T extends WebCryptoMaterial<T>> (mater
   if (material instanceof WebCryptoDecryptionMaterial) return 'decrypt'
 
   throw new Error('Unsupported material')
+}
+
+export function unwrapDataKey (dataKey: Uint8Array|AwsEsdkKeyObject): Uint8Array {
+  if (dataKey instanceof Uint8Array) return dataKey
+  if (supportsKeyObject && dataKey instanceof supportsKeyObject.KeyObject) return dataKey.export()
+
+  throw new Error('Unsupported dataKey type')
+}
+
+export function wrapWithKeyObjectIfSupported (dataKey: Uint8Array|AwsEsdkKeyObject): Uint8Array|AwsEsdkKeyObject {
+  if (supportsKeyObject) {
+    if (dataKey instanceof Uint8Array) {
+      const ko = supportsKeyObject.createSecretKey(dataKey)
+      /* Postcondition: Zero the secret.  It is now inside the KeyObject. */
+      dataKey.fill(0)
+      return ko
+    }
+    if (dataKey instanceof supportsKeyObject.KeyObject) return dataKey
+  } else if (dataKey instanceof Uint8Array) {
+    return dataKey
+  }
+  throw new Error('Unsupported dataKey type')
 }

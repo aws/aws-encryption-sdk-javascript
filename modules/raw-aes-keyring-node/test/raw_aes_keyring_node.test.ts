@@ -24,7 +24,8 @@ import {
   NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier,
   EncryptedDataKey, // eslint-disable-line no-unused-vars
-  NodeDecryptionMaterial
+  NodeDecryptionMaterial,
+  unwrapDataKey
 } from '@aws-crypto/material-management-node'
 
 chai.use(chaiAsPromised)
@@ -119,7 +120,7 @@ describe('RawAesKeyringNode encrypt/decrypt', () => {
     const material = new NodeEncryptionMaterial(suite, {})
     const test = await keyring.onEncrypt(material)
     expect(test.hasValidKey()).to.equal(true)
-    const udk = test.getUnencryptedDataKey()
+    const udk = unwrapDataKey(test.getUnencryptedDataKey())
     expect(udk).to.have.lengthOf(suite.keyLengthBytes)
     expect(test.encryptedDataKeys).to.have.lengthOf(1)
     const [edk] = test.encryptedDataKeys
