@@ -20,7 +20,7 @@ import chaiAsPromised from 'chai-as-promised'
 import 'mocha'
 import { MultiKeyringNode } from '../src/multi_keyring'
 import { KeyringNode, KeyringWebCrypto } from '../src/keyring'
-import { NodeEncryptionMaterial, NodeDecryptionMaterial } from '../src/cryptographic_material'
+import { NodeEncryptionMaterial, NodeDecryptionMaterial, unwrapDataKey } from '../src/cryptographic_material'
 import { NodeAlgorithmSuite } from '../src/node_algorithms'
 import { AlgorithmSuiteIdentifier } from '../src/algorithm_suites'
 import { EncryptedDataKey } from '../src/encrypted_data_key'
@@ -117,7 +117,7 @@ describe('MultiKeyring: onEncrypt', () => {
     const generator = keyRingFactory({
       async onEncrypt (material: NodeEncryptionMaterial) {
         return material
-          .setUnencryptedDataKey(unencryptedDataKey, keyringTrace0)
+          .setUnencryptedDataKey(new Uint8Array(unencryptedDataKey), keyringTrace0)
           .addEncryptedDataKey(edk0, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
       },
       onDecrypt: never
@@ -135,7 +135,7 @@ describe('MultiKeyring: onEncrypt', () => {
     expect(test.keyringTrace[0] === keyringTrace0).to.equal(true)
 
     // Make sure the unencrypted data key match
-    expect(test.getUnencryptedDataKey()).to.deep.equal(unencryptedDataKey)
+    expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(unencryptedDataKey)
   })
 
   it('calls generator then child keyrings', async () => {
@@ -146,7 +146,7 @@ describe('MultiKeyring: onEncrypt', () => {
     const generator = keyRingFactory({
       async onEncrypt (material: NodeEncryptionMaterial) {
         return material
-          .setUnencryptedDataKey(unencryptedDataKey, keyringTrace0)
+          .setUnencryptedDataKey(new Uint8Array(unencryptedDataKey), keyringTrace0)
           .addEncryptedDataKey(edk0, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
       },
       onDecrypt: never
@@ -172,7 +172,7 @@ describe('MultiKeyring: onEncrypt', () => {
     expect(test.keyringTrace).to.be.an('Array').with.lengthOf(2)
 
     // Make sure the unencrypted data key match
-    expect(test.getUnencryptedDataKey()).to.deep.equal(unencryptedDataKey)
+    expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(unencryptedDataKey)
   })
 
   it('Precondition: A Generator Keyring *must* ensure generated material.', async () => {
@@ -218,7 +218,7 @@ describe('MultiKeyring: onEncrypt', () => {
     })
 
     const mkeyring = new MultiKeyringNode({ generator })
-    const material = new NodeEncryptionMaterial(suite, {}).setUnencryptedDataKey(unencryptedDataKey, keyringTrace0)
+    const material = new NodeEncryptionMaterial(suite, {}).setUnencryptedDataKey(new Uint8Array(unencryptedDataKey), keyringTrace0)
 
     await mkeyring.onEncrypt(material)
   })
@@ -235,7 +235,7 @@ describe('MultiKeyring: onEncrypt', () => {
     })
 
     const mkeyring = new MultiKeyringNode({ children: [ child ] })
-    const material = new NodeEncryptionMaterial(suite, {}).setUnencryptedDataKey(unencryptedDataKey, keyringTrace0)
+    const material = new NodeEncryptionMaterial(suite, {}).setUnencryptedDataKey(new Uint8Array(unencryptedDataKey), keyringTrace0)
 
     await mkeyring.onEncrypt(material)
   })
@@ -250,7 +250,7 @@ describe('MultiKeyring: onDecrypt', () => {
 
     const generator = keyRingFactory({
       async onDecrypt (material: NodeDecryptionMaterial /*, encryptedDataKeys: EncryptedDataKey[] */) {
-        return material.setUnencryptedDataKey(unencryptedDataKey, keyringTrace0)
+        return material.setUnencryptedDataKey(new Uint8Array(unencryptedDataKey), keyringTrace0)
       },
       onEncrypt: never
     })
@@ -263,7 +263,7 @@ describe('MultiKeyring: onDecrypt', () => {
     expect(test.keyringTrace[0] === keyringTrace0).to.equal(true)
 
     // Make sure the unencrypted data key match
-    expect(test.getUnencryptedDataKey()).to.deep.equal(unencryptedDataKey)
+    expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(unencryptedDataKey)
   })
 
   it('calls children.onDecrypt', async () => {
@@ -274,7 +274,7 @@ describe('MultiKeyring: onDecrypt', () => {
 
     const child = keyRingFactory({
       async onDecrypt (material: NodeDecryptionMaterial /*, encryptedDataKeys: EncryptedDataKey[] */) {
-        return material.setUnencryptedDataKey(unencryptedDataKey, keyringTrace0)
+        return material.setUnencryptedDataKey(new Uint8Array(unencryptedDataKey), keyringTrace0)
       },
       onEncrypt: never
     })
@@ -287,7 +287,7 @@ describe('MultiKeyring: onDecrypt', () => {
     expect(test.keyringTrace[0] === keyringTrace0).to.equal(true)
 
     // Make sure the unencrypted data key match
-    expect(test.getUnencryptedDataKey()).to.deep.equal(unencryptedDataKey)
+    expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(unencryptedDataKey)
   })
 
   it('Check for early return (Postcondition): Do not attempt to decrypt once I have a valid key.', async () => {
@@ -298,7 +298,7 @@ describe('MultiKeyring: onDecrypt', () => {
 
     const child = keyRingFactory({
       async onDecrypt (material: NodeDecryptionMaterial /*, encryptedDataKeys: EncryptedDataKey[] */) {
-        return material.setUnencryptedDataKey(unencryptedDataKey, keyringTrace0)
+        return material.setUnencryptedDataKey(new Uint8Array(unencryptedDataKey), keyringTrace0)
       },
       onEncrypt: never
     })
@@ -320,7 +320,7 @@ describe('MultiKeyring: onDecrypt', () => {
     expect(test.keyringTrace[0] === keyringTrace0).to.equal(true)
 
     // Make sure the unencrypted data key match
-    expect(test.getUnencryptedDataKey()).to.deep.equal(unencryptedDataKey)
+    expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(unencryptedDataKey)
     expect(notCalled).to.equal(true)
   })
 
@@ -332,7 +332,7 @@ describe('MultiKeyring: onDecrypt', () => {
 
     const child = keyRingFactory({
       async onDecrypt (material: NodeDecryptionMaterial /*, encryptedDataKeys: EncryptedDataKey[] */) {
-        return material.setUnencryptedDataKey(unencryptedDataKey, keyringTrace0)
+        return material.setUnencryptedDataKey(new Uint8Array(unencryptedDataKey), keyringTrace0)
       },
       onEncrypt: never
     })
@@ -355,7 +355,7 @@ describe('MultiKeyring: onDecrypt', () => {
     expect(test.keyringTrace[0] === keyringTrace0).to.equal(true)
 
     // Make sure the unencrypted data key match
-    expect(test.getUnencryptedDataKey()).to.deep.equal(unencryptedDataKey)
+    expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(unencryptedDataKey)
     expect(called).to.equal(true)
   })
 })

@@ -24,7 +24,8 @@ import {
   DecryptionRequest, // eslint-disable-line no-unused-vars
   needs,
   readOnlyProperty,
-  Keyring // eslint-disable-line no-unused-vars
+  Keyring, // eslint-disable-line no-unused-vars
+  cloneMaterial
 } from '@aws-crypto/material-management'
 import { Maximum } from '@aws-crypto/serialize'
 import {
@@ -34,7 +35,6 @@ import {
 import {
   CryptographicMaterialsCacheKeyHelpersInterface // eslint-disable-line no-unused-vars
 } from './build_cryptographic_materials_cache_key_helpers'
-import { cloneMaterial } from './clone_cryptographic_material'
 
 export function decorateProperties<S extends SupportedAlgorithmSuites> (
   obj: CachingMaterialsManager<S>,
