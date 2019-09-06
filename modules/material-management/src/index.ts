@@ -31,6 +31,7 @@ export { NodeEncryptionMaterial, NodeDecryptionMaterial } from './cryptographic_
 export { isValidCryptoKey, isCryptoKey, keyUsageForMaterial, subtleFunctionForMaterial } from './cryptographic_material'
 export { WebCryptoEncryptionMaterial, WebCryptoDecryptionMaterial } from './cryptographic_material'
 export { isEncryptionMaterial, isDecryptionMaterial } from './cryptographic_material'
+export { unwrapDataKey, wrapWithKeyObjectIfSupported } from './cryptographic_material'
 export { CryptographicMaterial, decorateCryptographicMaterial, decorateWebCryptoMaterial, WebCryptoMaterial } from './cryptographic_material'
 export { SignatureKey, VerificationKey } from './signature_key'
 export { EncryptedDataKey, IEncryptedDataKey } from './encrypted_data_key'
@@ -38,5 +39,6 @@ export { EncryptedDataKey, IEncryptedDataKey } from './encrypted_data_key'
 export { immutableBaseClass, immutableClass, frozenClass, readOnlyProperty } from './immutable_class'
 
 export { needs } from './needs'
+export { cloneMaterial } from './clone_cryptographic_material'
 
 export * from './types'
