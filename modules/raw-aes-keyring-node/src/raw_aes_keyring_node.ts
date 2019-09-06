@@ -22,6 +22,7 @@ import {
   KeyringTraceFlag,
   immutableClass,
   readOnlyProperty,
+  unwrapDataKey,
   NodeAlgorithmSuite // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 import { randomBytes, createCipheriv, createDecipheriv } from 'crypto'
@@ -141,7 +142,7 @@ function aesGcmWrapKey (
   const iv = randomBytes(ivLength)
 
   const wrappingDataKey = wrappingMaterial.getUnencryptedDataKey()
-  const dataKey = material.getUnencryptedDataKey()
+  const dataKey = unwrapDataKey(material.getUnencryptedDataKey())
 
   const cipher = createCipheriv(encryption, wrappingDataKey, iv)
     .setAAD(aad)
@@ -182,7 +183,8 @@ function aesGcmUnwrapKey (
   const { authTag, ciphertext, iv } = rawAesEncryptedParts(material.suite, keyName, edk)
   const { encryption } = wrappingMaterial.suite
 
-  const decipher = createDecipheriv(encryption, wrappingMaterial.getUnencryptedDataKey(), iv)
+  // createDecipheriv is incorrectly typed in @types/node. It should take key: CipherKey, not key: BinaryLike
+  const decipher = createDecipheriv(encryption, wrappingMaterial.getUnencryptedDataKey() as any, iv)
     .setAAD(aad)
     .setAuthTag(authTag)
   // Buffer.concat will use the shared buffer space, and the resultant buffer will have a byteOffset...

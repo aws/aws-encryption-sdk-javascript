@@ -29,7 +29,7 @@ import {
   immutableClass, KeyringNode
 } from '@aws-crypto/material-management-node'
 import { KMS } from 'aws-sdk' // eslint-disable-line no-unused-vars
-const getKmsClient = getClient(KMS)
+const getKmsClient = getClient(KMS, { customUserAgent: 'AwsEncryptionSdkJavascriptNodejs' })
 const cacheKmsClients = cacheClients(getKmsClient)
 
 export type KmsKeyringNodeInput = Partial<KmsKeyringInput<KMS>>

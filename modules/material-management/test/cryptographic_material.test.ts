@@ -38,8 +38,13 @@ import {
   subtleFunctionForMaterial,
   keyUsageForMaterial,
   isValidCryptoKey,
-  isCryptoKey
+  isCryptoKey,
+  unwrapDataKey,
+  wrapWithKeyObjectIfSupported,
+  supportsKeyObject
 } from '../src/cryptographic_material'
+
+import { createSecretKey } from 'crypto'
 
 describe('decorateCryptographicMaterial', () => {
   it('will decorate', () => {
@@ -54,33 +59,45 @@ describe('decorateCryptographicMaterial', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    test.setUnencryptedDataKey(dataKey, { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
+    test.setUnencryptedDataKey(new Uint8Array(dataKey), { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
     expect(test.hasUnencryptedDataKey).to.equal(true)
-    expect(test.getUnencryptedDataKey()).to.deep.equal(dataKey)
+    const udk = unwrapDataKey(test.getUnencryptedDataKey())
+    expect(udk).to.deep.equal(dataKey)
   })
 
   it('zeroing out the unencrypted data key', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
+    /* This is complicated.
+     * Now that I support KeyObjects it is good to pass a copy,
+     * i.e. new Uint8Array(dataKey).
+     * But in this case, if this is a version of Node.js that does not support KeyObjects
+     * passing the dataKey lets me verify that the value memory is really zeroed.
+     */
     test.setUnencryptedDataKey(dataKey, { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
     test.zeroUnencryptedDataKey()
     expect(test.hasUnencryptedDataKey).to.equal(false)
-    expect(dataKey).to.deep.equal(new Uint8Array(suite.keyLengthBytes).fill(0))
+    if (!supportsKeyObject) {
+      expect(dataKey).to.deep.equal(new Uint8Array(suite.keyLengthBytes).fill(0))
+    } else {
+      // If the environment supports KeyObjects then the udk was wrapped.
+      // There is no way to confirm that
+    }
   })
 
   it('Precondition: The data key length must agree with algorithm specification.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
     const dataKey = new Uint8Array(suite.keyLengthBytes - 1).fill(1)
-    expect(() => test.setUnencryptedDataKey(dataKey)).to.throw()
+    expect(() => test.setUnencryptedDataKey(new Uint8Array(dataKey))).to.throw()
   })
 
   it('Precondition: unencryptedDataKey must not be Zeroed out.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    test.setUnencryptedDataKey(dataKey, { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
+    test.setUnencryptedDataKey(new Uint8Array(dataKey), { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
     test.zeroUnencryptedDataKey()
     expect(() => test.getUnencryptedDataKey()).to.throw()
   })
@@ -98,7 +115,7 @@ describe('decorateCryptographicMaterial', () => {
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
     // It is very hard to test this perfectly.  However, this tests the spirit.
-    expect(() => test.setUnencryptedDataKey(dataKey, trace)).to.throw()
+    expect(() => test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)).to.throw()
   })
 
   it('Precondition: dataKey must be Binary Data', () => {
@@ -112,8 +129,8 @@ describe('decorateCryptographicMaterial', () => {
     const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
-    test.setUnencryptedDataKey(dataKey, trace)
-    expect(() => test.setUnencryptedDataKey(dataKey, trace)).to.throw('unencryptedDataKey has already been set')
+    test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+    expect(() => test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)).to.throw('unencryptedDataKey has already been set')
   })
 
   it('Precondition: dataKey should have an ArrayBuffer that *only* stores the key.', () => {
@@ -128,7 +145,7 @@ describe('decorateCryptographicMaterial', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    expect(() => test.setUnencryptedDataKey(dataKey, {} as any)).to.throw('Malformed KeyringTrace')
+    expect(() => test.setUnencryptedDataKey(new Uint8Array(dataKey), {} as any)).to.throw('Malformed KeyringTrace')
   })
 
   it('Precondition: On set the required KeyringTraceFlag must be set.', () => {
@@ -136,7 +153,7 @@ describe('decorateCryptographicMaterial', () => {
     const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
     const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX }
-    expect(() => test.setUnencryptedDataKey(dataKey, trace)).to.throw('Required KeyringTraceFlag not set')
+    expect(() => test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)).to.throw('Required KeyringTraceFlag not set')
   })
 
   it('Precondition: The unencryptedDataKey must not have been modified.', () => {
@@ -146,7 +163,16 @@ describe('decorateCryptographicMaterial', () => {
     material.setUnencryptedDataKey(dataKey, { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
     const test = material.getUnencryptedDataKey()
     test[0] = 12
-    expect(() => material.getUnencryptedDataKey()).to.throw()
+    expect(() => {
+      const udk = unwrapDataKey(material.getUnencryptedDataKey())
+      if (supportsKeyObject) {
+        /* This should NOT be true.
+        * If the udk is a KeyObject then the change above was on independent memory.
+        * This check follows the code, and is *intended* to fail.
+        */
+        expect(udk[0]).to.equal(12)
+      }
+    }).to.throw()
   })
 })
 
@@ -533,4 +559,80 @@ describe('WebCryptoDecryptionMaterial', () => {
     expect(() => new WebCryptoDecryptionMaterial(suite, undefined as any)).to.throw()
     expect(() => new WebCryptoDecryptionMaterial(suite, true as any)).to.throw()
   })
+})
+
+describe('KeyObject support', () => {
+  it('supportsKeyObject tracks values of crypto module', () => {
+    // supportsKeyObject should track the createSecretKey value...
+    expect(!!supportsKeyObject === !!createSecretKey).to.equal(true)
+  })
+
+  if (supportsKeyObject) {
+    const { KeyObject, createSecretKey } = supportsKeyObject
+    describe('wrapWithKeyObjectIfSupported', () => {
+      it('Uint8Array are wrapped in a KeyObject if supported', () => {
+        const test = wrapWithKeyObjectIfSupported(new Uint8Array(16))
+        expect(test).to.be.instanceOf(KeyObject)
+      })
+
+      it('KeyObject are return unchanged', () => {
+        const dataKey = createSecretKey(new Uint8Array(16))
+        expect(dataKey === wrapWithKeyObjectIfSupported(dataKey)).to.equal(true)
+      })
+
+      it('throws for unsupported types', () => {
+        expect(() => wrapWithKeyObjectIfSupported({} as any)).to.throw('Unsupported dataKey type')
+      })
+
+      it('Postcondition: Zero the secret.  It is now inside the KeyObject.', () => {
+        const dataKey = new Uint8Array(16).fill(1)
+        wrapWithKeyObjectIfSupported(dataKey)
+        expect(dataKey).to.deep.equal(new Uint8Array(16).fill(0))
+      })
+    })
+
+    describe('unwrapDataKey', () => {
+      it('returns Uint8Array unmodified', () => {
+        const dataKey = new Uint8Array(16).fill(1)
+        const test = unwrapDataKey(dataKey)
+        expect(test === dataKey).to.equal(true)
+      })
+
+      it('exports the secret key', () => {
+        const rawKey = new Uint8Array(16).fill(1)
+        const dataKey = createSecretKey(rawKey)
+        const test = unwrapDataKey(dataKey)
+        expect(test).to.deep.equal(rawKey)
+      })
+
+      it('throws for unsupported types', () => {
+        expect(() => unwrapDataKey({} as any)).to.throw('Unsupported dataKey type')
+      })
+    })
+  } else {
+    describe('wrapWithKeyObjectIfSupported', () => {
+      it('Uint8Array are returned unchanged', () => {
+        const dataKey = new Uint8Array(16)
+        const test = wrapWithKeyObjectIfSupported(dataKey)
+        expect(test).to.be.instanceOf(Uint8Array)
+        expect(test === dataKey).to.equal(true)
+      })
+
+      it('throws for unsupported types', () => {
+        expect(() => wrapWithKeyObjectIfSupported({} as any)).to.throw('Unsupported dataKey type')
+      })
+    })
+
+    describe('unwrapDataKey', () => {
+      it('returns Uint8Array unmodified', () => {
+        const dataKey = new Uint8Array(16).fill(1)
+        const test = unwrapDataKey(dataKey)
+        expect(test === dataKey).to.equal(true)
+      })
+
+      it('throws for unsupported types', () => {
+        expect(() => unwrapDataKey({} as any)).to.throw('Unsupported dataKey type')
+      })
+    })
+  }
 })
