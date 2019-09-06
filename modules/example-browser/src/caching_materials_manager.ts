@@ -102,12 +102,14 @@ export async function testCachingMaterialsManagerExample () {
   const maxAge = 1000 * 60
 
   /* The maximum amount of bytes that will be encrypted under a single data key.
-   * This value is optional, but you should be configured to a lower value.
+   * This value is optional,
+   * but you should configure the lowest value possible.
    */
   const maxBytesEncrypted = 100
 
   /* The maximum number of messages that will be encrypted under a single data key.
-   * This value is optional, but you should be configured to a lower value.
+   * This value is optional,
+   * but you should configure the lowest value possible.
    */
   const maxMessagesEncrypted = 100
 
