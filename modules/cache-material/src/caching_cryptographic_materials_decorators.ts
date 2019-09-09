@@ -24,7 +24,8 @@ import {
   DecryptionRequest, // eslint-disable-line no-unused-vars
   needs,
   readOnlyProperty,
-  Keyring // eslint-disable-line no-unused-vars
+  Keyring, // eslint-disable-line no-unused-vars
+  cloneMaterial
 } from '@aws-crypto/material-management'
 import { Maximum } from '@aws-crypto/serialize'
 import {
@@ -34,7 +35,6 @@ import {
 import {
   CryptographicMaterialsCacheKeyHelpersInterface // eslint-disable-line no-unused-vars
 } from './build_cryptographic_materials_cache_key_helpers'
-import { cloneMaterial } from './clone_cryptographic_material'
 
 export function decorateProperties<S extends SupportedAlgorithmSuites> (
   obj: CachingMaterialsManager<S>,
@@ -49,17 +49,17 @@ export function decorateProperties<S extends SupportedAlgorithmSuites> (
   /* Precondition: You *can not* cache something forever. */
   needs(maxAge > 0, 'You must configure a maxAge')
   /* Precondition: maxBytesEncrypted must be inside bounds.  i.e. positive and not more than the maximum. */
-  needs(!maxBytesEncrypted || (maxBytesEncrypted > 0 && Maximum.BYTES_PER_KEY >= maxBytesEncrypted), 'maxBytesEncrypted is outside of bounds.')
+  needs(!maxBytesEncrypted || (maxBytesEncrypted > 0 && Maximum.BYTES_PER_CACHED_KEY_LIMIT >= maxBytesEncrypted), 'maxBytesEncrypted is outside of bounds.')
   /* Precondition: maxMessagesEncrypted must be inside bounds.  i.e. positive and not more than the maximum. */
-  needs(!maxMessagesEncrypted || (maxMessagesEncrypted > 0 && Maximum.MESSAGES_PER_KEY >= maxMessagesEncrypted), 'maxMessagesEncrypted is outside of bounds.')
+  needs(!maxMessagesEncrypted || (maxMessagesEncrypted > 0 && Maximum.MESSAGES_PER_CACHED_KEY_LIMIT >= maxMessagesEncrypted), 'maxMessagesEncrypted is outside of bounds.')
   /* Precondition: partition must be a string. */
   needs(partition && typeof partition === 'string', 'partition must be a string.')
 
   readOnlyProperty(obj, '_cache', cache)
   readOnlyProperty(obj, '_backingMaterialsManager', backingMaterialsManager)
   readOnlyProperty(obj, '_maxAge', maxAge)
-  readOnlyProperty(obj, '_maxBytesEncrypted', maxBytesEncrypted || Maximum.BYTES_PER_KEY)
-  readOnlyProperty(obj, '_maxMessagesEncrypted', maxMessagesEncrypted || Maximum.MESSAGES_PER_KEY)
+  readOnlyProperty(obj, '_maxBytesEncrypted', maxBytesEncrypted || Maximum.BYTES_PER_CACHED_KEY_LIMIT)
+  readOnlyProperty(obj, '_maxMessagesEncrypted', maxMessagesEncrypted || Maximum.MESSAGES_PER_CACHED_KEY_LIMIT)
   readOnlyProperty(obj, '_partition', partition)
 }
 
@@ -110,9 +110,15 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
     }
     if (!this._cacheEntryHasExceededLimits(testEntry)) {
       this._cache.putEncryptionMaterial(cacheKey, material, plaintextLength, this._maxAge)
+      return cloneResponse(material)
+    } else {
+      /* Postcondition: If the material has exceeded limits it MUST NOT be cloned.
+       * If it is cloned, and the clone is returned,
+       * then there exist a copy of the unencrypted data key.
+       * It is true that this data would be caught by GC, it is better to just not rely on that.
+       */
+      return material
     }
-
-    return cloneResponse(material)
   }
 }
 

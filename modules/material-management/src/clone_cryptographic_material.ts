@@ -19,33 +19,45 @@ import {
   WebCryptoEncryptionMaterial,
   WebCryptoDecryptionMaterial,
   isEncryptionMaterial,
-  isDecryptionMaterial,
+  isDecryptionMaterial
+} from './cryptographic_material'
+import {
   NodeAlgorithmSuite
-
-} from '@aws-crypto/material-management'
+} from './node_algorithms'
+import {
+  AwsEsdkKeyObject // eslint-disable-line no-unused-vars
+} from './types'
+import { KeyringTraceFlag } from './keyring_trace'
 
 type Material = NodeEncryptionMaterial|NodeDecryptionMaterial|WebCryptoEncryptionMaterial|WebCryptoDecryptionMaterial
 
 export function cloneMaterial<M extends Material> (source: M): M {
   const { suite, encryptionContext } = source
 
-  const clone = suite instanceof NodeAlgorithmSuite
+  const clone = <M>(suite instanceof NodeAlgorithmSuite
     ? source instanceof NodeEncryptionMaterial
       ? new NodeEncryptionMaterial(suite, encryptionContext)
       : new NodeDecryptionMaterial(suite, encryptionContext)
     : source instanceof WebCryptoEncryptionMaterial
       ? new WebCryptoEncryptionMaterial(suite, encryptionContext)
-      : new WebCryptoDecryptionMaterial(suite, encryptionContext)
+      : new WebCryptoDecryptionMaterial(suite, encryptionContext))
+
+  /* The WRAPPING_KEY_GENERATED_DATA_KEY _should_ be the first trace,
+   * but it is better to look for it explicitly.
+   */
+  const trace = source.keyringTrace.find(({ flags }) => flags & KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
 
   if (source.hasUnencryptedDataKey) {
-    const udk = new Uint8Array(source.getUnencryptedDataKey())
-    clone.setUnencryptedDataKey(udk, source.keyringTrace[0])
+    const udk = cloneUnencryptedDataKey(source.getUnencryptedDataKey())
+    if (!trace) throw new Error('Malformed source material.')
+    clone.setUnencryptedDataKey(udk, trace)
   }
 
   if ((<WebCryptoDecryptionMaterial>source).hasCryptoKey) {
     const cryptoKey = (<WebCryptoDecryptionMaterial>source).getCryptoKey()
+    if (!trace) throw new Error('Malformed source material.')
     ;(<WebCryptoDecryptionMaterial>clone)
-      .setCryptoKey(cryptoKey, source.keyringTrace[0])
+      .setCryptoKey(cryptoKey, trace)
   }
 
   if (isEncryptionMaterial(source) && isEncryptionMaterial(clone)) {
@@ -67,5 +79,12 @@ export function cloneMaterial<M extends Material> (source: M): M {
     throw new Error('Material mismatch')
   }
 
-  return <M>clone
+  return clone
+}
+
+function cloneUnencryptedDataKey (dataKey: AwsEsdkKeyObject| Uint8Array) {
+  if (dataKey instanceof Uint8Array) {
+    return new Uint8Array(dataKey)
+  }
+  return dataKey
 }

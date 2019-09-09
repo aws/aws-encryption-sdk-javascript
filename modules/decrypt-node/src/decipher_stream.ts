@@ -160,6 +160,10 @@ export function getDecipherStream () {
       decipherState = {} as any
 
       decipher.setAuthTag(authTag)
+      /* In Node.js versions 10.9 and older will fail to decrypt if decipher.update is not called.
+       * https://github.com/nodejs/node/pull/22538 fixes this.
+       */
+      if (!content.length) decipher.update(Buffer.alloc(0))
 
       const clear: Buffer[] = []
       for (const cipherChunk of content) {

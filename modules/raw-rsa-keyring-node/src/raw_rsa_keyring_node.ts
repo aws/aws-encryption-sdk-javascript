@@ -23,6 +23,8 @@ import {
   KeyringTraceFlag,
   immutableClass,
   readOnlyProperty,
+  unwrapDataKey,
+  AwsEsdkKeyObject, // eslint-disable-line no-unused-vars
   NodeAlgorithmSuite // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-node'
 
@@ -51,8 +53,8 @@ import {
  * or more complicated options...  Thoughts?
  */
 interface RsaKey {
-  publicKey?: string | Buffer
-  privateKey?: string | Buffer
+  publicKey?: string | Buffer | AwsEsdkKeyObject
+  privateKey?: string | Buffer | AwsEsdkKeyObject
 }
 
 export type RawRsaKeyringNodeInput = {
@@ -86,7 +88,7 @@ export class RawRsaKeyringNode extends KeyringNode {
     const _wrapKey = async (material: NodeEncryptionMaterial) => {
       /* Precondition: Public key must be defined to support encrypt. */
       if (!publicKey) throw new Error('No public key defined in constructor.  Encrypt disabled.')
-      const { buffer, byteOffset, byteLength } = material.getUnencryptedDataKey()
+      const { buffer, byteOffset, byteLength } = unwrapDataKey(material.getUnencryptedDataKey())
       const encryptedDataKey = publicEncrypt(
         { key: publicKey, padding },
         Buffer.from(buffer, byteOffset, byteLength))
