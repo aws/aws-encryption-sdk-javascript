@@ -54,7 +54,7 @@ export interface EncryptInput {
 
 export interface EncryptResult {
   messageHeader: MessageHeader
-  ciphertext: Uint8Array
+  result: Uint8Array
 }
 
 export async function encrypt (
@@ -145,7 +145,7 @@ export async function encrypt (
     bodyContent.push(frameHeader, cipherBufferAndAuthTag)
   }
 
-  const ciphertext = concatBuffers(
+  const result = concatBuffers(
     header,
     headerAuthIv,
     headerAuthTag,
@@ -155,11 +155,11 @@ export async function encrypt (
   dispose()
 
   if (typeof subtleSign === 'function') {
-    const signatureArrayBuffer = await subtleSign(ciphertext)
+    const signatureArrayBuffer = await subtleSign(result)
     const derSignature = raw2der(new Uint8Array(signatureArrayBuffer), material.suite)
     const signatureInfo = serializeSignatureInfo(derSignature)
-    return { ciphertext: concatBuffers(ciphertext, signatureInfo), messageHeader }
+    return { result: concatBuffers(result, signatureInfo), messageHeader }
   } else {
-    return { ciphertext, messageHeader }
+    return { result: result, messageHeader }
   }
 }
