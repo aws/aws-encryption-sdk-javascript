@@ -43,6 +43,7 @@ import { needs } from '@aws-crypto/material-management'
  */
 export function readElements (
   elementCount: number,
+  fieldsPerElement: number,
   buffer: Uint8Array,
   readPos: number = 0
 ) {
@@ -59,22 +60,27 @@ export function readElements (
   )
   const elements = []
 
-  /* Precondition: readElements readPos must be within the byte length of the buffer given. */
+  /* Precondition: readPos must be non-negative and within the byte length of the buffer given. */
   needs(readPos >= 0 && dataView.byteLength >= readPos, 'readPos out of bounds.')
 
-  /* Precondition: elementCount must not be negative. */
-  needs(elementCount >= 0, 'elementCount must be positive.')
+  /* Precondition: elementCount and fieldsPerElement must be non-negative. */
+  needs(elementCount >= 0 && fieldsPerElement >= 0, 'elementCount and fieldsPerElement must be positive.')
 
   while (elementCount--) {
-    /* Check for early return (Postcondition): Enough data must exist to read the Uint16 length value. */
-    if (readPos + 2 > dataView.byteLength) return false
-    const length = dataView.getUint16(readPos, false) // big endian
-    readPos += 2
-    /* Check for early return (Postcondition): Enough data must exist length of the value. */
-    if (readPos + length > dataView.byteLength) return false
-    const elementBinary = buffer.slice(readPos, readPos + length)
-    elements.push(elementBinary)
-    readPos += length
+    let element = []
+    let fieldCount = fieldsPerElement
+    while (fieldCount--) {
+      /* Check for early return (Postcondition): Enough data must exist to read the Uint16 length value. */
+      if (readPos + 2 > dataView.byteLength) return false
+      const length = dataView.getUint16(readPos, false) // big endian
+      readPos += 2
+      /* Check for early return (Postcondition): Enough data must exist length of the value. */
+      if (readPos + length > dataView.byteLength) return false
+      const fieldBinary = buffer.slice(readPos, readPos + length)
+      element.push(fieldBinary)
+      readPos += length
+    }
+    elements.push(element)
   }
   return { elements, readPos }
 }
