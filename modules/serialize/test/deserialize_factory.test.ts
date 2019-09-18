@@ -417,6 +417,12 @@ describe('deserializeFactory:deserializeMessageHeader', () => {
       .and.to.eql(4096)
   })
 
+  it('Precondition: version and type must be the required values.', () => {
+    const { deserializeMessageHeader } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
+    expect(() => deserializeMessageHeader(fixtures.versionNotValidMessageHeader())).to.throw('Malformed Header')
+    expect(() => deserializeMessageHeader(fixtures.typeNotValidMessageHeader())).to.throw('Malformed Header')
+  })
+
   it('Precondition: suiteId must match supported algorithm suite', () => {
     const { deserializeMessageHeader } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
     const suiteIdNotValidMessageHeader = fixtures.suiteIdNotValidMessageHeader()

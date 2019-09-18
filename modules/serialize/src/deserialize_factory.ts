@@ -76,6 +76,8 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
 
     const version = dataView.getUint8(0)
     const type = dataView.getUint8(1)
+    /* Precondition: version and type must be the required values. */
+    needs(version === 1 && type === 128, 'Malformed Header')
 
     const suiteId = <AlgorithmSuiteIdentifier>dataView.getUint16(2, false) // big endian
     /* Precondition: suiteId must match supported algorithm suite */
