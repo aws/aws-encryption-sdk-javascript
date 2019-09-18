@@ -78,6 +78,17 @@ describe('deserializeFactory:decodeEncryptionContext', () => {
     expect(test).to.have.property('information')
       .and.to.eql('\u00bd + \u00bc = \u00be')
   })
+
+  it('Keys may be properties of Object.prototype, decodeEncryptionContext has to succeed', () => {
+    const { decodeEncryptionContext } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
+
+    /* hasOwnProperty test vector */
+    const encryptionContext = fixtures.hasOwnPropertyEncryptionContext().slice(2)
+
+    const test = decodeEncryptionContext(encryptionContext)
+    expect(test).to.have.property('hasOwnProperty')
+      .and.to.eql('arbitraryValue')
+  })
 })
 
 describe('deserializeFactory:deserializeEncryptedDataKeys', () => {

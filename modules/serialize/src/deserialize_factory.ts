@@ -197,7 +197,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
    * @param encodedEncryptionContext Uint8Array
    */
   function decodeEncryptionContext (encodedEncryptionContext: Uint8Array) {
-    const encryptionContext: EncryptionContext = {}
+    const encryptionContext: EncryptionContext = Object.create(null)
     /* Check for early return (Postcondition): The case of 0 length is defined as an empty object. */
     if (!encodedEncryptionContext.byteLength) {
       return encryptionContext
