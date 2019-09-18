@@ -82,20 +82,8 @@ describe('deserializeFactory:decodeEncryptionContext', () => {
   it('Keys may be properties of Object.prototype, decodeEncryptionContext has to succeed', () => {
     const { decodeEncryptionContext } = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
 
-    /* Single key-value pair */
-    const kvPairCount = Buffer.alloc(2)
-    kvPairCount.writeUInt16BE(1, 0)
-
-    /* Actual key-value pair */
-    const kvPair = [ 'hasOwnProperty', 'arbitraryValue' ]
-
-    /* Constructing the encryption context */
-    const kvPairBinary = kvPair.map(str => new Uint8Array([...Buffer.from(str)]))
-    const encryptionContext = concatBuffers(kvPairCount, ...kvPairBinary.map(bufStr => {
-      const len = Buffer.alloc(2)
-      len.writeUInt16BE(bufStr.byteLength, 0)
-      return concatBuffers(len, bufStr)
-    }))
+    /* hasOwnProperty test vector */
+    const encryptionContext = fixtures.hasOwnPropertyEncryptionContext().slice(2)
 
     const test = decodeEncryptionContext(encryptionContext)
     expect(test).to.have.property('hasOwnProperty')
