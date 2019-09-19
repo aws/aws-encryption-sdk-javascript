@@ -27,7 +27,7 @@ import {
 import {
   AwsEsdkKeyObject // eslint-disable-line no-unused-vars
 } from './types'
-import { KeyringTraceFlag } from './keyring_trace'
+import { needs } from './needs'
 
 type Material = NodeEncryptionMaterial|NodeDecryptionMaterial|WebCryptoEncryptionMaterial|WebCryptoDecryptionMaterial
 
@@ -42,36 +42,49 @@ export function cloneMaterial<M extends Material> (source: M): M {
       ? new WebCryptoEncryptionMaterial(suite, encryptionContext)
       : new WebCryptoDecryptionMaterial(suite, encryptionContext))
 
-  /* The WRAPPING_KEY_GENERATED_DATA_KEY _should_ be the first trace,
-   * but it is better to look for it explicitly.
+  /* The setTrace _must_ be the first trace,
+   * If the material is an EncryptionMaterial
+   * then the data key *must* have been generated.
+   * If the material is DecryptionMaterial
+   * then the data key *must* have been decrypted.
+   * i.e. the required flags are:
+   * WRAPPING_KEY_GENERATED_DATA_KEY, WRAPPING_KEY_DECRYPTED_DATA_KEY
+   * These are controlled by the material itself.
+   * Furthermore, subsequent trace entries,
+   * *must* be in the same order as the added encrypted data keys.
+   * See cryptographic_materials.ts `decorateCryptographicMaterial`, `decorateWebCryptoMaterial`.
    */
-  const trace = source.keyringTrace.find(({ flags }) => flags & KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
+  const [setTrace, ...traces] = source.keyringTrace.slice()
 
   if (source.hasUnencryptedDataKey) {
     const udk = cloneUnencryptedDataKey(source.getUnencryptedDataKey())
-    if (!trace) throw new Error('Malformed source material.')
-    clone.setUnencryptedDataKey(udk, trace)
+    clone.setUnencryptedDataKey(udk, setTrace)
   }
 
   if ((<WebCryptoDecryptionMaterial>source).hasCryptoKey) {
     const cryptoKey = (<WebCryptoDecryptionMaterial>source).getCryptoKey()
-    if (!trace) throw new Error('Malformed source material.')
     ;(<WebCryptoDecryptionMaterial>clone)
-      .setCryptoKey(cryptoKey, trace)
+      .setCryptoKey(cryptoKey, setTrace)
   }
 
   if (isEncryptionMaterial(source) && isEncryptionMaterial(clone)) {
-    source.encryptedDataKeys.forEach(edk => {
+    const encryptedDataKeys = source.encryptedDataKeys
+    /* Precondition: For each encrypted data key, there must be a trace. */
+    needs(encryptedDataKeys.length === traces.length, 'KeyringTrace length does not match encrypted data keys.')
+    encryptedDataKeys.forEach((edk, i) => {
       const { providerInfo, providerId } = edk
-      const trace = source.keyringTrace.find(({ keyNamespace, keyName }) => keyName === providerInfo && keyNamespace === providerId)
-      if (!trace) throw new Error('Malformed Encrypted Data Key')
-      clone.addEncryptedDataKey(edk, trace.flags)
+      const { keyNamespace, keyName, flags } = traces[i]
+      /* Precondition: The traces must be in the same order as the encrypted data keys. */
+      needs(keyName === providerInfo && keyNamespace === providerId, 'Keyring trace does not match encrypted data key.')
+      clone.addEncryptedDataKey(edk, flags)
     })
 
     if (source.suite.signatureCurve && source.signatureKey) {
       clone.setSignatureKey(source.signatureKey)
     }
   } else if (isDecryptionMaterial(source) && isDecryptionMaterial(clone)) {
+    /* Precondition: On Decrypt there must not be any additional traces other than the setTrace. */
+    needs(!traces.length, 'Only 1 trace is valid on DecryptionMaterials.')
     if (source.suite.signatureCurve && source.verificationKey) {
       clone.setVerificationKey(source.verificationKey)
     }
