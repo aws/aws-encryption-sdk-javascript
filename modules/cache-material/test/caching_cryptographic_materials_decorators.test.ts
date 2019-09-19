@@ -198,22 +198,27 @@ describe('Cryptographic Material Functions', () => {
 
   const nodeSuite = new NodeAlgorithmSuite(suiteId)
   const udk128 = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
-  const trace = {
+  const encryptTrace = {
     keyNamespace: 'keyNamespace',
     keyName: 'keyName',
-    flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
+    flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
+  }
+  const decryptTrace = {
+    keyNamespace: 'keyNamespace',
+    keyName: 'keyName',
+    flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
   }
 
   const edk1 = new EncryptedDataKey({ providerId: 'keyNamespace', providerInfo: 'keyName', encryptedDataKey: new Uint8Array([1]) })
   const edk2 = new EncryptedDataKey({ providerId: 'p2', providerInfo: 'pi2', encryptedDataKey: new Uint8Array([2]) })
 
   const encryptionMaterial = new NodeEncryptionMaterial(nodeSuite, {})
-    .setUnencryptedDataKey(udk128, trace)
+    .setUnencryptedDataKey(udk128, encryptTrace)
     .addEncryptedDataKey(edk1, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
     .addEncryptedDataKey(edk2, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
 
   const decryptionMaterial = new NodeDecryptionMaterial(nodeSuite, {})
-    .setUnencryptedDataKey(udk128, trace)
+    .setUnencryptedDataKey(udk128, decryptTrace)
 
   const context = {}
 
@@ -343,17 +348,17 @@ describe('Cryptographic Material Functions', () => {
 
       const nodeSuite = new NodeAlgorithmSuite(suiteId)
       const udk128 = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
-      const trace = {
+      const encryptTrace = {
         keyNamespace: 'keyNamespace',
         keyName: 'keyName',
-        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
+        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
       }
 
       const edk1 = new EncryptedDataKey({ providerId: 'keyNamespace', providerInfo: 'keyName', encryptedDataKey: new Uint8Array([1]) })
       const edk2 = new EncryptedDataKey({ providerId: 'p2', providerInfo: 'pi2', encryptedDataKey: new Uint8Array([2]) })
 
       const encryptionMaterial = new NodeEncryptionMaterial(nodeSuite, {})
-        .setUnencryptedDataKey(udk128, trace)
+        .setUnencryptedDataKey(udk128, encryptTrace)
         .addEncryptedDataKey(edk1, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
         .addEncryptedDataKey(edk2, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
 
@@ -401,17 +406,17 @@ describe('Cryptographic Material Functions', () => {
 
       const nodeSuite = new NodeAlgorithmSuite(suiteId)
       const udk128 = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
-      const trace = {
+      const encryptTrace = {
         keyNamespace: 'keyNamespace',
         keyName: 'keyName',
-        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
+        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
       }
 
       const edk1 = new EncryptedDataKey({ providerId: 'keyNamespace', providerInfo: 'keyName', encryptedDataKey: new Uint8Array([1]) })
       const edk2 = new EncryptedDataKey({ providerId: 'p2', providerInfo: 'pi2', encryptedDataKey: new Uint8Array([2]) })
 
       const encryptionMaterial = new NodeEncryptionMaterial(nodeSuite, {})
-        .setUnencryptedDataKey(udk128, trace)
+        .setUnencryptedDataKey(udk128, encryptTrace)
         .addEncryptedDataKey(edk1, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
         .addEncryptedDataKey(edk2, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
 

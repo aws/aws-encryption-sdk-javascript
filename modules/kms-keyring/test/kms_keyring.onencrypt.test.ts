@@ -81,17 +81,22 @@ describe('KmsKeyring: _onEncrypt', () => {
     expect(edkEncrypt.providerId).to.equal('aws-kms')
     expect(edkEncrypt.providerInfo).to.equal(encryptKmsKey)
 
-    expect(material.keyringTrace).to.have.lengthOf(2)
-    const [traceGenerate, traceEncrypt] = material.keyringTrace
+    expect(material.keyringTrace).to.have.lengthOf(3)
+    const [traceGenerate, traceEncrypt1, traceEncrypt2] = material.keyringTrace
     expect(traceGenerate.keyNamespace).to.equal('aws-kms')
     expect(traceGenerate.keyName).to.equal(generatorKeyId)
     expect(traceGenerate.flags & KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY).to.equal(KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
     expect(traceGenerate.flags & KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY).to.equal(KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
     expect(traceGenerate.flags & KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX).to.equal(KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
-    expect(traceEncrypt.keyNamespace).to.equal('aws-kms')
-    expect(traceEncrypt.keyName).to.equal(encryptKmsKey)
-    expect(traceEncrypt.flags & KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY).to.equal(KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
-    expect(traceEncrypt.flags & KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX).to.equal(KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
+
+    expect(traceEncrypt1.keyNamespace).to.equal('aws-kms')
+    expect(traceEncrypt1.keyName).to.equal(generatorKeyId)
+    expect(traceEncrypt1.flags & KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY).to.equal(KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+    expect(traceEncrypt1.flags & KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX).to.equal(KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
+    expect(traceEncrypt2.keyNamespace).to.equal('aws-kms')
+    expect(traceEncrypt2.keyName).to.equal(encryptKmsKey)
+    expect(traceEncrypt2.flags & KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY).to.equal(KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+    expect(traceEncrypt2.flags & KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX).to.equal(KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
   })
 
   it('Check for early return (Postcondition): Discovery Keyrings do not encrypt.', async () => {

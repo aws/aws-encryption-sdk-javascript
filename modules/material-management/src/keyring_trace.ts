@@ -72,4 +72,26 @@ export enum KeyringTraceFlag {
  * Bit flag indicating this wrapping key verified the signature of the encryption context.
  */
   WRAPPING_KEY_VERIFIED_ENC_CTX = (1 << 4), // eslint-disable-line no-unused-vars
+
+  /* KeyringTraceFlags are organized here.
+   * The three groupings are set, encrypt, and decrypt.
+   * An unencrypted data key is set and is required to have a SET_FLAG.
+   * For the encrypt path, the unencrypted data key must be generated.
+   * For the decrypt path, the unencrypted data key must be decrypted.
+   *
+   * A encrypted data key must be encrypted
+   * and the encryption context may be signed.
+   *
+   * When an encrypted data key is decrypted,
+   * the encryption context may be verified.
+   *
+   * This organization is to keep a KeyringTrace for an encrypted data key
+   * for listing the WRAPPING_KEY_VERIFIED_ENC_CTX flag.
+   */
+
+  ENCRYPT_FLAGS = WRAPPING_KEY_ENCRYPTED_DATA_KEY | WRAPPING_KEY_SIGNED_ENC_CTX, // eslint-disable-line no-unused-vars
+
+  SET_FLAGS = WRAPPING_KEY_GENERATED_DATA_KEY | WRAPPING_KEY_DECRYPTED_DATA_KEY, // eslint-disable-line no-unused-vars
+
+  DECRYPT_FLAGS = WRAPPING_KEY_DECRYPTED_DATA_KEY | WRAPPING_KEY_VERIFIED_ENC_CTX, // eslint-disable-line no-unused-vars
 }
