@@ -73,7 +73,7 @@ describe('encrypt structural testing', () => {
     const encryptionContext = { simple: 'context' }
 
     const plaintext = fromUtf8('asdf')
-    const { ciphertext, messageHeader } = await encrypt(keyRing, plaintext, { encryptionContext })
+    const { result, messageHeader } = await encrypt(keyRing, plaintext, { encryptionContext })
 
     /* The default algorithm suite will add a signature key to the context.
      * So I only check that the passed context elements exist.
@@ -82,7 +82,7 @@ describe('encrypt structural testing', () => {
     expect(messageHeader.encryptedDataKeys).lengthOf(1)
     expect(messageHeader.encryptedDataKeys[0]).to.deep.equal(edk)
 
-    const messageInfo = deserializeMessageHeader(ciphertext)
+    const messageInfo = deserializeMessageHeader(result)
     if (!messageInfo) throw new Error('I should never see this error')
 
     expect(messageHeader).to.deep.equal(messageInfo.messageHeader)
@@ -96,9 +96,9 @@ describe('encrypt structural testing', () => {
   it('can fully parse a framed message', async () => {
     const plaintext = fromUtf8('asdf')
     const frameLength = 1
-    const { ciphertext } = await encrypt(keyRing, plaintext, { frameLength })
+    const { result } = await encrypt(keyRing, plaintext, { frameLength })
 
-    const headerInfo = deserializeMessageHeader(ciphertext)
+    const headerInfo = deserializeMessageHeader(result)
     if (!headerInfo) throw new Error('this should never happen')
 
     const tagLength = headerInfo.algorithmSuite.tagLength / 8
@@ -107,7 +107,7 @@ describe('encrypt structural testing', () => {
     let bodyHeader: any
     // for every frame...
     for (; i < 4; i++) {
-      bodyHeader = decodeBodyHeader(ciphertext, headerInfo, readPos)
+      bodyHeader = decodeBodyHeader(result, headerInfo, readPos)
       if (!bodyHeader) throw new Error('this should never happen')
       readPos = bodyHeader.readPos + bodyHeader.contentLength + tagLength
     }
@@ -117,7 +117,7 @@ describe('encrypt structural testing', () => {
 
     // This implicitly tests that I have consumed all the data,
     // because otherwise the footer section will be too large
-    const footerSection = ciphertext.slice(readPos)
+    const footerSection = result.slice(readPos)
     // This will throw if it does not deserialize correctly
     deserializeSignature(footerSection)
   })
