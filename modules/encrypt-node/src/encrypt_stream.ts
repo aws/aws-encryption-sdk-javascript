@@ -78,7 +78,7 @@ export function encryptStream (
 
       wrappingStream.emit('MessageHeader', messageHeader)
 
-      const encryptStream = getFramedEncryptStream(getCipher, messageHeader, dispose)
+      const encryptStream = getFramedEncryptStream(getCipher, messageHeader, dispose, plaintextLength)
       const signatureStream = new SignatureStream(getSigner)
 
       pipeline(encryptStream, signatureStream)
