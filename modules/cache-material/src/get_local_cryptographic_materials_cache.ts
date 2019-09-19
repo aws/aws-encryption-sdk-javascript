@@ -31,11 +31,11 @@ import {
 } from './cryptographic_materials_cache'
 
 export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithmSuites> (
-  maxSize: number,
+  capacity: number,
   proactiveFrequency: number = 1000 * 60
 ): CryptographicMaterialsCache<S> {
   const cache = new LRU<string, Entry<S>>({
-    max: maxSize,
+    max: capacity,
     dispose (_key, value) {
       /* Zero out the unencrypted dataKey, when the material is removed from the cache. */
       value.response.zeroUnencryptedDataKey()
