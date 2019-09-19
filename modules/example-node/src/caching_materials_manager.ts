@@ -45,7 +45,8 @@ export async function cachingMaterialsManagerNodeSimpleTest () {
    * This can be configure by passing a `proactiveFrequency`
    * as the second paramter to however often you want to check in milliseconds.
    */
-  const cache = getLocalCryptographicMaterialsCache(100)
+  const capacity = 100
+  const cache = getLocalCryptographicMaterialsCache(capacity)
 
   /* The partition name lets multiple caching CMMs share the same local cryptographic cache.
    * If you want these CMMs to all cache the same items,
@@ -70,9 +71,9 @@ export async function cachingMaterialsManagerNodeSimpleTest () {
    * This value is optional,
    * but you should configure the lowest value possible.
    */
-  const maxMessagesEncrypted = 100
+  const maxMessagesEncrypted = 10
 
-  const cmm = new NodeCachingMaterialsManager({
+  const cachingCMM = new NodeCachingMaterialsManager({
     backingMaterials: keyring,
     cache,
     partition,
@@ -116,14 +117,14 @@ export async function cachingMaterialsManagerNodeSimpleTest () {
    * the AWS Encryption SDK uses the actual plaintext length
    * instead of any length you provide.
    */
-  const { ciphertext } = await encrypt(cmm, cleartext, { encryptionContext, plaintextLength: 4 })
+  const { ciphertext } = await encrypt(cachingCMM, cleartext, { encryptionContext, plaintextLength: 4 })
 
   /* Decrypt the data.
    * NOTE: This decrypt request will not use the data key
    * that was cached during the encrypt operation.
    * Data keys for encrypt and decrypt operations are cached separately.
    */
-  const { plaintext, messageHeader } = await decrypt(cmm, ciphertext)
+  const { plaintext, messageHeader } = await decrypt(cachingCMM, ciphertext)
 
   /* Grab the encryption context so you can verify it. */
   const { encryptionContext: decryptedContext } = messageHeader

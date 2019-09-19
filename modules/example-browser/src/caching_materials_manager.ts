@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-/* This is a simple example of using a KMS Keyring
+/* This is a simple example of using a Caching CMM with a KMS Keyring
  * to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser.
  */
 
@@ -29,7 +29,7 @@ import {
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
 /* This is injected by webpack.
- * The webpack.DefinePlugin will replace the values when bundling.
+ * The webpack.DefinePlugin or @aws-sdk/karma-credential-loader will replace the values when bundling.
  * The credential values are pulled from @aws-sdk/credential-provider-node
  * Use any method you like to get credentials into the browser.
  * See kms.webpack.config
@@ -86,7 +86,8 @@ export async function testCachingMaterialsManagerExample () {
    * This can be configure by passing a `proactiveFrequency`
    * as the second paramter to however often you want to check in milliseconds.
    */
-  const cache = getLocalCryptographicMaterialsCache(100)
+  const capacity = 100
+  const cache = getLocalCryptographicMaterialsCache(capacity)
 
   /* The partition name lets multiple caching CMMs share the same local cryptographic cache.
    * If you want these CMMs to all cache the same items,
@@ -111,9 +112,9 @@ export async function testCachingMaterialsManagerExample () {
    * This value is optional,
    * but you should configure the lowest value possible.
    */
-  const maxMessagesEncrypted = 100
+  const maxMessagesEncrypted = 10
 
-  const cmm = new WebCryptoCachingMaterialsManager({
+  const cachingCMM = new WebCryptoCachingMaterialsManager({
     backingMaterials: keyring,
     cache,
     partition,
@@ -151,7 +152,7 @@ export async function testCachingMaterialsManagerExample () {
    * Therefore, the encrypt function in the browser knows the length of the plaintext
    * and does not accept a plaintextLength option.
    */
-  const { ciphertext } = await encrypt(cmm, plainText, { encryptionContext })
+  const { ciphertext } = await encrypt(cachingCMM, plainText, { encryptionContext })
 
   /* Log the plain text
    * only for testing and to show that it works.
@@ -171,7 +172,7 @@ export async function testCachingMaterialsManagerExample () {
    * that was cached during the encrypt operation.
    * Data keys for encrypt and decrypt operations are cached separately.
    */
-  const { plaintext, messageHeader } = await decrypt(cmm, ciphertext)
+  const { plaintext, messageHeader } = await decrypt(cachingCMM, ciphertext)
 
   /* Grab the encryption context so you can verify it. */
   const { encryptionContext: decryptedContext } = messageHeader
