@@ -359,9 +359,9 @@ describe('MultiKeyring: onDecrypt', () => {
     expect(called).to.equal(true)
   })
 
-  it('Postcondition: A child keyring must provide a valid data key or not child keyring must have raised an error.', async () => {
+  it('Postcondition: A child keyring must provide a valid data key or no child keyring must have raised an error.', async () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
-    const [edk0] = makeEDKandTrace(0)
+    const [edk0] = makeEDKandTraceForDecrypt(0)
     const material = new NodeDecryptionMaterial(suite, {})
     const childNotSucceeded = keyRingFactory({
       async onDecrypt () {

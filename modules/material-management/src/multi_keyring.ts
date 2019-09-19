@@ -130,7 +130,7 @@ function buildPrivateOnDecrypt<S extends SupportedAlgorithmSuites> () {
       }
     }
 
-    /* Postcondition: A child keyring must provide a valid data key or not child keyring must have raised an error.
+    /* Postcondition: A child keyring must provide a valid data key or no child keyring must have raised an error.
      * If I have a data key,
      * decrypt errors can be ignored.
      * However, if I was unable to decrypt a data key AND I have errors,
