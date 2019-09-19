@@ -30,7 +30,7 @@ describe('getFramedEncryptStream', () => {
     expect(test._transform).is.a('function')
   })
 
-  it('Precondition: plaintextLength must be withing bounds.', () => {
+  it('Precondition: plaintextLength must be within bounds.', () => {
     const getCipher: any = () => {}
     expect(() => getFramedEncryptStream(getCipher, {} as any, () => {}, -1)).to.throw(Error, 'plaintextLength out of bounds.')
     expect(() => getFramedEncryptStream(getCipher, {} as any, () => {}, Number.MAX_SAFE_INTEGER + 1)).to.throw(Error, 'plaintextLength out of bounds.')

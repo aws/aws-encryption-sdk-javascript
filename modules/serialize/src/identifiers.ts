@@ -80,6 +80,12 @@ export enum Maximum {
    * or some value larger 2 ** 63.
    */
   BYTES_PER_CACHED_KEY_LIMIT = 2 ** 53 - 1, // eslint-disable-line no-unused-vars
+  /* This value should be Maximum.FRAME_COUNT * Maximum.FRAME_SIZE.
+   * However this would be ~ 2 ** 64, much larger than Number.MAX_SAFE_INTEGER.
+   * For the same reasons outlined above in BYTES_PER_CACHED_KEY_LIMIT
+   * this value is set to 2 ** 53 - 1.
+   */
+  BYTES_PER_MESSAGE = 2 ** 53 - 1, // eslint-disable-line no-unused-vars
   // Maximum number of frames allowed in one message as defined in specification
   FRAME_COUNT = 2 ** 32 - 1, // eslint-disable-line no-unused-vars
   // Maximum bytes allowed in a single frame as defined in specification

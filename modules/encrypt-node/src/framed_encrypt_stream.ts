@@ -55,11 +55,11 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
   let pathologicalDrain: Function = noop
   const { frameLength } = messageHeader
 
-  /* Precondition: plaintextLength must be withing bounds.
-   * The Maximum.BYTES_PER_CACHED_KEY_LIMIT is set to be within Number.MAX_SAFE_INTEGER
+  /* Precondition: plaintextLength must be within bounds.
+   * The Maximum.BYTES_PER_MESSAGE is set to be within Number.MAX_SAFE_INTEGER
    * See serialize/identifiers.ts enum Maximum for more details.
    */
-  needs(!plaintextLength || (plaintextLength >= 0 && Maximum.BYTES_PER_CACHED_KEY_LIMIT >= plaintextLength), 'plaintextLength out of bounds.')
+  needs(!plaintextLength || (plaintextLength >= 0 && Maximum.BYTES_PER_MESSAGE >= plaintextLength), 'plaintextLength out of bounds.')
 
   /* Keeping the messageHeader, accumulatingFrame and pathologicalDrain private is the intention here.
    * It is already unlikely that these values could be touched in the current composition of streams,
