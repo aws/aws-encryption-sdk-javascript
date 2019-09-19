@@ -94,7 +94,7 @@ export async function testKmsSimpleExample () {
   const plainText = new Uint8Array([1, 2, 3, 4, 5])
 
   /* Encrypt the data. */
-  const { ciphertext } = await encrypt(keyring, plainText, { encryptionContext: context })
+  const { result } = await encrypt(keyring, plainText, { encryptionContext: context })
 
   /* Log the plain text
    * only for testing and to show that it works.
@@ -102,14 +102,14 @@ export async function testKmsSimpleExample () {
   console.log('plainText:', plainText)
   document.write('</br>plainText:' + plainText + '</br>')
 
-  /* Log the base64-encoded ciphertext
+  /* Log the base64-encoded result
    * so that you can try decrypting it with another AWS Encryption SDK implementation.
    */
-  const ciphertextBase64 = toBase64(ciphertext)
-  console.log(ciphertextBase64)
-  document.write(ciphertextBase64)
+  const resultBase64 = toBase64(result)
+  console.log(resultBase64)
+  document.write(resultBase64)
 
-  const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
+  const { plaintext, messageHeader } = await decrypt(keyring, result)
 
   /* Grab the encryption context so you can verify it. */
   const { encryptionContext } = messageHeader

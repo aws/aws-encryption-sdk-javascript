@@ -57,9 +57,9 @@ export async function aesTest () {
   const cleartext = 'asdf'
 
   /* Encrypt the data. */
-  const { ciphertext } = await encrypt(keyring, cleartext, { encryptionContext: context })
+  const { result } = await encrypt(keyring, cleartext, { encryptionContext: context })
   /* Decrypt the data. */
-  const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
+  const { plaintext, messageHeader } = await decrypt(keyring, result)
 
   /* Grab the encryption context so you can verify it. */
   const { encryptionContext } = messageHeader
@@ -78,5 +78,5 @@ export async function aesTest () {
     })
 
   /* Return the values so the code can be tested. */
-  return { plaintext, ciphertext, cleartext }
+  return { plaintext, result, cleartext }
 }

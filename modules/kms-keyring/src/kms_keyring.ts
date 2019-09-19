@@ -123,7 +123,8 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
           * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
           */
           .setUnencryptedDataKey(dataKey.Plaintext, trace)
-          .addEncryptedDataKey(kmsResponseToEncryptedDataKey(dataKey), KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+          .addEncryptedDataKey(kmsResponseToEncryptedDataKey(dataKey),
+            KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
       } else if (generatorKeyId) {
         keyIds.unshift(generatorKeyId)
       }

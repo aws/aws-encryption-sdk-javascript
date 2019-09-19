@@ -287,7 +287,20 @@ export function isDecryptionMaterial (obj: any): obj is WebCryptoDecryptionMater
   return (obj instanceof WebCryptoDecryptionMaterial) || (obj instanceof NodeDecryptionMaterial)
 }
 
-export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>> (material: T, setFlags: KeyringTraceFlag) {
+export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>> (material: T, setFlag: KeyringTraceFlag) {
+  /* Precondition: setFlag must be in the set of KeyringTraceFlag.SET_FLAGS. */
+  needs(setFlag & KeyringTraceFlag.SET_FLAGS, 'Invalid setFlag')
+  /* When a KeyringTraceFlag is passed to setUnencryptedDataKey,
+   * it must be valid for the type of material.
+   * It is invalid to claim that EncryptionMaterial were decrypted.
+   */
+  const deniedSetFlags = (KeyringTraceFlag.SET_FLAGS ^ setFlag) | (
+    setFlag === KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
+      ? KeyringTraceFlag.DECRYPT_FLAGS
+      : setFlag === KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
+        ? KeyringTraceFlag.ENCRYPT_FLAGS
+        : 0)
+
   let unencryptedDataKeyZeroed = false
   let unencryptedDataKey: AwsEsdkKeyObject | Uint8Array
   // This copy of the unencryptedDataKey is stored to insure that the
@@ -390,11 +403,16 @@ export function decorateCryptographicMaterial<T extends CryptographicMaterial<T>
     /* Precondition: Trace must be set, and the flag must indicate that the data key was generated. */
     needs(trace && trace.keyName && trace.keyNamespace, 'Malformed KeyringTrace')
     /* Precondition: On set the required KeyringTraceFlag must be set. */
-    needs(trace.flags & setFlags, 'Required KeyringTraceFlag not set')
+    needs(trace.flags & setFlag, 'Required KeyringTraceFlag not set')
+    /* Precondition: Only valid flags are allowed.
+     * An unencrypted data key can not be both generated and decrypted.
+     */
+    needs(!(trace.flags & deniedSetFlags), 'Invalid KeyringTraceFlags set.')
   }
 }
 
 export function decorateEncryptionMaterial<T extends EncryptionMaterial<T>> (material: T) {
+  const deniedEncryptFlags = KeyringTraceFlag.SET_FLAGS | KeyringTraceFlag.DECRYPT_FLAGS
   const encryptedDataKeys: EncryptedDataKey[] = []
   let signatureKey: Readonly<SignatureKey>|undefined
 
@@ -412,16 +430,18 @@ export function decorateEncryptionMaterial<T extends EncryptionMaterial<T>> (mat
 
     /* Precondition: flags must indicate that the key was encrypted. */
     needs(flags & KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY, 'Encrypted data key flag must be set.')
-    /* When the unencrypted data key is first set, a given wrapping key may or may not also encrypt that key.
-     * This means that the first EDK that is added may already have a trace.
-     * The flags for the EDK and the existing trace should be merged iif this is the first EDK
-     * and the only existing trace corresponds to this EDK.
+
+    /* Precondition: flags must not include a setFlag or a decrypt flag.
+     * The setFlag is reserved for setting the unencrypted data key
+     * and must only occur once in the set of KeyringTrace flags.
+     * The two setFlags in use are:
+     * KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
+     * KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
+     *
+     * KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX is reserved for the decrypt path
      */
-    if (firstEdkAndTraceMatch(encryptedDataKeys, material.keyringTrace, edk)) {
-      material.keyringTrace[0].flags |= flags
-    } else {
-      material.keyringTrace.push({ keyName: edk.providerInfo, keyNamespace: edk.providerId, flags })
-    }
+    needs(!(flags & deniedEncryptFlags), 'Invalid flag for EncryptedDataKey.')
+    material.keyringTrace.push({ keyName: edk.providerInfo, keyNamespace: edk.providerId, flags })
 
     encryptedDataKeys.push(edk)
     return material
@@ -461,14 +481,6 @@ export function decorateEncryptionMaterial<T extends EncryptionMaterial<T>> (mat
   })
 
   return material
-}
-
-/* Verify that the this is the first EDK and that it matches the 1 and only 1 trace. */
-function firstEdkAndTraceMatch (edks: EncryptedDataKey[], traces: KeyringTrace[], edk: EncryptedDataKey) {
-  return edks.length === 0 &&
-  traces.length === 1 &&
-  edk.providerId === traces[0].keyNamespace &&
-  edk.providerInfo === traces[0].keyName
 }
 
 export function decorateDecryptionMaterial<T extends DecryptionMaterial<T>> (material: T) {

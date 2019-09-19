@@ -17,7 +17,7 @@ interface EncryptInput extends EncryptStreamInput {
 }
 
 export interface EncryptOutput {
-  ciphertext: Buffer
+  result: Buffer
   messageHeader: MessageHeader
 }
 
@@ -29,11 +29,11 @@ export async function encrypt (
   const stream = encryptStream(cmm, op)
   const { encoding } = op
 
-  const ciphertext: Buffer[] = []
+  const result: Buffer[] = []
   let messageHeader: MessageHeader|false = false
   stream
     .once('MessageHeader', header => { messageHeader = header })
-    .on('data', (chunk: Buffer) => ciphertext.push(chunk))
+    .on('data', (chunk: Buffer) => result.push(chunk))
 
   // This will check both Uint8Array|Buffer
   if (plaintext instanceof Uint8Array) {
@@ -50,7 +50,7 @@ export async function encrypt (
   if (!messageHeader) throw new Error('Unknown format')
 
   return {
-    ciphertext: Buffer.concat(ciphertext),
+    result: Buffer.concat(result),
     messageHeader
   }
 }
