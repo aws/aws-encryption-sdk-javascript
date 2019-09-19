@@ -117,14 +117,14 @@ export async function cachingMaterialsManagerNodeSimpleTest () {
    * the AWS Encryption SDK uses the actual plaintext length
    * instead of any length you provide.
    */
-  const { ciphertext } = await encrypt(cachingCMM, cleartext, { encryptionContext, plaintextLength: 4 })
+  const { result } = await encrypt(cachingCMM, cleartext, { encryptionContext, plaintextLength: 4 })
 
   /* Decrypt the data.
    * NOTE: This decrypt request will not use the data key
    * that was cached during the encrypt operation.
    * Data keys for encrypt and decrypt operations are cached separately.
    */
-  const { plaintext, messageHeader } = await decrypt(cachingCMM, ciphertext)
+  const { plaintext, messageHeader } = await decrypt(cachingCMM, result)
 
   /* Grab the encryption context so you can verify it. */
   const { encryptionContext: decryptedContext } = messageHeader
@@ -143,5 +143,5 @@ export async function cachingMaterialsManagerNodeSimpleTest () {
     })
 
   /* Return the values so the code can be tested. */
-  return { plaintext, ciphertext, cleartext, messageHeader }
+  return { plaintext, result, cleartext, messageHeader }
 }

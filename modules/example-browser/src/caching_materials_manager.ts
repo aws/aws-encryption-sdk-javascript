@@ -152,7 +152,7 @@ export async function testCachingMaterialsManagerExample () {
    * Therefore, the encrypt function in the browser knows the length of the plaintext
    * and does not accept a plaintextLength option.
    */
-  const { ciphertext } = await encrypt(cachingCMM, plainText, { encryptionContext })
+  const { result } = await encrypt(cachingCMM, plainText, { encryptionContext })
 
   /* Log the plain text
    * only for testing and to show that it works.
@@ -160,19 +160,19 @@ export async function testCachingMaterialsManagerExample () {
   console.log('plainText:', plainText)
   document.write('</br>plainText:' + plainText + '</br>')
 
-  /* Log the base64-encoded ciphertext
+  /* Log the base64-encoded result
    * so that you can try decrypting it with another AWS Encryption SDK implementation.
    */
-  const ciphertextBase64 = toBase64(ciphertext)
-  console.log(ciphertextBase64)
-  document.write(ciphertextBase64)
+  const resultBase64 = toBase64(result)
+  console.log(resultBase64)
+  document.write(resultBase64)
 
   /* Decrypt the data.
    * NOTE: This decrypt request will not use the data key
    * that was cached during the encrypt operation.
    * Data keys for encrypt and decrypt operations are cached separately.
    */
-  const { plaintext, messageHeader } = await decrypt(cachingCMM, ciphertext)
+  const { plaintext, messageHeader } = await decrypt(cachingCMM, result)
 
   /* Grab the encryption context so you can verify it. */
   const { encryptionContext: decryptedContext } = messageHeader
