@@ -42,14 +42,14 @@ describe('browser encrypt tests', function () {
       const plainText = fromBase64(plainTextData)
       try {
         const cmm = await encryptMaterialsManagerWebCrypto(keysInfo)
-        const { ciphertext } = await encrypt(cmm, plainText, encryptOp)
+        const { result } = await encrypt(cmm, plainText, encryptOp)
         const response = await fetch(decryptOracle, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/octet-stream',
             'Accept': 'application/octet-stream'
           },
-          body: ciphertext
+          body: result
         })
         const body = await response.arrayBuffer()
         needs(response.ok, `Failed to decrypt: ${toUtf8(body)}`)

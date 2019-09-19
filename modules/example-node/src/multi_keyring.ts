@@ -76,16 +76,16 @@ export async function multiKeyringTest () {
   const cleartext = 'asdf'
 
   /* Encrypt the data. */
-  const { ciphertext } = await encrypt(keyring, cleartext, { encryptionContext: context })
+  const { result } = await encrypt(keyring, cleartext, { encryptionContext: context })
 
   /* Decrypt the data.
    * This decrypt call could be done with **any** of the 3 keyrings.
    * Here we use the multi-keyring, but
-   * decrypt(kmsKeyring, ciphertext)
-   * decrypt(aesKeyring, ciphertext)
+   * decrypt(kmsKeyring, result)
+   * decrypt(aesKeyring, result)
    * would both work as well.
    */
-  const { plaintext, messageHeader } = await decrypt(keyring, ciphertext)
+  const { plaintext, messageHeader } = await decrypt(keyring, result)
 
   /* Grab the encryption context so you can verify it. */
   const { encryptionContext } = messageHeader
@@ -104,5 +104,5 @@ export async function multiKeyringTest () {
     })
 
   /* Return the values so the code can be tested. */
-  return { plaintext, ciphertext, cleartext, messageHeader }
+  return { plaintext, result, cleartext, messageHeader }
 }

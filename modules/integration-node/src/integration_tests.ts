@@ -53,14 +53,14 @@ export async function testDecryptVector ({ name, keysInfo, plainTextStream, ciph
 export async function testEncryptVector ({ name, keysInfo, encryptOp, plainTextData }: EncryptTestVectorInfo, decryptOracle: URL): Promise<TestVectorResults> {
   try {
     const cmm = encryptMaterialsManagerNode(keysInfo)
-    const { ciphertext } = await encrypt(cmm, plainTextData, encryptOp)
+    const { result: encryptResult } = await encrypt(cmm, plainTextData, encryptOp)
 
     const decryptResponse = await got.post(decryptOracle, {
       headers: {
         'Content-Type': 'application/octet-stream',
         'Accept': 'application/octet-stream'
       },
-      body: ciphertext,
+      body: encryptResult,
       encoding: null
     })
     needs(decryptResponse.statusCode === 200, 'decrypt failure')

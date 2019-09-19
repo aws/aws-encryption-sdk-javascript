@@ -88,9 +88,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
      */
     if (22 + contextLength > dataView.byteLength) return false // not enough data
 
-    const encryptionContext = contextLength > 0
-      ? decodeEncryptionContext(messageBuffer.slice(22, 22 + contextLength))
-      : {}
+    const encryptionContext = decodeEncryptionContext(messageBuffer.slice(22, 22 + contextLength))
     const dataKeyInfo = deserializeEncryptedDataKeys(messageBuffer, 22 + contextLength)
 
     /* Check for early return (Postcondition): Not Enough Data. deserializeEncryptedDataKeys will return false if it does not have enough data.
@@ -176,23 +174,20 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
     /* Precondition: There must be at least 1 EncryptedDataKey element. */
     needs(encryptedDataKeysCount, 'No EncryptedDataKey found.')
 
-    const elementInfo = readElements(encryptedDataKeysCount * 3, buffer, startPos + 2)
+    const elementInfo = readElements(encryptedDataKeysCount, 3, buffer, startPos + 2)
     /* Check for early return (Postcondition): readElement will return false if there is not enough data.
      * I can only continue if I have at least the entire EDK section.
      */
     if (!elementInfo) return false
     const { elements, readPos } = elementInfo
 
-    let remainingKeyCount = encryptedDataKeysCount
-    const encryptedDataKeys = []
-    while (remainingKeyCount--) {
-      const [rawId, rawInfo] = elements.splice(0, 2)
-      const [providerId, providerInfo] = [rawId, rawInfo].map(toUtf8)
-      const [encryptedDataKey] = elements.splice(0, 1)
-      // The providerInfo is technically a binary field, so I must pass rawInfo
-      const edk = new EncryptedDataKey({ providerInfo, providerId, encryptedDataKey, rawInfo })
-      encryptedDataKeys.push(edk)
-    }
+    const encryptedDataKeys = elements.map(
+      ([rawId, rawInfo, encryptedDataKey], _) => {
+        const providerId = toUtf8(rawId)
+        const providerInfo = toUtf8(rawInfo)
+        return new EncryptedDataKey({ providerInfo, providerId, encryptedDataKey, rawInfo })
+      }
+    )
     Object.freeze(encryptedDataKeys)
     return { encryptedDataKeys, readPos }
   }
@@ -202,7 +197,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
    * @param encodedEncryptionContext Uint8Array
    */
   function decodeEncryptionContext (encodedEncryptionContext: Uint8Array) {
-    const encryptionContext: EncryptionContext = {}
+    const encryptionContext: EncryptionContext = Object.create(null)
     /* Check for early return (Postcondition): The case of 0 length is defined as an empty object. */
     if (!encodedEncryptionContext.byteLength) {
       return encryptionContext
@@ -219,7 +214,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
       encodedEncryptionContext.byteLength
     )
     const pairsCount = dataView.getUint16(0, false) // big endian
-    const elementInfo = readElements(pairsCount * 2, encodedEncryptionContext, 2)
+    const elementInfo = readElements(pairsCount, 2, encodedEncryptionContext, 2)
     /* Postcondition: Since the encryption context has a length, it must have pairs.
      * Unlike the encrypted data key section, the encryption context has a length
      * element.  This means I should always pass the entire section.
@@ -230,9 +225,8 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
     /* Postcondition: The byte length of the encodedEncryptionContext must match the readPos. */
     needs(encodedEncryptionContext.byteLength === readPos, 'Overflow, too much data.')
 
-    let count = pairsCount
-    while (count--) {
-      const [key, value] = elements.splice(0, 2).map(toUtf8)
+    for (let count = 0; count < pairsCount; count++) {
+      const [key, value] = elements[count].map(toUtf8)
       /* Postcondition: The number of keys in the encryptionContext must match the pairsCount.
        * If the same Key value is serialized...
        */
