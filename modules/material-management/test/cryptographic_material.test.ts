@@ -55,6 +55,10 @@ describe('decorateCryptographicMaterial', () => {
     expect(test).to.haveOwnProperty('hasUnencryptedDataKey').and.to.equal(false)
   })
 
+  it('Precondition: setFlag must be in the set of KeyringTraceFlag.SET_FLAGS.', () => {
+    expect(() => decorateCryptographicMaterial((<any>{}), KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)).to.throw('')
+  })
+
   it('set, inspect, get works', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
@@ -156,6 +160,14 @@ describe('decorateCryptographicMaterial', () => {
     expect(() => test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)).to.throw('Required KeyringTraceFlag not set')
   })
 
+  it('Precondition: Only valid flags are allowed.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const test = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
+    const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
+    const trace = { keyNamespace: 'k', keyName: 'k', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    expect(() => test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)).to.throw('Invalid KeyringTraceFlags set.')
+  })
+
   it('Precondition: The unencryptedDataKey must not have been modified.', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const material = decorateCryptographicMaterial((<any>{ suite, keyringTrace: [] }), KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
@@ -221,7 +233,14 @@ describe('decorateEncryptionMaterial', () => {
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
     const test: any = decorateEncryptionMaterial((<any>{ suite, keyringTrace: [], hasUnencryptedDataKey: true }))
     const edk = new EncryptedDataKey({ providerId: 'p', providerInfo: 'p', encryptedDataKey: new Uint8Array(3) })
-    expect(() => test.addEncryptedDataKey(edk, KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX)).to.throw('Encrypted data key flag must be set.')
+    expect(() => test.addEncryptedDataKey(edk, KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)).to.throw('Encrypted data key flag must be set.')
+  })
+
+  it('Precondition: flags must not include a setFlag or a decrypt flag.', () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const test: any = decorateEncryptionMaterial((<any>{ suite, keyringTrace: [], hasUnencryptedDataKey: true }))
+    const edk = new EncryptedDataKey({ providerId: 'p', providerInfo: 'p', encryptedDataKey: new Uint8Array(3) })
+    expect(() => test.addEncryptedDataKey(edk, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX)).to.throw('Invalid flag for EncryptedDataKey.')
   })
 
   it('Precondition: The SignatureKey stored must agree with the algorithm specification.', () => {
