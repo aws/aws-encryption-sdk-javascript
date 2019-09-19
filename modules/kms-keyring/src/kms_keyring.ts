@@ -206,7 +206,7 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
         return material
       }
 
-      /* Postcondition: A CMK must provide a valid data key.
+      /* Postcondition: A CMK must provide a valid data key or KMS must not have raised any errors.
        * If I have a data key,
        * decrypt errors can be ignored.
        * However, if I was unable to decrypt a data key AND I have errors,

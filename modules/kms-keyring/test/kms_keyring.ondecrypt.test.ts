@@ -290,14 +290,14 @@ describe('KmsKeyring: _onDecrypt',
       )).to.rejectedWith(Error, 'Key length does not agree with the algorithm specification.')
     })
 
-    it('Postcondition: A CMK must provide a valid data key.', async () => {
+    it('Postcondition: A CMK must provide a valid data key or KMS must not have raised any errors.', async () => {
       const generatorKeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
       const context = { some: 'context' }
       const grantTokens = ['grant']
       const discovery = true
       const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
 
-      const clientProvider: any = () => {
+      const clientProviderError: any = () => {
         return { decrypt }
         function decrypt () {
           throw new Error('failed to decrypt')
@@ -306,7 +306,7 @@ describe('KmsKeyring: _onDecrypt',
       class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
 
       const testKeyring = new TestKmsKeyring({
-        clientProvider,
+        clientProvider: clientProviderError,
         grantTokens,
         discovery
       })
@@ -321,5 +321,17 @@ describe('KmsKeyring: _onDecrypt',
         new NodeDecryptionMaterial(suite, context),
         [edk, edk]
       )).to.rejectedWith(Error, 'Unable to decrypt data key and one or more KMS CMKs had an error.')
+
+      /* This will make the decrypt loop not have an error.
+       * This will exercise the `(!material.hasValidKey() && !cmkErrors.length)` `needs` condition.
+       */
+      const clientProviderNoError: any = () => false
+      await expect(new TestKmsKeyring({
+        clientProvider: clientProviderNoError,
+        grantTokens,
+        discovery
+      }).onDecrypt(new NodeDecryptionMaterial(suite, context),
+      [edk, edk]
+      )).to.not.rejectedWith(Error)
     })
   })
