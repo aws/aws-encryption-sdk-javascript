@@ -331,7 +331,7 @@ describe('KmsKeyring: _onDecrypt',
         grantTokens,
         discovery
       }).onDecrypt(new NodeDecryptionMaterial(suite, context),
-      [edk, edk]
+        [edk, edk]
       )).to.not.rejectedWith(Error)
     })
   })
