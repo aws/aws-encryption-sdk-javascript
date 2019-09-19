@@ -38,7 +38,7 @@ const { expect } = chai
 /* Injected from @aws-sdk/karma-credential-loader. */
 declare const credentials: any
 
-describe('KmsKeyringNode::constructor', () => {
+describe('KmsKeyringBrowser::constructor', () => {
   it('constructor decorates', async () => {
     const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
     const keyArn = 'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f'
@@ -60,7 +60,7 @@ describe('KmsKeyringNode::constructor', () => {
   })
 })
 
-describe('RawAesKeyringWebCrypto encrypt/decrypt', () => {
+describe('KmsKeyringBrowser encrypt/decrypt', () => {
   const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
   const keyArn = 'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f'
   const keyIds = [keyArn]
