@@ -358,6 +358,37 @@ describe('MultiKeyring: onDecrypt', () => {
     expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(unencryptedDataKey)
     expect(called).to.equal(true)
   })
+
+  it('Postcondition: A child keyring must provide a valid data key or no child keyring must have raised an error.', async () => {
+    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const [edk0] = makeEDKandTraceForDecrypt(0)
+    const material = new NodeDecryptionMaterial(suite, {})
+    const childNotSucceeded = keyRingFactory({
+      async onDecrypt () {
+        // Because this keyring does not return a value, it will result in an error
+      },
+      onEncrypt: never
+    })
+    const children = [childNotSucceeded]
+
+    const mkeyring = new MultiKeyringNode({ children })
+
+    await expect(mkeyring.onDecrypt(material, [edk0])).to.rejectedWith(Error, 'Unable to decrypt data key and one or more child keyrings had an error.')
+
+    /* This will make the decrypt loop not have an error.
+     * This will exercise the `(!material.hasValidKey() && !childKeyringErrors.length)` `needs` condition.
+     */
+    const childNoDataKey = keyRingFactory({
+      async onDecrypt (material: NodeDecryptionMaterial /*, encryptedDataKeys: EncryptedDataKey[] */) {
+        return material
+      },
+      onEncrypt: never
+    })
+
+    const mkeyringNoErrors = new MultiKeyringNode({ children: [ childNoDataKey ] })
+
+    await expect(mkeyringNoErrors.onDecrypt(material, [edk0])).to.not.rejectedWith(Error)
+  })
 })
 
 function makeEDKandTraceForEncrypt (num: number): [EncryptedDataKey, KeyringTrace] {
