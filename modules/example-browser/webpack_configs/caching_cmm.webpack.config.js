@@ -3,12 +3,12 @@ const path = require('path')
 const {defaultProvider} = require('@aws-sdk/credential-provider-node')
 
 module.exports = (async () => ({
-  entry: './src/caching_materials_manager.ts',
+  entry: './src/caching_cmm.ts',
   // devtool: 'inline-source-map',
   module: {
     rules: [
       {
-        test: /caching_materials_manager.ts$/,
+        test: /caching_cmm.ts$/,
         use: [
           {
             loader: 'ts-loader',
@@ -17,7 +17,7 @@ module.exports = (async () => ({
             }
           }
         ],
-        include: /caching_materials_manager.ts/,
+        include: /caching_cmm.ts/,
         exclude: [/node_modules/]
       }
     ]
@@ -26,7 +26,7 @@ module.exports = (async () => ({
     extensions: [ '.tsx', '.ts', '.js' ]
   },
   output: {
-    filename: 'caching_materials_manager_bundle.js',
+    filename: 'caching_cmm_bundle.js',
     path: path.resolve(__dirname, '..', 'build'),
     library: 'test',
     libraryTarget: 'var'

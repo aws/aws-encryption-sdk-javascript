@@ -37,7 +37,7 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
 declare const credentials: {accessKeyId: string, secretAccessKey:string, sessionToken:string }
 
 /* This is done to facilitate testing. */
-export async function testCachingMaterialsManagerExample () {
+export async function testCachingCMMExample () {
   /* This example uses a KMS keyring. The generator key in a KMS keyring generates and encrypts the data key.
    * The caller needs kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
@@ -52,7 +52,7 @@ export async function testCachingMaterialsManagerExample () {
    * In `generatorId`, this CMK is identified by its alias ARN.
    * In `keyIds`, this CMK is identified by its key ARN.
    * In practice, you would specify different CMKs,
-   * or omit the `keyIds` parameter. 
+   * or omit the `keyIds` parameter.
    * This is *only* to demonstrate how the CMK ARNs are configured.
    */
   const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
@@ -135,18 +135,18 @@ export async function testCachingMaterialsManagerExample () {
    * and managing access.
    * When you pass an encryption context to the encrypt function,
    * the encryption context is cryptographically bound to the data.
-   * If you don't pass in the same encryption context when decrypting, 
+   * If you don't pass in the same encryption context when decrypting,
    * the decrypt function fails.
    * The encryption context is ***not*** secret!
    * Encrypted data is opaque.
    * You can use an encryption context to assert things about the encrypted data.
-   * The encryption context helps you to determine 
+   * The encryption context helps you to determine
    * whether the ciphertext you retrieved is the ciphertext you expect to decrypt.
    * For example, if you are are only expecting data from 'us-west-2',
    * the appearance of a different AWS Region in the encryption context can indicate malicious interference.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    *
-   * Cached data keys are reused ***only*** when the encryption contexts passed into the functions are an exact case-sensitive match.  
+   * Cached data keys are reused ***only*** when the encryption contexts passed into the functions are an exact case-sensitive match.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/data-caching-details.html#caching-encryption-context
    */
   const encryptionContext = {

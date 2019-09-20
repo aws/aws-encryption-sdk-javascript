@@ -18,7 +18,7 @@
 import { expect } from 'chai'
 import 'mocha'
 import { testAES } from '../src/aes_simple'
-import { testCachingMaterialsManagerExample } from '../src/caching_materials_manager'
+import { testCachingCMMExample } from '../src/caching_cmm'
 import { testKmsSimpleExample } from '../src/kms_simple'
 import { testMultiKeyringExample } from '../src/multi_keyring'
 import { testRSA } from '../src/rsa_simple'
@@ -29,8 +29,8 @@ describe('test', () => {
     expect(plainText).to.deep.equal(plaintext)
   })
 
-  it('testCachingMaterialsManagerExample', async () => {
-    const { plainText, plaintext } = await testCachingMaterialsManagerExample()
+  it('testCachingCMMExample', async () => {
+    const { plainText, plaintext } = await testCachingCMMExample()
     expect(plainText).to.deep.equal(plaintext)
   })
 

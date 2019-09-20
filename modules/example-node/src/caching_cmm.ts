@@ -15,7 +15,7 @@
 
 import { KmsKeyringNode, encrypt, decrypt, NodeCachingMaterialsManager, getLocalCryptographicMaterialsCache } from '@aws-crypto/client-node'
 
-export async function cachingMaterialsManagerNodeSimpleTest () {
+export async function cachingCMMNodeSimpleTest () {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */

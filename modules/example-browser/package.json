@@ -12,7 +12,7 @@
     "example-aes": "webpack -d --config webpack_configs/aes.webpack.config.js",
     "example-kms": "webpack -d --config webpack_configs/kms.webpack.config.js",
     "example-multi-keyring": "webpack -d --config webpack_configs/multi_keyring.webpack.config.js",
-    "example-caching-materials-manager": "webpack -d --config webpack_configs/caching_materials_manager.webpack.config.js"
+    "example-caching-cmm": "webpack -d --config webpack_configs/caching_cmm.webpack.config.js"
   },
   "author": {
     "name": "AWS Crypto Tools Team",
