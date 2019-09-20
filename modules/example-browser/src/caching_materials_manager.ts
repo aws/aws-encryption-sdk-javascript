@@ -83,7 +83,7 @@ export async function testCachingMaterialsManagerExample () {
    * Both encrypt and decrypt requests count independently towards this threshold.
    * Entries that exceed any cache threshold are actively removed from the cache.
    * By default, the SDK checks one item in the cache every 60 seconds (60,000 milliseconds).
-   * This can be configure by passing a `proactiveFrequency`
+   * To change this frequency, pass in a `proactiveFrequency` value
    * as the second paramter to however often you want to check in milliseconds.
    */
   const capacity = 100
