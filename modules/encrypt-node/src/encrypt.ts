@@ -26,9 +26,15 @@ export async function encrypt (
   plaintext: Buffer|Uint8Array|Readable|string|NodeJS.ReadableStream,
   op: EncryptInput = {}
 ): Promise<EncryptOutput> {
-  const stream = encryptStream(cmm, op)
   const { encoding } = op
+  if (plaintext instanceof Uint8Array) {
+    op.plaintextLength = plaintext.byteLength
+  } else if (typeof plaintext === 'string') {
+    plaintext = Buffer.from(plaintext, encoding)
+    op.plaintextLength = plaintext.byteLength
+  }
 
+  const stream = encryptStream(cmm, op)
   const result: Buffer[] = []
   let messageHeader: MessageHeader|false = false
   stream
@@ -38,8 +44,6 @@ export async function encrypt (
   // This will check both Uint8Array|Buffer
   if (plaintext instanceof Uint8Array) {
     stream.end(plaintext)
-  } else if (typeof plaintext === 'string') {
-    stream.end(Buffer.from(plaintext, encoding))
   } else if (plaintext.readable) {
     plaintext.pipe(stream)
   } else {

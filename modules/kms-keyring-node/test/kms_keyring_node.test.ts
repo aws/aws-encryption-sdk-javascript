@@ -49,7 +49,7 @@ describe('KmsKeyringNode::constructor', () => {
   })
 })
 
-describe('RawAesKeyringWebCrypto encrypt/decrypt', () => {
+describe('KmsKeyringNode encrypt/decrypt', () => {
   const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
   const keyArn = 'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f'
   const keyIds = [keyArn]
