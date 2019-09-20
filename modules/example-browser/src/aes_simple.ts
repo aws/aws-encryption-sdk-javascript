@@ -31,7 +31,7 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
 export async function testAES () {
   /* You need to specify a name
    * and a namespace for raw encryption key providers.
-   * The name and namespace that you use in the decryption keyring *must* be an exact,
+   * The name and namespace that you use in the decryption keyring *must* be an exact, case-sensitive match.
    * *case-sensitive* match for the name and namespace in the encryption keyring.
    */
   const keyName = 'aes-name'
