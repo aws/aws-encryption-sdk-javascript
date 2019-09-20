@@ -74,7 +74,7 @@ export async function testCachingMaterialsManagerExample () {
     }
   })
 
-  /* The KMS keyring must be configured with the desired CMKs */
+  /* You must configure the KMS keyring with your KMS CMKs */
   const keyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
 
   /* Create a cache to hold the material.
