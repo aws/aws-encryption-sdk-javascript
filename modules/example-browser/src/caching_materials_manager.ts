@@ -47,7 +47,12 @@ export async function testCachingMaterialsManagerExample () {
    * The caller must have kms:Encrypt permission for every CMK in keyIds.
    * You might list several keys in different AWS Regions.
    * This allows you to decrypt the data in any of the represented Regions.
-   * In this example, the generator key and the additional key are actually the same CMK. In `generatorId`, this CMK is identified by its alias ARN. In `keyIds`, this CMK is identified by its key ARN. In practice, you would specify different CMKs, or omit the `keyIds` parameter. 
+   * In this example, the generator key
+   * and the additional key are actually the same CMK.
+   * In `generatorId`, this CMK is identified by its alias ARN.
+   * In `keyIds`, this CMK is identified by its key ARN.
+   * In practice, you would specify different CMKs,
+   * or omit the `keyIds` parameter. 
    * This is *only* to demonstrate how the CMK ARNs are configured.
    */
   const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
@@ -79,7 +84,10 @@ export async function testCachingMaterialsManagerExample () {
 
   /* Create a cache to hold the data keys (and related cryptographic material).
    * This example uses the local cache provided by the Encryption SDK.
-   * The `capacity` value represents is the maximum number of entries that the cache can hold. To make room for an additional entry, the cache evicts the oldest cached entry.
+   * The `capacity` value represents is the maximum number of entries
+   * that the cache can hold.
+   * To make room for an additional entry,
+   * the cache evicts the oldest cached entry.
    * Both encrypt and decrypt requests count independently towards this threshold.
    * Entries that exceed any cache threshold are actively removed from the cache.
    * By default, the SDK checks one item in the cache every 60 seconds (60,000 milliseconds).
@@ -123,11 +131,17 @@ export async function testCachingMaterialsManagerExample () {
     maxMessagesEncrypted
   })
 
-  /* Encryption context is a *very* powerful tool for controlling and managing access. When you pass an encryption context to the encrypt function, the encryption context is cryptographically bound to the data. If you don't pass in the same encryption context when decrypting, the decrypt function fails.
+  /* Encryption context is a *very* powerful tool for controlling
+   * and managing access.
+   * When you pass an encryption context to the encrypt function,
+   * the encryption context is cryptographically bound to the data.
+   * If you don't pass in the same encryption context when decrypting, 
+   * the decrypt function fails.
    * The encryption context is ***not*** secret!
    * Encrypted data is opaque.
    * You can use an encryption context to assert things about the encrypted data.
-   * The encryption context helps you to determine whether the ciphertext you retrieved is the ciphertext you expect to decrypt.
+   * The encryption context helps you to determine 
+   * whether the ciphertext you retrieved is the ciphertext you expect to decrypt.
    * For example, if you are are only expecting data from 'us-west-2',
    * the appearance of a different AWS Region in the encryption context can indicate malicious interference.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
