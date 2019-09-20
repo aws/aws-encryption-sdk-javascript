@@ -124,7 +124,7 @@ export async function testCachingMaterialsManagerExample () {
   })
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
-   * It is ***not*** secret!
+   * The encryption context is ***not*** secret!
    * Encrypted data is opaque.
    * You can use an encryption context to assert things about the encrypted data.
    * Just because you can decrypt something does not mean it is what you expect.
