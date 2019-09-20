@@ -92,7 +92,7 @@ export async function testCachingMaterialsManagerExample () {
   /* The partition name lets multiple caching CMMs share the same local cryptographic cache.
    * By default, the entries for each CMM are cached separately. However, if you want these CMMs to share the cache,
    * make the partition name the same.
-   * If no partition is supplied a random one will be generated.
+   * If you don't supply a partition name, the Encryption SDK generates a random name.
    * This is so that sharing elements in the cache MUST be an intentional operation.
    */
   const partition = 'local partition name'
