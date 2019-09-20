@@ -80,7 +80,7 @@ export async function testCachingMaterialsManagerExample () {
   /* Create a cache to hold the data keys (and related cryptographic material).
    * This example uses the local cache provided by the Encryption SDK.
    * The `capacity` value represents is the maximum number of entries that the cache can hold. To make room for an additional entry, the cache evicts the oldest cached entry.
-   * Both encrypt and decrypt requests count independently towards this total.
+   * Both encrypt and decrypt requests count independently towards this threshold.
    * Elements will be actively removed from the cache.
    * The default frequency is to check one item every minute.
    * This can be configure by passing a `proactiveFrequency`
