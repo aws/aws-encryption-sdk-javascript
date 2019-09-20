@@ -43,7 +43,7 @@ export async function testCachingMaterialsManagerExample () {
    */
   const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
-  /* Adding alternate KMS keys that can decrypt.
+  /* Adding additional KMS keys that can decrypt.
    * Access to kms:Encrypt is required for every CMK in keyIds.
    * You might list several keys in different AWS Regions.
    * This allows you to decrypt the data in any of the represented Regions.
