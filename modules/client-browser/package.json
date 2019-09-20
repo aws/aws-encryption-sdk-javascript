@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/client-browser",
-  "version": "0.1.0-preview.4",
+  "version": "0.1.0-preview.5",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "standard src/*.ts test/**/*.ts"
@@ -12,13 +12,13 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/caching-materials-manager-browser": "^0.1.0-preview.3",
-    "@aws-crypto/decrypt-browser": "^0.1.0-preview.3",
-    "@aws-crypto/encrypt-browser": "^0.1.0-preview.3",
-    "@aws-crypto/kms-keyring-browser": "^0.1.0-preview.3",
-    "@aws-crypto/material-management-browser": "^0.1.0-preview.3",
-    "@aws-crypto/raw-aes-keyring-browser": "^0.1.0-preview.3",
-    "@aws-crypto/raw-rsa-keyring-browser": "^0.1.0-preview.3",
+    "@aws-crypto/caching-materials-manager-browser": "^0.1.0-preview.4",
+    "@aws-crypto/decrypt-browser": "^0.1.0-preview.4",
+    "@aws-crypto/encrypt-browser": "^0.1.0-preview.4",
+    "@aws-crypto/kms-keyring-browser": "^0.1.0-preview.4",
+    "@aws-crypto/material-management-browser": "^0.1.0-preview.4",
+    "@aws-crypto/raw-aes-keyring-browser": "^0.1.0-preview.4",
+    "@aws-crypto/raw-rsa-keyring-browser": "^0.1.0-preview.4",
     "@aws-crypto/web-crypto-backend": "^0.1.0-preview.3",
     "tslib": "^1.9.3"
   },

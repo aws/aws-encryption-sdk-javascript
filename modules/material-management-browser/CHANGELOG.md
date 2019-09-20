@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.4](/compare/@aws-crypto/material-management-browser@0.1.0-preview.3...@aws-crypto/material-management-browser@0.1.0-preview.4) (2019-09-20)
+
+
+### Bug Fixes
+
+* ENCODED_SIGNER_KEY in encryption context e8b8efd
+
+
+### Features
+
+* Suport Node.js crypto KeyObjects (#200) 77ad031, closes #200 #74
+
+
+
+
+
 # [0.1.0-preview.3](/compare/@aws-crypto/material-management-browser@0.1.0-preview.2...@aws-crypto/material-management-browser@0.1.0-preview.3) (2019-08-08)
 
 

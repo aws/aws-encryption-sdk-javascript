@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.4](/compare/@aws-crypto/decrypt-node@0.1.0-preview.3...@aws-crypto/decrypt-node@0.1.0-preview.4) (2019-09-20)
+
+
+### Bug Fixes
+
+* Zero length frames in old version of Node (#202) c50dfa1, closes #202 #199
+
+
+
+
+
 # [0.1.0-preview.3](/compare/@aws-crypto/decrypt-node@0.1.0-preview.2...@aws-crypto/decrypt-node@0.1.0-preview.3) (2019-08-08)
 
 

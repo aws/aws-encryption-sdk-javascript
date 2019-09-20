@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0-preview.5](/compare/@aws-crypto/integration-node@0.2.0-preview.4...@aws-crypto/integration-node@0.2.0-preview.5) (2019-09-20)
+
+
+### Bug Fixes
+
+* Encrypt name to result (#211) 03061d1, closes #211
+* integration silent errors (#197) fc91a71, closes #197
+
+
+
+
+
 # [0.2.0-preview.4](/compare/@aws-crypto/integration-node@0.2.0-preview.3...@aws-crypto/integration-node@0.2.0-preview.4) (2019-08-08)
 
 **Note:** Version bump only for package @aws-crypto/integration-node

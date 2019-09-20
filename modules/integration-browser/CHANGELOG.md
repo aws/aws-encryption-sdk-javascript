@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0-preview.5](/compare/@aws-crypto/integration-browser@0.2.0-preview.4...@aws-crypto/integration-browser@0.2.0-preview.5) (2019-09-20)
+
+
+### Bug Fixes
+
+* CI encrypt/decrypt test vectors (#192) 7a6e1e5, closes #192
+* Encrypt name to result (#211) 03061d1, closes #211
+* integration silent errors (#197) fc91a71, closes #197
+
+
+
+
+
 # [0.2.0-preview.4](/compare/@aws-crypto/integration-browser@0.2.0-preview.3...@aws-crypto/integration-browser@0.2.0-preview.4) (2019-08-08)
 
 

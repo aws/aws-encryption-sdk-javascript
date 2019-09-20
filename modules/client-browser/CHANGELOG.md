@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.5](/compare/@aws-crypto/client-browser@0.1.0-preview.4...@aws-crypto/client-browser@0.1.0-preview.5) (2019-09-20)
+
+
+### Bug Fixes
+
+* Add cacheing CMM examples (#187) b74716b, closes #187 #23
+
+
+
+
+
 # [0.1.0-preview.4](/compare/@aws-crypto/client-browser@0.1.0-preview.3...@aws-crypto/client-browser@0.1.0-preview.4) (2019-08-08)
 
 

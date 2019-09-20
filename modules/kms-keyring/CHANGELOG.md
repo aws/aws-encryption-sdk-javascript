@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.4](/compare/@aws-crypto/kms-keyring@0.1.0-preview.3...@aws-crypto/kms-keyring@0.1.0-preview.4) (2019-09-20)
+
+
+### Bug Fixes
+
+* Better error messageing (#212) 7198100, closes #212 #152
+* KeyringTraceFlag requirements and data key caching (#210) 7dfa1ae, closes #210
+
+
+### Features
+
+* Suport Node.js crypto KeyObjects (#200) 77ad031, closes #200 #74
+
+
+
+
+
 # [0.1.0-preview.3](/compare/@aws-crypto/kms-keyring@0.1.0-preview.2...@aws-crypto/kms-keyring@0.1.0-preview.3) (2019-08-08)
 
 

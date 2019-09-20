@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0-preview.4](/compare/@aws-crypto/material-management@0.2.0-preview.3...@aws-crypto/material-management@0.2.0-preview.4) (2019-09-20)
+
+
+### Bug Fixes
+
+* Better error messageing (#212) 7198100, closes #212 #152
+* Better timingSafeEqual definition (#203) 12d1661, closes #203
+* KeyringTraceFlag requirements and data key caching (#210) 7dfa1ae, closes #210
+
+
+### Features
+
+* Remove unencryptedDataKeyLength (#201) bd160c0, closes #201
+* Suport Node.js crypto KeyObjects (#200) 77ad031, closes #200 #74
+
+
+
+
+
 # [0.2.0-preview.3](/compare/@aws-crypto/material-management@0.2.0-preview.2...@aws-crypto/material-management@0.2.0-preview.3) (2019-08-08)
 
 

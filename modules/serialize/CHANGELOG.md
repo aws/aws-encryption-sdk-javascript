@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-preview.4](/compare/@aws-crypto/serialize@0.1.0-preview.3...@aws-crypto/serialize@0.1.0-preview.4) (2019-09-20)
+
+
+### Bug Fixes
+
+* BYTES_PER_KEY value (#193) d3118d7, closes #193
+* plaintextLength must be enforced (#213) 1788d25, closes #213
+* prototype inheritance bug in decodeEncryptionContext (#216) 6945eef, closes #216
+* updating readElement to match underlying data structure (#215) b59855e, closes #215
+* version and type are required by the message format (#217) de30b36, closes #217 #209
+
+
+
+
+
 # [0.1.0-preview.3](/compare/@aws-crypto/serialize@0.1.0-preview.2...@aws-crypto/serialize@0.1.0-preview.3) (2019-08-08)
 
 **Note:** Version bump only for package @aws-crypto/serialize
