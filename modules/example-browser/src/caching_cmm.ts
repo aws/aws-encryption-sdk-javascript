@@ -110,7 +110,7 @@ export async function testCachingCMMExample () {
    */
   const maxAge = 1000 * 60
 
-  /* The maximum amount of bytes that will be encrypted under a single data key.
+  /* The maximum number of bytes that will be encrypted under a single data key.
    * This value is optional,
    * but you should configure the lowest practical value.
    */
