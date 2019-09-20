@@ -81,7 +81,7 @@ export async function testCachingMaterialsManagerExample () {
    * This example uses the local cache provided by the Encryption SDK.
    * The `capacity` value represents is the maximum number of entries that the cache can hold. To make room for an additional entry, the cache evicts the oldest cached entry.
    * Both encrypt and decrypt requests count independently towards this threshold.
-   * Elements will be actively removed from the cache.
+   * Entries that exceed any cache threshold are actively removed from the cache.
    * The default frequency is to check one item every minute.
    * This can be configure by passing a `proactiveFrequency`
    * as the second paramter to however often you want to check in milliseconds.
