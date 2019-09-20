@@ -66,7 +66,7 @@ const context = {
 const plainText = new Uint8Array([1, 2, 3, 4, 5])
 
 /* Encrypt the string using the keyring and the encryption context 
- * the Encryption SDK returns an "encrypted message" that includes the result, 
+ * the Encryption SDK returns an "encrypted message" that includes the ciphertext, 
  * the encryption context, and the encrypted data keys.
  */ 
 const { result } = await encrypt(keyring, plainText, { encryptionContext: context })
