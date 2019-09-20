@@ -84,7 +84,7 @@ export async function testCachingCMMExample () {
 
   /* Create a cache to hold the data keys (and related cryptographic material).
    * This example uses the local cache provided by the Encryption SDK.
-   * The `capacity` value represents is the maximum number of entries
+   * The `capacity` value represents the maximum number of entries
    * that the cache can hold.
    * To make room for an additional entry,
    * the cache evicts the oldest cached entry.
