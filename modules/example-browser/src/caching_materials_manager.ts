@@ -127,7 +127,7 @@ export async function testCachingMaterialsManagerExample () {
    * The encryption context is ***not*** secret!
    * Encrypted data is opaque.
    * You can use an encryption context to assert things about the encrypted data.
-   * Just because you can decrypt something does not mean it is what you expect.
+   * The encryption context helps you to determine whether the ciphertext you retrieved is the ciphertext you expect to decrypt.
    * For example, if you are are only expecting data from 'us-west-2',
    * the appearance of a different AWS Region in the encryption context can indicate malicious interference.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
