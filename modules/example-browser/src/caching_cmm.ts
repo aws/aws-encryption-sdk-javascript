@@ -146,7 +146,7 @@ export async function testCachingCMMExample () {
    * the appearance of a different AWS Region in the encryption context can indicate malicious interference.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    *
-   * Cached data keys are reused ***only*** when the encryption contexts passed into the functions are an exact case-sensitive match.
+   * Also, cached data keys are reused ***only*** when the encryption contexts passed into the functions are an exact case-sensitive match.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/data-caching-details.html#caching-encryption-context
    */
   const encryptionContext = {
