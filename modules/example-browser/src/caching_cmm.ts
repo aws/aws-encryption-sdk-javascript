@@ -99,7 +99,7 @@ export async function testCachingCMMExample () {
 
   /* The partition name lets multiple caching CMMs share the same local cryptographic cache.
    * By default, the entries for each CMM are cached separately. However, if you want these CMMs to share the cache,
-   * make the partition name the same.
+   * use the same partition name for both caching CMMs.
    * If you don't supply a partition name, the Encryption SDK generates a random name.
    * As a result, sharing elements in the cache MUST be an intentional operation.
    */
