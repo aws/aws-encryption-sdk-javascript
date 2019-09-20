@@ -118,7 +118,7 @@ export async function testCachingCMMExample () {
 
   /* The maximum number of messages that will be encrypted under a single data key.
    * This value is optional,
-   * but you should configure the lowest value possible.
+   * but you should configure the lowest practical value.
    */
   const maxMessagesEncrypted = 10
 
