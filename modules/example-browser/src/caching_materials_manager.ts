@@ -56,7 +56,7 @@ export async function testCachingMaterialsManagerExample () {
    * The credentials here are injected by webpack from your environment bundle is created
    * The credential values are pulled using @aws-sdk/credential-provider-node.
    * See kms.webpack.config
-   * You should inject your credential into the browser in a secure manner,
+   * You should inject your credential into the browser in a secure manner
    * that works with your application.
    */
   const { accessKeyId, secretAccessKey, sessionToken } = credentials
