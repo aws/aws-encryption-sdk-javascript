@@ -129,7 +129,7 @@ export async function testCachingMaterialsManagerExample () {
    * You can use an encryption context to assert things about the encrypted data.
    * Just because you can decrypt something does not mean it is what you expect.
    * For example, if you are are only expecting data from 'us-west-2',
-   * the origin can identify a malicious actor.
+   * the appearance of a different AWS Region in the encryption context can indicate malicious interference.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    *
    * DATA KEYS FOR MESSAGES WILL ***ONLY*** BE SHARED FOR EXACT MATCHES OF ENCRYPTION CONTEXT.
