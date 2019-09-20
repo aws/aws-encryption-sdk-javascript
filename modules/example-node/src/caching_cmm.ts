@@ -31,7 +31,7 @@ export async function cachingCMMNodeSimpleTest () {
   const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
 
   /* The KMS keyring must be configured with the desired CMKs
-   * In this case we are going to pass this keyring to the caching CMM,
+   * This example passes the keyring to the caching CMM
    * instead of using it directly.
    */
   const keyring = new KmsKeyringNode({ generatorKeyId, keyIds })
