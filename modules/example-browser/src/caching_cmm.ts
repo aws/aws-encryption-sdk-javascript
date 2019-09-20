@@ -134,7 +134,7 @@ export async function testCachingCMMExample () {
   /* Encryption context is a *very* powerful tool for controlling
    * and managing access.
    * When you pass an encryption context to the encrypt function,
-   * the encryption context is cryptographically bound to the data.
+   * the encryption context is cryptographically bound to the ciphertext.
    * If you don't pass in the same encryption context when decrypting,
    * the decrypt function fails.
    * The encryption context is ***not*** secret!
