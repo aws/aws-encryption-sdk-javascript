@@ -60,7 +60,7 @@ export async function testMultiKeyringExample () {
    * from your environment when the bundle is created.
    * The credential values are pulled using @aws-sdk/credential-provider-node.
    * See kms.webpack.config
-   * You should inject your credential into the browser in a secure manner
+   * You should inject your credentials into the browser in a secure manner
    * that works with your application.
    */
   const { accessKeyId, secretAccessKey, sessionToken } = credentials
