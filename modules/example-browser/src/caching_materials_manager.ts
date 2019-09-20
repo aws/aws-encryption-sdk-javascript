@@ -82,7 +82,7 @@ export async function testCachingMaterialsManagerExample () {
    * The `capacity` value represents is the maximum number of entries that the cache can hold. To make room for an additional entry, the cache evicts the oldest cached entry.
    * Both encrypt and decrypt requests count independently towards this threshold.
    * Entries that exceed any cache threshold are actively removed from the cache.
-   * The default frequency is to check one item every minute.
+   * By default, the SDK checks one item in the cache every 60 seconds (60,000 milliseconds).
    * This can be configure by passing a `proactiveFrequency`
    * as the second paramter to however often you want to check in milliseconds.
    */
