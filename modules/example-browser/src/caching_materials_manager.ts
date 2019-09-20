@@ -64,7 +64,7 @@ export async function testCachingMaterialsManagerExample () {
   /* getClient takes a KMS client constructor
    * and optional configuration values.
    * The credentials can be injected here,
-   * because browser do not have a standard credential discover process the way Node.js does.
+   * because browsers do not have a standard credential discovery process the way Node.js does.
    */
   const clientProvider = getClient(KMS, {
     credentials: {
