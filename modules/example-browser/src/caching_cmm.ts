@@ -196,7 +196,7 @@ export async function testCachingCMMExample () {
    * the Encryption SDK adds a name-value pair to the encryption context that contains the public key.
    * Because the encryption context might contain additional key-value pairs,
    * do not include a test that requires that all key-value pairs match.
-   * Instead, verify that the key-value pairs you expect match.
+   * Instead, verify that the key-value pairs that you supplied to the `encrypt` function are included in the encryption context that the `decrypt` function returns.
    */
   Object
     .entries(encryptionContext)
