@@ -123,7 +123,7 @@ export async function testCachingMaterialsManagerExample () {
     maxMessagesEncrypted
   })
 
-  /* Encryption context is a *very* powerful tool for controlling and managing access.
+  /* Encryption context is a *very* powerful tool for controlling and managing access. When you pass an encryption context to the encrypt function, the encryption context is cryptographically bound to the data. If you don't pass in the same encryption context when decrypting, the decrypt function fails.
    * The encryption context is ***not*** secret!
    * Encrypted data is opaque.
    * You can use an encryption context to assert things about the encrypted data.
