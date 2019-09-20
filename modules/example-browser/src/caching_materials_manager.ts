@@ -84,7 +84,7 @@ export async function testCachingMaterialsManagerExample () {
    * Entries that exceed any cache threshold are actively removed from the cache.
    * By default, the SDK checks one item in the cache every 60 seconds (60,000 milliseconds).
    * To change this frequency, pass in a `proactiveFrequency` value
-   * as the second paramter to however often you want to check in milliseconds.
+   * as the second parameter. This value is in milliseconds.
    */
   const capacity = 100
   const cache = getLocalCryptographicMaterialsCache(capacity)
