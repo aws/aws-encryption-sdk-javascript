@@ -77,7 +77,7 @@ export async function testCachingMaterialsManagerExample () {
   /* You must configure the KMS keyring with your KMS CMKs */
   const keyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
 
-  /* Create a cache to hold the material.
+  /* Create a cache to hold the data keys (and related cryptographic material).
    * In this case we use the local cache provided by the Encryption SDK.
    * The number is the maximum number of entries that will be cached.
    * Both encrypt and decrypt requests count independently towards this total.
