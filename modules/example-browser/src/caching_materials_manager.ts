@@ -104,7 +104,7 @@ export async function testCachingMaterialsManagerExample () {
 
   /* The maximum amount of bytes that will be encrypted under a single data key.
    * This value is optional,
-   * but you should configure the lowest value possible.
+   * but you should configure the lowest practical value.
    */
   const maxBytesEncrypted = 100
 
