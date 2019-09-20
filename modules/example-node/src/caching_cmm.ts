@@ -41,23 +41,26 @@ export async function cachingCMMNodeSimpleTest () {
    */
   const keyring = new KmsKeyringNode({ generatorKeyId, keyIds })
 
-  /* Create a cache to hold the material.
-   * In this case we use the local cache provided by the Encryption SDK.
-   * The number is the maximum number of entries that will be cached.
-   * Both encrypt and decrypt requests count independently towards this total.
-   * Elements will be actively removed from the cache.
-   * The default frequency is to check one item every minute.
-   * This can be configure by passing a `proactiveFrequency`
-   * as the second paramter to however often you want to check in milliseconds.
+  /* Create a cache to hold the data keys (and related cryptographic material).
+   * This example uses the local cache provided by the Encryption SDK.
+   * The `capacity` value represents the maximum number of entries
+   * that the cache can hold.
+   * To make room for an additional entry,
+   * the cache evicts the oldest cached entry.
+   * Both encrypt and decrypt requests count independently towards this threshold.
+   * Entries that exceed any cache threshold are actively removed from the cache.
+   * By default, the SDK checks one item in the cache every 60 seconds (60,000 milliseconds).
+   * To change this frequency, pass in a `proactiveFrequency` value
+   * as the second parameter. This value is in milliseconds.
    */
   const capacity = 100
   const cache = getLocalCryptographicMaterialsCache(capacity)
 
   /* The partition name lets multiple caching CMMs share the same local cryptographic cache.
-   * If you want these CMMs to all cache the same items,
-   * make the partition name the same.
-   * If no partition is supplied a random one will be generated.
-   * This is so that sharing elements in the cache MUST be an intentional operation.
+   * By default, the entries for each CMM are cached separately. However, if you want these CMMs to share the cache,
+   * use the same partition name for both caching CMMs.
+   * If you don't supply a partition name, the Encryption SDK generates a random name for each caching CMM.
+   * As a result, sharing elements in the cache MUST be an intentional operation.
    */
   const partition = 'local partition name'
 
@@ -87,16 +90,22 @@ export async function cachingCMMNodeSimpleTest () {
     maxMessagesEncrypted
   })
 
-  /* Encryption context is a *very* powerful tool for controlling and managing access.
-   * It is ***not*** secret!
+  /* Encryption context is a *very* powerful tool for controlling
+   * and managing access.
+   * When you pass an encryption context to the encrypt function,
+   * the encryption context is cryptographically bound to the ciphertext.
+   * If you don't pass in the same encryption context when decrypting,
+   * the decrypt function fails.
+   * The encryption context is ***not*** secret!
    * Encrypted data is opaque.
    * You can use an encryption context to assert things about the encrypted data.
-   * Just because you can decrypt something does not mean it is what you expect.
+   * The encryption context helps you to determine
+   * whether the ciphertext you retrieved is the ciphertext you expect to decrypt.
    * For example, if you are are only expecting data from 'us-west-2',
-   * the origin can identify a malicious actor.
+   * the appearance of a different AWS Region in the encryption context can indicate malicious interference.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#encryption-context
    *
-   * DATA KEYS FOR MESSAGES WILL ***ONLY*** BE SHARED FOR EXACT MATCHES OF ENCRYPTION CONTEXT.
+   * Also, cached data keys are reused ***only*** when the encryption contexts passed into the functions are an exact case-sensitive match.
    * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/data-caching-details.html#caching-encryption-context
    */
   const encryptionContext = {
@@ -138,8 +147,8 @@ export async function cachingCMMNodeSimpleTest () {
    * If you use an algorithm suite with signing,
    * the Encryption SDK adds a name-value pair to the encryption context that contains the public key.
    * Because the encryption context might contain additional key-value pairs,
-   * do not add a test that requires that all key-value pairs match.
-   * Instead, verify that the key-value pairs you expect match.
+   * do not include a test that requires that all key-value pairs match.
+   * Instead, verify that the key-value pairs that you supplied to the `encrypt` function are included in the encryption context that the `decrypt` function returns.
    */
   Object
     .entries(encryptionContext)
