@@ -38,7 +38,7 @@ declare const credentials: {accessKeyId: string, secretAccessKey:string, session
 
 /* This is done to facilitate testing. */
 export async function testCachingMaterialsManagerExample () {
-  /* A KMS CMK is required to generate the data key.
+  /* This example uses a KMS keyring. The generator key in a KMS keyring generates and encrypts the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
   const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
