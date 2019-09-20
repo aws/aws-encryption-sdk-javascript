@@ -158,7 +158,7 @@ describe('getLocalCryptographicMaterialsCache', () => {
 })
 
 describe('cache eviction', () => {
-  it('putDecryptionMaterial can exceed maxSize', () => {
+  it('putDecryptionMaterial can exceed capacity', () => {
     const {
       getDecryptionMaterial,
       putDecryptionMaterial
@@ -207,7 +207,7 @@ describe('cache eviction', () => {
     expect(lost).to.equal(false)
   })
 
-  it('putEncryptionMaterial can exceed maxSize', () => {
+  it('putEncryptionMaterial can exceed capacity', () => {
     const {
       getEncryptionMaterial,
       putEncryptionMaterial

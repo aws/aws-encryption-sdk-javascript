@@ -32,9 +32,10 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
  * Use any method you like to get credentials into the browser.
  * See kms.webpack.config
  */
-declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
+declare const credentials: {accessKeyId: string, secretAccessKey:string, sessionToken:string }
 
-;(async function kmsSimpleExample () {
+/* This is done to facilitate testing. */
+export async function testKmsSimpleExample () {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
@@ -56,7 +57,7 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
    * You should inject your credential into the browser in a secure manner,
    * that works with your application.
    */
-  const { accessKeyId, secretAccessKey } = AWS_CREDENTIALS
+  const { accessKeyId, secretAccessKey, sessionToken } = credentials
 
   /* getClient takes a KMS client constructor
    * and optional configuration values.
@@ -66,7 +67,8 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   const clientProvider = getClient(KMS, {
     credentials: {
       accessKeyId,
-      secretAccessKey
+      secretAccessKey,
+      sessionToken
     }
   })
 
@@ -128,6 +130,9 @@ declare const AWS_CREDENTIALS: {accessKeyId: string, secretAccessKey:string }
   /* Log the clear message
    * only for testing and to show that it works.
    */
-  document.write('</br>Decrypted:' + plaintext)
+  document.write('</br>plaintext:' + plaintext)
   console.log(plaintext)
-})()
+
+  /* Return the values to make testing easy. */
+  return { plainText, plaintext }
+}

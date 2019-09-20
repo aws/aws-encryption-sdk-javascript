@@ -27,7 +27,8 @@ import {
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
-  ;(async function testAES () {
+/* This is done to facilitate testing. */
+export async function testAES () {
   /* You need to specify a name
    * and a namespace for raw encryption key providers.
    * The name and namespace that you use in the decryption keyring *must* be an exact,
@@ -105,4 +106,7 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
    */
   document.write('</br>plaintext:' + plaintext)
   console.log(plaintext)
-})()
+
+  /* Return the values to make testing easy. */
+  return { plainText, plaintext }
+}

@@ -27,11 +27,13 @@ module.exports = (async () => ({
   },
   output: {
     filename: 'kms_simple_bundle.js',
-    path: path.resolve(__dirname, '..', 'build')
+    path: path.resolve(__dirname, '..', 'build'),
+    library: 'test',
+    libraryTarget: 'var'
   },
   plugins: [
     new webpack.DefinePlugin({
-      'AWS_CREDENTIALS': JSON.stringify(await defaultProvider()())
+      credentials: JSON.stringify(await defaultProvider()())
     })
   ],
   node: {
