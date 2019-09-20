@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-/* This is a simple example of using a Caching CMM with a KMS Keyring
+/* This is a simple example of using a caching CMM with a KMS keyring
  * to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser.
  */
 
