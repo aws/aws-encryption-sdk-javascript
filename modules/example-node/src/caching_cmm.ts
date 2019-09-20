@@ -25,7 +25,12 @@ export async function cachingCMMNodeSimpleTest () {
    * Access to kms:Encrypt is required for every CMK in keyIds.
    * You might list several keys in different AWS Regions.
    * This allows you to decrypt the data in any of the represented Regions.
-   * In this example, I am using the same CMK.
+   * In this example, the generator key
+   * and the additional key are actually the same CMK.
+   * In `generatorId`, this CMK is identified by its alias ARN.
+   * In `keyIds`, this CMK is identified by its key ARN.
+   * In practice, you would specify different CMKs,
+   * or omit the `keyIds` parameter.
    * This is *only* to demonstrate how the CMK ARNs are configured.
    */
   const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']

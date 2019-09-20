@@ -58,7 +58,7 @@ const context = {
 const cleartext = 'asdf'
 
 /* Encrypt the string using the keyring and the encryption context 
- * the Encryption SDK returns an "encrypted message" that includes the ciphertext, 
+ * the Encryption SDK returns an "encrypted message" (`result`) that includes the ciphertext
  * the encryption context, and the encrypted data keys.
  */ 
 const { result } = await encrypt(keyring, cleartext, { context })
