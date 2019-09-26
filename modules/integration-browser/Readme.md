@@ -1,12 +1,41 @@
 # AWS Encryption SDK for Javascript Browser Integration
 
-This module includes compatibility tests with the other versions of the AWS Encryption SDK.
-It's designed to facilitate testing for the set of test vectors of the AWS Encryption SDK. 
-The test vectors can be found [here] (https://github.com/awslabs/aws-encryption-sdk-test-vectors/tree/a28851a188163e45b8cbf94c1d5a1e67e9622aa8).
+This repository is for compatibility tests with the other versions of the AWS Encryption SDKs.
+It's purpose is to facilitate testing the set of test vectors the AWS Encryption SDK.
+The test vectors can be found at https://github.com/awslabs/aws-encryption-sdk-test-vectors.
+Manifest information can be found at https://github.com/awslabs/aws-crypto-tools-test-vector-framework.
 
-This package will not add any dependencies in your environment, but it can be used to test the environment.   
+It does not provide any useful functionality upon which you may want to build any dependencies.
+Instead you want to use it to verify environments (make sure the AWS Encryption SDK works on them).
+It uses karma under the hood to run in a browser.
 
 # To test browser compatibility
-1. Get a manifest zip file from aws-encryption-sdk-test-vectors or a supported format.
-1. Use `npm run build_fixtures -- -v path/to/zip` to extract the fixtures from the zip file.
-1. Run `npm run karma` to  execute the extracted tests.
+
+1. Download a manifest zip file from aws-encryption-sdk-test-vectors or a supported format.
+1. Select or download both an encrypt manifest list and key manifest from aws-crypto-tools-test-vector-framework.
+1. Execute the CLI to run the integration tests for decrypt and encrypt.
+
+## integration-browser is installed as a dependency or globally
+
+### decrypt tests
+`integration_browser decrypt -v path/to/test/vectors/zip --karma`
+
+### encrypt tests
+`integration_browser encrypt -m "path/or/url/to/manifest" -k "path/or/url/to/key" -o "url/to/decrypt/oracle" --karma`
+
+## integration-browser has been checked out local
+
+### decrypt tests
+`npm run build_fixtures -- decrypt -v path/to/test/vectors/zip --karma`
+
+### encrypt tests
+`npm run build_fixtures -- encrypt -m "path/or/url/to/manifest" -k "path/or/url/to/key" -o "url/to/decrypt/oracle" --karma`
+
+## Test Integration
+Just run
+
+```sh
+npm test
+```
+
+to run the tests.
