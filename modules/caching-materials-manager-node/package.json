@@ -12,7 +12,7 @@
   "author": {
     "name": "AWS Crypto Tools Team",
     "email": "aws-crypto-tools-team@amazon.com",
-    "url": "https://github.com/awslabs/aws-encryption-sdk-javascript"
+    "url": "https://github.com/aws/aws-encryption-sdk-javascript"
   },
   "license": "Apache-2.0",
   "dependencies": {

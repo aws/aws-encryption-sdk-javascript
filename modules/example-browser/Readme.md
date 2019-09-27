@@ -17,7 +17,7 @@ This repository holds examples for encrypting and decrypting in a browser.
 This package is intended to act as a working example.
 It is not intended for direct use by clients.
 To get started with the AWS Encryption SDK for JavaScript,
-follow the instructions in [the README](https://github.com/awslabs/aws-encryption-sdk-javascript/blob/master/README.md).
+follow the instructions in [the README](https://github.com/aws/aws-encryption-sdk-javascript/blob/master/README.md).
 
 # KMS Simple Example
 

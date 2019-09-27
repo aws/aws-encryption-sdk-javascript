@@ -76,11 +76,11 @@ We will ask you to confirm the licensing of your contribution.
 
 We may ask you to sign a [Contributor License Agreement (CLA)][cla] for larger changes.
 
-[issues]: https://github.com/awslabs/aws-encryption-sdk-javascript/issues
-[recently closed]: https://github.com/awslabs/aws-encryption-sdk-javascript/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20
-[help wanted]: https://github.com/awslabs/aws-encryption-sdk-javascript/labels/help%20wanted
-[pr]: https://github.com/awslabs/aws-encryption-sdk-javascript/pulls
-[license]: https://github.com/awslabs/aws-encryption-sdk-javascript/blob/master/LICENSE
+[issues]: https://github.com/aws/aws-encryption-sdk-javascript/issues
+[recently closed]: https://github.com/aws/aws-encryption-sdk-javascript/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20
+[help wanted]: https://github.com/aws/aws-encryption-sdk-javascript/labels/help%20wanted
+[pr]: https://github.com/aws/aws-encryption-sdk-javascript/pulls
+[license]: https://github.com/aws/aws-encryption-sdk-javascript/blob/master/LICENSE
 [cla]: http://en.wikipedia.org/wiki/Contributor_License_Agreement
 [vulnerability reporting]: http://aws.amazon.com/security/vulnerability-reporting/
 [code of conduct]: https://aws.github.io/code-of-conduct
