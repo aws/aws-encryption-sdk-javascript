@@ -4,7 +4,7 @@ The AWS Encryption SDK for JavaScript is a client-side encryption library design
 
 ## About @aws-crypto/material-management
 
-This packages is not intended for direct use by clients. To get started with the AWS Encryption SDK for JavaScript, follow the instructions in [the README](https://github.com/aws/aws-encryption-sdk-javascript/blob/master/README.md).
+This package is not intended for direct use by clients. To get started with the AWS Encryption SDK for JavaScript, follow the instructions in [the README](https://github.com/aws/aws-encryption-sdk-javascript/blob/master/README.md).
 
 ## License
 
