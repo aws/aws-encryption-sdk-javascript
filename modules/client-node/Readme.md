@@ -13,7 +13,7 @@ JavaScript with Node.js.
 * raw-aes-keyring-node
 * raw-rsa-keyring-node
 
-For code examples that show you how to these modules to create keyrings and encrypt and decrypt data, install the [example-node](https://github.com/awslabs/aws-encryption-sdk-javascript/tree/master/modules/example-node) module. 
+For code examples that show you how to these modules to create keyrings and encrypt and decrypt data, install the [example-node](https://github.com/aws/aws-encryption-sdk-javascript/tree/master/modules/example-node) module. 
 ## install
 
 To install this module, use the npm package manager. For help with installation, see

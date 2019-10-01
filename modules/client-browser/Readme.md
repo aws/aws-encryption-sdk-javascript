@@ -14,7 +14,7 @@ the JavaScript web browser.
 * raw-rsa-keyring-browser
 * web-crypto-backend
 
-For code examples that show you how to these modules to create keyrings and encrypt and decrypt data, install the [example-browser](https://github.com/awslabs/aws-encryption-sdk-javascript/tree/master/modules/example-browser) module. 
+For code examples that show you how to these modules to create keyrings and encrypt and decrypt data, install the [example-browser](https://github.com/aws/aws-encryption-sdk-javascript/tree/master/modules/example-browser) module. 
 ## install
 
 To install this module, use the npm package manager. For help with installation, see
