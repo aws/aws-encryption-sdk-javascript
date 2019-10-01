@@ -10,7 +10,7 @@ see the [Developer Guide](https://docs.aws.amazon.com/encryption-sdk/latest/deve
 This package should only be used as part of the AWS Encryption SDK for Javascript.
 For more information about the packages in this project
 and how they can be used together,
-see the [main node package readme](https://github.com/awslabs/aws-encryption-sdk-javascript/blob/master/modules/client-node/Readme.md)
+see the [main node package readme](https://github.com/aws/aws-encryption-sdk-javascript/blob/master/modules/client-node/Readme.md)
 
 ## Installing
 
