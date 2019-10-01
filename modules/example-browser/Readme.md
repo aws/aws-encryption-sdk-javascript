@@ -79,7 +79,7 @@ open html/aes_simple.html
 
 ```
 npm run example-multi-keyring
-open html/multi_keyring_simple.html
+open html/multi_keyring.html
 ```
 
 ## License
