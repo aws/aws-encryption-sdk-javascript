@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0](/compare/@aws-crypto/hkdf-node@0.2.0-preview.1...@aws-crypto/hkdf-node@1.0.0) (2019-10-01)
+
+**Note:** Version bump only for package @aws-crypto/hkdf-node
+
+
+
+
+
 # [0.2.0-preview.1](/compare/@aws-crypto/hkdf-node@0.2.0-preview.0...@aws-crypto/hkdf-node@0.2.0-preview.1) (2019-06-21)
 
 

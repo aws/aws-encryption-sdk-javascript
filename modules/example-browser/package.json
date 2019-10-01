@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/example-browser",
-  "version": "0.1.0-preview.5",
+  "version": "1.0.0",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -21,7 +21,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/client-browser": "^0.1.0-preview.5",
+    "@aws-crypto/client-browser": "^1.0.0",
     "@aws-sdk/util-base64-browser": "0.1.0-preview.1",
     "tslib": "^1.9.3"
   },
