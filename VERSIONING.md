@@ -21,8 +21,7 @@ A patch release will contain a collection of minor bug fixes,
 or individual major and security bug fixes, depending on severity.
 A patch release will also include warning of upcoming breaking changes, whenever possible.
 
-What this means for you
-=======================
+# What this means for you
 
 We recommend running the most recent version. Here are our suggestions for managing updates:
 
