@@ -80,3 +80,17 @@ npm test
 This SDK is distributed under the
 [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0),
 see LICENSE.txt and NOTICE.txt for more information.
+
+# Breaking changes from `preview` to `1.0.0`
+
+The AWS Encryption SDK for JavaScript is generally available
+as of October 1, 2019.
+There were breaking changes during the `preview`.
+
+* Passing encryption context to `encrypt` is now `{ encryptionContext?: EncryptionContext }` [#148][encryptionContext]
+* The return value of `encrypt` is now `{result: Uint8Array, messageHeader: MessageHeader}` [#211][encryptResult]
+* `encrypt` strictly enforces `plaintextLength` [#213][plaintextLength]
+
+[encryptionContext]: https://github.com/aws/aws-encryption-sdk-javascript/pull/148
+[encryptResult]: https://github.com/aws/aws-encryption-sdk-javascript/pull/211
+[plaintextLength]: https://github.com/aws/aws-encryption-sdk-javascript/pull/213
