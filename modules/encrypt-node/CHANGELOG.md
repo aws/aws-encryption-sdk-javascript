@@ -19,8 +19,12 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Encrypt name to result (#211) 03061d1, closes #211
 * plaintextLength must be enforced (#213) 1788d25, closes #213
 
+### BREAKING CHANGES
 
-
+* `encrypt` now returns `{result: Uint8Array, messageHeader: MessageHeader}`
+instead of `{ciphertext: Uint8Array, messageHeader: MessageHeader}`.
+*  `encrypt` and `encryptStream` will now throw
+if the caller tries to encrypt more data than `plaintextLength`.
 
 
 # [0.1.0-preview.3](/compare/@aws-crypto/encrypt-node@0.1.0-preview.2...@aws-crypto/encrypt-node@0.1.0-preview.3) (2019-08-08)
@@ -31,9 +35,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Encryption Context changes (#148) 5a7e9ca, closes #148 #54
 * framLength is not passed to the CMM (#190) b60f653, closes #190 #161
 
+### BREAKING CHANGES
 
-
-
+* `encrypt` and `encryptStream` now expect the encryption context 
+to be passed as `encryptionContext` instead of `context`.
 
 # [0.1.0-preview.2](/compare/@aws-crypto/encrypt-node@0.1.0-preview.1...@aws-crypto/encrypt-node@0.1.0-preview.2) (2019-07-24)
 

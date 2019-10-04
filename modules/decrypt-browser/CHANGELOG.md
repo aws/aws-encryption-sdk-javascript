@@ -27,7 +27,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * encrypt/decrypt interface should be the same (#189) ff78f94, closes #189 #182
 * Encryption Context changes (#148) 5a7e9ca, closes #148 #54
 
+### BREAKING CHANGES
 
+* `decrypt` now returns `{plaintext: Uint8Array, messageHeader: MessageHeader}`
+instead of `{clearMessage: Uint8Array, messageHeader: MessageHeader}`.
 
 
 

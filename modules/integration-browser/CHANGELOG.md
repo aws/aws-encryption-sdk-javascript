@@ -47,7 +47,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 * Encryption tests for integration-browser (#159) 043506d, closes #159
 
+### BREAKING CHANGES
 
+* The cli now takes `encrypt` and `decrypt` as a command,
+instead of only supporting decrypt testing.
 
 
 
