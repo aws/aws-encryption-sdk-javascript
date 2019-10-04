@@ -38,6 +38,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 * Encryption tests for integration-node (#153) d7b5e73, closes #153
 
+### BREAKING CHANGES
+
+* The cli now takes `encrypt` and `decrypt` as a command,
+instead of only supporting decrypt testing.
 
 
 

@@ -18,7 +18,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 * Encrypt name to result (#211) 03061d1, closes #211
 
+### BREAKING CHANGES
 
+* `encrypt` now returns `{result: Uint8Array, messageHeader: MessageHeader}`
+instead of `{ciphertext: Uint8Array, messageHeader: MessageHeader}`.
 
 
 
@@ -32,6 +35,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * framLength is not passed to the CMM (#190) b60f653, closes #190 #161
 
 
+### BREAKING CHANGES
+
+* `encrypt` now returns `{ciphertext: Uint8Array, messageHeader: MessageHeader}`
+instead of `{cipherMessage: Uint8Array, messageHeader: MessageHeader}`.
 
 
 
