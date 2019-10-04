@@ -11,7 +11,7 @@ Major version changes are significant and expected to break backwards compatibil
 Minor version changes will not break compatibility between the previous minor versions;
 to do so is a bug.
 Encryption SDK changes will also involve addition of optional features, and non-breaking enhancements.
-Additionally any change to the version of a dependency.
+Additionally, any change to the version of a dependency is a minor version change.
 
 ## Patch versions
 
@@ -19,20 +19,6 @@ Patch versions changes are meant only for bug fixes,
 and will not break compatibility of the current major version.
 A patch release will contain a collection of minor bug fixes, 
 or individual major and security bug fixes, depending on severity.
-A patch release will also include warning of upcoming breaking changes, whenever possible.
-
-# What this means for you
-
-We recommend running the most recent version. Here are our suggestions for managing updates:
-
-* X changes will require some effort to incorporate.
-* Y changes will not require significant effort to incorporate.
-
-  * If you have good unit and integration tests, these changes are generally safe to pick up automatically.
-
-* Z changes will not require any changes to your code. Z changes are intended to be picked up automatically.
-
-  * Good unit and integration tests are always recommended.
 
 # Semantic Commits
 
