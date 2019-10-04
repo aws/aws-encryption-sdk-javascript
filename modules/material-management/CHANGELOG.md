@@ -26,7 +26,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Remove unencryptedDataKeyLength (#201) bd160c0, closes #201
 * Suport Node.js crypto KeyObjects (#200) 77ad031, closes #200 #74
 
+### BREAKING CHANGES
 
+* CryptographicMaterial no longer support `unencryptedDataKeyLength`
 
 
 
@@ -40,7 +42,16 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * framLength is not passed to the CMM (#190) b60f653, closes #190 #161
 * Multi keyrings should not require a generator (#165) 11ff819, closes #165
 
+### BREAKING CHANGES
 
+* CryptographicMaterial now require `encryptionContext` on creation.
+this includes `NodeDecryptionMaterial`, `NodeEncryptionMaterial`,
+`WebCryptoEncryptionMaterial`, and `WebCryptoDecryptionMaterial`.
+* The Keyring base class no longer accepts `encryptionContext`
+for `onDecrypt` and `onEncrypt`.
+It now gets this value from the CryptographicMaterial passed.
+* The CMM interface now returns CryptographicMaterial
+instead of a complex object with material and context.
 
 
 
