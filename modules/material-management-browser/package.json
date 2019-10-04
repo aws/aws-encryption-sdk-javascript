@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/material-management-browser",
-  "version": "0.1.0-preview.4",
+  "version": "1.0.0",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -16,9 +16,9 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/material-management": "^0.2.0-preview.4",
-    "@aws-crypto/serialize": "^0.1.0-preview.4",
-    "@aws-crypto/web-crypto-backend": "^0.1.0-preview.3",
+    "@aws-crypto/material-management": "^1.0.0",
+    "@aws-crypto/serialize": "^1.0.0",
+    "@aws-crypto/web-crypto-backend": "^1.0.0",
     "@aws-sdk/util-base64-browser": "0.1.0-preview.1",
     "tslib": "^1.9.3"
   },

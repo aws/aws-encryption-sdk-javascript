@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/integration-node",
-  "version": "0.2.0-preview.5",
+  "version": "1.0.0",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "standard src/*.ts test/**/*.ts",
@@ -14,7 +14,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/client-node": "^0.1.0-preview.5",
+    "@aws-crypto/client-node": "^1.0.0",
     "@types/got": "^9.6.2",
     "@types/unzipper": "^0.9.1",
     "@types/yargs": "^13.0.0",

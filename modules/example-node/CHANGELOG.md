@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0](/compare/@aws-crypto/example-node@0.2.0-preview.5...@aws-crypto/example-node@1.0.0) (2019-10-01)
+
+**Note:** Version bump only for package @aws-crypto/example-node
+
+
+
+
+
 # [0.2.0-preview.5](/compare/@aws-crypto/example-node@0.2.0-preview.4...@aws-crypto/example-node@0.2.0-preview.5) (2019-09-20)
 
 

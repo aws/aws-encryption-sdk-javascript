@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/encrypt-node",
-  "version": "0.1.0-preview.4",
+  "version": "1.0.0",
   "scripts": {
     "prepublishOnly": "tsc -p tsconfig.json && tsc -p tsconfig.module.json",
     "lint": "standard src/*.ts test/**/*.ts",
@@ -15,8 +15,8 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/material-management-node": "^0.1.0-preview.4",
-    "@aws-crypto/serialize": "^0.1.0-preview.4",
+    "@aws-crypto/material-management-node": "^1.0.0",
+    "@aws-crypto/serialize": "^1.0.0",
     "@types/duplexify": "^3.6.0",
     "duplexify": "^4.0.0",
     "readable-stream": "^3.2.0",
