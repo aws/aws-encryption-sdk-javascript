@@ -1,5 +1,6 @@
 {
   "name": "@aws-crypto/client-node",
+  "keywords": ["cryptography", "crypto", "encryption", "envelope encryption", "client side encryption", "CSE", "aws"],
   "version": "1.0.0",
   "scripts": {
     "build": "tsc -b tsconfig.json",
