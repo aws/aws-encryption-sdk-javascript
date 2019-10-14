@@ -87,7 +87,7 @@ const timingSafeEqual: (a: Uint8Array, b: Uint8Array) => boolean = (function () 
      * because if a browser is using a Content Security Policy with `'unsafe-eval'`
      * it would fail on this eval.
      * The value in attempting to ensure this function is not optimized,
-     * is not worth the cost of making customers to alow `'unsafe-eval'`.
+     * is not worth the cost of making customers allow `'unsafe-eval'`.
      * If you copy this function for your own use, make sure to educate yourself.
      * Side channel attacks are pernicious and subtle.
      */
