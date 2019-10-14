@@ -88,7 +88,8 @@ const timingSafeEqual: (a: Uint8Array, b: Uint8Array) => boolean = (function () 
      * it would fail on this eval.
      * The value in attempting to ensure that this function is not optimized
      * is not worth the cost of making customers allow `'unsafe-eval'`.
-     * If you copy this function for your own use, make sure to educate yourself.
+     * If you want to copy this function for your own use,
+     * please review the timing-attack link above.
      * Side channel attacks are pernicious and subtle.
      */
     // eval('') // eslint-disable-line no-eval
