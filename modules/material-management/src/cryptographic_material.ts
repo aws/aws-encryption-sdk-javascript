@@ -83,7 +83,7 @@ const timingSafeEqual: (a: Uint8Array, b: Uint8Array) => boolean = (function () 
   function portableTimingSafeEqual (a: Uint8Array, b: Uint8Array) {
     /* It is *possible* that a runtime could optimize this constant time function.
      * Adding `eval` could prevent the optimization, but this is no guarantee.
-     * The eval below is commented out,
+     * The eval below is commented out
      * because if a browser is using a Content Security Policy with `'unsafe-eval'`
      * it would fail on this eval.
      * The value in attempting to ensure this function is not optimized,
