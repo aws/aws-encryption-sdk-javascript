@@ -92,7 +92,7 @@ const timingSafeEqual: (a: Uint8Array, b: Uint8Array) => boolean = (function () 
      * Side channel attacks are pernicious and subtle.
      */
     // eval('') // eslint-disable-line no-eval
-    /* Check for early return (Postcondition) UNTESTED: Size is well-know information.
+    /* Check for early return (Postcondition) UNTESTED: Size is well-know information
      * and does not leak information about contents.
      */
     if (a.byteLength !== b.byteLength) return false
