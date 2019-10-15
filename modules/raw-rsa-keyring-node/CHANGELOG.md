@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.1](/compare/@aws-crypto/raw-rsa-keyring-node@1.0.0...@aws-crypto/raw-rsa-keyring-node@1.0.1) (2019-10-15)
+
+**Note:** Version bump only for package @aws-crypto/raw-rsa-keyring-node
+
+
+
+
+
 # [1.0.0](/compare/@aws-crypto/raw-rsa-keyring-node@0.1.0-preview.4...@aws-crypto/raw-rsa-keyring-node@1.0.0) (2019-10-01)
 
 **Note:** Version bump only for package @aws-crypto/raw-rsa-keyring-node

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.1](/compare/@aws-crypto/material-management@1.0.0...@aws-crypto/material-management@1.0.1) (2019-10-15)
+
+
+### Bug Fixes
+
+* eval in portableTimingSafeEqual (#227) edd41f2, closes #227
+
+
+
+
+
 # [1.0.0](/compare/@aws-crypto/material-management@0.2.0-preview.4...@aws-crypto/material-management@1.0.0) (2019-10-01)
 
 **Note:** Version bump only for package @aws-crypto/material-management
