@@ -82,14 +82,20 @@ const timingSafeEqual: (a: Uint8Array, b: Uint8Array) => boolean = (function () 
   /* https://codahale.com/a-lesson-in-timing-attacks/ */
   function portableTimingSafeEqual (a: Uint8Array, b: Uint8Array) {
     /* It is *possible* that a runtime could optimize this constant time function.
-      * Adding `eval` should prevent the optimization, but this is no grantee.
-      * If you copy this function for your own use, make sure to educate yourself.
-      * Side channel attacks are pernicious and subtle.
-      */
-    eval('') // eslint-disable-line no-eval
-    /* Check for early return (Postcondition) UNTESTED: Size is well-know information.
-      * and does not leak information about contents.
-      */
+     * Adding `eval` could prevent the optimization, but this is no guarantee.
+     * The eval below is commented out
+     * because if a browser is using a Content Security Policy with `'unsafe-eval'`
+     * it would fail on this eval.
+     * The value in attempting to ensure that this function is not optimized
+     * is not worth the cost of making customers allow `'unsafe-eval'`.
+     * If you want to copy this function for your own use,
+     * please review the timing-attack link above.
+     * Side channel attacks are pernicious and subtle.
+     */
+    // eval('') // eslint-disable-line no-eval
+    /* Check for early return (Postcondition) UNTESTED: Size is well-know information
+     * and does not leak information about contents.
+     */
     if (a.byteLength !== b.byteLength) return false
 
     let diff = 0
