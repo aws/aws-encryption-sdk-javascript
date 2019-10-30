@@ -42,7 +42,7 @@ export function getClient<Client extends AwsEsdkKMSInterface, Config> (
      * in this case, the Encryption SDK should find the default region
      * or the default region needs to be supplied to this function
      */
-    const config = { ...defaultConfig, region } as Config
+    const config = (region ? { ...defaultConfig, region } : { ...defaultConfig }) as Config
     const client = new KMSClient(config)
 
     /* Postcondition: A region must be configured.

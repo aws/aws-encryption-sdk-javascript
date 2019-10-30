@@ -78,9 +78,9 @@ export function KmsKeyringClass<S extends SupportedAlgorithmSuites, Client exten
       needs(!(!discovery && !generatorKeyId && !keyIds.length), 'Noop keyring is not allowed: Set a keyId or discovery')
       /* Precondition: A keyring can be either a Discovery or have keyIds configured. */
       needs(!(discovery && (generatorKeyId || keyIds.length)), 'A keyring can be either a Discovery or have keyIds configured.')
-      /* Precondition: All KMS key arns must be valid. */
-      needs(!generatorKeyId || !!regionFromKmsKeyArn(generatorKeyId), 'Malformed arn.')
-      needs(keyIds.every(keyarn => !!regionFromKmsKeyArn(keyarn)), 'Malformed arn.')
+      /* Precondition: All KMS key identifiers must be valid. */
+      needs(!generatorKeyId || typeof regionFromKmsKeyArn(generatorKeyId) === 'string', 'Malformed arn.')
+      needs(keyIds.every(keyArn => typeof regionFromKmsKeyArn(keyArn) === 'string'), 'Malformed arn.')
       /* Precondition: clientProvider needs to be a callable function. */
       needs(typeof clientProvider === 'function', 'Missing clientProvider')
 

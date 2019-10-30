@@ -75,7 +75,7 @@ describe('KmsKeyring: constructor', () => {
     expect(() => new TestKmsKeyring({ clientProvider, generatorKeyId, keyIds, discovery })).to.throw()
   })
 
-  it('Precondition: All KMS key arns must be valid.', () => {
+  it('Precondition: All KMS key identifiers must be valid.', () => {
     const clientProvider: any = () => {}
     class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
 
@@ -93,6 +93,17 @@ describe('KmsKeyring: constructor', () => {
       clientProvider,
       keyIds: ['arn:aws:kms:us-east-1:123456789012:alias/example-alias', 'Not arn']
     })).to.throw()
+  })
+
+  it('An KMS CMK alias is a valid CMK identifier', () => {
+    const clientProvider: any = () => {}
+    class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
+    
+    new TestKmsKeyring({
+      clientProvider,
+      generatorKeyId: 'alias/example-alias',
+      keyIds: ['alias:example-alias']
+    })
   })
 
   it('Precondition: clientProvider needs to be a callable function.', () => {
