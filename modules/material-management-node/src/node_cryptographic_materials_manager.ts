@@ -15,7 +15,6 @@
 
 import {
   NodeMaterialsManager, EncryptionRequest, DecryptionRequest, EncryptionContext, // eslint-disable-line no-unused-vars
-  EncryptionMaterial, DecryptionMaterial, // eslint-disable-line no-unused-vars
   NodeAlgorithmSuite, NodeEncryptionMaterial, NodeDecryptionMaterial, SignatureKey,
   needs, VerificationKey, AlgorithmSuiteIdentifier,
   immutableClass, readOnlyProperty, KeyringNode,
@@ -28,8 +27,6 @@ import { createECDH } from 'crypto'
 
 export type NodeEncryptionRequest = EncryptionRequest<NodeAlgorithmSuite>
 export type NodeDecryptionRequest = DecryptionRequest<NodeAlgorithmSuite>
-export type NodeEncryptionMaterial = EncryptionMaterial<NodeAlgorithmSuite>
-export type NodeDecryptionMaterial = DecryptionMaterial<NodeAlgorithmSuite>
 export type NodeGetEncryptionMaterials = GetEncryptionMaterials<NodeAlgorithmSuite>
 export type NodeGetDecryptMaterials = GetDecryptMaterials<NodeAlgorithmSuite>
 

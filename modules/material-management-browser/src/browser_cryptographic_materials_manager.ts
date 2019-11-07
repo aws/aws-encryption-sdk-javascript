@@ -16,7 +16,6 @@
 import {
   WebCryptoMaterialsManager, EncryptionRequest, // eslint-disable-line no-unused-vars
   DecryptionRequest, EncryptionContext, // eslint-disable-line no-unused-vars
-  EncryptionMaterial, DecryptionMaterial, // eslint-disable-line no-unused-vars
   WebCryptoAlgorithmSuite, WebCryptoEncryptionMaterial,
   WebCryptoDecryptionMaterial, SignatureKey, needs, readOnlyProperty,
   VerificationKey, AlgorithmSuiteIdentifier, immutableBaseClass,
@@ -29,8 +28,6 @@ import { fromBase64, toBase64 } from '@aws-sdk/util-base64-browser'
 
 export type WebCryptoEncryptionRequest = EncryptionRequest<WebCryptoAlgorithmSuite>
 export type WebCryptoDecryptionRequest = DecryptionRequest<WebCryptoAlgorithmSuite>
-export type WebCryptoEncryptionMaterial = EncryptionMaterial<WebCryptoAlgorithmSuite>
-export type WebCryptoDecryptionMaterial = DecryptionMaterial<WebCryptoAlgorithmSuite>
 export type WebCryptoGetEncryptionMaterials = GetEncryptionMaterials<WebCryptoAlgorithmSuite>
 export type WebCryptoGetDecryptMaterials = GetDecryptMaterials<WebCryptoAlgorithmSuite>
 
