@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.2](/compare/@aws-crypto/material-management-browser@1.0.1...@aws-crypto/material-management-browser@1.0.2) (2019-11-12)
+
+
+### Bug Fixes
+
+* Import declaration conflicts with local declaration (#233) 4818074, closes #233 #232 #148
+
+
+
+
+
 ## [1.0.1](/compare/@aws-crypto/material-management-browser@1.0.0...@aws-crypto/material-management-browser@1.0.1) (2019-10-15)
 
 **Note:** Version bump only for package @aws-crypto/material-management-browser
