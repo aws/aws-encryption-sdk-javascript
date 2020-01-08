@@ -28,7 +28,8 @@ import {
   importForWebCryptoEncryptionMaterial,
   unwrapDataKey,
   MixedBackendCryptoKey, // eslint-disable-line no-unused-vars
-  WebCryptoAlgorithmSuite // eslint-disable-line no-unused-vars
+  WebCryptoAlgorithmSuite, // eslint-disable-line no-unused-vars
+  AwsEsdkJsCryptoKey // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
 
 import {
@@ -168,14 +169,14 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
    */
   _onDecrypt = _onDecrypt<WebCryptoAlgorithmSuite, RawRsaKeyringWebCrypto>()
 
-  static async importPublicKey (publicKey: RsaImportableKey): Promise<CryptoKey> {
+  static async importPublicKey (publicKey: RsaImportableKey): Promise<AwsEsdkJsCryptoKey> {
     const { wrappingAlgorithm, format, key } = getImportOptions(publicKey)
     const backend = await getWebCryptoBackend()
     const subtle = getNonZeroByteBackend(backend)
     return subtle.importKey(format, key, wrappingAlgorithm, false, ['wrapKey'])
   }
 
-  static async importPrivateKey (privateKey: RsaImportableKey): Promise<CryptoKey|MixedBackendCryptoKey> {
+  static async importPrivateKey (privateKey: RsaImportableKey): Promise<AwsEsdkJsCryptoKey|MixedBackendCryptoKey> {
     const { wrappingAlgorithm, format, key } = getImportOptions(privateKey)
     const backend = await getWebCryptoBackend()
 
