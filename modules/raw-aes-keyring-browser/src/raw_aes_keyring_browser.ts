@@ -46,7 +46,7 @@ import {
 } from '@aws-crypto/raw-keyring'
 import { fromUtf8, toUtf8 } from '@aws-sdk/util-utf8-browser'
 import { randomValuesOnly } from '@aws-crypto/random-source-browser'
-import { getWebCryptoBackend, getZeroByteSubtle } from '@aws-crypto/web-crypto-backend'
+import { getWebCryptoBackend, getNonZeroByteBackend } from '@aws-crypto/web-crypto-backend'
 const { serializeEncryptionContext } = serializeFactory(fromUtf8)
 const { rawAesEncryptedDataKey } = rawAesEncryptedDataKeyFactory(toUtf8, fromUtf8)
 const { rawAesEncryptedParts } = rawAesEncryptedPartsFactory(fromUtf8)
@@ -134,9 +134,8 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
       * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
       */
       .setUnencryptedDataKey(masterKey, { keyNamespace: 'importOnly', keyName: 'importOnly', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
-    return getWebCryptoBackend()
-      .then(getZeroByteSubtle)
-      .then(backend => _importCryptoKey(backend, material, ['encrypt', 'decrypt']))
+    return backendForRawAesMasterKey()
+      .then(backend => _importCryptoKey(backend.subtle, material, ['encrypt', 'decrypt']))
   }
 }
 immutableClass(RawAesKeyringWebCrypto)
@@ -158,7 +157,7 @@ async function aesGcmWrapKey (
   aad: Uint8Array,
   wrappingMaterial: WebCryptoRawAesMaterial
 ): Promise<WebCryptoEncryptionMaterial> {
-  const backend = await getWebCryptoBackend()
+  const backend = await backendForRawAesMasterKey()
   const iv = await backend.randomValues(material.suite.ivLength)
 
   const kdfGetSubtleEncrypt = getSubtleFunction(wrappingMaterial, backend, 'encrypt')
@@ -194,7 +193,7 @@ async function aesGcmUnwrapKey (
   const { suite } = material
   const { iv, ciphertext, authTag } = rawAesEncryptedParts(suite, keyName, edk)
 
-  const backend = await getWebCryptoBackend()
+  const backend = await backendForRawAesMasterKey()
 
   const KdfGetSubtleDecrypt = getSubtleFunction(wrappingMaterial, backend, 'decrypt')
   const info = new Uint8Array()
@@ -202,4 +201,21 @@ async function aesGcmUnwrapKey (
   const trace = { keyNamespace, keyName, flags: decryptFlags }
   material.setUnencryptedDataKey(new Uint8Array(buffer), trace)
   return importForWebCryptoDecryptionMaterial(material)
+}
+
+/**
+ * The master key can not be zero length.
+ * If the back end is mixed,
+ * to support both zero and non-zero byte AES-GCM operations,
+ * then the `NonZeroByteBackend` should be the native implementation.
+ * I assert that it should be slightly harder to exfiltrate
+ * from the native implementation than a JS implementation.
+ * So I *force* the master key to be stored in the native implementation **only**.
+ */
+async function backendForRawAesMasterKey () {
+  const backend = await getWebCryptoBackend()
+  const { randomValues } = backend
+  const subtle = getNonZeroByteBackend(backend)
+
+  return { randomValues, subtle }
 }
