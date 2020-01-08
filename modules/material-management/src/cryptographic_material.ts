@@ -582,7 +582,6 @@ export function isCryptoKey (dataKey: any): dataKey is AwsEsdkJsCryptoKey {
   return dataKey &&
     'algorithm' in dataKey &&
     'type' in dataKey &&
-    'algorithm' in dataKey &&
     'usages' in dataKey &&
     'extractable' in dataKey
 }
