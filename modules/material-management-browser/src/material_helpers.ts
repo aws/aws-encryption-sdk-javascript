@@ -175,10 +175,16 @@ export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
           const { nonZeroByteSubtle, zeroByteSubtle } = backend
           const { nonZeroByteCryptoKey, zeroByteCryptoKey } = deriveKey
           const algorithm = { name: cipherName, iv, additionalData, tagLength }
-          if (data.byteLength) {
-            return nonZeroByteSubtle[subtleFunction](algorithm, nonZeroByteCryptoKey, data)
-          } else {
+          /* Precondition: The WebCrypto AES-GCM decrypt API expects the data *and* tag together.
+           * This means that on decrypt any amount of data less than tagLength is invalid.
+           * This also means that zero encrypted data will be equal to tagLength.
+           */
+          const dataByteLength = subtleFunction === 'decrypt' ? data.byteLength - tagLength / 8 : data.byteLength
+          needs(dataByteLength >= 0, 'Invalid data length.')
+          if (dataByteLength === 0) {
             return zeroByteSubtle[subtleFunction](algorithm, zeroByteCryptoKey, data)
+          } else {
+            return nonZeroByteSubtle[subtleFunction](algorithm, nonZeroByteCryptoKey, data)
           }
         }
         // This should be impossible
