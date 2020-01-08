@@ -25,7 +25,8 @@ import {
 import {
   MixedBackendCryptoKey, // eslint-disable-line no-unused-vars
   needs,
-  isCryptoKey
+  isCryptoKey,
+  AwsEsdkJsCryptoKey // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
 
 type WebCryptoRsaName = keyof typeof JsonWebKeyRsaAlg
@@ -80,7 +81,7 @@ export function getImportOptions (keyInfo: RsaImportableKey) {
   throw new Error('Unsupported RsaImportableKey')
 }
 
-export function getWrappingAlgorithm (publicKey?: CryptoKey, privateKey?: CryptoKey|MixedBackendCryptoKey) {
+export function getWrappingAlgorithm (publicKey?: AwsEsdkJsCryptoKey, privateKey?: AwsEsdkJsCryptoKey|MixedBackendCryptoKey) {
   const privateKeys = flattenMixedCryptoKey(privateKey)
   if (publicKey && privateKeys.length) {
     return verify(...[publicKey, ...privateKeys].map(extract))
@@ -92,7 +93,7 @@ export function getWrappingAlgorithm (publicKey?: CryptoKey, privateKey?: Crypto
   throw new Error('No Key provided.')
 }
 
-export function extract (key: CryptoKey): RsaWrappingKeyAlgorithm {
+export function extract (key: AwsEsdkJsCryptoKey): RsaWrappingKeyAlgorithm {
   const { algorithm } = key
   // @ts-ignore
   const { name, hash } = algorithm
@@ -122,7 +123,7 @@ export function verify (...args: RsaWrappingKeyAlgorithm[]) {
   }
 }
 
-export function flattenMixedCryptoKey (key?: CryptoKey|MixedBackendCryptoKey): CryptoKey[] {
+export function flattenMixedCryptoKey (key?: AwsEsdkJsCryptoKey|MixedBackendCryptoKey): AwsEsdkJsCryptoKey[] {
   /* Check for early return (Postcondition): empty inputs should return an empty array. */
   if (!key) return []
   if (isCryptoKey(key)) return [key]

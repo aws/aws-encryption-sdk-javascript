@@ -27,7 +27,8 @@ import {
   _importCryptoKey,
   unwrapDataKey,
   importForWebCryptoEncryptionMaterial,
-  importForWebCryptoDecryptionMaterial
+  importForWebCryptoDecryptionMaterial,
+  AwsEsdkJsCryptoKey // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
 import {
   serializeFactory,
@@ -55,7 +56,7 @@ const decryptFlags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringT
 export type RawAesKeyringWebCryptoInput = {
   keyNamespace: string
   keyName: string
-  masterKey: CryptoKey,
+  masterKey: AwsEsdkJsCryptoKey,
   wrappingSuite: WrappingSuiteIdentifier
 }
 
@@ -125,7 +126,7 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
    */
   _onDecrypt = _onDecrypt<WebCryptoAlgorithmSuite, RawAesKeyringWebCrypto>()
 
-  static async importCryptoKey (masterKey: Uint8Array, wrappingSuite: WrappingSuiteIdentifier) {
+  static async importCryptoKey (masterKey: Uint8Array, wrappingSuite: WrappingSuiteIdentifier): Promise<AwsEsdkJsCryptoKey> {
     needs(masterKey instanceof Uint8Array, 'Unsupported master key type.')
     const material = new WebCryptoRawAesMaterial(wrappingSuite)
       /* Precondition: masterKey must correspond to the algorithm suite specification.

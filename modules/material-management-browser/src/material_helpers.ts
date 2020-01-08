@@ -23,6 +23,7 @@ import {
   keyUsageForMaterial,
   subtleFunctionForMaterial,
   unwrapDataKey,
+  AwsEsdkJsCryptoKey, // eslint-disable-line no-unused-vars
   WebCryptoMaterial // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 
@@ -155,7 +156,7 @@ export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
   const { encryption: cipherName, ivLength, tagLength } = suite
 
   return (info: Uint8Array) => {
-    const derivedKeyPromise: Promise<CryptoKey|MixedBackendCryptoKey> = isCryptoKey(cryptoKey)
+    const derivedKeyPromise: Promise<AwsEsdkJsCryptoKey|MixedBackendCryptoKey> = isCryptoKey(cryptoKey)
       ? WebCryptoKdf(getNonZeroByteBackend(backend), material, cryptoKey, [subtleFunction], info)
       : Promise.all([
         WebCryptoKdf(getNonZeroByteBackend(backend), material, cryptoKey.nonZeroByteCryptoKey, [subtleFunction], info),
@@ -190,7 +191,7 @@ export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
 export async function WebCryptoKdf<T extends WebCryptoMaterial<T>> (
   subtle: SubtleCrypto,
   material: T,
-  cryptoKey: CryptoKey,
+  cryptoKey: AwsEsdkJsCryptoKey,
   keyUsages: SubtleFunction[],
   info: Uint8Array
 ): Promise<CryptoKey> {
@@ -244,7 +245,7 @@ export async function _importCryptoKey<T extends WebCryptoMaterial<T>> (
   subtle: SubtleCrypto,
   material: T,
   keyUsages: KeyUsage[] = [keyUsageForMaterial(material)]
-) {
+): Promise<AwsEsdkJsCryptoKey> {
   const { suite } = material
   const extractable = false
   const udk = unwrapDataKey(material.getUnencryptedDataKey())
