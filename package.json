@@ -3,7 +3,15 @@
   "private": true,
   "version": "0.0.1",
   "description": "AWS Encryption SDK for JavaScript",
-  "keywords": ["cryptography", "crypto", "encryption", "envelope encryption", "client side encryption", "CSE", "aws"],
+  "keywords": [
+    "cryptography",
+    "crypto",
+    "encryption",
+    "envelope encryption",
+    "client side encryption",
+    "CSE",
+    "aws"
+  ],
   "main": "index.js",
   "scripts": {
     "bootstrap": "./util/bootstrap_tsconfig && lerna bootstrap",
