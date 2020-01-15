@@ -126,13 +126,15 @@ describe('RawRsaKeyringNode::constructor', () => {
   })
 })
 
-describe('RawRsaKeyringNode encrypt/decrypt', () => {
+const oaepHashOptions: (undefined|'sha1'|'sha256'|'sha512')[] = [undefined, 'sha1', 'sha256', 'sha512']
+oaepHashOptions.forEach(oaepHash => describe(`RawRsaKeyringNode encrypt/decrypt for oaepHash=${oaepHash || 'undefined'}`, () => {
   const keyNamespace = 'keyNamespace'
   const keyName = 'keyName'
   const keyring = new RawRsaKeyringNode({
     rsaKey: { privateKey: privatePem, publicKey: publicPem },
     keyName,
-    keyNamespace
+    keyNamespace,
+    oaepHash
   })
   let encryptedDataKey: EncryptedDataKey
 
@@ -179,4 +181,4 @@ describe('RawRsaKeyringNode encrypt/decrypt', () => {
     const material = new NodeDecryptionMaterial(suite, {})
     return expect(keyring._unwrapKey(material, encryptedDataKey)).to.rejectedWith(Error)
   })
-})
+}))

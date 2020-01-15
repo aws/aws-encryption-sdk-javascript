@@ -32,7 +32,9 @@ import {
   constants,
   publicEncrypt,
   privateDecrypt,
-  randomBytes
+  randomBytes,
+  RsaPublicKey, // eslint-disable-line no-unused-vars
+  RsaPrivateKey // eslint-disable-line no-unused-vars
 } from 'crypto'
 
 import {
@@ -62,6 +64,7 @@ export type RawRsaKeyringNodeInput = {
   keyName: string
   rsaKey: RsaKey
   padding?: number
+  oaepHash?: 'sha1'|'sha256'|'sha512'
 }
 
 /* Node supports RSA_OAEP_SHA1_MFG1 by default.
@@ -78,7 +81,7 @@ export class RawRsaKeyringNode extends KeyringNode {
   constructor (input: RawRsaKeyringNodeInput) {
     super()
 
-    const { rsaKey, keyName, keyNamespace, padding = constants.RSA_PKCS1_OAEP_PADDING } = input
+    const { rsaKey, keyName, keyNamespace, padding = constants.RSA_PKCS1_OAEP_PADDING, oaepHash } = input
     const { publicKey, privateKey } = rsaKey
     /* Precondition: RsaKeyringNode needs either a public or a private key to operate. */
     needs(publicKey || privateKey, 'No Key provided.')
@@ -90,7 +93,7 @@ export class RawRsaKeyringNode extends KeyringNode {
       if (!publicKey) throw new Error('No public key defined in constructor.  Encrypt disabled.')
       const { buffer, byteOffset, byteLength } = unwrapDataKey(material.getUnencryptedDataKey())
       const encryptedDataKey = publicEncrypt(
-        { key: publicKey, padding },
+        { key: publicKey, padding, oaepHash } as RsaPublicKey,
         Buffer.from(buffer, byteOffset, byteLength))
       const providerInfo = this.keyName
       const providerId = this.keyNamespace
@@ -112,7 +115,7 @@ export class RawRsaKeyringNode extends KeyringNode {
       const { buffer, byteOffset, byteLength } = edk.encryptedDataKey
       const encryptedDataKey = Buffer.from(buffer, byteOffset, byteLength)
       const unencryptedDataKey = privateDecrypt(
-        { key: privateKey, padding },
+        { key: privateKey, padding, oaepHash } as RsaPrivateKey,
         encryptedDataKey)
       return material.setUnencryptedDataKey(unencryptedDataKey, trace)
     }
