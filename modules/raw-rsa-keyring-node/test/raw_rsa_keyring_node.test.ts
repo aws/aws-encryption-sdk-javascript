@@ -168,7 +168,7 @@ describe('RawRsaKeyringNode encrypt/decrypt', () => {
     return expect(keyring.onEncrypt(material)).to.rejectedWith(Error)
   })
 
-  xit('Precondition: Private key must be defined to support decrypt.', async () => {
+  it('Precondition: Private key must be defined to support decrypt.', async () => {
     const keyring = new RawRsaKeyringNode({
       rsaKey: { publicKey: publicPem },
       keyName,
@@ -177,7 +177,6 @@ describe('RawRsaKeyringNode encrypt/decrypt', () => {
 
     const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
     const material = new NodeDecryptionMaterial(suite, {})
-    await keyring.onDecrypt(material, [encryptedDataKey])
-    return expect(keyring.onDecrypt(material, [encryptedDataKey])).to.rejectedWith(Error)
+    return expect(keyring._unwrapKey(material, encryptedDataKey)).to.rejectedWith(Error)
   })
 })
