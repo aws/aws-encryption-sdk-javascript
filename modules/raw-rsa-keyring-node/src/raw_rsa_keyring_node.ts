@@ -64,7 +64,7 @@ export type RawRsaKeyringNodeInput = {
   keyName: string
   rsaKey: RsaKey
   padding?: number
-  oaepHash?: 'sha1'|'sha256'|'sha512'
+  oaepHash?: 'sha1'|'sha256'|'sha384'|'sha512'
 }
 
 /* Node supports RSA_OAEP_SHA1_MFG1 by default.

@@ -126,7 +126,7 @@ describe('RawRsaKeyringNode::constructor', () => {
   })
 })
 
-const oaepHashOptions: (undefined|'sha1'|'sha256'|'sha512')[] = [undefined, 'sha1', 'sha256', 'sha512']
+const oaepHashOptions: (undefined|'sha1'|'sha256'|'sha384'|'sha512')[] = [undefined, 'sha1', 'sha256', 'sha384', 'sha512']
 oaepHashOptions.forEach(oaepHash => describe(`RawRsaKeyringNode encrypt/decrypt for oaepHash=${oaepHash || 'undefined'}`, () => {
   const keyNamespace = 'keyNamespace'
   const keyName = 'keyName'
