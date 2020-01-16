@@ -67,11 +67,6 @@ export type RawRsaKeyringNodeInput = {
   oaepHash?: 'sha1'|'sha256'|'sha384'|'sha512'
 }
 
-/* Node supports RSA_OAEP_SHA1_MFG1 by default.
- * It does not support RSA_OAEP_SHA256_MFG1 at this time.
- * Passing RSA_PKCS1_OAEP_PADDING implies RSA_OAEP_SHA1_MFG1.
- */
-
 export class RawRsaKeyringNode extends KeyringNode {
   public keyNamespace!: string
   public keyName!: string
