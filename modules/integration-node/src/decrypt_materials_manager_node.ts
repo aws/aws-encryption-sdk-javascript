@@ -14,7 +14,6 @@
  */
 
 import {
-  needs,
   MultiKeyringNode,
   KmsKeyringNode,
   RawAesKeyringNode,
@@ -83,17 +82,15 @@ export function rsaKeyring (keyInfo: RsaKeyInfo, key: RSAKey) {
     ? { privateKey: key.material }
     : { publicKey: key.material }
   const padding = rsaPadding(keyInfo)
-  return new RawRsaKeyringNode({ keyName, keyNamespace, rsaKey, padding })
+  const oaepHash = keyInfo['padding-hash']
+  return new RawRsaKeyringNode({ keyName, keyNamespace, rsaKey, padding, oaepHash })
 }
 
 export function rsaPadding (keyInfo: RsaKeyInfo) {
   const paddingAlgorithm = keyInfo['padding-algorithm']
-  const paddingHash = keyInfo['padding-hash']
-
-  if (paddingAlgorithm === 'pkcs1') return constants.RSA_PKCS1_PADDING
-  needs(paddingHash === 'sha1', 'Not supported at this time.')
-
-  return constants.RSA_PKCS1_OAEP_PADDING
+  return paddingAlgorithm === 'pkcs1'
+    ? constants.RSA_PKCS1_PADDING
+    : constants.RSA_PKCS1_OAEP_PADDING
 }
 
 export class NotSupported extends Error {
