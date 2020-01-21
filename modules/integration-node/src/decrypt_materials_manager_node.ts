@@ -14,12 +14,14 @@
  */
 
 import {
+  needs,
   MultiKeyringNode,
   KmsKeyringNode,
   RawAesKeyringNode,
   WrappingSuiteIdentifier, // eslint-disable-line no-unused-vars
   RawAesWrappingSuiteIdentifier,
-  RawRsaKeyringNode
+  RawRsaKeyringNode,
+  oaepHashSupported
 } from '@aws-crypto/client-node'
 import {
   RsaKeyInfo, // eslint-disable-line no-unused-vars
@@ -81,16 +83,16 @@ export function rsaKeyring (keyInfo: RsaKeyInfo, key: RSAKey) {
   const rsaKey = key.type === 'private'
     ? { privateKey: key.material }
     : { publicKey: key.material }
-  const padding = rsaPadding(keyInfo)
-  const oaepHash = keyInfo['padding-hash']
+  const { padding, oaepHash } = rsaPadding(keyInfo)
   return new RawRsaKeyringNode({ keyName, keyNamespace, rsaKey, padding, oaepHash })
 }
 
 export function rsaPadding (keyInfo: RsaKeyInfo) {
-  const paddingAlgorithm = keyInfo['padding-algorithm']
-  return paddingAlgorithm === 'pkcs1'
-    ? constants.RSA_PKCS1_PADDING
-    : constants.RSA_PKCS1_OAEP_PADDING
+  if (keyInfo['padding-algorithm'] === 'pkcs1') return { padding: constants.RSA_PKCS1_PADDING }
+  const padding = constants.RSA_PKCS1_OAEP_PADDING
+  const oaepHash = keyInfo['padding-hash']
+  needs(oaepHashSupported || oaepHash === 'sha1', 'Not supported at this time.')
+  return { padding, oaepHash }
 }
 
 export class NotSupported extends Error {

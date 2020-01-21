@@ -19,7 +19,8 @@ import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import 'mocha'
 import {
-  RawRsaKeyringNode
+  RawRsaKeyringNode,
+  OaepHash // eslint-disable-line no-unused-vars
 } from '../src/index'
 import {
   KeyringNode,
@@ -30,6 +31,7 @@ import {
   NodeDecryptionMaterial,
   unwrapDataKey
 } from '@aws-crypto/material-management-node'
+import { oaepHashSupported } from '../src/oaep_hash_supported'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -108,6 +110,16 @@ describe('RawRsaKeyringNode::constructor', () => {
     })).to.throw()
   })
 
+  it('Precondition: The AWS ESDK only supports specific hash values for OAEP padding.', () => {
+    expect(() => new RawRsaKeyringNode({
+      keyName,
+      keyNamespace,
+      // @ts-ignore Valid hash, but not supported by the ESDK
+      oaepHash: 'rmd160',
+      rsaKey: { privateKey: privatePem }
+    })).to.throw('Unsupported oaepHash')
+  })
+
   it('Precondition: RsaKeyringNode needs identifying information for encrypt and decrypt.', () => {
     // @ts-ignore Typescript is trying to save us.
     expect(() => new RawRsaKeyringNode({
@@ -126,59 +138,61 @@ describe('RawRsaKeyringNode::constructor', () => {
   })
 })
 
-const oaepHashOptions: (undefined|'sha1'|'sha256'|'sha384'|'sha512')[] = [undefined, 'sha1', 'sha256', 'sha384', 'sha512']
-oaepHashOptions.forEach(oaepHash => describe(`RawRsaKeyringNode encrypt/decrypt for oaepHash=${oaepHash || 'undefined'}`, () => {
-  const keyNamespace = 'keyNamespace'
-  const keyName = 'keyName'
-  const keyring = new RawRsaKeyringNode({
-    rsaKey: { privateKey: privatePem, publicKey: publicPem },
-    keyName,
-    keyNamespace,
-    oaepHash
-  })
-  let encryptedDataKey: EncryptedDataKey
-
-  it('can encrypt and create unencrypted data key', async () => {
-    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new NodeEncryptionMaterial(suite, {})
-    const test = await keyring.onEncrypt(material)
-    expect(test.hasValidKey()).to.equal(true)
-    const udk = unwrapDataKey(test.getUnencryptedDataKey())
-    expect(udk).to.have.lengthOf(suite.keyLengthBytes)
-    expect(test.encryptedDataKeys).to.have.lengthOf(1)
-    const [edk] = test.encryptedDataKeys
-    expect(edk.providerId).to.equal(keyNamespace)
-    encryptedDataKey = edk
-  })
-
-  it('can decrypt an EncryptedDataKey', async () => {
-    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new NodeDecryptionMaterial(suite, {})
-    const test = await keyring.onDecrypt(material, [encryptedDataKey])
-    expect(test.hasValidKey()).to.equal(true)
-  })
-
-  it('Precondition: Public key must be defined to support encrypt.', async () => {
+const oaepHashOptions: OaepHash[] = [undefined, 'sha1', 'sha256', 'sha384', 'sha512']
+oaepHashOptions
+  .filter(oaepHash => oaepHashSupported || [undefined, 'sha1'].includes(oaepHash))
+  .forEach(oaepHash => describe(`RawRsaKeyringNode encrypt/decrypt for oaepHash=${oaepHash || 'undefined'}`, () => {
+    const keyNamespace = 'keyNamespace'
+    const keyName = 'keyName'
     const keyring = new RawRsaKeyringNode({
-      rsaKey: { privateKey: privatePem },
+      rsaKey: { privateKey: privatePem, publicKey: publicPem },
       keyName,
-      keyNamespace
+      keyNamespace,
+      oaepHash
+    })
+    let encryptedDataKey: EncryptedDataKey
+
+    it('can encrypt and create unencrypted data key', async () => {
+      const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
+      const material = new NodeEncryptionMaterial(suite, {})
+      const test = await keyring.onEncrypt(material)
+      expect(test.hasValidKey()).to.equal(true)
+      const udk = unwrapDataKey(test.getUnencryptedDataKey())
+      expect(udk).to.have.lengthOf(suite.keyLengthBytes)
+      expect(test.encryptedDataKeys).to.have.lengthOf(1)
+      const [edk] = test.encryptedDataKeys
+      expect(edk.providerId).to.equal(keyNamespace)
+      encryptedDataKey = edk
     })
 
-    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new NodeEncryptionMaterial(suite, {})
-    return expect(keyring.onEncrypt(material)).to.rejectedWith(Error)
-  })
-
-  it('Precondition: Private key must be defined to support decrypt.', async () => {
-    const keyring = new RawRsaKeyringNode({
-      rsaKey: { publicKey: publicPem },
-      keyName,
-      keyNamespace
+    it('can decrypt an EncryptedDataKey', async () => {
+      const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
+      const material = new NodeDecryptionMaterial(suite, {})
+      const test = await keyring.onDecrypt(material, [encryptedDataKey])
+      expect(test.hasValidKey()).to.equal(true)
     })
 
-    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
-    const material = new NodeDecryptionMaterial(suite, {})
-    return expect(keyring._unwrapKey(material, encryptedDataKey)).to.rejectedWith(Error)
-  })
-}))
+    it('Precondition: Public key must be defined to support encrypt.', async () => {
+      const keyring = new RawRsaKeyringNode({
+        rsaKey: { privateKey: privatePem },
+        keyName,
+        keyNamespace
+      })
+
+      const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
+      const material = new NodeEncryptionMaterial(suite, {})
+      return expect(keyring.onEncrypt(material)).to.rejectedWith(Error)
+    })
+
+    it('Precondition: Private key must be defined to support decrypt.', async () => {
+      const keyring = new RawRsaKeyringNode({
+        rsaKey: { publicKey: publicPem },
+        keyName,
+        keyNamespace
+      })
+
+      const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
+      const material = new NodeDecryptionMaterial(suite, {})
+      return expect(keyring._unwrapKey(material, encryptedDataKey)).to.rejectedWith(Error)
+    })
+  }))

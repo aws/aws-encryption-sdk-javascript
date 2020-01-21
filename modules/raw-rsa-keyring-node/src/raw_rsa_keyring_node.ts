@@ -44,6 +44,8 @@ import {
   UnwrapKey // eslint-disable-line no-unused-vars
 } from '@aws-crypto/raw-keyring'
 
+import { oaepHashSupported } from './oaep_hash_supported'
+
 /* Interface question:
  * When creating a keyring being able to define
  * if the keyring can be used for encrypt/decrypt/both
@@ -59,12 +61,15 @@ interface RsaKey {
   privateKey?: string | Buffer | AwsEsdkKeyObject
 }
 
+export type OaepHash = 'sha1'|'sha256'|'sha384'|'sha512'|undefined
+const supportedOaepHash: OaepHash[] = ['sha1', 'sha256', 'sha384', 'sha512', undefined]
+
 export type RawRsaKeyringNodeInput = {
   keyNamespace: string
   keyName: string
   rsaKey: RsaKey
   padding?: number
-  oaepHash?: 'sha1'|'sha256'|'sha384'|'sha512'
+  oaepHash?: OaepHash
 }
 
 export class RawRsaKeyringNode extends KeyringNode {
@@ -82,6 +87,12 @@ export class RawRsaKeyringNode extends KeyringNode {
     needs(publicKey || privateKey, 'No Key provided.')
     /* Precondition: RsaKeyringNode needs identifying information for encrypt and decrypt. */
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
+    /* Precondition: The AWS ESDK only supports specific hash values for OAEP padding. */
+    needs(padding === constants.RSA_PKCS1_OAEP_PADDING
+      ? oaepHashSupported
+        ? supportedOaepHash.includes(oaepHash)
+        : !oaepHash || oaepHash === 'sha1'
+      : !oaepHash, 'Unsupported oaepHash')
 
     const _wrapKey = async (material: NodeEncryptionMaterial) => {
       /* Precondition: Public key must be defined to support encrypt. */
