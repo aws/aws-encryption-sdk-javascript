@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/raw-aes-keyring-node",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -16,7 +16,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/material-management-node": "^1.0.1",
+    "@aws-crypto/material-management-node": "^1.0.2",
     "@aws-crypto/raw-keyring": "^1.0.1",
     "@aws-crypto/serialize": "^1.0.1",
     "tslib": "^1.9.3"

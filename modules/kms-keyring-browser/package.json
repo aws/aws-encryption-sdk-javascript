@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/kms-keyring-browser",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -17,7 +17,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/kms-keyring": "^1.0.1",
-    "@aws-crypto/material-management-browser": "^1.0.1",
+    "@aws-crypto/material-management-browser": "^1.0.2",
     "@aws-crypto/web-crypto-backend": "^1.0.1",
     "aws-sdk": "^2.443.0",
     "tslib": "^1.9.3"
