@@ -14,3 +14,4 @@
  */
 
 export * from './raw_rsa_keyring_node'
+export * from './oaep_hash_supported'
