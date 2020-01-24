@@ -98,12 +98,13 @@ describe('KmsKeyring: constructor', () => {
   it('An KMS CMK alias is a valid CMK identifier', () => {
     const clientProvider: any = () => {}
     class TestKmsKeyring extends KmsKeyringClass(Keyring as KeyRingConstructible<NodeAlgorithmSuite>) {}
-    
-    new TestKmsKeyring({
+
+    const test = new TestKmsKeyring({
       clientProvider,
       generatorKeyId: 'alias/example-alias',
       keyIds: ['alias:example-alias']
     })
+    expect(test).to.be.instanceOf(TestKmsKeyring)
   })
 
   it('Precondition: clientProvider needs to be a callable function.', () => {
