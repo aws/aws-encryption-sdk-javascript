@@ -32,7 +32,9 @@ import {
   constants,
   publicEncrypt,
   privateDecrypt,
-  randomBytes
+  randomBytes,
+  RsaPublicKey, // eslint-disable-line no-unused-vars
+  RsaPrivateKey // eslint-disable-line no-unused-vars
 } from 'crypto'
 
 import {
@@ -41,6 +43,8 @@ import {
   WrapKey, // eslint-disable-line no-unused-vars
   UnwrapKey // eslint-disable-line no-unused-vars
 } from '@aws-crypto/raw-keyring'
+
+import { oaepHashSupported } from './oaep_hash_supported'
 
 /* Interface question:
  * When creating a keyring being able to define
@@ -57,17 +61,16 @@ interface RsaKey {
   privateKey?: string | Buffer | AwsEsdkKeyObject
 }
 
+export type OaepHash = 'sha1'|'sha256'|'sha384'|'sha512'|undefined
+const supportedOaepHash: OaepHash[] = ['sha1', 'sha256', 'sha384', 'sha512', undefined]
+
 export type RawRsaKeyringNodeInput = {
   keyNamespace: string
   keyName: string
   rsaKey: RsaKey
   padding?: number
+  oaepHash?: OaepHash
 }
-
-/* Node supports RSA_OAEP_SHA1_MFG1 by default.
- * It does not support RSA_OAEP_SHA256_MFG1 at this time.
- * Passing RSA_PKCS1_OAEP_PADDING implies RSA_OAEP_SHA1_MFG1.
- */
 
 export class RawRsaKeyringNode extends KeyringNode {
   public keyNamespace!: string
@@ -78,19 +81,25 @@ export class RawRsaKeyringNode extends KeyringNode {
   constructor (input: RawRsaKeyringNodeInput) {
     super()
 
-    const { rsaKey, keyName, keyNamespace, padding = constants.RSA_PKCS1_OAEP_PADDING } = input
+    const { rsaKey, keyName, keyNamespace, padding = constants.RSA_PKCS1_OAEP_PADDING, oaepHash } = input
     const { publicKey, privateKey } = rsaKey
     /* Precondition: RsaKeyringNode needs either a public or a private key to operate. */
     needs(publicKey || privateKey, 'No Key provided.')
     /* Precondition: RsaKeyringNode needs identifying information for encrypt and decrypt. */
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
+    /* Precondition: The AWS ESDK only supports specific hash values for OAEP padding. */
+    needs(padding === constants.RSA_PKCS1_OAEP_PADDING
+      ? oaepHashSupported
+        ? supportedOaepHash.includes(oaepHash)
+        : !oaepHash || oaepHash === 'sha1'
+      : !oaepHash, 'Unsupported oaepHash')
 
     const _wrapKey = async (material: NodeEncryptionMaterial) => {
       /* Precondition: Public key must be defined to support encrypt. */
       if (!publicKey) throw new Error('No public key defined in constructor.  Encrypt disabled.')
       const { buffer, byteOffset, byteLength } = unwrapDataKey(material.getUnencryptedDataKey())
       const encryptedDataKey = publicEncrypt(
-        { key: publicKey, padding },
+        { key: publicKey, padding, oaepHash } as RsaPublicKey,
         Buffer.from(buffer, byteOffset, byteLength))
       const providerInfo = this.keyName
       const providerId = this.keyNamespace
@@ -112,7 +121,7 @@ export class RawRsaKeyringNode extends KeyringNode {
       const { buffer, byteOffset, byteLength } = edk.encryptedDataKey
       const encryptedDataKey = Buffer.from(buffer, byteOffset, byteLength)
       const unencryptedDataKey = privateDecrypt(
-        { key: privateKey, padding },
+        { key: privateKey, padding, oaepHash } as RsaPrivateKey,
         encryptedDataKey)
       return material.setUnencryptedDataKey(unencryptedDataKey, trace)
     }
