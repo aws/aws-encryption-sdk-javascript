@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/hkdf-node",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "nodejs hkdf crypto primitive",
   "scripts": {
     "prepublishOnly": "npm run build",

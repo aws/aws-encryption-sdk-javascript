@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.3](/compare/@aws-crypto/example-browser@1.0.2...@aws-crypto/example-browser@1.0.3) (2020-02-07)
+
+
+### Bug Fixes
+
+* lerna version maintains package-lock (#235) c901318, closes #235 #234
+
+
+
+
+
 ## [1.0.2](/compare/@aws-crypto/example-browser@1.0.1...@aws-crypto/example-browser@1.0.2) (2019-11-12)
 
 **Note:** Version bump only for package @aws-crypto/example-browser
