@@ -18,11 +18,11 @@
     "@aws-crypto/material-management-browser": "^1.0.3",
     "@aws-crypto/serialize": "^1.0.2",
     "@aws-crypto/web-crypto-backend": "^1.0.2",
-    "@aws-sdk/util-utf8-browser": "0.1.0-preview.1",
+    "@aws-sdk/util-utf8-browser": "1.0.0-alpha.2",
     "tslib": "^1.9.3"
   },
   "devDependencies": {
-    "@aws-sdk/karma-credential-loader": "0.1.0-preview.2",
+    "@aws-sdk/karma-credential-loader": "1.0.0-alpha.5",
     "@types/chai": "^4.1.4",
     "@types/mocha": "^5.2.5",
     "@types/node": "^11.11.4",
