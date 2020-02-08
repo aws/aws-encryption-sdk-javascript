@@ -21,21 +21,14 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/caching-materials-manager-node": "^1.0.3",
-    "@aws-crypto/decrypt-node": "^1.0.3",
-    "@aws-crypto/encrypt-node": "^1.0.3",
-    "@aws-crypto/kms-keyring-node": "^1.0.3",
-    "@aws-crypto/material-management-node": "^1.0.3",
-    "@aws-crypto/raw-aes-keyring-node": "^1.0.3",
-    "@aws-crypto/raw-rsa-keyring-node": "^1.1.0",
+    "@aws-crypto/caching-materials-manager-node": "file:../caching-materials-manager-node",
+    "@aws-crypto/decrypt-node": "file:../decrypt-node",
+    "@aws-crypto/encrypt-node": "file:../encrypt-node",
+    "@aws-crypto/kms-keyring-node": "file:../kms-keyring-node",
+    "@aws-crypto/material-management-node": "file:../material-management-node",
+    "@aws-crypto/raw-aes-keyring-node": "file:../raw-aes-keyring-node",
+    "@aws-crypto/raw-rsa-keyring-node": "file:../raw-rsa-keyring-node",
     "tslib": "^1.9.3"
-  },
-  "devDependencies": {
-    "@types/node": "^11.11.4",
-    "@typescript-eslint/eslint-plugin": "^1.9.0",
-    "@typescript-eslint/parser": "^1.9.0",
-    "standard": "^12.0.1",
-    "typescript": "^3.5.0"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",
