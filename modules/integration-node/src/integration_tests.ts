@@ -168,7 +168,7 @@ async function parallelTests<
         failureCount += 1
       })
       .then(() => {
-        /* Dequeue this work.*/
+        /* Dequeue this work. */
         queue.delete(work)
         /* More to eat? */
         enqueue()
