@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/raw-rsa-keyring-browser",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -16,15 +16,15 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/material-management-browser": "^1.0.2",
-    "@aws-crypto/random-source-browser": "^0.1.0-preview.1",
-    "@aws-crypto/raw-keyring": "^1.0.1",
-    "@aws-crypto/web-crypto-backend": "^1.0.1",
-    "@aws-sdk/util-base64-browser": "0.1.0-preview.1",
+    "@aws-crypto/material-management-browser": "^1.1.0",
+    "@aws-crypto/random-source-browser": "^1.0.0-alpha.0",
+    "@aws-crypto/raw-keyring": "^1.0.2",
+    "@aws-crypto/web-crypto-backend": "^1.1.0",
+    "@aws-sdk/util-base64-browser": "1.0.0-alpha.2",
     "tslib": "^1.9.3"
   },
   "devDependencies": {
-    "@aws-sdk/karma-credential-loader": "0.1.0-preview.2",
+    "@aws-sdk/karma-credential-loader": "1.0.0-alpha.5",
     "@types/chai": "^4.1.4",
     "@types/mocha": "^5.2.5",
     "@types/node": "^11.11.4",

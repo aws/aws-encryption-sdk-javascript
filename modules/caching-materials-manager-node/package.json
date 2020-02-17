@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/caching-materials-manager-node",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -16,8 +16,8 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/cache-material": "^1.0.1",
-    "@aws-crypto/material-management-node": "^1.0.2",
+    "@aws-crypto/cache-material": "^1.0.2",
+    "@aws-crypto/material-management-node": "^1.0.3",
     "tslib": "^1.9.3"
   },
   "devDependencies": {

@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0](/compare/@aws-crypto/web-crypto-backend@1.0.2...@aws-crypto/web-crypto-backend@1.1.0) (2020-02-07)
+
+
+### Features
+
+* Update version of dependencies (#241) cf404a4, closes #241
+
+
+
+
+
+## [1.0.2](/compare/@aws-crypto/web-crypto-backend@1.0.1...@aws-crypto/web-crypto-backend@1.0.2) (2020-02-07)
+
+
+### Bug Fixes
+
+* lerna version maintains package-lock (#235) c901318, closes #235 #234
+
+
+
+
+
 ## [1.0.1](/compare/@aws-crypto/web-crypto-backend@1.0.0...@aws-crypto/web-crypto-backend@1.0.1) (2019-10-15)
 
 **Note:** Version bump only for package @aws-crypto/web-crypto-backend

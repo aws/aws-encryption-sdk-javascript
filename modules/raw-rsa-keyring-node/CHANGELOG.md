@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0](/compare/@aws-crypto/raw-rsa-keyring-node@1.0.2...@aws-crypto/raw-rsa-keyring-node@1.1.0) (2020-02-07)
+
+
+### Bug Fixes
+
+* lerna version maintains package-lock (#235) c901318, closes #235 #234
+
+
+### Features
+
+* Support sha256, sha384, and sha512 for OAEP padding (#240) 81b4562, closes #240 #198 nodejs/node#28335
+
+
+
+
+
 ## [1.0.2](/compare/@aws-crypto/raw-rsa-keyring-node@1.0.1...@aws-crypto/raw-rsa-keyring-node@1.0.2) (2019-11-12)
 
 **Note:** Version bump only for package @aws-crypto/raw-rsa-keyring-node

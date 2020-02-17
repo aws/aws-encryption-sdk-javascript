@@ -61,7 +61,7 @@
     "standard": "^12.0.1",
     "ts-node": "^7.0.1",
     "tslib": "^1.9.3",
-    "@aws-sdk/karma-credential-loader": "0.1.0-preview.2",
+    "@aws-sdk/karma-credential-loader": "1.0.0-alpha.5",
     "karma": "^4.1.0",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.2.0",

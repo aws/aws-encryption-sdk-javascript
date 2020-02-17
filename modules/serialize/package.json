@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/serialize",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "scripts": {
     "prepublishOnly": "tsc -p tsconfig.json && tsc -p tsconfig.module.json",
     "lint": "standard src/*.ts test/**/*.ts",
@@ -15,7 +15,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/material-management": "^1.0.1",
+    "@aws-crypto/material-management": "^1.0.2",
     "asn1.js": "^5.0.1",
     "bn.js": "^4.11.8",
     "tslib": "^1.9.3"
