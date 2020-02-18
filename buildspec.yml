@@ -5,8 +5,7 @@ phases:
         runtime-versions:
             nodejs: 10
         commands:
-            - npm install
-            - npm run bootstrap
+            - npm ci
             - npm run build
     build:
         commands:
