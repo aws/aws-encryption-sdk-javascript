@@ -31,8 +31,8 @@
     "integration-browser-decrypt": "npm run build; lerna run build_fixtures --stream --no-prefix -- -- decrypt -v $npm_package_config_localTestVectors --karma",
     "integration-browser-encrypt": "npm run build; lerna run build_fixtures --stream --no-prefix -- -- encrypt -m $npm_package_config_encryptManifestList -k $npm_package_config_encryptKeyManifest -o $npm_package_config_decryptOracle --karma",
     "browser-integration": "run-s integration-browser-*",
-    "integration-node-decrypt": "npm run build; lerna run integration_node --stream --no-prefix -- -- decrypt -v $npm_package_config_localTestVectors",
-    "integration-node-encrypt": "npm run build; lerna run integration_node --stream --no-prefix -- -- encrypt -m $npm_package_config_encryptManifestList -k $npm_package_config_encryptKeyManifest -o $npm_package_config_decryptOracle",
+    "integration-node-decrypt": "npm run build; lerna run integration_node --stream --no-prefix -- -- decrypt -v $npm_package_config_localTestVectors -c 10",
+    "integration-node-encrypt": "npm run build; lerna run integration_node --stream --no-prefix -- -- encrypt -m $npm_package_config_encryptManifestList -k $npm_package_config_encryptKeyManifest -o $npm_package_config_decryptOracle -c 20",
     "node-integration": "run-s integration-node-*",
     "integration": "run-s integration-*",
     "test_conditions": "./util/test_conditions"

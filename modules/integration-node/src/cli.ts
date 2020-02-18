@@ -57,18 +57,24 @@ const cli = yargs
     describe: 'an optional test name to execute',
     type: 'string'
   })
+  .option('concurrency', {
+    alias: 'c',
+    describe: 'an optional concurrency for running tests',
+    type: 'number',
+    default: 1
+  })
   .demandCommand()
 
 ;(async (argv) => {
-  const { _: [ command ], tolerateFailures, testName } = argv
+  const { _: [ command ], tolerateFailures, testName, concurrency } = argv
   /* I set the result to 1 so that if I fall through the exit condition is a failure */
   let result = 1
   if (command === 'decrypt') {
     const { vectorFile } = argv as unknown as { vectorFile: string}
-    result = await integrationDecryptTestVectors(vectorFile, tolerateFailures, testName)
+    result = await integrationDecryptTestVectors(vectorFile, tolerateFailures, testName, concurrency)
   } else if (command === 'encrypt') {
     const { manifestFile, keyFile, decryptOracle } = argv as unknown as { manifestFile: string, keyFile: string, decryptOracle: string}
-    result = await integrationEncryptTestVectors(manifestFile, keyFile, decryptOracle, tolerateFailures, testName)
+    result = await integrationEncryptTestVectors(manifestFile, keyFile, decryptOracle, tolerateFailures, testName, concurrency)
   } else {
     console.log(`Unknown command ${command}`)
     cli.showHelp()
