@@ -15,6 +15,15 @@
 
 import { needs } from '@aws-crypto/material-management'
 
+/* See: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-kms
+ * regex to match: 'resourceType/resourceId' || 'resourceType'
+ * This is complicated because the `split(':')`.
+ * The valid resourceType resourceId delimiters are `/`, `:`.
+ * This means if the delimiter is a `:` it will be split out,
+ * when splitting the whole arn.
+ */
+const aliasOrKeyResourceType = /^(alias|key)(\/.*)*$/
+
 export function regionFromKmsKeyArn (kmsKeyArn: string): string {
   /* Precondition: A KMS key arn must be a string. */
   needs(typeof kmsKeyArn === 'string', 'KMS key arn must be a string.')
@@ -23,17 +32,30 @@ export function regionFromKmsKeyArn (kmsKeyArn: string): string {
    * arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012
    * arn:aws:kms:us-east-1:123456789012:alias/example-alias
    */
-  const [arnLiteral, partition, service, region] = kmsKeyArn.split(':')
+  const [arnLiteral, partition, service, region = ''] = kmsKeyArn.split(':')
 
   /* Postcondition: The ARN must be well formed.
    * The arn and kms section have defined values,
    * but the aws section does not.
+   * It is also possible to have a a key or alias.
+   * In this case the partition, service, region
+   * will be empty.
+   * In this case the arnLiteral should look like an alias.
    */
   needs(
-    arnLiteral === 'arn' &&
-    partition &&
-    service === 'kms' &&
-    region,
+    (arnLiteral === 'arn' &&
+      partition &&
+      service === 'kms' &&
+      region) ||
+    /* Partition may or may not have a value.
+     * If the resourceType delimiter is /,
+     * it will not have a value.
+     * However if the delimiter is : it will
+     * because of the split(':')
+     */
+    (!service &&
+      !region &&
+      arnLiteral.match(aliasOrKeyResourceType)),
     'Malformed arn.')
 
   return region
