@@ -18,7 +18,7 @@
     "@types/got": "^9.6.2",
     "@types/unzipper": "^0.9.1",
     "@types/yargs": "^13.0.0",
-    "got": "^9.6.0",
+    "got": "^10.6.0",
     "tslib": "^1.9.3",
     "unzipper": "^0.9.11",
     "yargs": "^13.2.2"
