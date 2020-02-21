@@ -22,7 +22,7 @@
     "@trust/keyto": "^0.3.7",
     "@types/got": "^9.6.2",
     "@types/stream-to-promise": "^2.2.0",
-    "@types/unzipper": "^0.9.1",
+    "@types/unzipper": "^0.10.2",
     "@types/yargs": "^13.0.0",
     "got": "^10.6.0",
     "jasmine-core": "^3.4.0",
