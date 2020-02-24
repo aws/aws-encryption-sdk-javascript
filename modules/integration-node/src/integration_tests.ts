@@ -40,8 +40,8 @@ export async function testDecryptVector ({ name, keysInfo, plainTextStream, ciph
   try {
     const cmm = decryptMaterialsManagerNode(keysInfo)
     const knowGood: Buffer[] = []
-    plainTextStream.on('data', (chunk: Buffer) => knowGood.push(chunk))
-    const { plaintext } = await decrypt(cmm, cipherStream)
+    ;(await plainTextStream()).on('data', (chunk: Buffer) => knowGood.push(chunk))
+    const { plaintext } = await decrypt(cmm, await cipherStream())
     const result = Buffer.concat(knowGood).equals(plaintext)
     return { result, name }
   } catch (err) {
@@ -50,7 +50,7 @@ export async function testDecryptVector ({ name, keysInfo, plainTextStream, ciph
 }
 
 // This is only viable for small streams, if we start get get larger streams, an stream equality should get written
-export async function testEncryptVector ({ name, keysInfo, encryptOp, plainTextData }: EncryptTestVectorInfo, decryptOracle: URL): Promise<TestVectorResults> {
+export async function testEncryptVector ({ name, keysInfo, encryptOp, plainTextData }: EncryptTestVectorInfo, decryptOracle: string): Promise<TestVectorResults> {
   try {
     const cmm = encryptMaterialsManagerNode(keysInfo)
     const { result: encryptResult } = await encrypt(cmm, plainTextData, encryptOp)
@@ -61,7 +61,7 @@ export async function testEncryptVector ({ name, keysInfo, encryptOp, plainTextD
         'Accept': 'application/octet-stream'
       },
       body: encryptResult,
-      encoding: null
+      responseType: 'buffer'
     })
     needs(decryptResponse.statusCode === 200, 'decrypt failure')
     const { body } = decryptResponse
@@ -97,7 +97,7 @@ export async function integrationDecryptTestVectors (vectorFile: string, tolerat
 }
 
 export async function integrationEncryptTestVectors (manifestFile: string, keyFile: string, decryptOracle: string, tolerateFailures: number = 0, testName?: string, concurrency: number = 1) {
-  const decryptOracleUrl = new URL(decryptOracle)
+  const decryptOracleUrl = new URL(decryptOracle).toString()
   const tests = await getEncryptTestVectorIterator(manifestFile, keyFile)
 
   return parallelTests(concurrency, tolerateFailures, runTest, tests)

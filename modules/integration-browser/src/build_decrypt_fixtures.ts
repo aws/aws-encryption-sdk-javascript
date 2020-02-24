@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-import { Open } from 'unzipper'
+import {
+  open,
+  Entry, // eslint-disable-line no-unused-vars
+  ZipFile // eslint-disable-line no-unused-vars
+} from 'yauzl'
 import streamToPromise from 'stream-to-promise'
 import { writeFileSync } from 'fs'
+import { Readable } from 'stream' // eslint-disable-line no-unused-vars
 
 import { DecryptManifestList } from './types' // eslint-disable-line no-unused-vars
 
@@ -30,23 +35,22 @@ import { DecryptManifestList } from './types' // eslint-disable-line no-unused-v
 export async function buildDecryptFixtures (fixtures: string, vectorFile: string, testName?: string, slice?: string) {
   const [start = 0, end = 9999] = (slice || '').split(':').map(n => parseInt(n, 10))
 
-  const centralDirectory = await Open.file(vectorFile)
-  const filesMap = new Map(centralDirectory.files.map(file => [file.path, file]))
+  const filesMap = await centralDirectory(vectorFile)
 
   const readUriOnce = (() => {
     const cache = new Map()
     return async (uri: string) => {
       const has = cache.get(uri)
       if (has) return has
-      const fileInfo = filesMap.get(testUri2Path(uri))
+      const fileInfo = filesMap.get(uri)
       if (!fileInfo) throw new Error(`${uri} does not exist`)
-      const buffer = await fileInfo.buffer()
+      const buffer = await streamToPromise(await fileInfo.stream())
       cache.set(uri, buffer)
       return buffer
     }
   })()
 
-  const manifestBuffer = await readUriOnce('manifest.json')
+  const manifestBuffer = await readUriOnce('file://manifest.json')
   const { keys: keysFile, tests }: DecryptManifestList = JSON.parse(manifestBuffer.toString('utf8'))
   const keysBuffer = await readUriOnce(keysFile)
   const { keys } = JSON.parse(keysBuffer.toString('utf8'))
@@ -68,12 +72,12 @@ export async function buildDecryptFixtures (fixtures: string, vectorFile: string
     testNames.push(name)
 
     const { plaintext: plaintextFile, ciphertext, 'master-keys': masterKeys } = testInfo
-    const plainTextInfo = filesMap.get(testUri2Path(plaintextFile))
-    const cipherInfo = filesMap.get(testUri2Path(ciphertext))
+    const plainTextInfo = filesMap.get(plaintextFile)
+    const cipherInfo = filesMap.get(ciphertext)
     if (!cipherInfo || !plainTextInfo) throw new Error(`no file for ${name}: ${ciphertext} | ${plaintextFile}`)
 
-    const cipherText = await streamToPromise(<NodeJS.ReadableStream>cipherInfo.stream())
-    const plainText = await readUriOnce(plainTextInfo.path)
+    const cipherText = await streamToPromise(await cipherInfo.stream())
+    const plainText = await readUriOnce(`file://${plainTextInfo.fileName}`)
     const keysInfo = masterKeys.map(keyInfo => {
       const key = keys[keyInfo.key]
       if (!key) throw new Error(`no key for ${name}`)
@@ -83,7 +87,7 @@ export async function buildDecryptFixtures (fixtures: string, vectorFile: string
     const test = JSON.stringify({
       name,
       keysInfo,
-      cipherFile: cipherInfo.path,
+      cipherFile: cipherInfo.fileName,
       cipherText: cipherText.toString('base64'),
       plainText: plainText.toString('base64')
     })
@@ -94,6 +98,38 @@ export async function buildDecryptFixtures (fixtures: string, vectorFile: string
   writeFileSync(`${fixtures}/decrypt_tests.json`, JSON.stringify(testNames))
 }
 
-function testUri2Path (uri: string) {
-  return uri.replace('file://', '')
+interface StreamEntry extends Entry {
+  stream: () => Promise<Readable>
+}
+
+function centralDirectory (vectorFile: string): Promise<Map<string, StreamEntry>> {
+  const filesMap = new Map<string, StreamEntry>()
+  return new Promise((resolve, reject) => {
+    open(vectorFile, { lazyEntries: true, autoClose: false }, (err, zipfile) => {
+      if (err || !zipfile) return reject(err)
+
+      zipfile
+        .on('entry', (entry: StreamEntry) => {
+          entry.stream = curryStream(zipfile, entry)
+          filesMap.set(`file://${entry.fileName}`, entry)
+          zipfile.readEntry()
+        })
+        .on('end', () => {
+          resolve(filesMap)
+        })
+        .on('error', (err) => reject(err))
+        .readEntry()
+    })
+  })
+}
+
+function curryStream (zipfile: ZipFile, entry: Entry) {
+  return function stream (): Promise<Readable> {
+    return new Promise((resolve, reject) => {
+      zipfile.openReadStream(entry, (err, readStream) => {
+        if (err || !readStream) return reject(err)
+        resolve(readStream)
+      })
+    })
+  }
 }
