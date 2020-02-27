@@ -21,6 +21,7 @@ import {
   _getDecryptTestVectorIterator
 } from '../src/index'
 import { DecryptManifestList, KeyList } from '../src/types' // eslint-disable-line no-unused-vars
+import { PassThrough } from 'stream'
 
 const keyList: KeyList = {
   'manifest': {
@@ -63,29 +64,33 @@ const manifest:DecryptManifestList = {
 
 const filesMap = new Map([
   [
-    'manifest.json', {
-      async buffer () {
-        return Buffer.from(JSON.stringify(manifest))
+    'file://manifest.json', {
+      async stream () {
+        const stream = new PassThrough()
+        setImmediate(() => stream.end(Buffer.from(JSON.stringify(manifest))))
+        return stream
       }
     } as any
   ],
   [
-    'keys.json', {
-      async buffer () {
-        return Buffer.from(JSON.stringify(keyList))
+    'file://keys.json', {
+      async stream () {
+        const stream = new PassThrough()
+        setImmediate(() => stream.end(Buffer.from(JSON.stringify(keyList))))
+        return stream
       }
     } as any
   ],
   [
-    'ciphertexts/460bd892-c137-4178-8201-4ab5ee5d3041', {
-      stream () {
+    'file://ciphertexts/460bd892-c137-4178-8201-4ab5ee5d3041', {
+      async stream () {
         return {} as any
       }
     } as any
   ],
   [
-    'plaintexts/small', {
-      stream () {
+    'file://plaintexts/small', {
+      async stream () {
         return {} as any
       }
     } as any

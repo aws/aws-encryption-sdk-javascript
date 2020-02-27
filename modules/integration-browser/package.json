@@ -22,7 +22,7 @@
     "@trust/keyto": "^0.3.7",
     "@types/got": "^9.6.2",
     "@types/stream-to-promise": "^2.2.0",
-    "@types/unzipper": "^0.10.2",
+    "@types/yauzl": "^2.9.1",
     "@types/yargs": "^15.0.3",
     "got": "^10.6.0",
     "jasmine-core": "^3.4.0",
@@ -34,7 +34,7 @@
     "puppeteer": "^1.14.0",
     "stream-to-promise": "^2.2.0",
     "tslib": "^1.9.3",
-    "unzipper": "^0.9.11",
+    "yauzl": "^2.10.0",
     "webpack": "^4.30.0",
     "yargs": "^13.2.2"
   },
