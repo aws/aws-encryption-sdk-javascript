@@ -24,6 +24,7 @@ import {
   KeyInfoTuple // eslint-disable-line no-unused-vars
 } from './types'
 import { Readable } from 'stream' // eslint-disable-line no-unused-vars
+import streamToPromise from 'stream-to-promise'
 
 export async function getDecryptTestVectorIterator (vectorFile: string) {
   const filesMap = await centralDirectory(vectorFile)
@@ -41,17 +42,10 @@ export async function _getDecryptTestVectorIterator (filesMap: Map<string, Strea
       const fileInfo = filesMap.get(uri)
       if (!fileInfo) throw new Error(`${uri} does not exist`)
       const stream = await fileInfo.stream()
-      return new Promise((resolve, reject) => {
-        const buffer: Buffer[] = []
-        stream
-          .on('data', chunk => buffer.push(chunk))
-          .on('end', () => {
-            const data = Buffer.concat(buffer)
-            cache.set(uri, data)
-            resolve(data)
-          })
-          .on('error', err => reject(err))
-      })
+
+      const buffer = await streamToPromise(stream)
+      cache.set(uri, buffer)
+      return buffer
     }
   })()
 

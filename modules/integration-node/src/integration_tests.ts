@@ -25,6 +25,7 @@ import { decryptMaterialsManagerNode, encryptMaterialsManagerNode } from './decr
 import { decrypt, encrypt, needs } from '@aws-crypto/client-node'
 import { URL } from 'url'
 import got from 'got'
+import streamToPromise from 'stream-to-promise'
 
 const notSupportedDecryptMessages = [
   'Not supported at this time.'
@@ -39,10 +40,9 @@ const notSupportedEncryptMessages = [
 export async function testDecryptVector ({ name, keysInfo, plainTextStream, cipherStream }: TestVectorInfo): Promise<TestVectorResults> {
   try {
     const cmm = decryptMaterialsManagerNode(keysInfo)
-    const knowGood: Buffer[] = []
-    ;(await plainTextStream()).on('data', (chunk: Buffer) => knowGood.push(chunk))
+    const knowGood = await streamToPromise(await plainTextStream())
     const { plaintext } = await decrypt(cmm, await cipherStream())
-    const result = Buffer.concat(knowGood).equals(plaintext)
+    const result = knowGood.equals(plaintext)
     return { result, name }
   } catch (err) {
     return { result: false, name, err }

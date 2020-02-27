@@ -18,9 +18,11 @@
     "@types/got": "^9.6.9",
     "@types/yauzl": "^2.9.1",
     "@types/yargs": "^15.0.3",
+    "@types/stream-to-promise": "^2.2.0",
     "got": "^10.6.0",
     "tslib": "^1.9.3",
     "yauzl": "^2.10.0",
+    "stream-to-promise": "^2.2.0",
     "yargs": "^13.2.2"
   },
   "sideEffects": false,
