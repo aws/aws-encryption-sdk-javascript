@@ -23,7 +23,7 @@
     "tslib": "^1.9.3",
     "yauzl": "^2.10.0",
     "stream-to-promise": "^2.2.0",
-    "yargs": "^13.2.2"
+    "yargs": "^15.3.0"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",

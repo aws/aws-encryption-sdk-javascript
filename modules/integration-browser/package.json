@@ -36,7 +36,7 @@
     "tslib": "^1.9.3",
     "yauzl": "^2.10.0",
     "webpack": "^4.30.0",
-    "yargs": "^13.2.2"
+    "yargs": "^15.3.0"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",
