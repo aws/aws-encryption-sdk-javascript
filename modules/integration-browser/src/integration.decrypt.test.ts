@@ -27,24 +27,36 @@ const notSupportedMessages = [
   '192-bit AES keys are not supported',
   'Unsupported right now'
 ]
-describe('browser decryption vectors', function () {
-  const tests: string[] = __fixtures__['fixtures/decrypt_tests']
 
-  for (const testName of tests) {
-    it(testName, async () => {
-      console.log(`start: ${testName}`)
-      const response = await fetch(`base/fixtures/${testName}.json`)
-      const { keysInfo, cipherText, plainText } = await response.json()
+const tests: string[] = __fixtures__['fixtures/decrypt_tests']
+const chunk = __fixtures__['fixtures/concurrency'] || 1
 
-      const cipher = fromBase64(cipherText)
-      const good = fromBase64(plainText)
-      try {
-        const cmm = await decryptMaterialsManagerWebCrypto(keysInfo)
-        const { plaintext } = await decrypt(cmm, cipher)
-        expect(good).toEqual(plaintext)
-      } catch (e) {
-        if (!notSupportedMessages.includes(e.message)) throw e
-      }
-    })
-  }
-})
+for (let i = 0, j = tests.length; i < j; i += chunk) {
+  aGroup(chunk, tests.slice(i, i + chunk))
+}
+
+function aGroup (groupNumber: number, tests: string[]) {
+  describe(`browser decryption vectors: ${groupNumber}`, () => {
+    for (const testName of tests) {
+      aTest(testName)
+    }
+  })
+}
+
+function aTest (testName: string) {
+  it(testName, async () => {
+    console.log(`start: ${testName}`)
+    const response = await fetch(`base/fixtures/${testName}.json`)
+    const { keysInfo, cipherText, plainText } = await response.json()
+
+    const cipher = fromBase64(cipherText)
+    const good = fromBase64(plainText)
+    try {
+      const cmm = await decryptMaterialsManagerWebCrypto(keysInfo)
+      const { plaintext } = await decrypt(cmm, cipher)
+      expect(good).toEqual(plaintext)
+    } catch (e) {
+      if (!notSupportedMessages.includes(e.message)) throw e
+    }
+  })
+}

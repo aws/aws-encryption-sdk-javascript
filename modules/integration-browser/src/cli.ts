@@ -16,6 +16,8 @@
 
 import yargs from 'yargs'
 import { spawnSync } from 'child_process'
+import { cpus } from 'os'
+import { needs } from '@aws-crypto/client-browser'
 
 import { join } from 'path'
 import { existsSync, mkdirSync, writeFileSync } from 'fs'
@@ -65,6 +67,19 @@ const cli = yargs
     describe: 'start karma and run the tests',
     type: 'boolean'
   })
+  .option('concurrency', {
+    alias: 'c',
+    describe: `an optional concurrency for running tests, pass 'cpu' to maximize`,
+    default: 1,
+    coerce: (value: any) => {
+      if (typeof value === 'string') {
+        needs(value.toLowerCase() === 'cpu', `The only supported string is 'cpu'`)
+        return cpus().length - 1
+      }
+      needs(typeof value === 'number' && value > 0, `Must be a number greater than 0`)
+      return value
+    }
+  })
   .demandCommand()
 const fixtures = join(__dirname, '../../fixtures')
 /* Sad side effect. */
@@ -73,10 +88,11 @@ if (!existsSync(fixtures)) {
 }
 
 ;(async (argv) => {
-  const { _: [ command ], testName, slice, karma } = argv
+  const { _: [ command ], testName, slice, karma, concurrency } = argv
 
   writeFileSync(`${fixtures}/decrypt_tests.json`, JSON.stringify([]))
   writeFileSync(`${fixtures}/encrypt_tests.json`, JSON.stringify([]))
+  writeFileSync(`${fixtures}/concurrency.json`, JSON.stringify(concurrency))
 
   if (command === 'decrypt') {
     // It is not clear how to get yargs/typescript to play nicely with sub commands
