@@ -15,6 +15,8 @@
  */
 
 import yargs from 'yargs'
+import { needs } from '@aws-crypto/client-node'
+import { cpus } from 'os'
 import { integrationDecryptTestVectors, integrationEncryptTestVectors } from './integration_tests'
 
 const cli = yargs
@@ -59,9 +61,16 @@ const cli = yargs
   })
   .option('concurrency', {
     alias: 'c',
-    describe: 'an optional concurrency for running tests',
-    type: 'number',
-    default: 1
+    describe: `an optional concurrency for running tests, pass 'cpu' to maximize`,
+    default: 1,
+    coerce: (value: any) => {
+      if (typeof value === 'string') {
+        needs(value.toLowerCase() === 'cpu', `The only supported string is 'cpu'`)
+        return cpus().length - 1
+      }
+      needs(typeof value === 'number' && value > 0, `Must be a number greater than 0`)
+      return value
+    }
   })
   .demandCommand()
 
