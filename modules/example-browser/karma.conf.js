@@ -2,7 +2,6 @@ const webpack = require('webpack')
 const {defaultProvider} = require('@aws-sdk/credential-provider-node')
 
 // Karma configuration
-process.env.CHROME_BIN = require('puppeteer').executablePath()
 
 module.exports =  function (config) {
   config.set({

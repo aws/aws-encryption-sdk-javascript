@@ -1,0 +1,55 @@
+#!/usr/bin/env node
+// Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+// This is done in a node script for 2 reasons
+// 1. Potability: I will need to run this in windows
+// 2. Errors. If the main command fails, the script needs to clean up
+// but and exit with this error.
+// this _can_ be done from bash or shell,
+// but now the portability problems loom large.
+
+const { spawn, execSync } = require('child_process')
+const pipeStdIo = { stdio: [process.stdin, process.stdout, process.stderr] }
+
+// Always clear storage so the latest versions are published
+// I am not worried about _what_ version number is published
+// Only that it is the latest code
+execSync('rm -rf verdaccio/storage/@aws-crypto')
+
+// Start verdaccio in the background
+const verdaccio = spawn('npx', ['verdaccio', '-c', 'verdaccio/config.yaml'], pipeStdIo)
+  .on('error', e => {
+    throw e
+  })
+
+// Publish all changed packages the local verdaccio server.
+// Anything that has not been changed will match what is in npm
+const args = [
+  'lerna', 'publish', 'prepatch',
+  '--registry', 'http://localhost:4873/',
+  '--yes',
+  '--no-changelog',
+  '--no-git-tag-version',
+  '--no-push',
+  '--no-git-reset',
+  '--ignore-scripts',
+  '--preid', 'ci',
+  '--no-verify-access'
+]
+spawn('npx', args, pipeStdIo)
+  .on('close', (code) => {
+    // The above command will make some modifications,
+    // Roll them back
+    // Ideally, we would find a way to not have to do this
+    execSync('git checkout -- modules/**/package-lock.json')
+    execSync('git checkout -- modules/**/package.json')
+
+    // Kill the background verdaccio server
+    verdaccio.kill()
+
+    // If this command had an error,
+    // we need to forward this.
+    // Otherwise the entire CI build may think that things succeeded.
+    if (code !== 0) throw Error(`Exit code: ${code}`)
+  })
