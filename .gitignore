@@ -31,3 +31,9 @@ coverage
 /tsconfig.json
 /tsconfig.module.json
 package.json.decrypt
+
+# verdaccio
+/verdaccio/storage
+
+# local npx cache
+/verdaccio/.npx

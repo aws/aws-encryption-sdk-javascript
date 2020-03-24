@@ -1,5 +1,4 @@
 // Karma configuration
-process.env.CHROME_BIN = require('puppeteer').executablePath()
 const { readFileSync } = require('fs')
 
 module.exports = function (config) {
@@ -55,7 +54,13 @@ module.exports = function (config) {
     customLaunchers: {
       ChromeHeadlessDisableCors: {
         base: 'ChromeHeadless',
-        flags: ['--disable-web-security', '--no-sandbox']
+        flags: [
+          '--headless',
+          '--disable-web-security',
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--enable-logging',
+        ]
       }
     },
     singleRun: true,

@@ -11,4 +11,4 @@ phases:
         commands:
             - npm test
             - npm run test_conditions
-            - npm run integration
+            - npm run verdaccio
