@@ -31,6 +31,12 @@ const args = [
   '--userconfig', 'verdaccio/npmrc',
   '--ignore-existing',
   '--cache', 'verdaccio/.npx',
+  // This is **very** important,
+  // without this, npx may mask error codes.
+  // In testing it was possible to have errors in the npx command
+  // but the spawned process here did not exit with a non-zero exit code.
+  // See `execCommand` in `libnpx` for specifics
+  '--always-spawn',
   // Yes, this is dangerous.
   // But I'm trying to replicate _just running npx_
   // So if you get here, you should have had access to run npx anyway.
