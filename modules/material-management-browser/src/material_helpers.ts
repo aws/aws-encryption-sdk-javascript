@@ -262,11 +262,11 @@ export async function _importCryptoKey<T extends WebCryptoMaterial<T>> (
      * with browsers that need a zero byte gcm fallback.
      */
     const format = 'raw'
-    const algorithm = suite.kdf
+    const algorithm = { name: suite.kdf, length: suite.keyLength }
     return subtle.importKey(format, udk, algorithm, extractable, keyUsages)
   } else {
     const format = 'jwk'
-    const algorithm = suite.encryption
+    const algorithm = { name: suite.encryption, length: suite.keyLength }
     const jwk = bytes2JWK(udk)
     return subtle.importKey(format, jwk, algorithm, extractable, keyUsages)
   }

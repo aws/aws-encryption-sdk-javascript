@@ -608,11 +608,18 @@ export function isValidCryptoKey<T extends WebCryptoMaterial<T>> (
   // @ts-ignore length is an optional value...
   const { name, length } = algorithm
 
+  /* MSRCrypto, for legacy reasons,
+   * normalizes the algorithm name
+   * to lower case.
+   * https://github.com/microsoft/MSR-JavaScript-Crypto/issues/1
+   * For now, I'm going to upper case the name.
+   */
+
   // Only symmetric algorithms
   return type === 'secret' &&
     // Must match the suite
-    ((kdf && name === kdf) ||
-     (name === encryption && length === keyLength)) &&
+    ((kdf && name.toUpperCase() === kdf) ||
+     (name.toUpperCase() === encryption && length === keyLength)) &&
     /* Only valid usage are: encrypt|decrypt|deriveKey
      * The complexity between deriveKey and suite.kdf should be handled in the Material class.
      */
