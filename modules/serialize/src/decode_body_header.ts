@@ -155,6 +155,8 @@ export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: Head
   needs(sequenceNumber > 0, 'Malformed sequenceNumber.')
   const iv = buffer.slice(readPos += 4, readPos += ivLength)
   const contentLength = dataView.getUint32(readPos)
+  /* Postcondition: The final frame should not be able to exceed the frameLength. */
+  needs(headerInfo.messageHeader.frameLength >= contentLength, 'Final frame length exceeds frame length.')
   return {
     sequenceNumber,
     iv,

@@ -61,6 +61,10 @@ export function finalFrameHeader () {
   return new Uint8Array([255, 255, 255, 255, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 231])
 }
 
+export function finalFrameHeaderZeroBytes () {
+  return new Uint8Array([255, 255, 255, 255, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0])
+}
+
 export function invalidSequenceEndFinalFrameHeader () {
   return new Uint8Array([0, 255, 255, 255, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 231])
 }
