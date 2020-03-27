@@ -31,7 +31,7 @@ describe('serializeFactory:frameIv', () => {
     expect(test).to.deep.equal(fixtures.basicFrameIV())
   })
 
-  it('Precondition: sequenceNumber must conform to the specification. i.e. 0 - (2^32 - 1)', () => {
+  it('Precondition: sequenceNumber must conform to the specification. i.e. 1 - (2^32 - 1)', () => {
     const fromUtf8 = () => { throw new Error('not used') }
     const { frameIv } = serializeFactory(fromUtf8)
     expect(() => frameIv(12, 0)).to.throw()

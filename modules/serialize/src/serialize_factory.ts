@@ -43,7 +43,10 @@ export function serializeFactory (fromUtf8: (input: any) => Uint8Array) {
   }
 
   function frameIv (ivLength: IvLength, sequenceNumber: number) {
-    /* Precondition: sequenceNumber must conform to the specification. i.e. 0 - (2^32 - 1) */
+    /* Precondition: sequenceNumber must conform to the specification. i.e. 1 - (2^32 - 1)
+     * The sequence number starts at 1
+     * https://github.com/awslabs/aws-encryption-sdk-specification/blob/master/data-format/message-body.md#sequence-number
+     */
     needs(sequenceNumber > 0 && SequenceIdentifier.SEQUENCE_NUMBER_END >= sequenceNumber, 'sequenceNumber out of bounds')
 
     const buff = new Uint8Array(ivLength)
