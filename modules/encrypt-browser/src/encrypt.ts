@@ -113,6 +113,7 @@ export async function encrypt (
   /* The final frame has a variable length.
    * The value needs to be known, but should only be calculated once.
    * So I calculate how much of a frame I should have at the end.
+   * This value will NEVER be larger than the frameLength.
    */
   const finalFrameLength = frameLength - ((numberOfFrames * frameLength) - plaintextLength)
   const bodyContent = []
