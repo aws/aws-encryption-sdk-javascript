@@ -428,7 +428,7 @@ describe('decodeFinalFrameBodyHeader', () => {
     }
   })
 
-  it('Postcondition: The final frame should not be able to exceed the frameLength.', () => {
+  it('Postcondition: The final frame MUST NOT exceed the frameLength.', () => {
     const headerInfo = {
       messageHeader: {
         // The content length in this final frame is 999
