@@ -16,7 +16,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/client-browser": "file:../client-browser",
-    "@aws-sdk/karma-credential-loader": "1.0.0-alpha.5",
+    "@aws-sdk/karma-credential-loader": "1.0.0-alpha.6",
     "@aws-sdk/util-base64-browser": "1.0.0-alpha.2",
     "@aws-sdk/util-utf8-browser": "1.0.0-alpha.2",
     "@trust/keyto": "^0.3.7",
