@@ -131,7 +131,7 @@
     "lerna": "^3.13.3",
     "source-map-support": "^0.5.12",
     "tslib": "^1.9.3",
-    "rimraf": "^2.6.2",
+    "rimraf": "^3.0.2",
     "karma-parallel": "^0.3.1",
     "verdaccio": "^4.5.1"
   }
