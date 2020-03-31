@@ -17,7 +17,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/material-management": "file:../material-management",
-    "tslib": "^1.9.3"
+    "tslib": "^1.11.1"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",
