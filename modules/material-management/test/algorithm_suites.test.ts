@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { AlgorithmSuiteIdentifier, AlgorithmSuite } from '../src/algorithm_suites'
 
 describe('AlgorithmSuiteIdentifier', () => {

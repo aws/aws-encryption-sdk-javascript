@@ -17,7 +17,6 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import 'mocha'
 import { getFramedEncryptStream } from '../src/framed_encrypt_stream'
 
 chai.use(chaiAsPromised)

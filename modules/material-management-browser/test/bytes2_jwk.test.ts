@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { bytes2JWK } from '../src/index'
 
 describe('bytes2JWK', () => {

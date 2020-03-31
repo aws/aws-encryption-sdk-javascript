@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { serializeSignatureInfo, deserializeSignature } from '../src/signature_info'
 import * as fixtures from './fixtures'
 

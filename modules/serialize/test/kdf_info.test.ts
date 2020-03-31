@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { kdfInfo } from '../src/kdf_info'
 import { Buffer } from 'buffer'
 

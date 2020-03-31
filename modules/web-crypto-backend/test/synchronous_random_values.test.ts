@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { synchronousRandomValues } from '../src/index'
 import sinon from 'sinon'
 import * as browserWindow from '@aws-sdk/util-locate-window'

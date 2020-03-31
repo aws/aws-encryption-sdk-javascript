@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { generateDataKey, encrypt, decrypt, kmsResponseToEncryptedDataKey } from '../src/helpers'
 import { EncryptedDataKey } from '@aws-crypto/material-management'
 

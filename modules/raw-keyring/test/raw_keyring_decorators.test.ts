@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { _onEncrypt, _onDecrypt } from '../src/raw_keyring_decorators'
 import { AlgorithmSuiteIdentifier, NodeEncryptionMaterial, NodeAlgorithmSuite, KeyringTraceFlag, NodeDecryptionMaterial, EncryptedDataKey, unwrapDataKey } from '@aws-crypto/material-management'
 

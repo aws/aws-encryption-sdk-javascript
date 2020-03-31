@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import {
   _getDecryptTestVectorIterator
 } from '../src/index'

@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { getDecipherStream } from '../src//decipher_stream'
 import { VerifyStream } from '../src/verify_stream'
 import { ContentType } from '@aws-crypto/serialize'

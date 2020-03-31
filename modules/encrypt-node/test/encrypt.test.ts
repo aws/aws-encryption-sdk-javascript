@@ -17,7 +17,6 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import 'mocha'
 import {
   NodeDecryptionMaterial, // eslint-disable-line no-unused-vars
   NodeEncryptionMaterial, // eslint-disable-line no-unused-vars

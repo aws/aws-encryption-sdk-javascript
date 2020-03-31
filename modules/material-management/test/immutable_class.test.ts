@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { immutableClass, immutableBaseClass, frozenClass } from '../src/immutable_class'
 
 describe('frozenClass', () => {

@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { NodeRawAesMaterial, WebCryptoRawAesMaterial } from '../src/raw_aes_material'
 import { RawAesWrappingSuiteIdentifier } from '../src/raw_aes_algorithm_suite'
 import { AlgorithmSuiteIdentifier } from '@aws-crypto/material-management'
