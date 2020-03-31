@@ -42,7 +42,6 @@ spawn('npx', args, pipeStdIo)
     // The above command will make some modifications,
     // Roll them back
     // Ideally, we would find a way to not have to do this
-    execSync('git checkout -- modules/**/package-lock.json')
     execSync('git checkout -- modules/**/package.json')
 
     // Kill the background verdaccio server

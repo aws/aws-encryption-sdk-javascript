@@ -17,8 +17,8 @@
   "dependencies": {
     "@aws-crypto/material-management-browser": "file:../material-management-browser",
     "@aws-crypto/serialize": "file:../serialize",
-    "@aws-sdk/util-utf8-browser": "1.0.0-alpha.2",
-    "tslib": "^1.9.3"
+    "@aws-sdk/util-utf8-browser": "1.0.0-alpha.3",
+    "tslib": "^1.11.1"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",
