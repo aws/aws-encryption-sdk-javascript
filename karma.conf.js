@@ -1,6 +1,19 @@
 // Karma configuration
 
 module.exports = function (config) {
+
+  process.on('infrastructure_error', (error) => {
+    /* @aws-sdk/karma-credential-loader get credential
+     * as configured by the AWS SDK.
+     * These credentials are used to test KMS integration
+     * with the Encryption SDK.
+     * If they do not exist, then karma will exit with an `UnhandledRejection`.
+     * The following will log errors link this,
+     * but still let the karma-server shut down.
+     */
+    console.error('infrastructure_error', error);
+  })
+
   config.set({
     basePath: '',
     frameworks: ['mocha', 'chai'],
@@ -25,10 +38,9 @@ module.exports = function (config) {
               {
                 loader: 'ts-loader',
                 options: {
-                  configFile: 'tsconfig.module.json',
-                  compilerOptions: {
-                    sourceRoot: 'modules/'
-                  }
+                  logInfoToStdOut: true,
+                  projectReferences: true,
+                  configFile: `${__dirname}/tsconfig.module.json`
                 }
               }
             ],
