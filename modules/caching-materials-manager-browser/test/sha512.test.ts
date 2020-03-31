@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { sha512 } from '../src/sha512'
 
 // sha512('asdf')

@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { EncryptedDataKey } from '../src/encrypted_data_key'
 
 describe('EncryptedDataKey', () => {

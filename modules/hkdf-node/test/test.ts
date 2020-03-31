@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { HKDF } from '../src/index'
 import { UnsupportedAlgorithm, KeyLengthError } from '../src/errors'
 

@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { KmsKeyringNode } from '../src/index'
 import {
   KeyringNode,

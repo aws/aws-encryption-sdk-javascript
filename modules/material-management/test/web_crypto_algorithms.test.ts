@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { AlgorithmSuiteIdentifier } from '../src/algorithm_suites'
 import { WebCryptoAlgorithmSuite } from '../src/web_crypto_algorithms'
 

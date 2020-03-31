@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { rawAesEncryptedDataKeyFactory, rawAesEncryptedPartsFactory } from '../src/raw_aes_encrypted_data_keys'
 import { EncryptedDataKey, NodeAlgorithmSuite, AlgorithmSuiteIdentifier } from '@aws-crypto/material-management'
 

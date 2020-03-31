@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import {
   KmsKeyringClass,
   KeyRingConstructible // eslint-disable-line no-unused-vars

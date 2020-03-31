@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { testAES } from '../src/aes_simple'
 import { testCachingCMMExample } from '../src/caching_cmm'
 import { testKmsSimpleExample } from '../src/kms_simple'

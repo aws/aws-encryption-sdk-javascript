@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { getLocalCryptographicMaterialsCache } from '../src/get_local_cryptographic_materials_cache'
 import {
   NodeAlgorithmSuite,

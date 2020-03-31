@@ -17,7 +17,6 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import 'mocha'
 import {
   _importCryptoKey,
   importCryptoKey,
@@ -369,7 +368,6 @@ describe('getSubtleFunction', () => {
     const testDecryptFunction = testDecryptIvAad(iv, aad)
 
     for (let i = 0; tagLengthBytes > i; i++) {
-      console.log(i)
       await expect(testDecryptFunction(new Uint8Array(testEncryptedData.slice(0, i))))
         .to.eventually.rejectedWith(Error, 'Invalid data length.')
     }
