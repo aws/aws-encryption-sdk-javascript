@@ -164,7 +164,7 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
       /* Push the authTag onto the end.  Yes, I am abusing the name. */
       cipherContent.push(cipher.getAuthTag())
 
-      needs(frameSize === frameLength || isFinalFrame, 'Malformed frame')
+      needs(frameSize === frameLength || (isFinalFrame && frameLength >= frameSize), 'Malformed frame')
 
       for (const cipherText of cipherContent) {
         if (!this.push(cipherText)) {
@@ -190,11 +190,18 @@ type EncryptFrameInput = {
 export function getEncryptFrame (input: EncryptFrameInput): EncryptFrame {
   const { pendingFrame, messageHeader, getCipher, isFinalFrame } = input
   const { sequenceNumber, contentLength, content } = pendingFrame
-  const frameIv = serialize.frameIv(messageHeader.headerIvLength, sequenceNumber)
+  const { frameLength, contentType, messageId, headerIvLength } = messageHeader
+  /* Precondition: The content length MUST correlate with the frameLength.
+   * In the case of a regular frame,
+   * the content length MUST strictly equal the frame length.
+   * In the case of the final frame,
+   * it MUST NOT be larger than the frame length.
+   */
+  needs(frameLength === contentLength || (isFinalFrame && frameLength >= contentLength), `Malformed frame length and content length: ${JSON.stringify({ frameLength, contentLength, isFinalFrame })}`)
+  const frameIv = serialize.frameIv(headerIvLength, sequenceNumber)
   const bodyHeader = Buffer.from(isFinalFrame
     ? finalFrameHeader(sequenceNumber, frameIv, contentLength)
     : frameHeader(sequenceNumber, frameIv))
-  const { contentType, messageId } = messageHeader
   const contentString = aadUtility.messageAADContentString({ contentType, isFinalFrame })
   const { buffer, byteOffset, byteLength } = aadUtility.messageAAD(messageId, contentString, sequenceNumber, contentLength)
   const cipher = getCipher(frameIv)

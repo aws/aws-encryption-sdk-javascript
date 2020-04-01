@@ -17,7 +17,7 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { getFramedEncryptStream } from '../src/framed_encrypt_stream'
+import { getFramedEncryptStream, getEncryptFrame } from '../src/framed_encrypt_stream'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -58,5 +58,92 @@ describe('getFramedEncryptStream', () => {
     })
 
     expect(called).to.equal(true)
+  })
+})
+
+describe('getEncryptFrame', () => {
+  it('can return an EncryptFrame', () => {
+    const input = {
+      pendingFrame: {
+        content: [Buffer.from([1, 2, 3, 4, 5])],
+        contentLength: 5,
+        sequenceNumber: 1
+      },
+      isFinalFrame: false,
+      getCipher: () => ({ setAAD: () => {} }) as any,
+      messageHeader: {
+        frameLength: 5,
+        contentType: 2,
+        messageId: Buffer.from([]),
+        headerIvLength: 12 as 12,
+        version: 1,
+        type: 12,
+        suiteId: 1,
+        encryptionContext: {},
+        encryptedDataKeys: []
+      }
+    }
+    const test1 = getEncryptFrame(input)
+    expect(test1.content).to.equal(input.pendingFrame.content)
+    expect(test1.isFinalFrame).to.equal(input.isFinalFrame)
+
+    // Just a quick flip to make sure...
+    input.isFinalFrame = true
+    const test2 = getEncryptFrame(input)
+    expect(test2.content).to.equal(input.pendingFrame.content)
+    expect(test2.isFinalFrame).to.equal(input.isFinalFrame)
+  })
+
+  it('Precondition: The content length MUST correlate with the frameLength.', () => {
+    const inputFinalFrameToLarge = {
+      pendingFrame: {
+        content: [Buffer.from([1, 2, 3, 4, 5, 6])],
+        // This exceeds the frameLength below
+        contentLength: 6,
+        sequenceNumber: 1
+      },
+      isFinalFrame: true,
+      getCipher: () => ({ setAAD: () => {} }) as any,
+      messageHeader: {
+        frameLength: 5,
+        contentType: 2,
+        messageId: Buffer.from([]),
+        headerIvLength: 12 as 12,
+        version: 1,
+        type: 12,
+        suiteId: 1,
+        encryptionContext: {},
+        encryptedDataKeys: []
+      }
+    }
+
+    expect(() => getEncryptFrame(inputFinalFrameToLarge)).to.throw('Malformed frame length and content length:')
+
+    const inputFrame = {
+      pendingFrame: {
+        content: [Buffer.from([1, 2, 3, 4, 5])],
+        contentLength: 5,
+        sequenceNumber: 1
+      },
+      isFinalFrame: false,
+      getCipher: () => ({ setAAD: () => {} }) as any,
+      messageHeader: {
+        frameLength: 5,
+        contentType: 2,
+        messageId: Buffer.from([]),
+        headerIvLength: 12 as 12,
+        version: 1,
+        type: 12,
+        suiteId: 1,
+        encryptionContext: {},
+        encryptedDataKeys: []
+      }
+    }
+
+    // Make sure that it must be equal as long as we are here...
+    inputFrame.pendingFrame.contentLength = 4
+    expect(() => getEncryptFrame(inputFrame)).to.throw('Malformed frame length and content length:')
+    inputFrame.pendingFrame.contentLength = 6
+    expect(() => getEncryptFrame(inputFrame)).to.throw('Malformed frame length and content length:')
   })
 })

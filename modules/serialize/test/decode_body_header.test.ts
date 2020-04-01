@@ -101,7 +101,7 @@ describe('decodeFrameBodyHeader', () => {
   it('return final frame header', () => {
     const headerInfo = {
       messageHeader: {
-        frameLength: 99,
+        frameLength: 999,
         contentType: ContentType.FRAMED_DATA
       },
       algorithmSuite: {
@@ -205,7 +205,7 @@ describe('decodeFrameBodyHeader', () => {
     const buffer = concatBuffers(new Uint8Array(10), fixtures.finalFrameHeader())
     const headerInfo = {
       messageHeader: {
-        frameLength: 99,
+        frameLength: 999,
         contentType: ContentType.FRAMED_DATA
       },
       algorithmSuite: {
@@ -296,7 +296,7 @@ describe('decodeFinalFrameBodyHeader', () => {
   it('return final frame header from readPos', () => {
     const headerInfo = {
       messageHeader: {
-        frameLength: 99,
+        frameLength: 999,
         contentType: ContentType.FRAMED_DATA
       },
       algorithmSuite: {
@@ -318,12 +318,36 @@ describe('decodeFinalFrameBodyHeader', () => {
     expect(test.tagLength).to.eql(16)
     expect(test.isFinalFrame).to.eql(true)
     expect(test.contentType).to.eql(ContentType.FRAMED_DATA)
+    expect(test.contentLength).to.eql(999)
+  })
+
+  it('The final frame can be 0 length.', () => {
+    const headerInfo = {
+      messageHeader: {
+        frameLength: 999,
+        contentType: ContentType.FRAMED_DATA
+      },
+      algorithmSuite: {
+        ivLength: 12,
+        tagLength: 16
+      }
+    } as any
+    const buffer = fixtures.finalFrameHeaderZeroBytes()
+
+    const test = decodeFinalFrameBodyHeader(buffer, headerInfo, 0)
+    if (!test) throw new Error('failure')
+    expect(test.sequenceNumber).to.eql(1)
+    expect(test.iv).to.eql(fixtures.basicFrameIV())
+    expect(test.tagLength).to.eql(16)
+    expect(test.isFinalFrame).to.eql(true)
+    expect(test.contentType).to.eql(ContentType.FRAMED_DATA)
+    expect(test.contentLength).to.eql(0)
   })
 
   it('Precondition: The contentType must be FRAMED_DATA to be a Final Frame.', () => {
     const headerInfo = {
       messageHeader: {
-        frameLength: 99,
+        frameLength: 999,
         contentType: 'not FRAMED_DATA'
       },
       algorithmSuite: {
@@ -338,7 +362,7 @@ describe('decodeFinalFrameBodyHeader', () => {
   it('Precondition: decodeFinalFrameBodyHeader readPos must be within the byte length of the buffer given.', () => {
     const headerInfo = {
       messageHeader: {
-        frameLength: 99,
+        frameLength: 999,
         contentType: ContentType.FRAMED_DATA
       },
       algorithmSuite: {
@@ -355,7 +379,7 @@ describe('decodeFinalFrameBodyHeader', () => {
   it('Postcondition: sequenceEnd must be SEQUENCE_NUMBER_END.', () => {
     const headerInfo = {
       messageHeader: {
-        frameLength: 99,
+        frameLength: 999,
         contentType: ContentType.FRAMED_DATA
       },
       algorithmSuite: {
@@ -371,7 +395,7 @@ describe('decodeFinalFrameBodyHeader', () => {
   it('Postcondition: decodeFinalFrameBodyHeader sequenceNumber must be greater than 0.', () => {
     const headerInfo = {
       messageHeader: {
-        frameLength: 99,
+        frameLength: 999,
         contentType: ContentType.FRAMED_DATA
       },
       algorithmSuite: {
@@ -388,7 +412,7 @@ describe('decodeFinalFrameBodyHeader', () => {
     const frameHeader = fixtures.finalFrameHeader()
     const headerInfo = {
       messageHeader: {
-        frameLength: 99,
+        frameLength: 999,
         contentType: ContentType.FRAMED_DATA
       },
       algorithmSuite: {
@@ -401,6 +425,24 @@ describe('decodeFinalFrameBodyHeader', () => {
       const test = decodeFinalFrameBodyHeader(frameHeader.slice(0, i), headerInfo, 0)
       expect(test).to.eql(false)
     }
+  })
+
+  it('Postcondition: The final frame MUST NOT exceed the frameLength.', () => {
+    const headerInfo = {
+      messageHeader: {
+        // The content length in this final frame is 999
+        // So I set the frame length to less than this
+        frameLength: 99,
+        contentType: ContentType.FRAMED_DATA
+      },
+      algorithmSuite: {
+        ivLength: 12,
+        tagLength: 16
+      }
+    } as any
+    const buffer = fixtures.finalFrameHeader()
+
+    expect(() => decodeFinalFrameBodyHeader(buffer, headerInfo, 0)).to.throw('Final frame length exceeds frame length.')
   })
 })
 
