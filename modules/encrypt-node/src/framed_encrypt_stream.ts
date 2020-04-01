@@ -164,7 +164,7 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
       /* Push the authTag onto the end.  Yes, I am abusing the name. */
       cipherContent.push(cipher.getAuthTag())
 
-      needs(frameSize === frameLength || isFinalFrame, 'Malformed frame')
+      needs(frameSize === frameLength || (isFinalFrame && frameLength >= frameSize), 'Malformed frame')
 
       for (const cipherText of cipherContent) {
         if (!this.push(cipherText)) {
@@ -193,11 +193,11 @@ export function getEncryptFrame (input: EncryptFrameInput): EncryptFrame {
   const { frameLength, contentType, messageId, headerIvLength } = messageHeader
   /* Precondition: The content length MUST correlate with the frameLength.
    * In the case of a regular frame,
-   * the content length must strictly equal the frame length.
+   * the content length MUST strictly equal the frame length.
    * In the case of the final frame,
-   * it MUST not be larger than the frame length.
+   * it MUST NOT be larger than the frame length.
    */
-  needs(frameLength === contentLength || (isFinalFrame && frameLength >= contentLength), 'Final frame length exceeds frame length.')
+  needs(frameLength === contentLength || (isFinalFrame && frameLength >= contentLength), `Malformed frame length and content length: ${JSON.stringify({ frameLength, contentLength, isFinalFrame })}`)
   const frameIv = serialize.frameIv(headerIvLength, sequenceNumber)
   const bodyHeader = Buffer.from(isFinalFrame
     ? finalFrameHeader(sequenceNumber, frameIv, contentLength)

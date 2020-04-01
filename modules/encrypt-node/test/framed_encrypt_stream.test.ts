@@ -117,7 +117,7 @@ describe('getEncryptFrame', () => {
       }
     }
 
-    expect(() => getEncryptFrame(inputFinalFrameToLarge)).to.throw('Final frame length exceeds frame length.')
+    expect(() => getEncryptFrame(inputFinalFrameToLarge)).to.throw('Malformed frame length and content length:')
 
     const inputFrame = {
       pendingFrame: {
@@ -142,8 +142,8 @@ describe('getEncryptFrame', () => {
 
     // Make sure that it must be equal as long as we are here...
     inputFrame.pendingFrame.contentLength = 4
-    expect(() => getEncryptFrame(inputFrame)).to.throw('Final frame length exceeds frame length.')
+    expect(() => getEncryptFrame(inputFrame)).to.throw('Malformed frame length and content length:')
     inputFrame.pendingFrame.contentLength = 6
-    expect(() => getEncryptFrame(inputFrame)).to.throw('Final frame length exceeds frame length.')
+    expect(() => getEncryptFrame(inputFrame)).to.throw('Malformed frame length and content length:')
   })
 })
