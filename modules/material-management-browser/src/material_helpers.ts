@@ -23,6 +23,7 @@ import {
   keyUsageForMaterial,
   subtleFunctionForMaterial,
   unwrapDataKey,
+  AwsEsdkJsCryptoKey, // eslint-disable-line no-unused-vars
   WebCryptoMaterial // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management'
 
@@ -155,7 +156,7 @@ export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
   const { encryption: cipherName, ivLength, tagLength } = suite
 
   return (info: Uint8Array) => {
-    const derivedKeyPromise: Promise<CryptoKey|MixedBackendCryptoKey> = isCryptoKey(cryptoKey)
+    const derivedKeyPromise: Promise<AwsEsdkJsCryptoKey|MixedBackendCryptoKey> = isCryptoKey(cryptoKey)
       ? WebCryptoKdf(getNonZeroByteBackend(backend), material, cryptoKey, [subtleFunction], info)
       : Promise.all([
         WebCryptoKdf(getNonZeroByteBackend(backend), material, cryptoKey.nonZeroByteCryptoKey, [subtleFunction], info),
@@ -174,10 +175,16 @@ export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
           const { nonZeroByteSubtle, zeroByteSubtle } = backend
           const { nonZeroByteCryptoKey, zeroByteCryptoKey } = deriveKey
           const algorithm = { name: cipherName, iv, additionalData, tagLength }
-          if (data.byteLength) {
-            return nonZeroByteSubtle[subtleFunction](algorithm, nonZeroByteCryptoKey, data)
-          } else {
+          /* Precondition: The WebCrypto AES-GCM decrypt API expects the data *and* tag together.
+           * This means that on decrypt any amount of data less than tagLength is invalid.
+           * This also means that zero encrypted data will be equal to tagLength.
+           */
+          const dataByteLength = subtleFunction === 'decrypt' ? data.byteLength - tagLength / 8 : data.byteLength
+          needs(dataByteLength >= 0, 'Invalid data length.')
+          if (dataByteLength === 0) {
             return zeroByteSubtle[subtleFunction](algorithm, zeroByteCryptoKey, data)
+          } else {
+            return nonZeroByteSubtle[subtleFunction](algorithm, nonZeroByteCryptoKey, data)
           }
         }
         // This should be impossible
@@ -190,7 +197,7 @@ export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
 export async function WebCryptoKdf<T extends WebCryptoMaterial<T>> (
   subtle: SubtleCrypto,
   material: T,
-  cryptoKey: CryptoKey,
+  cryptoKey: AwsEsdkJsCryptoKey,
   keyUsages: SubtleFunction[],
   info: Uint8Array
 ): Promise<CryptoKey> {
@@ -244,7 +251,7 @@ export async function _importCryptoKey<T extends WebCryptoMaterial<T>> (
   subtle: SubtleCrypto,
   material: T,
   keyUsages: KeyUsage[] = [keyUsageForMaterial(material)]
-) {
+): Promise<AwsEsdkJsCryptoKey> {
   const { suite } = material
   const extractable = false
   const udk = unwrapDataKey(material.getUnencryptedDataKey())
@@ -255,11 +262,11 @@ export async function _importCryptoKey<T extends WebCryptoMaterial<T>> (
      * with browsers that need a zero byte gcm fallback.
      */
     const format = 'raw'
-    const algorithm = suite.kdf
+    const algorithm = { name: suite.kdf, length: suite.keyLength }
     return subtle.importKey(format, udk, algorithm, extractable, keyUsages)
   } else {
     const format = 'jwk'
-    const algorithm = suite.encryption
+    const algorithm = { name: suite.encryption, length: suite.keyLength }
     const jwk = bytes2JWK(udk)
     return subtle.importKey(format, jwk, algorithm, extractable, keyUsages)
   }

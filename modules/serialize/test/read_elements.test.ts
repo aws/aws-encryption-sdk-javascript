@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { readElements } from '../src/read_element'
 import { concatBuffers } from '../src/concat_buffers'
 import { Buffer } from 'buffer'

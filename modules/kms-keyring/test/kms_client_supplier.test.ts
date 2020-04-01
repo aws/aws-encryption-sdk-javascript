@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { getClient, limitRegions, excludeRegions, cacheClients, deferCache } from '../src/kms_client_supplier'
 
 describe('getClient', () => {

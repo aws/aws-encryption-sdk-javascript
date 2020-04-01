@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { VerifyStream } from '../src/verify_stream'
 import { ParseHeaderStream } from '../src/parse_header_stream'
 import * as fixtures from './fixtures'

@@ -17,7 +17,6 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import 'mocha'
 import { RawAesKeyringNode, RawAesWrappingSuiteIdentifier } from '../src/index'
 import {
   NodeEncryptionMaterial,

@@ -16,12 +16,12 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { testAES } from '../src/aes_simple'
 import { testCachingCMMExample } from '../src/caching_cmm'
 import { testKmsSimpleExample } from '../src/kms_simple'
 import { testMultiKeyringExample } from '../src/multi_keyring'
 import { testRSA } from '../src/rsa_simple'
+import { testFallback } from '../src/fallback'
 
 describe('test', () => {
   it('testAES', async () => {
@@ -46,6 +46,11 @@ describe('test', () => {
 
   it('testRSA', async () => {
     const { plainText, plaintext } = await testRSA()
+    expect(plainText).to.deep.equal(plaintext)
+  })
+
+  it('testFallback', async () => {
+    const { plainText, plaintext } = await testFallback()
     expect(plainText).to.deep.equal(plaintext)
   })
 })

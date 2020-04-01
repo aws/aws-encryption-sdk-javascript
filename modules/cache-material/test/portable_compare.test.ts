@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { compare } from '../src/portable_compare'
 
 describe('compare', () => {

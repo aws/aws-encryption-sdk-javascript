@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import {
   EncryptedDataKey,
   NodeAlgorithmSuite,
@@ -477,7 +476,7 @@ describe('decorateWebCryptoMaterial:Helpers', () => {
     it('Suite without the KDF is only derivable with the key', () => {
       const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
       const material = new WebCryptoEncryptionMaterial(suite, {})
-      const keyKdf: any = { type: 'secret', algorithm: { name: suite.kdf }, usages: ['deriveKey'], extractable: false }
+      const keyKdf: any = { type: 'secret', algorithm: { name: 'HKDF' }, usages: ['deriveKey'], extractable: false }
       const key: any = { type: 'secret', algorithm: { name: suite.encryption, length: suite.keyLength }, usages: ['encrypt'], extractable: false }
       expect(isValidCryptoKey(keyKdf, material)).to.equal(false)
       expect(isValidCryptoKey(key, material)).to.equal(true)

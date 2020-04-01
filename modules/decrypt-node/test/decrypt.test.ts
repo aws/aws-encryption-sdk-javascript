@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { AlgorithmSuiteIdentifier } from '@aws-crypto/material-management-node'
 import { decrypt } from '../src/index'
 import * as fixtures from './fixtures'

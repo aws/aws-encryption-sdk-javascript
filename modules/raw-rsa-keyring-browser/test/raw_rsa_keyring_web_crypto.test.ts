@@ -17,11 +17,10 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import 'mocha'
 import {
   RsaImportableKey, // eslint-disable-line no-unused-vars
   RawRsaKeyringWebCrypto
-} from '../src/index'
+} from '@aws-crypto/raw-rsa-keyring-browser'
 import {
   KeyringWebCrypto,
   WebCryptoEncryptionMaterial,

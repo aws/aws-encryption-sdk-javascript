@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { aadFactory } from '../src/aad_factory'
 import { ContentType, ContentAADString } from '../src/identifiers'
 

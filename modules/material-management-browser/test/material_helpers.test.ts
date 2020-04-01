@@ -17,7 +17,6 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import 'mocha'
 import {
   _importCryptoKey,
   importCryptoKey,
@@ -36,7 +35,7 @@ import {
   SignatureKey,
   VerificationKey
 } from '@aws-crypto/material-management'
-import { synchronousRandomValues, getWebCryptoBackend, getZeroByteSubtle } from '@aws-crypto/web-crypto-backend'
+import { synchronousRandomValues, getWebCryptoBackend, getZeroByteSubtle, getNonZeroByteBackend } from '@aws-crypto/web-crypto-backend'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -286,6 +285,92 @@ describe('getSubtleFunction', () => {
     const iv = new Uint8Array(suite.ivLength - 1)
     const aad = new Uint8Array(1)
     expect(() => testIvAad(iv, aad)).to.throw()
+  })
+
+  it('can encrypt/decrypt 0 bytes', async () => {
+    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
+    const udk = synchronousRandomValues(suite.keyLengthBytes)
+    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    material.setUnencryptedDataKey(udk, trace)
+
+    const backend = await getWebCryptoBackend()
+    /* All of this _only_ matters in the case of a mixed backend.
+     * So I force the issue.
+     */
+    const mixedBackend = {
+      nonZeroByteSubtle: getZeroByteSubtle(backend),
+      zeroByteSubtle: getNonZeroByteBackend(backend),
+      randomValues: backend.randomValues
+    }
+
+    const cryptoKey = await importCryptoKey(mixedBackend, material, ['encrypt', 'decrypt'])
+    material.setCryptoKey(cryptoKey, trace)
+
+    const iv = new Uint8Array(suite.ivLength)
+    const aad = new Uint8Array(1)
+    const tagLengthBytes = suite.tagLength / 8
+
+    // Encrypt
+    const testEncryptInfo = getSubtleFunction(material, mixedBackend, 'encrypt')
+    const testEncryptIvAad = testEncryptInfo(new Uint8Array(1))
+    const testEncryptFunction = testEncryptIvAad(iv, aad)
+    const testEncryptedData = await testEncryptFunction(new Uint8Array(0))
+    // Because I encrypted 0 bytes, the data should _only_ be tagLength
+    expect(testEncryptedData.byteLength).to.equal(tagLengthBytes)
+
+    // Decrypt
+    const testDecryptInfo = getSubtleFunction(material, mixedBackend, 'decrypt')
+    const testDecryptIvAad = testDecryptInfo(new Uint8Array(1))
+    const testDecryptFunction = testDecryptIvAad(iv, aad)
+    const testDecryptedData = await testDecryptFunction(new Uint8Array(testEncryptedData))
+
+    // Because I encrypted 0 bytes, the data should be 0 length
+    expect(testDecryptedData.byteLength).to.equal(0)
+  })
+
+  it('Precondition: The WebCrypto AES-GCM decrypt API expects the data *and* tag together.', async () => {
+    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const material = new WebCryptoEncryptionMaterial(suite, {})
+    const udk = synchronousRandomValues(suite.keyLengthBytes)
+    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    material.setUnencryptedDataKey(udk, trace)
+
+    const backend = await getWebCryptoBackend()
+    /* All of this _only_ matters in the case of a mixed backend.
+     * So I force the issue.
+     */
+    const mixedBackend = {
+      nonZeroByteSubtle: getZeroByteSubtle(backend),
+      zeroByteSubtle: getNonZeroByteBackend(backend),
+      randomValues: backend.randomValues
+    }
+
+    const cryptoKey = await importCryptoKey(mixedBackend, material, ['encrypt', 'decrypt'])
+    material.setCryptoKey(cryptoKey, trace)
+
+    const iv = new Uint8Array(suite.ivLength)
+    const aad = new Uint8Array(1)
+    const tagLengthBytes = suite.tagLength / 8
+
+    // Encrypt
+    const testEncryptInfo = getSubtleFunction(material, mixedBackend, 'encrypt')
+    const testEncryptIvAad = testEncryptInfo(new Uint8Array(1))
+    const testEncryptFunction = testEncryptIvAad(iv, aad)
+    const testEncryptedData = await testEncryptFunction(new Uint8Array(0))
+
+    // Because I encrypted 0 bytes, the data should _only_ be tagLength
+    expect(testEncryptedData.byteLength).to.equal(tagLengthBytes)
+
+    // Decrypt
+    const testDecryptInfo = getSubtleFunction(material, mixedBackend, 'decrypt')
+    const testDecryptIvAad = testDecryptInfo(new Uint8Array(1))
+    const testDecryptFunction = testDecryptIvAad(iv, aad)
+
+    for (let i = 0; tagLengthBytes > i; i++) {
+      await expect(testDecryptFunction(new Uint8Array(testEncryptedData.slice(0, i))))
+        .to.eventually.rejectedWith(Error, 'Invalid data length.')
+    }
   })
 
   it('no kdf, simple backend, can encrypt/decrypt', async () => {

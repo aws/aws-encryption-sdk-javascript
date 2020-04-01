@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { der2raw, raw2der } from '../src/ecdsa_signature'
 import { WebCryptoAlgorithmSuite, AlgorithmSuiteIdentifier } from '@aws-crypto/material-management'
 

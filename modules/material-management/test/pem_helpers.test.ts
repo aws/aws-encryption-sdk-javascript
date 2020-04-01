@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { publicKeyPem, privateKeyPem, chunk64 } from '../src/pem_helpers'
 
 describe('chunk64', () => {

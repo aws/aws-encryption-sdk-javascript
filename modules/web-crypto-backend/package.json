@@ -19,8 +19,8 @@
   "dependencies": {
     "@aws-crypto/ie11-detection": "^1.0.0-alpha.0",
     "@aws-crypto/supports-web-crypto": "^1.0.0-alpha.0",
-    "@aws-sdk/util-locate-window": "^1.0.0-alpha.2",
-    "tslib": "^1.9.3"
+    "@aws-sdk/util-locate-window": "^1.0.0-alpha.3",
+    "tslib": "^1.11.1"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",

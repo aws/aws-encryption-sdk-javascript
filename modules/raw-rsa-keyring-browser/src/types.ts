@@ -14,7 +14,8 @@
  */
 
 import {
-  MixedBackendCryptoKey // eslint-disable-line no-unused-vars
+  MixedBackendCryptoKey, // eslint-disable-line no-unused-vars
+  AwsEsdkJsCryptoKey // eslint-disable-line no-unused-vars
 } from '@aws-crypto/material-management-browser'
 
 export enum RsaPadding {
@@ -69,6 +70,6 @@ export type RsaImportableKey = RsaJsonWebKey | BinaryKey
 export type RawRsaKeyringWebCryptoInput = {
   keyNamespace: string
   keyName: string
-  privateKey?: CryptoKey|MixedBackendCryptoKey
-  publicKey?: CryptoKey
+  privateKey?: AwsEsdkJsCryptoKey|MixedBackendCryptoKey
+  publicKey?: AwsEsdkJsCryptoKey
 }

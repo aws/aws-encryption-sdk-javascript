@@ -17,7 +17,6 @@
 
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import 'mocha'
 import {
   KmsKeyringClass,
   KeyRingConstructible // eslint-disable-line no-unused-vars

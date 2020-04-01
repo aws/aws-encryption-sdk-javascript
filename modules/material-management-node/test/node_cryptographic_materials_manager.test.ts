@@ -17,7 +17,6 @@
 
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import 'mocha'
 import { KeyringNode } from '@aws-crypto/material-management'
 import { NodeDefaultCryptographicMaterialsManager } from '../src/node_cryptographic_materials_manager'
 import {

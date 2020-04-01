@@ -12,7 +12,8 @@
     "example-aes": "webpack -d --config webpack_configs/aes.webpack.config.js",
     "example-kms": "webpack -d --config webpack_configs/kms.webpack.config.js",
     "example-multi-keyring": "webpack -d --config webpack_configs/multi_keyring.webpack.config.js",
-    "example-caching-cmm": "webpack -d --config webpack_configs/caching_cmm.webpack.config.js"
+    "example-caching-cmm": "webpack -d --config webpack_configs/caching_cmm.webpack.config.js",
+    "example-fallback": "webpack -d --config webpack_configs/fallback.webpack.config.js"
   },
   "author": {
     "name": "AWS Crypto Tools Team",
@@ -22,8 +23,21 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/client-browser": "file:../client-browser",
-    "@aws-sdk/util-base64-browser": "1.0.0-alpha.2",
-    "tslib": "^1.9.3"
+    "tslib": "^1.11.1",
+    "@aws-sdk/util-base64-browser": "1.0.0-alpha.3",
+    "@types/chai": "^4.2.11",
+    "chai": "^4.2.0",
+    "karma": "^4.1.0",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-coverage-istanbul-reporter": "^2.1.1",
+    "karma-mocha": "^1.3.0",
+    "karma-webpack": "^4.0.2",
+    "ts-loader": "^6.2.2",
+    "ts-node": "^8.8.1",
+    "typescript": "^3.8.3",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
   },
   "main": "./build/main/index.js",
   "module": "./build/module/index.js",

@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { regionFromKmsKeyArn } from '../src/region_from_kms_key_arn'
 
 describe('regionFromKmsKeyArn', () => {
