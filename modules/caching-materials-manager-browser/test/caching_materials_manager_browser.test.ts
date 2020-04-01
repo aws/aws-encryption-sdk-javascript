@@ -16,7 +16,7 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
+// import 'mocha'
 import { WebCryptoCachingMaterialsManager } from '../src/index'
 import { } from '@aws-crypto/cache-material'
 import {

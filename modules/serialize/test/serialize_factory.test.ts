@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { serializeFactory } from '../src/serialize_factory'
 import { SerializationVersion, ContentType, ObjectType } from '../src/identifiers'
 import * as fixtures from './fixtures'

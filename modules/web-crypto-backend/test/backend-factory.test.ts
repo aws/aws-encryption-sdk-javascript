@@ -18,7 +18,7 @@
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import sinon from 'sinon'
-import 'mocha'
+// import 'mocha'
 import {
   pluckSubtleCrypto,
   windowRequiresFallback,

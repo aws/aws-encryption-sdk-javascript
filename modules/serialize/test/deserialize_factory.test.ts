@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { deserializeFactory } from '../src/deserialize_factory'
 import { concatBuffers } from '../src'
 import { WebCryptoAlgorithmSuite, EncryptedDataKey } from '@aws-crypto/material-management'

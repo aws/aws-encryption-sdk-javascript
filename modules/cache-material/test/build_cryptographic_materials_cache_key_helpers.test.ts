@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { buildCryptographicMaterialsCacheKeyHelpers } from '../src/build_cryptographic_materials_cache_key_helpers'
 import { encryptionContextVectors, encryptedDataKeyVectors, encryptCacheKeyVectors, decryptCacheKeyVectors } from './fixtures'
 import { createHash } from 'crypto'

@@ -17,7 +17,6 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import 'mocha'
 import { MultiKeyringNode } from '../src/multi_keyring'
 import { KeyringNode, KeyringWebCrypto } from '../src/keyring'
 import { NodeEncryptionMaterial, NodeDecryptionMaterial, unwrapDataKey } from '../src/cryptographic_material'

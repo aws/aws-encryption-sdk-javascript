@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { cloneMaterial } from '../src/clone_cryptographic_material'
 import {
   NodeEncryptionMaterial,

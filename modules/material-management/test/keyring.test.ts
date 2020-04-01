@@ -17,7 +17,6 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import 'mocha'
 import { NodeEncryptionMaterial, NodeDecryptionMaterial } from '../src/cryptographic_material' // eslint-disable-line no-unused-vars
 import { AlgorithmSuiteIdentifier } from '../src/algorithm_suites'
 import { NodeAlgorithmSuite } from '../src/node_algorithms'

@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { rsaTest } from '../src/rsa_simple'
 import { kmsSimpleTest } from '../src/kms_simple'
 import { kmsStreamTest } from '../src/kms_stream'

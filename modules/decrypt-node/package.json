@@ -19,9 +19,9 @@
     "@aws-crypto/material-management-node": "file:../material-management-node",
     "@aws-crypto/serialize": "file:../serialize",
     "@types/duplexify": "^3.6.0",
-    "duplexify": "^4.0.0",
-    "readable-stream": "^3.2.0",
-    "tslib": "^1.9.3"
+    "duplexify": "^4.1.1",
+    "readable-stream": "^3.6.0",
+    "tslib": "^1.11.1"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",

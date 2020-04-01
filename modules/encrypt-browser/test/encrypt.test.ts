@@ -17,7 +17,6 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import 'mocha'
 import {
   WebCryptoDecryptionMaterial, // eslint-disable-line no-unused-vars
   WebCryptoEncryptionMaterial, // eslint-disable-line no-unused-vars

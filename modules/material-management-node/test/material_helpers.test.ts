@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { NodeDecryptionMaterial, NodeEncryptionMaterial, NodeAlgorithmSuite, AlgorithmSuiteIdentifier, KeyringTraceFlag, SignatureKey, VerificationKey, unwrapDataKey } from '@aws-crypto/material-management'
 import { nodeKdf, getCryptoStream, getEncryptHelper, getDecryptionHelper } from '../src/material_helpers'
 // @ts-ignore

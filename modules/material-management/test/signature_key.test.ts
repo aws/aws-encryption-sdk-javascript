@@ -16,7 +16,6 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import 'mocha'
 import { SignatureKey, VerificationKey, AlgorithmSuiteIdentifier, NodeAlgorithmSuite } from '../src'
 
 const prime256v1PublicFixture = [ 4,
