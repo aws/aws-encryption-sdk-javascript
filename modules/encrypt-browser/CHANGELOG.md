@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/encrypt-browser@1.1.0...@aws-crypto/encrypt-browser@1.1.1) (2020-04-02)
+
+
+### Bug Fixes
+
+* The final frame can not be larger than the Frame Length ([#281](https://github.com/aws/aws-encryption-sdk-javascript/issues/281)) ([3dd6f43](https://github.com/aws/aws-encryption-sdk-javascript/commit/3dd6f438c6cf2b456a8a92d5d9821503d016bc90))
+
+
+
+
+
 # [1.1.0](/compare/@aws-crypto/encrypt-browser@1.0.3...@aws-crypto/encrypt-browser@1.1.0) (2020-02-07)
 
 

@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.3](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/material-management@1.0.2...@aws-crypto/material-management@1.0.3) (2020-04-02)
+
+
+### Bug Fixes
+
+* Duplicate `’algorithm’` check ([1b876dc](https://github.com/aws/aws-encryption-sdk-javascript/commit/1b876dc53fc539306fd8264e166e8f5cee1a1c0b))
+* for MSRCrypto 1.6.0 ([cf7e389](https://github.com/aws/aws-encryption-sdk-javascript/commit/cf7e3895aa57b78f89c1c7ec541724f7fe9e6616))
+* Kdf keys should have an algorithm name of ‘HKDF’ ([6100d1d](https://github.com/aws/aws-encryption-sdk-javascript/commit/6100d1deeb60a6d4ef80efd12c258b5ebc0cef1d))
+
+
+
+
+
 ## [1.0.2](/compare/@aws-crypto/material-management@1.0.1...@aws-crypto/material-management@1.0.2) (2020-02-07)
 
 

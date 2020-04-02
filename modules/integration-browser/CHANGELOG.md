@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/integration-browser@1.1.0...@aws-crypto/integration-browser@1.2.0) (2020-04-02)
+
+
+### Features
+
+* Add concurrency option to integration-browser ([b60a783](https://github.com/aws/aws-encryption-sdk-javascript/commit/b60a783c6fbb801da7a6179ac72265b90c74ff70))
+* Move to yauzl to fix FD error ([#264](https://github.com/aws/aws-encryption-sdk-javascript/issues/264)) ([1dd5a86](https://github.com/aws/aws-encryption-sdk-javascript/commit/1dd5a864fb7acf212a5aa397b42aa2bdee6567fc))
+
+
+
+
+
 # [1.1.0](/compare/@aws-crypto/integration-browser@1.0.3...@aws-crypto/integration-browser@1.1.0) (2020-02-07)
 
 

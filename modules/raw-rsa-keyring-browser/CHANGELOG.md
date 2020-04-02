@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/raw-rsa-keyring-browser@1.1.0...@aws-crypto/raw-rsa-keyring-browser@1.2.0) (2020-04-02)
+
+
+### Features
+
+* Change to AwsEsdkJsCryptoKey ([6b5b6f7](https://github.com/aws/aws-encryption-sdk-javascript/commit/6b5b6f7db1792982a0e43cdec2699cba5ba581ef)), closes [#237](https://github.com/aws/aws-encryption-sdk-javascript/issues/237)
+
+
+
+
+
 # [1.1.0](/compare/@aws-crypto/raw-rsa-keyring-browser@1.0.3...@aws-crypto/raw-rsa-keyring-browser@1.1.0) (2020-02-07)
 
 

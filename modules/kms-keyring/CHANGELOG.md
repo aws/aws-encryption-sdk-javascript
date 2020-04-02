@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/kms-keyring@1.0.2...@aws-crypto/kms-keyring@1.1.0) (2020-04-02)
+
+
+### Features
+
+* **kms-keyring:** KMS CMK alias is a valid identifier ([#231](https://github.com/aws/aws-encryption-sdk-javascript/issues/231)) ([136de57](https://github.com/aws/aws-encryption-sdk-javascript/commit/136de573453e3a2f6e0ba646eba856fbfd1eee0a))
+
+
+
+
+
 ## [1.0.2](/compare/@aws-crypto/kms-keyring@1.0.1...@aws-crypto/kms-keyring@1.0.2) (2020-02-07)
 
 

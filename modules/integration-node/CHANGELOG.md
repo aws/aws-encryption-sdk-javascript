@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/integration-node@1.1.0...@aws-crypto/integration-node@1.2.0) (2020-04-02)
+
+
+### Features
+
+* Add concurrency for running tests ([#243](https://github.com/aws/aws-encryption-sdk-javascript/issues/243)) ([b9cd571](https://github.com/aws/aws-encryption-sdk-javascript/commit/b9cd5712ea90822c49c5fb81fbeb2bee06e33f21))
+* Move to yauzl to fix FD error ([#264](https://github.com/aws/aws-encryption-sdk-javascript/issues/264)) ([1dd5a86](https://github.com/aws/aws-encryption-sdk-javascript/commit/1dd5a864fb7acf212a5aa397b42aa2bdee6567fc))
+* Update the concurrency option to support cpu ([44475b5](https://github.com/aws/aws-encryption-sdk-javascript/commit/44475b51a86b9c148523254bec12a44981037aa0))
+
+
+
+
+
 # [1.1.0](/compare/@aws-crypto/integration-node@1.0.2...@aws-crypto/integration-node@1.1.0) (2020-02-07)
 
 

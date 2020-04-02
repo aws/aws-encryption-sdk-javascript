@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/material-management-browser@1.1.0...@aws-crypto/material-management-browser@1.2.0) (2020-04-02)
+
+
+### Bug Fixes
+
+* for MSRCrypto 1.6.0 ([cf7e389](https://github.com/aws/aws-encryption-sdk-javascript/commit/cf7e3895aa57b78f89c1c7ec541724f7fe9e6616))
+* WebCrypto API passes the tag with encrypted data. ([aad983f](https://github.com/aws/aws-encryption-sdk-javascript/commit/aad983f4bb7846d73f4b1276fd69f8b62090b6d7)), closes [#237](https://github.com/aws/aws-encryption-sdk-javascript/issues/237)
+
+
+### Features
+
+* Change to AwsEsdkJsCryptoKey ([6b5b6f7](https://github.com/aws/aws-encryption-sdk-javascript/commit/6b5b6f7db1792982a0e43cdec2699cba5ba581ef)), closes [#237](https://github.com/aws/aws-encryption-sdk-javascript/issues/237)
+
+
+
+
+
 # [1.1.0](/compare/@aws-crypto/material-management-browser@1.0.3...@aws-crypto/material-management-browser@1.1.0) (2020-02-07)
 
 

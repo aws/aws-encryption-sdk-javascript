@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/serialize",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "scripts": {
     "prepublishOnly": "tsc -p tsconfig.json && tsc -p tsconfig.module.json",
     "lint": "standard src/*.ts test/**/*.ts",
