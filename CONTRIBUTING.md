@@ -8,6 +8,10 @@ Please read through this document before submitting any issues
 or pull requests to ensure we have all the necessary information
 to effectively respond to your bug report or contribution.
 
+## Security issue notifications
+If you discover a potential security issue in this project we ask that you notify AWS/Amazon Security
+via our [vulnerability reporting page][vulnerability reporting].
+Please do **not** create a public github issue.
 
 ## Reporting Bugs/Feature Requests
 
@@ -62,12 +66,6 @@ looking at any [help wanted][help wanted] issues is a great place to start.
 This project has adopted the [Amazon Open Source Code of Conduct][code of conduct]. 
 For more information see the [Code of Conduct FAQ][code of conduct faq] or contact 
 opensource-codeofconduct@amazon.com with any additional questions or comments.
-
-
-## Security issue notifications
-If you discover a potential security issue in this project we ask that you notify AWS/Amazon Security
-via our [vulnerability reporting page][vulnerability reporting].
-Please do **not** create a public github issue.
 
 ## Licensing
 
