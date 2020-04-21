@@ -99,10 +99,12 @@ if (!existsSync(fixtures)) {
   }
 
   if (karma) {
-    spawnSync('npm', ['run', 'karma'], {
+    const { status } = spawnSync('npm', ['run', 'karma'], {
       cwd: __dirname,
       stdio: 'inherit'
     })
+    /* Forward the status to the parent. */
+    process.exit(status || 0)
   }
 })(cli.argv)
   .catch(err => {
