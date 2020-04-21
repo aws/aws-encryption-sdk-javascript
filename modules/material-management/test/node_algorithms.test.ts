@@ -9,7 +9,9 @@ import { NodeAlgorithmSuite } from '../src/node_algorithms'
 
 describe('NodeAlgorithmSuite', () => {
   it('should return WebCryptoAlgorithmSuite', () => {
-    const test = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const test = new NodeAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     expect(test).to.be.instanceof(NodeAlgorithmSuite)
     expect(Object.isFrozen(test)).to.equal(true)
   })
@@ -19,7 +21,9 @@ describe('NodeAlgorithmSuite', () => {
   })
 
   it('instance should be frozen', () => {
-    const test = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const test = new NodeAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     expect(Object.isFrozen(test))
   })
 

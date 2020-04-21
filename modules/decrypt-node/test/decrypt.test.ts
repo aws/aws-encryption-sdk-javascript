@@ -11,30 +11,47 @@ import from from 'from2'
 
 describe('decrypt', () => {
   it('string with encoding', async () => {
-    const { plaintext: test, messageHeader } = await decrypt(
+    const {
+      plaintext: test,
+      messageHeader,
+    } = await decrypt(
       fixtures.decryptKeyring(),
       fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(),
       { encoding: 'base64' }
     )
 
-    expect(messageHeader.suiteId).to.equal(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
-    expect(messageHeader.encryptionContext).to.deep.equal(fixtures.encryptionContext())
+    expect(messageHeader.suiteId).to.equal(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+    )
+    expect(messageHeader.encryptionContext).to.deep.equal(
+      fixtures.encryptionContext()
+    )
     expect(test.toString('base64')).to.equal(fixtures.base64Plaintext())
   })
 
   it('buffer', async () => {
     const { plaintext: test, messageHeader } = await decrypt(
       fixtures.decryptKeyring(),
-      Buffer.from(fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(), 'base64')
+      Buffer.from(
+        fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(),
+        'base64'
+      )
     )
 
-    expect(messageHeader.suiteId).to.equal(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
-    expect(messageHeader.encryptionContext).to.deep.equal(fixtures.encryptionContext())
+    expect(messageHeader.suiteId).to.equal(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+    )
+    expect(messageHeader.encryptionContext).to.deep.equal(
+      fixtures.encryptionContext()
+    )
     expect(test.toString('base64')).to.equal(fixtures.base64Plaintext())
   })
 
   it('stream', async () => {
-    const ciphertext = Buffer.from(fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(), 'base64')
+    const ciphertext = Buffer.from(
+      fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(),
+      'base64'
+    )
     const i = ciphertext.values()
     const ciphertextStream = from((_: number, next: Function) => {
       /* Pushing 1 byte at time is the most annoying thing.
@@ -50,25 +67,31 @@ describe('decrypt', () => {
       ciphertextStream
     )
 
-    expect(messageHeader.suiteId).to.equal(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
-    expect(messageHeader.encryptionContext).to.deep.equal(fixtures.encryptionContext())
+    expect(messageHeader.suiteId).to.equal(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+    )
+    expect(messageHeader.encryptionContext).to.deep.equal(
+      fixtures.encryptionContext()
+    )
     expect(test.toString('base64')).to.equal(fixtures.base64Plaintext())
   })
 
   it('Precondition: The sequence number is required to monotonically increase, starting from 1.', async () => {
-    return expect(decrypt(
-      fixtures.decryptKeyring(),
-      fixtures.frameSequenceOutOfOrder(),
-      { encoding: 'base64' }
-    )).to.rejectedWith(Error, 'Encrypted body sequence out of order.')
+    return expect(
+      decrypt(fixtures.decryptKeyring(), fixtures.frameSequenceOutOfOrder(), {
+        encoding: 'base64',
+      })
+    ).to.rejectedWith(Error, 'Encrypted body sequence out of order.')
   })
 
   it('Postcondition: The signature must be valid.', async () => {
-    await expect(decrypt(
-      fixtures.decryptKeyring(),
-      fixtures.invalidSignatureCiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(),
-      { encoding: 'base64' }
-    )).to.rejectedWith(Error, 'Invalid Signature')
+    await expect(
+      decrypt(
+        fixtures.decryptKeyring(),
+        fixtures.invalidSignatureCiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(),
+        { encoding: 'base64' }
+      )
+    ).to.rejectedWith(Error, 'Invalid Signature')
   })
 
   it('can decrypt maxBodySize message with a single final frame.', async () => {
@@ -81,10 +104,12 @@ describe('decrypt', () => {
   })
 
   it('will not decrypt data that exceeds maxBodySize.', async () => {
-    return expect(decrypt(
-      fixtures.decryptKeyring(),
-      fixtures.base64Ciphertext4BytesWith4KFrameLength(),
-      { encoding: 'base64', maxBodySize: 3 }
-    )).to.rejectedWith(Error, 'maxBodySize exceeded.')
+    return expect(
+      decrypt(
+        fixtures.decryptKeyring(),
+        fixtures.base64Ciphertext4BytesWith4KFrameLength(),
+        { encoding: 'base64', maxBodySize: 3 }
+      )
+    ).to.rejectedWith(Error, 'maxBodySize exceeded.')
   })
 })

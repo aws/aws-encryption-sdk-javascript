@@ -14,6 +14,8 @@ describe('kdfInfo', () => {
 
     expect(test).to.instanceof(Uint8Array)
     expect(test.byteLength).to.eql(18)
-    expect(test).to.deep.equal(new Uint8Array([0, 20, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
+    expect(test).to.deep.equal(
+      new Uint8Array([0, 20, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+    )
   })
 })

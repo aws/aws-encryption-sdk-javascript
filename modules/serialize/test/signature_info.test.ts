@@ -4,7 +4,10 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import { serializeSignatureInfo, deserializeSignature } from '../src/signature_info'
+import {
+  serializeSignatureInfo,
+  deserializeSignature,
+} from '../src/signature_info'
 import * as fixtures from './fixtures'
 
 describe('serializeSignatureInfo', () => {

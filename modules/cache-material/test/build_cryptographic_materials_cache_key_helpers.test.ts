@@ -5,21 +5,27 @@
 
 import { expect } from 'chai'
 import { buildCryptographicMaterialsCacheKeyHelpers } from '../src/build_cryptographic_materials_cache_key_helpers'
-import { encryptionContextVectors, encryptedDataKeyVectors, encryptCacheKeyVectors, decryptCacheKeyVectors } from './fixtures'
+import {
+  encryptionContextVectors,
+  encryptedDataKeyVectors,
+  encryptCacheKeyVectors,
+  decryptCacheKeyVectors,
+} from './fixtures'
 import { createHash } from 'crypto'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const toUtf8 = (input: Uint8Array) => Buffer.from(input).toString('utf8')
-const sha512 = async (...data: (Uint8Array|string)[]) => data
-  .map(item => typeof item === 'string' ? Buffer.from(item, 'hex') : item)
-  .reduce((hash, item) => hash.update(item), createHash('sha512'))
-  .digest()
+const sha512 = async (...data: (Uint8Array | string)[]) =>
+  data
+    .map((item) => (typeof item === 'string' ? Buffer.from(item, 'hex') : item))
+    .reduce((hash, item) => hash.update(item), createHash('sha512'))
+    .digest()
 
 const {
   encryptionContextHash,
   encryptedDataKeysHash,
   buildEncryptionMaterialCacheKey,
-  buildDecryptionMaterialCacheKey
+  buildDecryptionMaterialCacheKey,
 } = buildCryptographicMaterialsCacheKeyHelpers(fromUtf8, toUtf8, sha512)
 
 describe('buildCryptographicMaterialsCacheKeyHelpers::encryptionContextHash', () => {

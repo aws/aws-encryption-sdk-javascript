@@ -12,7 +12,7 @@ import {
   windowRequiresFallback,
   webCryptoBackendFactory,
   getNonZeroByteBackend,
-  getZeroByteSubtle
+  getZeroByteSubtle,
 } from '../src/backend-factory'
 import * as browserWindow from '@aws-sdk/util-locate-window'
 
@@ -27,19 +27,27 @@ describe('pluckSubtleCrypto', () => {
   })
 
   it('return subtle object', () => {
-    const test = pluckSubtleCrypto(fixtures.fakeWindowWebCryptoSupportsZeroByteGCM)
-    expect(test === fixtures.fakeWindowWebCryptoSupportsZeroByteGCM.crypto.subtle).to.equal(true)
+    const test = pluckSubtleCrypto(
+      fixtures.fakeWindowWebCryptoSupportsZeroByteGCM
+    )
+    expect(
+      test === fixtures.fakeWindowWebCryptoSupportsZeroByteGCM.crypto.subtle
+    ).to.equal(true)
   })
 })
 
 describe('windowRequiresFallback', () => {
   it('returns false', async () => {
-    const test = await windowRequiresFallback(fixtures.fakeWindowWebCryptoSupportsZeroByteGCM)
+    const test = await windowRequiresFallback(
+      fixtures.fakeWindowWebCryptoSupportsZeroByteGCM
+    )
     expect(test).to.eql(false)
   })
 
   it('returns true', async () => {
-    const test = await windowRequiresFallback(fixtures.fakeWindowWebCryptoZeroByteEncryptFail)
+    const test = await windowRequiresFallback(
+      fixtures.fakeWindowWebCryptoZeroByteEncryptFail
+    )
     expect(test).to.eql(true)
   })
 })
@@ -48,10 +56,16 @@ describe('webCryptoBackendFactory', () => {
   describe('configureFallback', () => {
     it('returns a valid and configured fallback.', async () => {
       const { locateWindow } = browserWindow
-      sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowNoWebCrypto)
+      sinon
+        .stub(browserWindow, 'locateWindow')
+        .returns(fixtures.fakeWindowNoWebCrypto)
 
-      const { configureFallback } = webCryptoBackendFactory(fixtures.fakeWindowNoWebCrypto)
-      const test = await configureFallback(fixtures.subtleFallbackSupportsZeroByteGCM)
+      const { configureFallback } = webCryptoBackendFactory(
+        fixtures.fakeWindowNoWebCrypto
+      )
+      const test = await configureFallback(
+        fixtures.subtleFallbackSupportsZeroByteGCM
+      )
 
       // @ts-ignore
       browserWindow.locateWindow = locateWindow
@@ -60,10 +74,16 @@ describe('webCryptoBackendFactory', () => {
 
     it('Precondition: If a fallback is not required, do not configure one.', async () => {
       const { locateWindow } = browserWindow
-      sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowWebCryptoSupportsZeroByteGCM)
+      sinon
+        .stub(browserWindow, 'locateWindow')
+        .returns(fixtures.fakeWindowWebCryptoSupportsZeroByteGCM)
 
-      const { configureFallback } = webCryptoBackendFactory(fixtures.fakeWindowWebCryptoSupportsZeroByteGCM)
-      const test = await configureFallback(fixtures.subtleFallbackSupportsZeroByteGCM)
+      const { configureFallback } = webCryptoBackendFactory(
+        fixtures.fakeWindowWebCryptoSupportsZeroByteGCM
+      )
+      const test = await configureFallback(
+        fixtures.subtleFallbackSupportsZeroByteGCM
+      )
       // @ts-ignore
       browserWindow.locateWindow = locateWindow
 
@@ -72,12 +92,18 @@ describe('webCryptoBackendFactory', () => {
 
     it('Precondition: Can not reconfigure fallback.', async () => {
       const { locateWindow } = browserWindow
-      sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowWebCryptoOnlyRandomSource)
+      sinon
+        .stub(browserWindow, 'locateWindow')
+        .returns(fixtures.fakeWindowWebCryptoOnlyRandomSource)
 
-      const { configureFallback } = webCryptoBackendFactory(fixtures.fakeWindowWebCryptoOnlyRandomSource)
+      const { configureFallback } = webCryptoBackendFactory(
+        fixtures.fakeWindowWebCryptoOnlyRandomSource
+      )
       await configureFallback(fixtures.subtleFallbackSupportsZeroByteGCM)
 
-      expect(configureFallback(fixtures.subtleFallbackSupportsZeroByteGCM)).to.rejectedWith(Error)
+      await expect(
+        configureFallback(fixtures.subtleFallbackSupportsZeroByteGCM)
+      ).to.rejectedWith(Error)
 
       // @ts-ignore
       browserWindow.locateWindow = locateWindow
@@ -85,11 +111,17 @@ describe('webCryptoBackendFactory', () => {
 
     it('Precondition: Fallback must look like it supports the required operations.', async () => {
       const { locateWindow } = browserWindow
-      sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowWebCryptoOnlyRandomSource)
+      sinon
+        .stub(browserWindow, 'locateWindow')
+        .returns(fixtures.fakeWindowWebCryptoOnlyRandomSource)
 
-      const { configureFallback } = webCryptoBackendFactory(fixtures.fakeWindowWebCryptoOnlyRandomSource)
+      const { configureFallback } = webCryptoBackendFactory(
+        fixtures.fakeWindowWebCryptoOnlyRandomSource
+      )
 
-      expect(configureFallback(fixtures.subtleFallbackNoWebCrypto)).to.rejectedWith(Error)
+      await expect(
+        configureFallback(fixtures.subtleFallbackNoWebCrypto)
+      ).to.rejectedWith(Error)
 
       // @ts-ignore
       browserWindow.locateWindow = locateWindow
@@ -97,11 +129,17 @@ describe('webCryptoBackendFactory', () => {
 
     it('Postcondition: The fallback must specifically support ZeroByteGCM.', async () => {
       const { locateWindow } = browserWindow
-      sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowWebCryptoOnlyRandomSource)
+      sinon
+        .stub(browserWindow, 'locateWindow')
+        .returns(fixtures.fakeWindowWebCryptoOnlyRandomSource)
 
-      const { configureFallback } = webCryptoBackendFactory(fixtures.fakeWindowWebCryptoOnlyRandomSource)
+      const { configureFallback } = webCryptoBackendFactory(
+        fixtures.fakeWindowWebCryptoOnlyRandomSource
+      )
 
-      expect(configureFallback(fixtures.subtleFallbackZeroByteEncryptFail)).to.rejectedWith(Error)
+      await expect(
+        configureFallback(fixtures.subtleFallbackZeroByteEncryptFail)
+      ).to.rejectedWith(Error)
 
       // @ts-ignore
       browserWindow.locateWindow = locateWindow
@@ -111,22 +149,34 @@ describe('webCryptoBackendFactory', () => {
   describe('getWebCryptoBackend', () => {
     it('getWebCryptoBackend returns subtle and randomValues', async () => {
       const { locateWindow } = browserWindow
-      sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowWebCryptoSupportsZeroByteGCM)
+      sinon
+        .stub(browserWindow, 'locateWindow')
+        .returns(fixtures.fakeWindowWebCryptoSupportsZeroByteGCM)
 
-      const { getWebCryptoBackend } = webCryptoBackendFactory(fixtures.fakeWindowWebCryptoSupportsZeroByteGCM)
+      const { getWebCryptoBackend } = webCryptoBackendFactory(
+        fixtures.fakeWindowWebCryptoSupportsZeroByteGCM
+      )
       const test = await getWebCryptoBackend()
       // @ts-ignore
       browserWindow.locateWindow = locateWindow
 
-      expect(test).to.have.property('subtle').and.to.eql(fixtures.fakeWindowWebCryptoSupportsZeroByteGCM.crypto.subtle)
+      expect(test)
+        .to.have.property('subtle')
+        .and.to.eql(
+          fixtures.fakeWindowWebCryptoSupportsZeroByteGCM.crypto.subtle
+        )
       expect(test).to.have.property('randomValues')
     })
 
     it('Precondition: Access to a secure random source is required.', async () => {
       const { locateWindow } = browserWindow
-      sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowNoWebCrypto)
+      sinon
+        .stub(browserWindow, 'locateWindow')
+        .returns(fixtures.fakeWindowNoWebCrypto)
 
-      const { getWebCryptoBackend } = webCryptoBackendFactory(fixtures.fakeWindowNoWebCrypto)
+      const { getWebCryptoBackend } = webCryptoBackendFactory(
+        fixtures.fakeWindowNoWebCrypto
+      )
       await expect(getWebCryptoBackend()).to.rejectedWith(Error)
 
       // @ts-ignore
@@ -135,9 +185,13 @@ describe('webCryptoBackendFactory', () => {
 
     it('Postcondition: If no SubtleCrypto exists, a fallback must configured.', async () => {
       const { locateWindow } = browserWindow
-      sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowWebCryptoOnlyRandomSource)
+      sinon
+        .stub(browserWindow, 'locateWindow')
+        .returns(fixtures.fakeWindowWebCryptoOnlyRandomSource)
 
-      const { getWebCryptoBackend } = webCryptoBackendFactory(fixtures.fakeWindowWebCryptoOnlyRandomSource)
+      const { getWebCryptoBackend } = webCryptoBackendFactory(
+        fixtures.fakeWindowWebCryptoOnlyRandomSource
+      )
       await expect(getWebCryptoBackend()).to.rejectedWith(Error)
       // @ts-ignore
       browserWindow.locateWindow = locateWindow
@@ -145,9 +199,13 @@ describe('webCryptoBackendFactory', () => {
 
     it('Postcondition: If a a subtle backend exists and a fallback is required, one must be configured.', async () => {
       const { locateWindow } = browserWindow
-      sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowWebCryptoZeroByteEncryptFail)
+      sinon
+        .stub(browserWindow, 'locateWindow')
+        .returns(fixtures.fakeWindowWebCryptoZeroByteEncryptFail)
 
-      const { getWebCryptoBackend } = webCryptoBackendFactory(fixtures.fakeWindowWebCryptoZeroByteEncryptFail)
+      const { getWebCryptoBackend } = webCryptoBackendFactory(
+        fixtures.fakeWindowWebCryptoZeroByteEncryptFail
+      )
       await expect(getWebCryptoBackend()).to.rejectedWith(Error)
       // @ts-ignore
       browserWindow.locateWindow = locateWindow
@@ -155,30 +213,56 @@ describe('webCryptoBackendFactory', () => {
 
     it('getWebCryptoBackend returns configured fallback subtle and randomValues', async () => {
       const { locateWindow } = browserWindow
-      sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowWebCryptoOnlyRandomSource)
+      sinon
+        .stub(browserWindow, 'locateWindow')
+        .returns(fixtures.fakeWindowWebCryptoOnlyRandomSource)
 
-      const { getWebCryptoBackend, configureFallback } = webCryptoBackendFactory(fixtures.fakeWindowWebCryptoOnlyRandomSource)
-      configureFallback(fixtures.subtleFallbackSupportsZeroByteGCM)
+      const {
+        getWebCryptoBackend,
+        configureFallback,
+      } = webCryptoBackendFactory(fixtures.fakeWindowWebCryptoOnlyRandomSource)
+      // This is intentionally frustrating.
+      // By not waiting for the config,
+      // I _also_ test its ability to await the configuration.
+      configureFallback(fixtures.subtleFallbackSupportsZeroByteGCM) // eslint-disable-line @typescript-eslint/no-floating-promises
       const test = await getWebCryptoBackend()
       // @ts-ignore
       browserWindow.locateWindow = locateWindow
 
-      expect(test).to.have.property('subtle').and.to.eql(fixtures.subtleFallbackSupportsZeroByteGCM)
+      expect(test)
+        .to.have.property('subtle')
+        .and.to.eql(fixtures.subtleFallbackSupportsZeroByteGCM)
       expect(test).to.have.property('randomValues')
     })
 
     it('getWebCryptoBackend returns MixedSupportWebCryptoBackend', async () => {
       const { locateWindow } = browserWindow
-      sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowWebCryptoZeroByteEncryptFail)
+      sinon
+        .stub(browserWindow, 'locateWindow')
+        .returns(fixtures.fakeWindowWebCryptoZeroByteEncryptFail)
 
-      const { getWebCryptoBackend, configureFallback } = webCryptoBackendFactory(fixtures.fakeWindowWebCryptoZeroByteEncryptFail)
-      configureFallback(fixtures.subtleFallbackSupportsZeroByteGCM)
+      const {
+        getWebCryptoBackend,
+        configureFallback,
+      } = webCryptoBackendFactory(
+        fixtures.fakeWindowWebCryptoZeroByteEncryptFail
+      )
+      // This is intentionally frustrating.
+      // By not waiting for the config,
+      // I _also_ test its ability to await the configuration.
+      configureFallback(fixtures.subtleFallbackSupportsZeroByteGCM) // eslint-disable-line @typescript-eslint/no-floating-promises
       const test = await getWebCryptoBackend()
       // @ts-ignore
       browserWindow.locateWindow = locateWindow
 
-      expect(test).to.have.property('nonZeroByteSubtle').and.to.eql(fixtures.fakeWindowWebCryptoZeroByteEncryptFail.crypto.subtle)
-      expect(test).to.have.property('zeroByteSubtle').and.to.eql(fixtures.subtleFallbackSupportsZeroByteGCM)
+      expect(test)
+        .to.have.property('nonZeroByteSubtle')
+        .and.to.eql(
+          fixtures.fakeWindowWebCryptoZeroByteEncryptFail.crypto.subtle
+        )
+      expect(test)
+        .to.have.property('zeroByteSubtle')
+        .and.to.eql(fixtures.subtleFallbackSupportsZeroByteGCM)
       expect(test).to.have.property('randomValues')
     })
   })
@@ -186,8 +270,12 @@ describe('webCryptoBackendFactory', () => {
 
 describe('getNonZeroByteBackend', () => {
   it('gets a subtle backend', () => {
-    const test = getNonZeroByteBackend(fixtures.subtleFallbackSupportsZeroByteGCM)
-    expect(test === fixtures.subtleFallbackSupportsZeroByteGCM.subtle).to.equal(true)
+    const test = getNonZeroByteBackend(
+      fixtures.subtleFallbackSupportsZeroByteGCM
+    )
+    expect(test === fixtures.subtleFallbackSupportsZeroByteGCM.subtle).to.equal(
+      true
+    )
   })
 
   it('Precondition: A backend must be passed to get a non zero byte backend.', () => {
@@ -198,7 +286,9 @@ describe('getNonZeroByteBackend', () => {
 describe('getZeroByteSubtle', () => {
   it('gets a subtle backend', () => {
     const test = getZeroByteSubtle(fixtures.subtleFallbackSupportsZeroByteGCM)
-    expect(test === fixtures.subtleFallbackSupportsZeroByteGCM.subtle).to.equal(true)
+    expect(test === fixtures.subtleFallbackSupportsZeroByteGCM.subtle).to.equal(
+      true
+    )
   })
 
   it('Precondition: A backend must be passed to get a zero byte backend.', () => {

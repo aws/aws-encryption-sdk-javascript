@@ -30,17 +30,17 @@ describe('getDecipherStream', () => {
       contentType: ContentType.FRAMED_DATA,
       iv: Buffer.from(Array(12)),
       getDecipher: () => ({
-        setAAD () {
+        setAAD() {
           // set decipher to a true-ish value for test
           return true
-        }
-      })
+        },
+      }),
     })
     const bodyInfo = {
       contentLength: 123,
       iv: Buffer.from(Array(12)),
       sequenceNumber: 1,
-      isFinalFrame: false
+      isFinalFrame: false,
     }
     test._onBodyHeader(bodyInfo)
 
@@ -51,7 +51,9 @@ describe('getDecipherStream', () => {
 
   it('Precondition: BodyHeader must be parsed before frame data.', () => {
     const test = getDecipherStream()
-    expect(() => test._transform(Buffer.from([1]), 'binary', () => {})).to.throw('Malformed State.')
+    expect(() =>
+      test._transform(Buffer.from([1]), 'binary', () => {})
+    ).to.throw('Malformed State.')
   })
 
   it('Precondition: Only content should be transformed, so the lengths must always match.', () => {
@@ -63,21 +65,23 @@ describe('getDecipherStream', () => {
       contentType: ContentType.FRAMED_DATA,
       iv: Buffer.from(Array(12)),
       getDecipher: () => ({
-        setAAD () {
+        setAAD() {
           // set decipher to a true-ish value for test
           return true
-        }
-      })
+        },
+      }),
     })
     const bodyInfo = {
       contentLength: 0,
       iv: Buffer.from(Array(12)),
       sequenceNumber: 1,
-      isFinalFrame: false
+      isFinalFrame: false,
     }
     test._onBodyHeader(bodyInfo)
 
-    expect(() => test._transform(Buffer.from([1]), 'binary', () => {})).to.throw('Lengths do not match')
+    expect(() =>
+      test._transform(Buffer.from([1]), 'binary', () => {})
+    ).to.throw('Lengths do not match')
   })
 
   it('Precondition: _onAuthTag must be called only after a frame has been accumulated.', async () => {
@@ -89,20 +93,23 @@ describe('getDecipherStream', () => {
       contentType: ContentType.FRAMED_DATA,
       iv: Buffer.from(Array(12)),
       getDecipher: () => ({
-        setAAD () {
+        setAAD() {
           // set decipher to a true-ish value for test
           return true
-        }
-      })
+        },
+      }),
     })
     const bodyInfo = {
       contentLength: 10,
       iv: Buffer.from(Array(12)),
       sequenceNumber: 1,
-      isFinalFrame: false
+      isFinalFrame: false,
     }
     test._onBodyHeader(bodyInfo)
 
-    await expect(test._onAuthTag(Buffer.from([]), () => {})).to.rejectedWith(Error, 'AuthTag before frame.')
+    await expect(test._onAuthTag(Buffer.from([]), () => {})).to.rejectedWith(
+      Error,
+      'AuthTag before frame.'
+    )
   })
 })

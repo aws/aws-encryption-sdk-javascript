@@ -5,21 +5,21 @@
 
 import { expect } from 'chai'
 import { NodeCachingMaterialsManager } from '../src/index'
-import { } from '@aws-crypto/cache-material'
+import {} from '@aws-crypto/cache-material'
 import {
   KeyringNode,
   NodeDefaultCryptographicMaterialsManager,
-  NodeEncryptionMaterial, // eslint-disable-line no-unused-vars
-  NodeDecryptionMaterial // eslint-disable-line no-unused-vars
+  NodeEncryptionMaterial,
+  NodeDecryptionMaterial,
 } from '@aws-crypto/material-management-node'
 
 describe('NodeCachingMaterialsManager', () => {
   it('constructor will decorate', () => {
     class TestKeyring extends KeyringNode {
-      async _onEncrypt (): Promise<NodeEncryptionMaterial> {
+      async _onEncrypt(): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
       }
-      async _onDecrypt (): Promise<NodeDecryptionMaterial> {
+      async _onDecrypt(): Promise<NodeDecryptionMaterial> {
         throw new Error('never')
       }
     }
@@ -36,10 +36,12 @@ describe('NodeCachingMaterialsManager', () => {
       partition,
       maxAge,
       maxBytesEncrypted,
-      maxMessagesEncrypted
+      maxMessagesEncrypted,
     })
 
-    expect(test._backingMaterialsManager).to.be.instanceOf(NodeDefaultCryptographicMaterialsManager)
+    expect(test._backingMaterialsManager).to.be.instanceOf(
+      NodeDefaultCryptographicMaterialsManager
+    )
     expect(test._cache).to.equal(cache)
     expect(test._partition).to.equal(partition)
     expect(test._maxAge).to.equal(maxAge)
@@ -49,10 +51,10 @@ describe('NodeCachingMaterialsManager', () => {
 
   it('Precondition: A partition value must exist for NodeCachingMaterialsManager.', () => {
     class TestKeyring extends KeyringNode {
-      async _onEncrypt (): Promise<NodeEncryptionMaterial> {
+      async _onEncrypt(): Promise<NodeEncryptionMaterial> {
         throw new Error('never')
       }
-      async _onDecrypt (): Promise<NodeDecryptionMaterial> {
+      async _onDecrypt(): Promise<NodeDecryptionMaterial> {
         throw new Error('never')
       }
     }
@@ -63,7 +65,7 @@ describe('NodeCachingMaterialsManager', () => {
     const test = new NodeCachingMaterialsManager({
       backingMaterials: keyring,
       cache,
-      maxAge
+      maxAge,
     })
     /* Binary data is being transformed to base64.
      * 64 bits of base64 encoded data is 88 characters.
