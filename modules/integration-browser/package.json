@@ -19,6 +19,7 @@
     "@aws-sdk/karma-credential-loader": "1.0.0-alpha.6",
     "@aws-sdk/util-base64-browser": "1.0.0-beta.2",
     "@aws-sdk/util-utf8-browser": "1.0.0-beta.2",
+    "@trust/keyto": "^1.0.1",
     "@types/got": "^9.6.9",
     "@types/stream-to-promise": "^2.2.0",
     "@types/yargs": "^15.0.3",
