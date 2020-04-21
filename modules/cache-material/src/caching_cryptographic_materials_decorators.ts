@@ -2,33 +2,38 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-  GetEncryptionMaterials, // eslint-disable-line no-unused-vars
-  GetDecryptMaterials, // eslint-disable-line no-unused-vars
-  DecryptionMaterial, // eslint-disable-line no-unused-vars
-  SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
-  EncryptionRequest, // eslint-disable-line no-unused-vars
-  EncryptionMaterial, // eslint-disable-line no-unused-vars
-  MaterialsManager, // eslint-disable-line no-unused-vars
-  DecryptionRequest, // eslint-disable-line no-unused-vars
+  GetEncryptionMaterials,
+  GetDecryptMaterials,
+  DecryptionMaterial,
+  SupportedAlgorithmSuites,
+  EncryptionRequest,
+  EncryptionMaterial,
+  MaterialsManager,
+  DecryptionRequest,
   needs,
   readOnlyProperty,
-  Keyring, // eslint-disable-line no-unused-vars
-  cloneMaterial
+  Keyring,
+  cloneMaterial,
 } from '@aws-crypto/material-management'
 import { Maximum } from '@aws-crypto/serialize'
 import {
-  CryptographicMaterialsCache, // eslint-disable-line no-unused-vars
-  Entry // eslint-disable-line no-unused-vars
+  CryptographicMaterialsCache,
+  Entry,
 } from './cryptographic_materials_cache'
-import {
-  CryptographicMaterialsCacheKeyHelpersInterface // eslint-disable-line no-unused-vars
-} from './build_cryptographic_materials_cache_key_helpers'
+import { CryptographicMaterialsCacheKeyHelpersInterface } from './build_cryptographic_materials_cache_key_helpers'
 
-export function decorateProperties<S extends SupportedAlgorithmSuites> (
+export function decorateProperties<S extends SupportedAlgorithmSuites>(
   obj: CachingMaterialsManager<S>,
   input: CachingMaterialsManagerDecorateInput<S>
 ) {
-  const { cache, backingMaterialsManager, maxAge, maxBytesEncrypted, maxMessagesEncrypted, partition } = input
+  const {
+    cache,
+    backingMaterialsManager,
+    maxAge,
+    maxBytesEncrypted,
+    maxMessagesEncrypted,
+    partition,
+  } = input
 
   /* Precondition: A caching material manager needs a cache. */
   needs(cache, 'You must provide a cache.')
@@ -37,36 +42,64 @@ export function decorateProperties<S extends SupportedAlgorithmSuites> (
   /* Precondition: You *can not* cache something forever. */
   needs(maxAge > 0, 'You must configure a maxAge')
   /* Precondition: maxBytesEncrypted must be inside bounds.  i.e. positive and not more than the maximum. */
-  needs(!maxBytesEncrypted || (maxBytesEncrypted > 0 && Maximum.BYTES_PER_CACHED_KEY_LIMIT >= maxBytesEncrypted), 'maxBytesEncrypted is outside of bounds.')
+  needs(
+    !maxBytesEncrypted ||
+      (maxBytesEncrypted > 0 &&
+        Maximum.BYTES_PER_CACHED_KEY_LIMIT >= maxBytesEncrypted),
+    'maxBytesEncrypted is outside of bounds.'
+  )
   /* Precondition: maxMessagesEncrypted must be inside bounds.  i.e. positive and not more than the maximum. */
-  needs(!maxMessagesEncrypted || (maxMessagesEncrypted > 0 && Maximum.MESSAGES_PER_CACHED_KEY_LIMIT >= maxMessagesEncrypted), 'maxMessagesEncrypted is outside of bounds.')
+  needs(
+    !maxMessagesEncrypted ||
+      (maxMessagesEncrypted > 0 &&
+        Maximum.MESSAGES_PER_CACHED_KEY_LIMIT >= maxMessagesEncrypted),
+    'maxMessagesEncrypted is outside of bounds.'
+  )
   /* Precondition: partition must be a string. */
-  needs(partition && typeof partition === 'string', 'partition must be a string.')
+  needs(
+    partition && typeof partition === 'string',
+    'partition must be a string.'
+  )
 
   readOnlyProperty(obj, '_cache', cache)
   readOnlyProperty(obj, '_backingMaterialsManager', backingMaterialsManager)
   readOnlyProperty(obj, '_maxAge', maxAge)
-  readOnlyProperty(obj, '_maxBytesEncrypted', maxBytesEncrypted || Maximum.BYTES_PER_CACHED_KEY_LIMIT)
-  readOnlyProperty(obj, '_maxMessagesEncrypted', maxMessagesEncrypted || Maximum.MESSAGES_PER_CACHED_KEY_LIMIT)
+  readOnlyProperty(
+    obj,
+    '_maxBytesEncrypted',
+    maxBytesEncrypted || Maximum.BYTES_PER_CACHED_KEY_LIMIT
+  )
+  readOnlyProperty(
+    obj,
+    '_maxMessagesEncrypted',
+    maxMessagesEncrypted || Maximum.MESSAGES_PER_CACHED_KEY_LIMIT
+  )
   readOnlyProperty(obj, '_partition', partition)
 }
 
-export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
-  { buildEncryptionMaterialCacheKey }: CryptographicMaterialsCacheKeyHelpersInterface<S>
-): GetEncryptionMaterials<S> {
-  return async function getEncryptionMaterials (
+export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
+  buildEncryptionMaterialCacheKey,
+}: CryptographicMaterialsCacheKeyHelpersInterface<S>): GetEncryptionMaterials<
+  S
+> {
+  return async function getEncryptionMaterials(
     this: CachingMaterialsManager<S>,
     request: EncryptionRequest<S>
   ): Promise<EncryptionMaterial<S>> {
     const { suite, encryptionContext, plaintextLength } = request
     /* Check for early return (Postcondition): If I can not cache the EncryptionMaterial, do not even look. */
-    if ((suite && !suite.cacheSafe) || typeof plaintextLength !== 'number' || plaintextLength < 0) {
-      return this
-        ._backingMaterialsManager
-        .getEncryptionMaterials(request)
+    if (
+      (suite && !suite.cacheSafe) ||
+      typeof plaintextLength !== 'number' ||
+      plaintextLength < 0
+    ) {
+      return this._backingMaterialsManager.getEncryptionMaterials(request)
     }
 
-    const cacheKey = await buildEncryptionMaterialCacheKey(this._partition, { suite, encryptionContext })
+    const cacheKey = await buildEncryptionMaterialCacheKey(this._partition, {
+      suite,
+      encryptionContext,
+    })
     const entry = this._cache.getEncryptionMaterial(cacheKey, plaintextLength)
     /* Check for early return (Postcondition): If I have a valid EncryptionMaterial, return it. */
     if (entry && !this._cacheEntryHasExceededLimits(entry)) {
@@ -75,8 +108,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
       this._cache.del(cacheKey)
     }
 
-    const material = await this
-      ._backingMaterialsManager
+    const material = await this._backingMaterialsManager
       /* Strip any information about the plaintext from the backing request,
        * because the resulting response may be used to encrypt multiple plaintexts.
        */
@@ -94,10 +126,15 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
       response: material,
       now: Date.now(),
       messagesEncrypted: 1,
-      bytesEncrypted: plaintextLength
+      bytesEncrypted: plaintextLength,
     }
     if (!this._cacheEntryHasExceededLimits(testEntry)) {
-      this._cache.putEncryptionMaterial(cacheKey, material, plaintextLength, this._maxAge)
+      this._cache.putEncryptionMaterial(
+        cacheKey,
+        material,
+        plaintextLength,
+        this._maxAge
+      )
       return cloneResponse(material)
     } else {
       /* Postcondition: If the material has exceeded limits it MUST NOT be cloned.
@@ -110,22 +147,23 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites> (
   }
 }
 
-export function decryptMaterials<S extends SupportedAlgorithmSuites> (
-  { buildDecryptionMaterialCacheKey }: CryptographicMaterialsCacheKeyHelpersInterface<S>
-): GetDecryptMaterials<S> {
-  return async function decryptMaterials (
+export function decryptMaterials<S extends SupportedAlgorithmSuites>({
+  buildDecryptionMaterialCacheKey,
+}: CryptographicMaterialsCacheKeyHelpersInterface<S>): GetDecryptMaterials<S> {
+  return async function decryptMaterials(
     this: CachingMaterialsManager<S>,
     request: DecryptionRequest<S>
   ): Promise<DecryptionMaterial<S>> {
     const { suite } = request
     /* Check for early return (Postcondition): If I can not cache the DecryptionMaterial, do not even look. */
     if (!suite.cacheSafe) {
-      return this
-        ._backingMaterialsManager
-        .decryptMaterials(request)
+      return this._backingMaterialsManager.decryptMaterials(request)
     }
 
-    const cacheKey = await buildDecryptionMaterialCacheKey(this._partition, request)
+    const cacheKey = await buildDecryptionMaterialCacheKey(
+      this._partition,
+      request
+    )
     const entry = this._cache.getDecryptionMaterial(cacheKey)
     /* Check for early return (Postcondition): If I have a valid DecryptionMaterial, return it. */
     if (entry && !this._cacheEntryHasExceededLimits(entry)) {
@@ -134,24 +172,28 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites> (
       this._cache.del(cacheKey)
     }
 
-    const material = await this
-      ._backingMaterialsManager
-      .decryptMaterials(request)
+    const material = await this._backingMaterialsManager.decryptMaterials(
+      request
+    )
 
     this._cache.putDecryptionMaterial(cacheKey, material, this._maxAge)
     return cloneResponse(material)
   }
 }
 
-export function cacheEntryHasExceededLimits<S extends SupportedAlgorithmSuites> (): CacheEntryHasExceededLimits<S> {
-  return function cacheEntryHasExceededLimits (
+export function cacheEntryHasExceededLimits<
+  S extends SupportedAlgorithmSuites
+>(): CacheEntryHasExceededLimits<S> {
+  return function cacheEntryHasExceededLimits(
     this: CachingMaterialsManager<S>,
     { now, messagesEncrypted, bytesEncrypted }: Entry<S>
   ): boolean {
     const age = Date.now() - now
-    return age > this._maxAge ||
+    return (
+      age > this._maxAge ||
       messagesEncrypted > this._maxMessagesEncrypted ||
       bytesEncrypted > this._maxBytesEncrypted
+    )
   }
 }
 
@@ -163,27 +205,34 @@ export function cacheEntryHasExceededLimits<S extends SupportedAlgorithmSuites> 
  * @param material EncryptionMaterial|DecryptionMaterial
  * @return EncryptionMaterial|DecryptionMaterial
  */
-function cloneResponse<S extends SupportedAlgorithmSuites, M extends EncryptionMaterial<S>|DecryptionMaterial<S>> (
-  material: M
-): M {
+function cloneResponse<
+  S extends SupportedAlgorithmSuites,
+  M extends EncryptionMaterial<S> | DecryptionMaterial<S>
+>(material: M): M {
   return cloneMaterial(material)
 }
 
-export interface CachingMaterialsManagerInput<S extends SupportedAlgorithmSuites> extends Readonly<{
-  cache: CryptographicMaterialsCache<S>
-  backingMaterials: MaterialsManager<S>|Keyring<S>
-  partition?: string
-  maxBytesEncrypted?: number
-  maxMessagesEncrypted?: number
-  maxAge: number
-}>{}
+export interface CachingMaterialsManagerInput<
+  S extends SupportedAlgorithmSuites
+>
+  extends Readonly<{
+    cache: CryptographicMaterialsCache<S>
+    backingMaterials: MaterialsManager<S> | Keyring<S>
+    partition?: string
+    maxBytesEncrypted?: number
+    maxMessagesEncrypted?: number
+    maxAge: number
+  }> {}
 
-export interface CachingMaterialsManagerDecorateInput<S extends SupportedAlgorithmSuites> extends CachingMaterialsManagerInput<S> {
+export interface CachingMaterialsManagerDecorateInput<
+  S extends SupportedAlgorithmSuites
+> extends CachingMaterialsManagerInput<S> {
   backingMaterialsManager: MaterialsManager<S>
   partition: string
 }
 
-export interface CachingMaterialsManager<S extends SupportedAlgorithmSuites> extends MaterialsManager<S> {
+export interface CachingMaterialsManager<S extends SupportedAlgorithmSuites>
+  extends MaterialsManager<S> {
   readonly _partition: string
   readonly _cache: CryptographicMaterialsCache<S>
   readonly _backingMaterialsManager: MaterialsManager<S>
@@ -194,6 +243,8 @@ export interface CachingMaterialsManager<S extends SupportedAlgorithmSuites> ext
   _cacheEntryHasExceededLimits: CacheEntryHasExceededLimits<S>
 }
 
-export interface CacheEntryHasExceededLimits<S extends SupportedAlgorithmSuites> {
+export interface CacheEntryHasExceededLimits<
+  S extends SupportedAlgorithmSuites
+> {
   (entry: Entry<S>): boolean
 }

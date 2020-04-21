@@ -30,45 +30,49 @@ export enum AlgorithmSuiteIdentifier {
   'ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256' = 0x0178,
   'ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256' = 0x0214,
   'ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384' = 0x0346,
-  'ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384' = 0x0378
+  'ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384' = 0x0378,
 }
 Object.freeze(AlgorithmSuiteIdentifier)
 
 export type AlgorithmSuiteName = keyof typeof AlgorithmSuiteIdentifier
 export type AlgorithmSuiteTypeNode = 'node'
 export type AlgorithmSuiteTypeWebCrypto = 'webCrypto'
-export type NodeEncryption = 'aes-128-gcm'|'aes-192-gcm'|'aes-256-gcm'
+export type NodeEncryption = 'aes-128-gcm' | 'aes-192-gcm' | 'aes-256-gcm'
 export type WebCryptoEncryption = 'AES-GCM'
 export type KDF = 'HKDF'
-export type NodeHash = 'sha256'|'sha384'
-export type WebCryptoHash = 'SHA-256'|'SHA-384'
-export type NodeECDHCurve = 'prime256v1'|'secp384r1'
-export type WebCryptoECDHCurve = 'P-256'|'P-384'
-export type KeyLength = 128|192|256
+export type NodeHash = 'sha256' | 'sha384'
+export type WebCryptoHash = 'SHA-256' | 'SHA-384'
+export type NodeECDHCurve = 'prime256v1' | 'secp384r1'
+export type WebCryptoECDHCurve = 'P-256' | 'P-384'
+export type KeyLength = 128 | 192 | 256
 export type IvLength = 12
 export type TagLength = 128
-
-export interface IAlgorithmSuite extends Readonly<{
-  id: AlgorithmSuiteIdentifier
-  encryption: NodeEncryption|WebCryptoEncryption
-  keyLength: KeyLength
-  ivLength: IvLength
-  tagLength: TagLength
-  cacheSafe: boolean
-  kdf?: KDF
-  kdfHash?: NodeHash|WebCryptoHash
-  signatureCurve?: NodeECDHCurve|WebCryptoECDHCurve
-  signatureHash?: NodeHash|WebCryptoHash
-}>{}
-
+/* eslint-disable @typescript-eslint/interface-name-prefix */
+export interface IAlgorithmSuite
+  extends Readonly<{
+    /* eslint-enable @typescript-eslint/interface-name-prefix */
+    id: AlgorithmSuiteIdentifier
+    encryption: NodeEncryption | WebCryptoEncryption
+    keyLength: KeyLength
+    ivLength: IvLength
+    tagLength: TagLength
+    cacheSafe: boolean
+    kdf?: KDF
+    kdfHash?: NodeHash | WebCryptoHash
+    signatureCurve?: NodeECDHCurve | WebCryptoECDHCurve
+    signatureHash?: NodeHash | WebCryptoHash
+  }> {}
+/* eslint-disable @typescript-eslint/interface-name-prefix */
 export interface INodeAlgorithmSuite extends IAlgorithmSuite {
+  /* eslint-enable @typescript-eslint/interface-name-prefix */
   encryption: NodeEncryption
   kdfHash?: NodeHash
   signatureCurve?: NodeECDHCurve
   signatureHash?: NodeHash
 }
-
+/* eslint-disable @typescript-eslint/interface-name-prefix */
 export interface IWebCryptoAlgorithmSuite extends IAlgorithmSuite {
+  /* eslint-enable @typescript-eslint/interface-name-prefix */
   encryption: WebCryptoEncryption
   kdfHash?: WebCryptoHash
   signatureCurve?: WebCryptoECDHCurve
@@ -78,31 +82,37 @@ export interface IWebCryptoAlgorithmSuite extends IAlgorithmSuite {
 export abstract class AlgorithmSuite implements IAlgorithmSuite {
   id!: AlgorithmSuiteIdentifier
   name!: AlgorithmSuiteName
-  encryption!: NodeEncryption|WebCryptoEncryption
+  encryption!: NodeEncryption | WebCryptoEncryption
   keyLength!: KeyLength
   keyLengthBytes!: number
   ivLength!: IvLength
   tagLength!: TagLength
   cacheSafe!: boolean
   kdf?: KDF
-  kdfHash?: NodeHash|WebCryptoHash
-  signatureCurve?: NodeECDHCurve|WebCryptoECDHCurve
-  signatureHash?: NodeHash|WebCryptoHash
-  type!: AlgorithmSuiteTypeNode|AlgorithmSuiteTypeWebCrypto
-  constructor (suite: INodeAlgorithmSuite|IWebCryptoAlgorithmSuite) {
-    needs(this.constructor !== AlgorithmSuite, 'new AlgorithmSuite is not allowed')
+  kdfHash?: NodeHash | WebCryptoHash
+  signatureCurve?: NodeECDHCurve | WebCryptoECDHCurve
+  signatureHash?: NodeHash | WebCryptoHash
+  type!: AlgorithmSuiteTypeNode | AlgorithmSuiteTypeWebCrypto
+  constructor(suite: INodeAlgorithmSuite | IWebCryptoAlgorithmSuite) {
+    needs(
+      this.constructor !== AlgorithmSuite,
+      'new AlgorithmSuite is not allowed'
+    )
 
     /* Precondition: A algorithm suite specification must be passed. */
     needs(suite, 'Algorithm specification not set.')
     /* Precondition: The Algorithm Suite Identifier must exist. */
-    needs(AlgorithmSuiteIdentifier[suite.id], 'No suite by that identifier exists.')
+    needs(
+      AlgorithmSuiteIdentifier[suite.id],
+      'No suite by that identifier exists.'
+    )
     Object.defineProperty(this, 'keyLengthBytes', {
       get: () => this.keyLength / 8,
-      enumerable: true
+      enumerable: true,
     })
     Object.defineProperty(this, 'name', {
       get: () => AlgorithmSuiteIdentifier[this.id],
-      enumerable: true
+      enumerable: true,
     })
     Object.assign(this, suite)
   }

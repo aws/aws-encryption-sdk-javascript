@@ -3,21 +3,21 @@
 
 import {
   WebCryptoAlgorithmSuite,
-  WebCryptoDefaultCryptographicMaterialsManager, // eslint-disable-line no-unused-vars
-  WebCryptoEncryptionRequest, // eslint-disable-line no-unused-vars
-  EncryptionContext, // eslint-disable-line no-unused-vars
+  WebCryptoDefaultCryptographicMaterialsManager,
+  WebCryptoEncryptionRequest,
+  EncryptionContext,
   AlgorithmSuiteIdentifier,
   getEncryptHelper,
   KeyringWebCrypto,
   needs,
-  WebCryptoMaterialsManager // eslint-disable-line no-unused-vars
+  WebCryptoMaterialsManager,
 } from '@aws-crypto/material-management-browser'
 import {
   serializeFactory,
   aadFactory,
   kdfInfo,
   concatBuffers,
-  MessageHeader, // eslint-disable-line no-unused-vars
+  MessageHeader,
   SerializationVersion,
   ObjectType,
   ContentType,
@@ -25,7 +25,7 @@ import {
   FRAME_LENGTH,
   MESSAGE_ID_LENGTH,
   raw2der,
-  Maximum
+  Maximum,
 } from '@aws-crypto/serialize'
 import { fromUtf8 } from '@aws-sdk/util-utf8-browser'
 import { getWebCryptoBackend } from '@aws-crypto/web-crypto-backend'
@@ -45,34 +45,48 @@ export interface EncryptResult {
   result: Uint8Array
 }
 
-export async function encrypt (
-  cmm: KeyringWebCrypto|WebCryptoMaterialsManager,
+export async function encrypt(
+  cmm: KeyringWebCrypto | WebCryptoMaterialsManager,
   plaintext: Uint8Array,
-  { suiteId, encryptionContext = {}, frameLength = FRAME_LENGTH }: EncryptInput = {}
+  {
+    suiteId,
+    encryptionContext = {},
+    frameLength = FRAME_LENGTH,
+  }: EncryptInput = {}
 ): Promise<EncryptResult> {
   /* Precondition: The frameLength must be less than the maximum frame size for browser encryption. */
-  needs(frameLength > 0 && Maximum.FRAME_SIZE >= frameLength, `frameLength out of bounds: 0 > frameLength >= ${Maximum.FRAME_SIZE}`)
+  needs(
+    frameLength > 0 && Maximum.FRAME_SIZE >= frameLength,
+    `frameLength out of bounds: 0 > frameLength >= ${Maximum.FRAME_SIZE}`
+  )
 
   const backend = await getWebCryptoBackend()
   if (!backend) throw new Error('No supported crypto backend')
 
   /* If the cmm is a Keyring, wrap it with WebCryptoDefaultCryptographicMaterialsManager. */
-  cmm = cmm instanceof KeyringWebCrypto
-    ? new WebCryptoDefaultCryptographicMaterialsManager(cmm)
-    : cmm
+  cmm =
+    cmm instanceof KeyringWebCrypto
+      ? new WebCryptoDefaultCryptographicMaterialsManager(cmm)
+      : cmm
 
   // Subtle Crypto functions are all one-shot so all the plaintext needs to be available.
   const plaintextLength = plaintext.byteLength
-  const suite = suiteId ? new WebCryptoAlgorithmSuite(suiteId) : new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
+  const suite = suiteId
+    ? new WebCryptoAlgorithmSuite(suiteId)
+    : new WebCryptoAlgorithmSuite(
+        AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+      )
 
   const encryptionRequest: WebCryptoEncryptionRequest = {
     suite,
     encryptionContext,
-    plaintextLength
+    plaintextLength,
   }
 
   const material = await cmm.getEncryptionMaterials(encryptionRequest)
-  const { kdfGetSubtleEncrypt, subtleSign, dispose } = await getEncryptHelper(material)
+  const { kdfGetSubtleEncrypt, subtleSign, dispose } = await getEncryptHelper(
+    material
+  )
 
   const messageId = await backend.randomValues(MESSAGE_ID_LENGTH)
 
@@ -87,7 +101,7 @@ export async function encrypt (
     encryptedDataKeys: material.encryptedDataKeys,
     contentType: ContentType.FRAMED_DATA,
     headerIvLength: ivLength,
-    frameLength
+    frameLength,
   }
 
   const header = serialize.serializeMessageHeader(messageHeader)
@@ -95,7 +109,10 @@ export async function encrypt (
   const getSubtleEncrypt = kdfGetSubtleEncrypt(info)
 
   const headerAuthIv = serialize.headerAuthIv(ivLength)
-  const headerAuthTag = await getSubtleEncrypt(headerAuthIv, header)(new Uint8Array(0))
+  const headerAuthTag = await getSubtleEncrypt(
+    headerAuthIv,
+    header
+  )(new Uint8Array(0))
 
   const numberOfFrames = Math.ceil(plaintextLength / frameLength)
   /* The final frame has a variable length.
@@ -103,16 +120,24 @@ export async function encrypt (
    * So I calculate how much of a frame I should have at the end.
    * This value will NEVER be larger than the frameLength.
    */
-  const finalFrameLength = frameLength - ((numberOfFrames * frameLength) - plaintextLength)
+  const finalFrameLength =
+    frameLength - (numberOfFrames * frameLength - plaintextLength)
   const bodyContent = []
 
-  for (let sequenceNumber = 1; numberOfFrames >= sequenceNumber; sequenceNumber += 1) {
+  for (
+    let sequenceNumber = 1;
+    numberOfFrames >= sequenceNumber;
+    sequenceNumber += 1
+  ) {
     const frameIv = serialize.frameIv(ivLength, sequenceNumber)
     const isFinalFrame = sequenceNumber === numberOfFrames
     const frameHeader = isFinalFrame
       ? serialize.finalFrameHeader(sequenceNumber, frameIv, finalFrameLength)
       : serialize.frameHeader(sequenceNumber, frameIv)
-    const contentString = messageAADContentString({ contentType: messageHeader.contentType, isFinalFrame })
+    const contentString = messageAADContentString({
+      contentType: messageHeader.contentType,
+      isFinalFrame,
+    })
     const messageAdditionalData = messageAAD(
       messageId,
       contentString,
@@ -129,7 +154,10 @@ export async function encrypt (
       (sequenceNumber - 1) * frameLength,
       isFinalFrame ? finalFrameLength : frameLength
     )
-    const cipherBufferAndAuthTag = await getSubtleEncrypt(frameIv, messageAdditionalData)(framePlaintext)
+    const cipherBufferAndAuthTag = await getSubtleEncrypt(
+      frameIv,
+      messageAdditionalData
+    )(framePlaintext)
 
     bodyContent.push(frameHeader, cipherBufferAndAuthTag)
   }
@@ -145,7 +173,10 @@ export async function encrypt (
 
   if (typeof subtleSign === 'function') {
     const signatureArrayBuffer = await subtleSign(result)
-    const derSignature = raw2der(new Uint8Array(signatureArrayBuffer), material.suite)
+    const derSignature = raw2der(
+      new Uint8Array(signatureArrayBuffer),
+      material.suite
+    )
     const signatureInfo = serializeSignatureInfo(derSignature)
     return { result: concatBuffers(result, signatureInfo), messageHeader }
   } else {

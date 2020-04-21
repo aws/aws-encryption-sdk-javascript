@@ -4,7 +4,7 @@
 import { needs } from '@aws-crypto/material-management'
 
 const UINT8_OVERFLOW = 2 ** 8
-export function uInt8 (number:number) {
+export function uInt8(number: number) {
   /* Precondition: Number must be 0-(2^8 - 1). */
   needs(number < UINT8_OVERFLOW && number >= 0, 'number out of bounds.')
 
@@ -15,7 +15,7 @@ export function uInt8 (number:number) {
 }
 
 const UINT16__OVERFLOW = 2 ** 16
-export function uInt16BE (number: number) {
+export function uInt16BE(number: number) {
   /* Precondition: Number must be 0-(2^16 - 1). */
   needs(number < UINT16__OVERFLOW && number >= 0, 'number out of bounds.')
 
@@ -26,7 +26,7 @@ export function uInt16BE (number: number) {
 }
 
 const UINT32__OVERFLOW = 2 ** 32
-export function uInt32BE (number: number) {
+export function uInt32BE(number: number) {
   /* Precondition: Number must be 0-(2^32 - 1). */
   needs(number < UINT32__OVERFLOW && number >= 0, 'number out of bounds.')
 

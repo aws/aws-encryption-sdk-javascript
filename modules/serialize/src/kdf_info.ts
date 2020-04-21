@@ -11,14 +11,14 @@
  * The Key Derivation Algorithm section
  */
 
-import { AlgorithmSuiteIdentifier } from '@aws-crypto/material-management' // eslint-disable-line no-unused-vars
-import { BinaryData } from './types' // eslint-disable-line no-unused-vars
+import { AlgorithmSuiteIdentifier } from '@aws-crypto/material-management'
+import { BinaryData } from './types'
 import { concatBuffers } from './concat_buffers'
 import { uInt16BE } from './uint_util'
 
-export function kdfInfo (suiteId: AlgorithmSuiteIdentifier, messageId: BinaryData) {
-  return concatBuffers(
-    uInt16BE(suiteId),
-    messageId
-  )
+export function kdfInfo(
+  suiteId: AlgorithmSuiteIdentifier,
+  messageId: BinaryData
+) {
+  return concatBuffers(uInt16BE(suiteId), messageId)
 }

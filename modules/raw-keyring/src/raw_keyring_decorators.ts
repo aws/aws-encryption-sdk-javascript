@@ -2,26 +2,27 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-  EncryptionMaterial, // eslint-disable-line no-unused-vars
-  DecryptionMaterial, // eslint-disable-line no-unused-vars
-  SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
-  KeyringTrace, // eslint-disable-line no-unused-vars
+  EncryptionMaterial,
+  DecryptionMaterial,
+  SupportedAlgorithmSuites,
+  KeyringTrace,
   KeyringTraceFlag,
-  EncryptedDataKey // eslint-disable-line no-unused-vars
+  EncryptedDataKey,
 } from '@aws-crypto/material-management'
 
 export interface RawKeyRing<S extends SupportedAlgorithmSuites> {
   keyNamespace: string
   keyName: string
-  _wrapKey: WrapKey<S>,
-  _unwrapKey: UnwrapKey<S>,
+  _wrapKey: WrapKey<S>
+  _unwrapKey: UnwrapKey<S>
   _filter: FilterEncryptedDataKey
 }
 
-export function _onEncrypt<S extends SupportedAlgorithmSuites, K extends RawKeyRing<S>> (
-  randomBytes: (bytes: number) => Promise<Uint8Array>
-) {
-  return async function _onEncrypt (
+export function _onEncrypt<
+  S extends SupportedAlgorithmSuites,
+  K extends RawKeyRing<S>
+>(randomBytes: (bytes: number) => Promise<Uint8Array>) {
+  return async function _onEncrypt(
     this: K,
     material: EncryptionMaterial<S>
   ): Promise<EncryptionMaterial<S>> {
@@ -29,7 +30,7 @@ export function _onEncrypt<S extends SupportedAlgorithmSuites, K extends RawKeyR
       const trace: KeyringTrace = {
         keyName: this.keyName,
         keyNamespace: this.keyNamespace,
-        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
+        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
       }
       const udk = await randomBytes(material.suite.keyLengthBytes)
       material.setUnencryptedDataKey(udk, trace)
@@ -38,8 +39,11 @@ export function _onEncrypt<S extends SupportedAlgorithmSuites, K extends RawKeyR
   }
 }
 
-export function _onDecrypt<S extends SupportedAlgorithmSuites, K extends RawKeyRing<S>> () {
-  return async function _onDecrypt (
+export function _onDecrypt<
+  S extends SupportedAlgorithmSuites,
+  K extends RawKeyRing<S>
+>() {
+  return async function _onDecrypt(
     this: K,
     material: DecryptionMaterial<S>,
     encryptedDataKeys: EncryptedDataKey[]
@@ -70,7 +74,9 @@ export interface WrapKey<S extends SupportedAlgorithmSuites> {
 }
 
 export interface UnwrapKey<S extends SupportedAlgorithmSuites> {
-  (material: DecryptionMaterial<S>, edk: EncryptedDataKey): Promise<DecryptionMaterial<S>>
+  (material: DecryptionMaterial<S>, edk: EncryptedDataKey): Promise<
+    DecryptionMaterial<S>
+  >
 }
 
 export interface FilterEncryptedDataKey {

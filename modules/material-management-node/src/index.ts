@@ -10,12 +10,25 @@ export {
   GetCipher,
   GetDecipher,
   AwsEsdkJsCipherGCM,
-  AwsEsdkJsDecipherGCM
+  AwsEsdkJsDecipherGCM,
 } from './material_helpers'
 export {
-  NodeDecryptionMaterial, NodeEncryptionMaterial, NodeAlgorithmSuite,
-  AlgorithmSuiteIdentifier, EncryptionContext, EncryptedDataKey,
-  KeyringTrace, KeyringTraceFlag, needs, KeyringNode, MultiKeyringNode,
-  immutableBaseClass, immutableClass, frozenClass, readOnlyProperty,
-  NodeMaterialsManager, unwrapDataKey, AwsEsdkKeyObject
+  NodeDecryptionMaterial,
+  NodeEncryptionMaterial,
+  NodeAlgorithmSuite,
+  AlgorithmSuiteIdentifier,
+  EncryptionContext,
+  EncryptedDataKey,
+  KeyringTrace,
+  KeyringTraceFlag,
+  needs,
+  KeyringNode,
+  MultiKeyringNode,
+  immutableBaseClass,
+  immutableClass,
+  frozenClass,
+  readOnlyProperty,
+  NodeMaterialsManager,
+  unwrapDataKey,
+  AwsEsdkKeyObject,
 } from '@aws-crypto/material-management'

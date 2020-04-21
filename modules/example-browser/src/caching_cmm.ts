@@ -12,7 +12,7 @@ import {
   encrypt,
   decrypt,
   WebCryptoCachingMaterialsManager,
-  getLocalCryptographicMaterialsCache
+  getLocalCryptographicMaterialsCache,
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
@@ -22,14 +22,19 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
  * Use any method you like to get credentials into the browser.
  * See kms.webpack.config
  */
-declare const credentials: {accessKeyId: string, secretAccessKey:string, sessionToken:string }
+declare const credentials: {
+  accessKeyId: string
+  secretAccessKey: string
+  sessionToken: string
+}
 
 /* This is done to facilitate testing. */
-export async function testCachingCMMExample () {
+export async function testCachingCMMExample() {
   /* This example uses a KMS keyring. The generator key in a KMS keyring generates and encrypts the data key.
    * The caller needs kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
-  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+  const generatorKeyId =
+    'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
   /* Adding additional KMS keys that can decrypt.
    * The caller must have kms:Encrypt permission for every CMK in keyIds.
@@ -43,7 +48,9 @@ export async function testCachingCMMExample () {
    * or omit the `keyIds` parameter.
    * This is *only* to demonstrate how the CMK ARNs are configured.
    */
-  const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
+  const keyIds = [
+    'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f',
+  ]
 
   /* Need a client provider that will inject correct credentials.
    * The credentials here are injected by webpack from your environment bundle is created
@@ -63,12 +70,16 @@ export async function testCachingCMMExample () {
     credentials: {
       accessKeyId,
       secretAccessKey,
-      sessionToken
-    }
+      sessionToken,
+    },
   })
 
   /* You must configure the KMS keyring with your KMS CMKs */
-  const keyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
+  const keyring = new KmsKeyringBrowser({
+    clientProvider,
+    generatorKeyId,
+    keyIds,
+  })
 
   /* Create a cache to hold the data keys (and related cryptographic material).
    * This example uses the local cache provided by the Encryption SDK.
@@ -116,7 +127,7 @@ export async function testCachingCMMExample () {
     partition,
     maxAge,
     maxBytesEncrypted,
-    maxMessagesEncrypted
+    maxMessagesEncrypted,
   })
 
   /* Encryption context is a *very* powerful tool for controlling
@@ -140,7 +151,7 @@ export async function testCachingCMMExample () {
   const encryptionContext = {
     stage: 'demo',
     purpose: 'simple demonstration app',
-    origin: 'us-west-2'
+    origin: 'us-west-2',
   }
 
   /* Find data to encrypt. */
@@ -186,11 +197,10 @@ export async function testCachingCMMExample () {
    * do not include a test that requires that all key-value pairs match.
    * Instead, verify that the key-value pairs that you supplied to the `encrypt` function are included in the encryption context that the `decrypt` function returns.
    */
-  Object
-    .entries(encryptionContext)
-    .forEach(([key, value]) => {
-      if (decryptedContext[key] !== value) throw new Error('Encryption Context does not match expected values')
-    })
+  Object.entries(encryptionContext).forEach(([key, value]) => {
+    if (decryptedContext[key] !== value)
+      throw new Error('Encryption Context does not match expected values')
+  })
 
   /* Log the clear message
    * only for testing and to show that it works.

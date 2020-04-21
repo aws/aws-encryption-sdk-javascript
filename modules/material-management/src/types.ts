@@ -1,22 +1,32 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { NodeAlgorithmSuite } from './node_algorithms' // eslint-disable-line no-unused-vars
-import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms' // eslint-disable-line no-unused-vars
-import { EncryptedDataKey } from './encrypted_data_key' // eslint-disable-line no-unused-vars
+import { NodeAlgorithmSuite } from './node_algorithms'
+import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
+import { EncryptedDataKey } from './encrypted_data_key'
 import {
-  NodeEncryptionMaterial, WebCryptoEncryptionMaterial, // eslint-disable-line no-unused-vars
-  NodeDecryptionMaterial, WebCryptoDecryptionMaterial // eslint-disable-line no-unused-vars
+  NodeEncryptionMaterial,
+  WebCryptoEncryptionMaterial,
+  NodeDecryptionMaterial,
+  WebCryptoDecryptionMaterial,
 } from './cryptographic_material'
 
-export type EncryptionContext = {[index: string]: string}
+export type EncryptionContext = { [index: string]: string }
 
 /* need to copy some things from DOM */
 export interface AwsEsdkJsKeyAlgorithm {
   name: string
 }
 export type AwsEsdkJsKeyType = 'public' | 'private' | 'secret'
-export type AwsEsdkJsKeyUsage = 'encrypt' | 'decrypt' | 'sign' | 'verify' | 'deriveKey' | 'deriveBits' | 'wrapKey' | 'unwrapKey'
+export type AwsEsdkJsKeyUsage =
+  | 'encrypt'
+  | 'decrypt'
+  | 'sign'
+  | 'verify'
+  | 'deriveKey'
+  | 'deriveBits'
+  | 'wrapKey'
+  | 'unwrapKey'
 
 export interface AwsEsdkJsCryptoKey {
   readonly algorithm: AwsEsdkJsKeyAlgorithm
@@ -30,29 +40,37 @@ export type MixedBackendCryptoKey = {
   zeroByteCryptoKey: AwsEsdkJsCryptoKey
 }
 
-export interface EncryptionRequest<S extends NodeAlgorithmSuite|WebCryptoAlgorithmSuite> {
+export interface EncryptionRequest<
+  S extends NodeAlgorithmSuite | WebCryptoAlgorithmSuite
+> {
   readonly suite?: S
   readonly encryptionContext: EncryptionContext
   readonly plaintextLength?: number
 }
 
-export interface DecryptionRequest<S extends NodeAlgorithmSuite|WebCryptoAlgorithmSuite> {
+export interface DecryptionRequest<
+  S extends NodeAlgorithmSuite | WebCryptoAlgorithmSuite
+> {
   readonly suite: S
   readonly encryptionContext: EncryptionContext
   readonly encryptedDataKeys: ReadonlyArray<EncryptedDataKey>
 }
 
-export type SupportedAlgorithmSuites = NodeAlgorithmSuite|WebCryptoAlgorithmSuite
+export type SupportedAlgorithmSuites =
+  | NodeAlgorithmSuite
+  | WebCryptoAlgorithmSuite
 
-export type EncryptionMaterial<Suite> =
-  Suite extends NodeAlgorithmSuite ? NodeEncryptionMaterial :
-  Suite extends WebCryptoAlgorithmSuite ? WebCryptoEncryptionMaterial :
-  never
+export type EncryptionMaterial<Suite> = Suite extends NodeAlgorithmSuite
+  ? NodeEncryptionMaterial
+  : Suite extends WebCryptoAlgorithmSuite
+  ? WebCryptoEncryptionMaterial
+  : never
 
-export type DecryptionMaterial<Suite> =
-  Suite extends NodeAlgorithmSuite ? NodeDecryptionMaterial :
-  Suite extends WebCryptoAlgorithmSuite ? WebCryptoDecryptionMaterial :
-  never
+export type DecryptionMaterial<Suite> = Suite extends NodeAlgorithmSuite
+  ? NodeDecryptionMaterial
+  : Suite extends WebCryptoAlgorithmSuite
+  ? WebCryptoDecryptionMaterial
+  : never
 
 /* These are copies of the v12 Node.js types.
  * I copied them here to avoid exporting v12 types

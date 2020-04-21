@@ -3,31 +3,33 @@
 
 import LRU from 'lru-cache'
 import {
-  EncryptionMaterial, // eslint-disable-line no-unused-vars
-  DecryptionMaterial, // eslint-disable-line no-unused-vars
-  SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
+  EncryptionMaterial,
+  DecryptionMaterial,
+  SupportedAlgorithmSuites,
   needs,
   isEncryptionMaterial,
-  isDecryptionMaterial
+  isDecryptionMaterial,
 } from '@aws-crypto/material-management'
 
 import {
-  CryptographicMaterialsCache, // eslint-disable-line no-unused-vars
-  Entry, // eslint-disable-line no-unused-vars
-  EncryptionMaterialEntry, // eslint-disable-line no-unused-vars
-  DecryptionMaterialEntry // eslint-disable-line no-unused-vars
+  CryptographicMaterialsCache,
+  Entry,
+  EncryptionMaterialEntry,
+  DecryptionMaterialEntry,
 } from './cryptographic_materials_cache'
 
-export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithmSuites> (
+export function getLocalCryptographicMaterialsCache<
+  S extends SupportedAlgorithmSuites
+>(
   capacity: number,
   proactiveFrequency: number = 1000 * 60
 ): CryptographicMaterialsCache<S> {
   const cache = new LRU<string, Entry<S>>({
     max: capacity,
-    dispose (_key, value) {
+    dispose(_key, value) {
       /* Zero out the unencrypted dataKey, when the material is removed from the cache. */
       value.response.zeroUnencryptedDataKey()
-    }
+    },
   })
 
   /* It is not a guarantee that the last item in the LRU will be the Oldest Item.
@@ -43,7 +45,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
    * If there is no get activity,
    * it will take until T=120 before I again begin evicting items.
    */
-  ;(function proactivelyTryAndEvictTail () {
+  ;(function proactivelyTryAndEvictTail() {
     const timeout = setTimeout(() => {
       mayEvictTail()
       proactivelyTryAndEvictTail()
@@ -59,7 +61,7 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
   })()
 
   return {
-    putEncryptionMaterial (
+    putEncryptionMaterial(
       key: string,
       material: EncryptionMaterial<S>,
       plaintextLength: number,
@@ -75,12 +77,12 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
         response: material,
         bytesEncrypted: plaintextLength,
         messagesEncrypted: 1,
-        now: Date.now()
+        now: Date.now(),
       })
 
       cache.set(key, entry, maxAge)
     },
-    putDecryptionMaterial (
+    putDecryptionMaterial(
       key: string,
       material: DecryptionMaterial<S>,
       maxAge?: number
@@ -93,12 +95,12 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
         response: material,
         bytesEncrypted: 0,
         messagesEncrypted: 0,
-        now: Date.now()
+        now: Date.now(),
       })
 
       cache.set(key, entry, maxAge)
     },
-    getEncryptionMaterial (key: string, plaintextLength: number) {
+    getEncryptionMaterial(key: string, plaintextLength: number) {
       /* Precondition: plaintextLength can not be negative. */
       needs(plaintextLength >= 0, 'Malformed plaintextLength')
       const entry = cache.get(key)
@@ -110,23 +112,23 @@ export function getLocalCryptographicMaterialsCache<S extends SupportedAlgorithm
       entry.bytesEncrypted += plaintextLength
       entry.messagesEncrypted += 1
 
-      return <EncryptionMaterialEntry<S>>entry
+      return entry as EncryptionMaterialEntry<S>
     },
-    getDecryptionMaterial (key: string) {
+    getDecryptionMaterial(key: string) {
       const entry = cache.get(key)
       /* Check for early return (Postcondition): If this key does not have a DecryptionMaterial, return false. */
       if (!entry) return false
       /* Postcondition: Only return DecryptionMaterial. */
       needs(isDecryptionMaterial(entry.response), 'Malformed response.')
 
-      return <DecryptionMaterialEntry<S>>entry
+      return entry as DecryptionMaterialEntry<S>
     },
-    del (key: string) {
+    del(key: string) {
       cache.del(key)
-    }
+    },
   }
 
-  function mayEvictTail () {
+  function mayEvictTail() {
     // @ts-ignore
     const { tail } = cache.dumpLru()
     /* Check for early return (Postcondition) UNTESTED: If there is no tail, then the cache is empty. */

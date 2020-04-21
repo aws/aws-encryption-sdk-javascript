@@ -3,23 +3,25 @@
 
 // @ts-ignore
 import { Transform as PortableTransform } from 'readable-stream'
-import { Transform } from 'stream' // eslint-disable-line no-unused-vars
+import { Transform } from 'stream'
 import {
   needs,
-  GetVerify, // eslint-disable-line no-unused-vars
-  GetDecipher // eslint-disable-line no-unused-vars
+  GetVerify,
+  GetDecipher,
 } from '@aws-crypto/material-management-node'
 import {
   deserializeSignature,
   decodeBodyHeader,
-  BodyHeader, // eslint-disable-line no-unused-vars
-  HeaderInfo // eslint-disable-line no-unused-vars
+  BodyHeader,
+  HeaderInfo,
 } from '@aws-crypto/serialize'
 import { ParseHeaderStream } from './parse_header_stream'
-import { DecipherInfo } from './decipher_stream' // eslint-disable-line no-unused-vars
+import { DecipherInfo } from './decipher_stream'
 
 type AWSVerify = ReturnType<GetVerify>
-const PortableTransformWithType = (<new (...args: any[]) => Transform>PortableTransform)
+const PortableTransformWithType = PortableTransform as new (
+  ...args: any[]
+) => Transform
 
 export interface VerifyInfo {
   headerInfo: HeaderInfo
@@ -46,15 +48,21 @@ export class VerifyStream extends PortableTransformWithType {
     buffer: Buffer.alloc(0),
     authTagBuffer: Buffer.alloc(0),
     signatureInfo: Buffer.alloc(0),
-    sequenceNumber: 0
+    sequenceNumber: 0,
   }
   private _verify?: AWSVerify
   private _maxBodySize?: number
-  constructor ({ maxBodySize }: VerifyStreamOptions) {
+  constructor({ maxBodySize }: VerifyStreamOptions) {
     super()
     /* Precondition: VerifyStream requires maxBodySize must be falsey or a number. */
-    needs(!maxBodySize || typeof maxBodySize === 'number', 'Unsupported MaxBodySize.')
-    Object.defineProperty(this, '_maxBodySize', { value: maxBodySize, enumerable: true })
+    needs(
+      !maxBodySize || typeof maxBodySize === 'number',
+      'Unsupported MaxBodySize.'
+    )
+    Object.defineProperty(this, '_maxBodySize', {
+      value: maxBodySize,
+      enumerable: true,
+    })
 
     this.on('pipe', (source: ParseHeaderStream) => {
       /* Precondition: The source must a ParseHeaderStream emit the required events. */
@@ -68,26 +76,38 @@ export class VerifyStream extends PortableTransformWithType {
          */
         if (verify) {
           const { rawHeader, headerIv, headerAuthTag } = headerInfo
-          ;[rawHeader, headerIv, headerAuthTag].forEach(e => verify.update(e))
+          ;[rawHeader, headerIv, headerAuthTag].forEach((e) => verify.update(e))
         }
-        Object.defineProperty(this, '_headerInfo', { value: headerInfo, enumerable: true })
-        Object.defineProperty(this, '_verify', { value: verify, enumerable: true })
+        Object.defineProperty(this, '_headerInfo', {
+          value: headerInfo,
+          enumerable: true,
+        })
+        Object.defineProperty(this, '_verify', {
+          value: verify,
+          enumerable: true,
+        })
 
         const decipherInfo: DecipherInfo = {
-          // @ts-ignore
-          messageId: Buffer.from(messageId.buffer, messageId.byteOffset, messageId.byteLength),
+          messageId: Buffer.from(
+            (messageId as Uint8Array).buffer || messageId,
+            (messageId as Uint8Array).byteOffset || 0,
+            messageId.byteLength
+          ),
           contentType,
           getDecipher,
-          dispose
+          dispose,
         }
         this.emit('DecipherInfo', decipherInfo)
       })
     })
   }
 
-  _transform (chunk: Buffer, enc: string, callback: Function): any {
+  _transform(chunk: Buffer, enc: string, callback: Function): any {
     /* Precondition: VerifyInfo must have initialized the stream. */
-    needs(this._headerInfo, 'VerifyStream not configured, VerifyInfo event not yet received.')
+    needs(
+      this._headerInfo,
+      'VerifyStream not configured, VerifyInfo event not yet received.'
+    )
 
     // BodyHeader
     const state = this._verifyState
@@ -106,7 +126,10 @@ export class VerifyStream extends PortableTransformWithType {
        * Before returning *any* cleartext, the stream **MUST** verify the decryption.
        * This means that I must buffer the message until the AuthTag is reached.
        */
-      needs(!this._maxBodySize || this._maxBodySize >= frameHeader.contentLength, 'maxBodySize exceeded.')
+      needs(
+        !this._maxBodySize || this._maxBodySize >= frameHeader.contentLength,
+        'maxBodySize exceeded.'
+      )
 
       /* Keeping track of the sequence number myself. */
       state.sequenceNumber += 1
@@ -117,7 +140,10 @@ export class VerifyStream extends PortableTransformWithType {
        * then the data could be significantly altered just by rearranging the frames.
        * Non-framed data returns a sequenceNumber of 1.
        */
-      needs(frameHeader.sequenceNumber === state.sequenceNumber, 'Encrypted body sequence out of order.')
+      needs(
+        frameHeader.sequenceNumber === state.sequenceNumber,
+        'Encrypted body sequence out of order.'
+      )
 
       if (this._verify) {
         this._verify.update(frameBuffer.slice(0, frameHeader.readPos))
@@ -154,7 +180,10 @@ export class VerifyStream extends PortableTransformWithType {
         state.authTagBuffer = Buffer.concat([authTagBuffer, chunk])
         return callback()
       } else {
-        const finalAuthTagBuffer = Buffer.concat([authTagBuffer, chunk], tagLengthBytes)
+        const finalAuthTagBuffer = Buffer.concat(
+          [authTagBuffer, chunk],
+          tagLengthBytes
+        )
         if (this._verify) {
           this._verify.update(finalAuthTagBuffer)
         }
@@ -172,7 +201,11 @@ export class VerifyStream extends PortableTransformWithType {
           /* Overwriting the _transform function.
            * Data flow control is not handled here.
            */
-          this._transform = (chunk: Buffer, _enc: string, callback: Function) => {
+          this._transform = (
+            chunk: Buffer,
+            _enc: string,
+            callback: Function
+          ) => {
             if (chunk.length) {
               state.signatureInfo = Buffer.concat([state.signatureInfo, chunk])
             }
@@ -202,7 +235,7 @@ export class VerifyStream extends PortableTransformWithType {
     callback()
   }
 
-  push (chunk: any, encoding?: string | undefined): boolean {
+  push(chunk: any, encoding?: string | undefined): boolean {
     // Typescript???? this._verify instanceof Verify is better....
     if (this._verify && chunk) {
       this._verify.update(chunk)
@@ -210,11 +243,13 @@ export class VerifyStream extends PortableTransformWithType {
     return super.push(chunk, encoding)
   }
 
-  _flush (callback: Function) {
+  _flush(callback: Function) {
     /* Check for early return (Postcondition): If there is no verify stream do not attempt to verify. */
     if (!this._verify) return callback()
     const { signatureInfo } = this._verifyState
-    const { buffer, byteOffset, byteLength } = deserializeSignature(signatureInfo)
+    const { buffer, byteOffset, byteLength } = deserializeSignature(
+      signatureInfo
+    )
     const signature = Buffer.from(buffer, byteOffset, byteLength)
     const isVerified = this._verify.awsCryptoVerify(signature)
     /* Postcondition: The signature must be valid. */

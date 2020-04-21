@@ -3,20 +3,21 @@
 
 // @ts-ignore
 import { Transform as PortableTransform } from 'readable-stream'
-import { Transform } from 'stream' // eslint-disable-line no-unused-vars
+import { Transform } from 'stream'
 import {
   NodeAlgorithmSuite,
-  NodeMaterialsManager, // eslint-disable-line no-unused-vars
-  getDecryptionHelper
+  NodeMaterialsManager,
+  getDecryptionHelper,
 } from '@aws-crypto/material-management-node'
 import { deserializeFactory, kdfInfo } from '@aws-crypto/serialize'
-import { VerifyInfo } from './verify_stream' // eslint-disable-line no-unused-vars
+import { VerifyInfo } from './verify_stream'
 
-const toUtf8 = (input: Uint8Array) => Buffer
-  .from(input.buffer, input.byteOffset, input.byteLength)
-  .toString('utf8')
+const toUtf8 = (input: Uint8Array) =>
+  Buffer.from(input.buffer, input.byteOffset, input.byteLength).toString('utf8')
 const deserialize = deserializeFactory(toUtf8, NodeAlgorithmSuite)
-const PortableTransformWithType = (<new (...args: any[]) => Transform>PortableTransform)
+const PortableTransformWithType = PortableTransform as new (
+  ...args: any[]
+) => Transform
 
 interface HeaderState {
   buffer: Buffer
@@ -25,15 +26,18 @@ interface HeaderState {
 export class ParseHeaderStream extends PortableTransformWithType {
   private materialsManager!: NodeMaterialsManager
   private _headerState: HeaderState
-  constructor (cmm: NodeMaterialsManager) {
+  constructor(cmm: NodeMaterialsManager) {
     super()
-    Object.defineProperty(this, 'materialsManager', { value: cmm, enumerable: true })
+    Object.defineProperty(this, 'materialsManager', {
+      value: cmm,
+      enumerable: true,
+    })
     this._headerState = {
-      buffer: Buffer.alloc(0)
+      buffer: Buffer.alloc(0),
     }
   }
 
-  _transform (chunk: any, encoding: string, callback: Function) {
+  _transform(chunk: any, encoding: string, callback: Function) {
     const { buffer } = this._headerState
     const headerBuffer = Buffer.concat([buffer, chunk])
     const headerInfo = deserialize.deserializeMessageHeader(headerBuffer)
@@ -53,24 +57,44 @@ export class ParseHeaderStream extends PortableTransformWithType {
       .then((material) => {
         this._headerState.buffer = Buffer.alloc(0) // clear the Buffer...
 
-        const { kdfGetDecipher, getVerify, dispose } = getDecryptionHelper(material)
+        const { kdfGetDecipher, getVerify, dispose } = getDecryptionHelper(
+          material
+        )
 
         const info = kdfInfo(messageHeader.suiteId, messageHeader.messageId)
         const getDecipher = kdfGetDecipher(info)
         const headerAuth = getDecipher(headerIv)
 
-        headerAuth.setAAD(Buffer.from(rawHeader.buffer, rawHeader.byteOffset, rawHeader.byteLength))
-        headerAuth.setAuthTag(Buffer.from(headerAuthTag.buffer, headerAuthTag.byteOffset, headerAuthTag.byteLength))
+        headerAuth.setAAD(
+          Buffer.from(
+            rawHeader.buffer,
+            rawHeader.byteOffset,
+            rawHeader.byteLength
+          )
+        )
+        headerAuth.setAuthTag(
+          Buffer.from(
+            headerAuthTag.buffer,
+            headerAuthTag.byteOffset,
+            headerAuthTag.byteLength
+          )
+        )
         headerAuth.update(Buffer.alloc(0))
         headerAuth.final() // will throw if invalid
 
         const verify = getVerify ? getVerify() : void 0
-        const verifyInfo: VerifyInfo = { headerInfo, getDecipher, verify, dispose }
+        const verifyInfo: VerifyInfo = {
+          headerInfo,
+          getDecipher,
+          verify,
+          dispose,
+        }
         this.emit('VerifyInfo', verifyInfo)
         this.emit('MessageHeader', headerInfo.messageHeader)
 
         // The header is parsed, pass control
-        const readPos = rawHeader.byteLength + headerIv.byteLength + headerAuthTag.byteLength
+        const readPos =
+          rawHeader.byteLength + headerIv.byteLength + headerAuthTag.byteLength
         const tail = headerBuffer.slice(readPos)
         /* needs calls in downstream _transform streams will throw.
          * But streams are async.
@@ -86,6 +110,6 @@ export class ParseHeaderStream extends PortableTransformWithType {
         // flush the tail.  Stream control is now in the verify and decrypt streams
         return setImmediate(() => this._transform(tail, encoding, callback))
       })
-      .catch(err => callback(err))
+      .catch((err) => callback(err))
   }
 }

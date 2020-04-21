@@ -1,15 +1,11 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-  EncryptManifestList, // eslint-disable-line no-unused-vars
-  KeyList, // eslint-disable-line no-unused-vars
-  KeyInfoTuple // eslint-disable-line no-unused-vars
-} from './types'
+import { EncryptManifestList, KeyList, KeyInfoTuple } from './types'
 import { randomBytes } from 'crypto'
 import {
-  AlgorithmSuiteIdentifier, // eslint-disable-line no-unused-vars
-  EncryptionContext // eslint-disable-line no-unused-vars
+  AlgorithmSuiteIdentifier,
+  EncryptionContext,
 } from '@aws-crypto/client-browser'
 import { URL } from 'url'
 import { readFileSync, writeFileSync } from 'fs'
@@ -22,21 +18,29 @@ import got from 'got'
  * 1. The code is not tied to a specific copy of the manifest information
  * 2. The tests can be run on a subset of tests for debugging.
  */
-export async function buildEncryptFixtures (fixtures: string, manifestFile: string, keyFile: string, testName?: string, slice?: string) {
-  const [start = 0, end = 9999] = (slice || '').split(':').map(n => parseInt(n, 10))
-  const { tests, plaintexts }: EncryptManifestList = await getParsedJSON(manifestFile)
+export async function buildEncryptFixtures(
+  fixtures: string,
+  manifestFile: string,
+  keyFile: string,
+  testName?: string,
+  slice?: string
+) {
+  const [start = 0, end = 9999] = (slice || '')
+    .split(':')
+    .map((n) => parseInt(n, 10))
+  const { tests, plaintexts }: EncryptManifestList = await getParsedJSON(
+    manifestFile
+  )
   const { keys }: KeyList = await getParsedJSON(keyFile)
 
-  const plaintextBytes: {[name: string]: string} = {}
+  const plaintextBytes: { [name: string]: string } = {}
 
-  Object
-    .keys(plaintexts)
-    .forEach(name => {
-      /* Generate random bites as per spec.
-       * See: https://github.com/awslabs/aws-crypto-tools-test-vector-framework/blob/master/features/0003-awses-message-encryption.md#plaintexts
-       */
-      plaintextBytes[name] = randomBytes(10).toString('base64')
-    })
+  Object.keys(plaintexts).forEach((name) => {
+    /* Generate random bites as per spec.
+     * See: https://github.com/awslabs/aws-crypto-tools-test-vector-framework/blob/master/features/0003-awses-message-encryption.md#plaintexts
+     */
+    plaintextBytes[name] = randomBytes(10).toString('base64')
+  })
 
   const testNames = []
   let count = 0
@@ -60,23 +64,23 @@ export async function buildEncryptFixtures (fixtures: string, manifestFile: stri
       'master-keys': masterKeys,
       algorithm,
       'frame-size': frameLength,
-      'encryption-context': encryptionContext
+      'encryption-context': encryptionContext,
     } = testInfo
 
-    const keysInfo = <KeyInfoTuple[]>masterKeys.map(keyInfo => {
+    const keysInfo = masterKeys.map((keyInfo) => {
       const key = keys[keyInfo.key]
       if (!key) throw new Error(`no key for ${name}`)
-      return [keyInfo, key]
+      return [keyInfo, key] as KeyInfoTuple
     })
 
     /* I'm expecting that the encrypt function will throw if this is not a supported AlgorithmSuiteIdentifier */
-    const suiteId = <AlgorithmSuiteIdentifier>parseInt(algorithm, 16)
+    const suiteId = parseInt(algorithm, 16) as AlgorithmSuiteIdentifier
 
     const test: EncryptTestVectorInfo = {
       name,
       keysInfo,
       plainTextData: plaintextBytes[plaintext],
-      encryptOp: { suiteId, frameLength, encryptionContext }
+      encryptOp: { suiteId, frameLength, encryptionContext },
     }
 
     writeFileSync(`${fixtures}/${name}.json`, JSON.stringify(test))
@@ -86,17 +90,17 @@ export async function buildEncryptFixtures (fixtures: string, manifestFile: stri
 }
 
 export interface EncryptTestVectorInfo {
-  name: string,
-  keysInfo: KeyInfoTuple[],
-  plainTextData: string,
+  name: string
+  keysInfo: KeyInfoTuple[]
+  plainTextData: string
   encryptOp: {
-    suiteId: AlgorithmSuiteIdentifier,
-    frameLength: number,
+    suiteId: AlgorithmSuiteIdentifier
+    frameLength: number
     encryptionContext: EncryptionContext
   }
 }
 
-async function getParsedJSON (thing: string) {
+async function getParsedJSON(thing: string) {
   try {
     const url = new URL(thing)
     if (url.protocol === 'file:') {
@@ -108,12 +112,12 @@ async function getParsedJSON (thing: string) {
     return jsonAtPath(thing)
   }
 }
-async function jsonAtUrl (url: URL) {
+async function jsonAtUrl(url: URL) {
   const { body } = await got(url)
   return JSON.parse(body)
 }
 
-function jsonAtPath (path: string) {
+function jsonAtPath(path: string) {
   const json = readFileSync(path, { encoding: 'utf-8' })
   return JSON.parse(json)
 }

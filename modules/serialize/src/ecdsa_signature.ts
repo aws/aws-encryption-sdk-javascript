@@ -12,22 +12,19 @@ import asn from 'asn1.js'
 import { concatBuffers } from './concat_buffers'
 import {
   needs,
-  WebCryptoAlgorithmSuite, // eslint-disable-line no-unused-vars
-  WebCryptoECDHCurve // eslint-disable-line no-unused-vars
+  WebCryptoAlgorithmSuite,
+  WebCryptoECDHCurve,
 } from '@aws-crypto/material-management'
 
 // https://tools.ietf.org/html/rfc3279#section-2.2.2
 const ECDSASignature = asn.define('ECDSASignature', function (this: any) {
-  this.seq().obj(
-    this.key('r').int(),
-    this.key('s').int()
-  )
+  this.seq().obj(this.key('r').int(), this.key('s').int())
 })
 
 // Map the ECDSA Curve to key lengths
-const keyLengthBytes : {[key in WebCryptoECDHCurve]: number} = Object.freeze({
+const keyLengthBytes: { [key in WebCryptoECDHCurve]: number } = Object.freeze({
   'P-256': 32,
-  'P-384': 48
+  'P-384': 48,
 })
 
 /**
@@ -38,14 +35,21 @@ const keyLengthBytes : {[key in WebCryptoECDHCurve]: number} = Object.freeze({
  * @param suite [WebCryptoAlgorithmSuite] The Algorithm suite used to create the signature
  * @returns Uint8Array The raw formated signature (r,s) used to verify in WebCrypto
  */
-export function der2raw (derSignature: Uint8Array, { signatureCurve }: WebCryptoAlgorithmSuite): Uint8Array {
+export function der2raw(
+  derSignature: Uint8Array,
+  { signatureCurve }: WebCryptoAlgorithmSuite
+): Uint8Array {
   /* Precondition: Do not attempt to RAW format if the suite does not support signing. */
-  if (!signatureCurve) throw new Error('AlgorithmSuite does not support signing')
+  if (!signatureCurve)
+    throw new Error('AlgorithmSuite does not support signing')
 
   const _keyLengthBytes = keyLengthBytes[signatureCurve]
 
   // A little more portable than Buffer.from, but not much
-  const { r, s } = ECDSASignature.decode(new asn.bignum.BN(derSignature).toArrayLike(Buffer), 'der')
+  const { r, s } = ECDSASignature.decode(
+    new asn.bignum.BN(derSignature).toArrayLike(Buffer),
+    'der'
+  )
 
   const rLength = r.byteLength()
   const sLength = r.byteLength()
@@ -67,9 +71,13 @@ export function der2raw (derSignature: Uint8Array, { signatureCurve }: WebCrypto
  * @param suite [WebCryptoAlgorithmSuite] The Algorithm suite used to create the signature
  * @returns Uint8Array The DER formated signature
  */
-export function raw2der (rawSignature: Uint8Array, { signatureCurve }: WebCryptoAlgorithmSuite): Uint8Array {
+export function raw2der(
+  rawSignature: Uint8Array,
+  { signatureCurve }: WebCryptoAlgorithmSuite
+): Uint8Array {
   /* Precondition: Do not attempt to DER format if the suite does not support signing. */
-  if (!signatureCurve) throw new Error('AlgorithmSuite does not support signing')
+  if (!signatureCurve)
+    throw new Error('AlgorithmSuite does not support signing')
 
   const { byteLength } = rawSignature
 

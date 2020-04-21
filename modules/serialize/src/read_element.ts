@@ -29,11 +29,11 @@ import { needs } from '@aws-crypto/material-management'
  * @param buffer
  * @param readPos
  */
-export function readElements (
+export function readElements(
   elementCount: number,
   fieldsPerElement: number,
   buffer: Uint8Array,
-  readPos: number = 0
+  readPos = 0
 ) {
   /* Uint8Array is a view on top of the underlying ArrayBuffer.
    * This means that raw underlying memory stored in the ArrayBuffer
@@ -49,13 +49,19 @@ export function readElements (
   const elements = []
 
   /* Precondition: readPos must be non-negative and within the byte length of the buffer given. */
-  needs(readPos >= 0 && dataView.byteLength >= readPos, 'readPos out of bounds.')
+  needs(
+    readPos >= 0 && dataView.byteLength >= readPos,
+    'readPos out of bounds.'
+  )
 
   /* Precondition: elementCount and fieldsPerElement must be non-negative. */
-  needs(elementCount >= 0 && fieldsPerElement >= 0, 'elementCount and fieldsPerElement must be positive.')
+  needs(
+    elementCount >= 0 && fieldsPerElement >= 0,
+    'elementCount and fieldsPerElement must be positive.'
+  )
 
   while (elementCount--) {
-    let element = []
+    const element = []
     let fieldCount = fieldsPerElement
     while (fieldCount--) {
       /* Check for early return (Postcondition): Enough data must exist to read the Uint16 length value. */

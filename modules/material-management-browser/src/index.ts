@@ -6,9 +6,26 @@ export * from './material_helpers'
 export * from './bytes2_jwk'
 export * from './keyring_helpers'
 export {
-  WebCryptoDecryptionMaterial, WebCryptoEncryptionMaterial, WebCryptoAlgorithmSuite,
-  AlgorithmSuiteIdentifier, EncryptionContext, EncryptedDataKey, KeyringWebCrypto,
-  KeyringTrace, KeyringTraceFlag, needs, MixedBackendCryptoKey, MultiKeyringWebCrypto,
-  immutableBaseClass, immutableClass, frozenClass, readOnlyProperty, keyUsageForMaterial,
-  isValidCryptoKey, isCryptoKey, WebCryptoMaterialsManager, unwrapDataKey, AwsEsdkJsCryptoKey
+  WebCryptoDecryptionMaterial,
+  WebCryptoEncryptionMaterial,
+  WebCryptoAlgorithmSuite,
+  AlgorithmSuiteIdentifier,
+  EncryptionContext,
+  EncryptedDataKey,
+  KeyringWebCrypto,
+  KeyringTrace,
+  KeyringTraceFlag,
+  needs,
+  MixedBackendCryptoKey,
+  MultiKeyringWebCrypto,
+  immutableBaseClass,
+  immutableClass,
+  frozenClass,
+  readOnlyProperty,
+  keyUsageForMaterial,
+  isValidCryptoKey,
+  isCryptoKey,
+  WebCryptoMaterialsManager,
+  unwrapDataKey,
+  AwsEsdkJsCryptoKey,
 } from '@aws-crypto/material-management'

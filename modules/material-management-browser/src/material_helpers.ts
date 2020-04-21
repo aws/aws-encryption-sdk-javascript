@@ -3,16 +3,16 @@
 
 import {
   needs,
-  WebCryptoEncryptionMaterial, // eslint-disable-line no-unused-vars
-  WebCryptoDecryptionMaterial, // eslint-disable-line no-unused-vars
-  MixedBackendCryptoKey, // eslint-disable-line no-unused-vars
+  WebCryptoEncryptionMaterial,
+  WebCryptoDecryptionMaterial,
+  MixedBackendCryptoKey,
   isCryptoKey,
   isValidCryptoKey,
   keyUsageForMaterial,
   subtleFunctionForMaterial,
   unwrapDataKey,
-  AwsEsdkJsCryptoKey, // eslint-disable-line no-unused-vars
-  WebCryptoMaterial // eslint-disable-line no-unused-vars
+  AwsEsdkJsCryptoKey,
+  WebCryptoMaterial,
 } from '@aws-crypto/material-management'
 
 import {
@@ -20,21 +20,23 @@ import {
   getNonZeroByteBackend,
   getZeroByteSubtle,
   isFullSupportWebCryptoBackend,
-  WebCryptoBackend // eslint-disable-line no-unused-vars
+  WebCryptoBackend,
 } from '@aws-crypto/web-crypto-backend'
 
 import { bytes2JWK } from './bytes2_jwk'
 
 export interface GetSubtleEncrypt {
-  (iv: Uint8Array, additionalData: Uint8Array) : (data: Uint8Array) => Promise<ArrayBuffer>
+  (iv: Uint8Array, additionalData: Uint8Array): (
+    data: Uint8Array
+  ) => Promise<ArrayBuffer>
 }
 
 export interface KdfGetSubtleEncrypt {
-  (info: Uint8Array) : GetSubtleEncrypt
+  (info: Uint8Array): GetSubtleEncrypt
 }
 
 export interface SubtleSign {
-  (data: Uint8Array) : PromiseLike<ArrayBuffer>
+  (data: Uint8Array): PromiseLike<ArrayBuffer>
 }
 
 export interface WebCryptoEncryptionMaterialHelper {
@@ -44,25 +46,34 @@ export interface WebCryptoEncryptionMaterialHelper {
 }
 
 export interface GetEncryptHelper {
-  (material: WebCryptoEncryptionMaterial) : Promise<WebCryptoEncryptionMaterialHelper>
+  (material: WebCryptoEncryptionMaterial): Promise<
+    WebCryptoEncryptionMaterialHelper
+  >
 }
 
-export const getEncryptHelper: GetEncryptHelper = async (material: WebCryptoEncryptionMaterial) => {
+export const getEncryptHelper: GetEncryptHelper = async (
+  material: WebCryptoEncryptionMaterial
+) => {
   const backend = await getWebCryptoBackend()
 
   /* Precondition: WebCryptoEncryptionMaterial must have a valid data key. */
   needs(material.hasValidKey(), 'Material has no CryptoKey.')
 
   const { signatureHash } = material.suite
-  const kdfGetSubtleEncrypt = <KdfGetSubtleEncrypt>getSubtleFunction(material, backend, 'encrypt')
+  const kdfGetSubtleEncrypt = getSubtleFunction(
+    material,
+    backend,
+    'encrypt'
+  ) as KdfGetSubtleEncrypt
   return Object.freeze({
     kdfGetSubtleEncrypt,
     subtleSign: signatureHash ? getSubtleSign : undefined,
-    dispose
+    dispose,
   })
 
-  function getSubtleSign (data: Uint8Array) {
-    if (!signatureHash) throw new Error('Algorithm suite does not support signing.')
+  function getSubtleSign(data: Uint8Array) {
+    if (!signatureHash)
+      throw new Error('Algorithm suite does not support signing.')
     const { signatureKey } = material
     if (!signatureKey) throw new Error('Malformed Material.')
     const { privateKey } = signatureKey
@@ -71,7 +82,7 @@ export const getEncryptHelper: GetEncryptHelper = async (material: WebCryptoEncr
     return getNonZeroByteBackend(backend).sign(algorithm, privateKey, data)
   }
 
-  function dispose () {
+  function dispose() {
     material.zeroUnencryptedDataKey()
   }
 }
@@ -79,11 +90,11 @@ export const getEncryptHelper: GetEncryptHelper = async (material: WebCryptoEncr
 export interface GetSubtleDecrypt extends GetSubtleEncrypt {}
 
 export interface KdfGetSubtleDecrypt {
-  (info: Uint8Array) : GetSubtleDecrypt
+  (info: Uint8Array): GetSubtleDecrypt
 }
 
 interface SubtleVerify {
-  (signature: Uint8Array, data: Uint8Array) : PromiseLike<boolean>
+  (signature: Uint8Array, data: Uint8Array): PromiseLike<boolean>
 }
 
 export interface WebCryptoDecryptionMaterialHelper {
@@ -93,10 +104,14 @@ export interface WebCryptoDecryptionMaterialHelper {
 }
 
 export interface GetDecryptionHelper {
-  (material: WebCryptoDecryptionMaterial) : Promise<WebCryptoDecryptionMaterialHelper>
+  (material: WebCryptoDecryptionMaterial): Promise<
+    WebCryptoDecryptionMaterialHelper
+  >
 }
 
-export const getDecryptionHelper: GetDecryptionHelper = async (material: WebCryptoDecryptionMaterial) => {
+export const getDecryptionHelper: GetDecryptionHelper = async (
+  material: WebCryptoDecryptionMaterial
+) => {
   const backend = await getWebCryptoBackend()
 
   /* Precondition: WebCryptoDecryptionMaterial must have a valid data key. */
@@ -104,62 +119,104 @@ export const getDecryptionHelper: GetDecryptionHelper = async (material: WebCryp
 
   const { signatureHash } = material.suite
 
-  const kdfGetSubtleDecrypt = <KdfGetSubtleDecrypt>getSubtleFunction(material, backend, 'decrypt')
+  const kdfGetSubtleDecrypt = getSubtleFunction(
+    material,
+    backend,
+    'decrypt'
+  ) as KdfGetSubtleDecrypt
   return Object.freeze({
     kdfGetSubtleDecrypt,
     subtleVerify: signatureHash ? subtleVerify : undefined,
-    dispose
+    dispose,
   })
 
-  function subtleVerify (signature: Uint8Array, data: Uint8Array) {
-    if (!signatureHash) throw new Error('Algorithm suite does not support signing.')
+  function subtleVerify(signature: Uint8Array, data: Uint8Array) {
+    if (!signatureHash)
+      throw new Error('Algorithm suite does not support signing.')
     const { verificationKey } = material
     if (!verificationKey) throw new Error('Malformed Material.')
     const { publicKey } = verificationKey
     if (!isCryptoKey(publicKey)) throw new Error('Malformed Material.')
     const algorithm = { name: 'ECDSA', hash: { name: signatureHash } }
-    return getNonZeroByteBackend(backend).verify(algorithm, publicKey, signature, data)
+    return getNonZeroByteBackend(backend).verify(
+      algorithm,
+      publicKey,
+      signature,
+      data
+    )
   }
 
-  function dispose () {
+  function dispose() {
     material.zeroUnencryptedDataKey()
   }
 }
 
-type SubtleFunction = 'encrypt'|'decrypt'
+type SubtleFunction = 'encrypt' | 'decrypt'
 
-export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
+export function getSubtleFunction<T extends WebCryptoMaterial<T>>(
   material: T,
   backend: WebCryptoBackend,
   subtleFunction: SubtleFunction = subtleFunctionForMaterial(material)
-): KdfGetSubtleEncrypt|KdfGetSubtleDecrypt {
+): KdfGetSubtleEncrypt | KdfGetSubtleDecrypt {
   /* Precondition: The material must have a CryptoKey. */
   needs(material.hasCryptoKey, 'Material must have a CryptoKey.')
 
   const cryptoKey = material.getCryptoKey()
 
   /* Precondition: The cryptoKey and backend must match in terms of Mixed vs Full support. */
-  needs(isCryptoKey(cryptoKey) === isFullSupportWebCryptoBackend(backend), 'CryptoKey vs WebCrypto backend mismatch.')
+  needs(
+    isCryptoKey(cryptoKey) === isFullSupportWebCryptoBackend(backend),
+    'CryptoKey vs WebCrypto backend mismatch.'
+  )
   const { suite } = material
   const { encryption: cipherName, ivLength, tagLength } = suite
 
   return (info: Uint8Array) => {
-    const derivedKeyPromise: Promise<AwsEsdkJsCryptoKey|MixedBackendCryptoKey> = isCryptoKey(cryptoKey)
-      ? WebCryptoKdf(getNonZeroByteBackend(backend), material, cryptoKey, [subtleFunction], info)
+    const derivedKeyPromise: Promise<
+      AwsEsdkJsCryptoKey | MixedBackendCryptoKey
+    > = isCryptoKey(cryptoKey)
+      ? WebCryptoKdf(
+          getNonZeroByteBackend(backend),
+          material,
+          cryptoKey,
+          [subtleFunction],
+          info
+        )
       : Promise.all([
-        WebCryptoKdf(getNonZeroByteBackend(backend), material, cryptoKey.nonZeroByteCryptoKey, [subtleFunction], info),
-        WebCryptoKdf(getZeroByteSubtle(backend), material, cryptoKey.zeroByteCryptoKey, [subtleFunction], info)
-      ]).then(([nonZeroByteCryptoKey, zeroByteCryptoKey]) => ({ nonZeroByteCryptoKey, zeroByteCryptoKey }))
+          WebCryptoKdf(
+            getNonZeroByteBackend(backend),
+            material,
+            cryptoKey.nonZeroByteCryptoKey,
+            [subtleFunction],
+            info
+          ),
+          WebCryptoKdf(
+            getZeroByteSubtle(backend),
+            material,
+            cryptoKey.zeroByteCryptoKey,
+            [subtleFunction],
+            info
+          ),
+        ]).then(([nonZeroByteCryptoKey, zeroByteCryptoKey]) => ({
+          nonZeroByteCryptoKey,
+          zeroByteCryptoKey,
+        }))
     return (iv: Uint8Array, additionalData: Uint8Array) => {
       /* Precondition: The length of the IV must match the WebCryptoAlgorithmSuite specification. */
-      needs(iv.byteLength === ivLength, 'Iv length does not match algorithm suite specification')
+      needs(
+        iv.byteLength === ivLength,
+        'Iv length does not match algorithm suite specification'
+      )
       return async (data: Uint8Array) => {
         const deriveKey = await derivedKeyPromise
         if (isCryptoKey(deriveKey) && isFullSupportWebCryptoBackend(backend)) {
           const { subtle } = backend
           const algorithm = { name: cipherName, iv, additionalData, tagLength }
           return subtle[subtleFunction](algorithm, deriveKey, data)
-        } else if (!isCryptoKey(deriveKey) && !isFullSupportWebCryptoBackend(backend)) {
+        } else if (
+          !isCryptoKey(deriveKey) &&
+          !isFullSupportWebCryptoBackend(backend)
+        ) {
           const { nonZeroByteSubtle, zeroByteSubtle } = backend
           const { nonZeroByteCryptoKey, zeroByteCryptoKey } = deriveKey
           const algorithm = { name: cipherName, iv, additionalData, tagLength }
@@ -167,12 +224,23 @@ export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
            * This means that on decrypt any amount of data less than tagLength is invalid.
            * This also means that zero encrypted data will be equal to tagLength.
            */
-          const dataByteLength = subtleFunction === 'decrypt' ? data.byteLength - tagLength / 8 : data.byteLength
+          const dataByteLength =
+            subtleFunction === 'decrypt'
+              ? data.byteLength - tagLength / 8
+              : data.byteLength
           needs(dataByteLength >= 0, 'Invalid data length.')
           if (dataByteLength === 0) {
-            return zeroByteSubtle[subtleFunction](algorithm, zeroByteCryptoKey, data)
+            return zeroByteSubtle[subtleFunction](
+              algorithm,
+              zeroByteCryptoKey,
+              data
+            )
           } else {
-            return nonZeroByteSubtle[subtleFunction](algorithm, nonZeroByteCryptoKey, data)
+            return nonZeroByteSubtle[subtleFunction](
+              algorithm,
+              nonZeroByteCryptoKey,
+              data
+            )
           }
         }
         // This should be impossible
@@ -182,7 +250,7 @@ export function getSubtleFunction<T extends WebCryptoMaterial<T>> (
   }
 }
 
-export async function WebCryptoKdf<T extends WebCryptoMaterial<T>> (
+export async function WebCryptoKdf<T extends WebCryptoMaterial<T>>(
   subtle: SubtleCrypto,
   material: T,
   cryptoKey: AwsEsdkJsCryptoKey,
@@ -196,31 +264,32 @@ export async function WebCryptoKdf<T extends WebCryptoMaterial<T>> (
 
   /* Precondition: Valid HKDF values must exist for browsers. */
   needs(
-    kdf === 'HKDF' &&
-    kdfHash &&
-    info instanceof Uint8Array &&
-    info.byteLength,
+    kdf === 'HKDF' && kdfHash && info instanceof Uint8Array && info.byteLength,
     'Invalid HKDF values.'
   )
   // https://developer.mozilla.org/en-US/docs/Web/API/HkdfParams
-  const kdfAlgorithm = { name: kdf, hash: { name: kdfHash }, info, salt: new Uint8Array() }
+  const kdfAlgorithm = {
+    name: kdf,
+    hash: { name: kdfHash },
+    info,
+    salt: new Uint8Array(),
+  }
   const derivedKeyAlgorithm = { name: encryption, length: keyLength }
   const extractable = false
-  const deriveKey = await subtle
-    .deriveKey(
-      // @ts-ignore types need to be updated see: https://developer.mozilla.org/en-US/docs/Web/API/HkdfParams
-      kdfAlgorithm,
-      cryptoKey,
-      derivedKeyAlgorithm,
-      extractable,
-      keyUsages
-    )
+  const deriveKey = await subtle.deriveKey(
+    // @ts-ignore types need to be updated see: https://developer.mozilla.org/en-US/docs/Web/API/HkdfParams
+    kdfAlgorithm,
+    cryptoKey,
+    derivedKeyAlgorithm,
+    extractable,
+    keyUsages
+  )
   /* Postcondition: The derived key must conform to the algorith suite specification. */
   needs(isValidCryptoKey(deriveKey, material), 'Invalid derived key')
   return deriveKey
 }
 
-export async function importCryptoKey<T extends WebCryptoMaterial<T>> (
+export async function importCryptoKey<T extends WebCryptoMaterial<T>>(
   backend: WebCryptoBackend,
   material: T,
   keyUsages: KeyUsage[] = [keyUsageForMaterial(material)]
@@ -230,12 +299,15 @@ export async function importCryptoKey<T extends WebCryptoMaterial<T>> (
   } else {
     return Promise.all([
       _importCryptoKey(getNonZeroByteBackend(backend), material, keyUsages),
-      _importCryptoKey(getZeroByteSubtle(backend), material, keyUsages)
-    ]).then(([nonZeroByteCryptoKey, zeroByteCryptoKey]) => ({ nonZeroByteCryptoKey, zeroByteCryptoKey }))
+      _importCryptoKey(getZeroByteSubtle(backend), material, keyUsages),
+    ]).then(([nonZeroByteCryptoKey, zeroByteCryptoKey]) => ({
+      nonZeroByteCryptoKey,
+      zeroByteCryptoKey,
+    }))
   }
 }
 
-export async function _importCryptoKey<T extends WebCryptoMaterial<T>> (
+export async function _importCryptoKey<T extends WebCryptoMaterial<T>>(
   subtle: SubtleCrypto,
   material: T,
   keyUsages: KeyUsage[] = [keyUsageForMaterial(material)]

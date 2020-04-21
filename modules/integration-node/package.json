@@ -3,7 +3,9 @@
   "version": "1.2.0",
   "scripts": {
     "build": "tsc -b tsconfig.json",
-    "lint": "standard src/*.ts test/**/*.ts",
+    "lint": "run-s lint-*",
+    "lint-eslint": "npx eslint modules/**/src/*.ts modules/**/test/**/*.ts",
+    "lint-prettier": "prettier -c modules/**/src/*.ts modules/**/test/**/*.ts",
     "test": "npm run lint && npm run build && node ./build/main/index.js",
     "integration_node": "npx ."
   },

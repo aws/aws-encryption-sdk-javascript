@@ -12,18 +12,24 @@
  */
 
 import BN from 'bn.js'
-import { ContentAADString, ContentType } from './identifiers' // eslint-disable-line no-unused-vars
-import { BinaryData } from './types' // eslint-disable-line no-unused-vars
+import { ContentAADString, ContentType } from './identifiers'
+import { BinaryData } from './types'
 import { concatBuffers } from './concat_buffers'
 import { uInt32BE } from './uint_util'
 
-export function aadFactory (fromUtf8: (input: string) => Uint8Array) {
+export function aadFactory(fromUtf8: (input: string) => Uint8Array) {
   return {
     messageAADContentString,
-    messageAAD
+    messageAAD,
   }
 
-  function messageAADContentString ({ contentType, isFinalFrame }: {contentType: ContentType, isFinalFrame: boolean}) {
+  function messageAADContentString({
+    contentType,
+    isFinalFrame,
+  }: {
+    contentType: ContentType
+    isFinalFrame: boolean
+  }) {
     switch (contentType) {
       case ContentType.NO_FRAMING:
         return ContentAADString.NON_FRAMED_STRING_ID
@@ -36,7 +42,12 @@ export function aadFactory (fromUtf8: (input: string) => Uint8Array) {
     }
   }
 
-  function messageAAD (messageId: BinaryData, aadContentString: ContentAADString, seqNum: number, contentLength: number) {
+  function messageAAD(
+    messageId: BinaryData,
+    aadContentString: ContentAADString,
+    seqNum: number,
+    contentLength: number
+  ) {
     return concatBuffers(
       messageId,
       fromUtf8(aadContentString),

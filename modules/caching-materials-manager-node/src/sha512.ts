@@ -3,7 +3,8 @@
 
 import { createHash } from 'crypto'
 
-export const sha512 = async (...data: (Uint8Array|string)[]) => data
-  .map(item => typeof item === 'string' ? Buffer.from(item) : item)
-  .reduce((hash, item) => hash.update(item), createHash('sha512'))
-  .digest()
+export const sha512 = async (...data: (Uint8Array | string)[]) =>
+  data
+    .map((item) => (typeof item === 'string' ? Buffer.from(item) : item))
+    .reduce((hash, item) => hash.update(item), createHash('sha512'))
+    .digest()

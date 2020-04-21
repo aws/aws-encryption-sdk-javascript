@@ -4,42 +4,41 @@
 import {
   KeyringNode,
   needs,
-  NodeEncryptionMaterial, // eslint-disable-line no-unused-vars
-  NodeDecryptionMaterial, // eslint-disable-line no-unused-vars
-  EncryptedDataKey, // eslint-disable-line no-unused-vars
+  NodeEncryptionMaterial,
+  NodeDecryptionMaterial,
+  EncryptedDataKey,
   KeyringTraceFlag,
   immutableClass,
   readOnlyProperty,
   unwrapDataKey,
-  NodeAlgorithmSuite // eslint-disable-line no-unused-vars
+  NodeAlgorithmSuite,
 } from '@aws-crypto/material-management-node'
 import { randomBytes, createCipheriv, createDecipheriv } from 'crypto'
-import {
-  serializeFactory,
-  concatBuffers
-} from '@aws-crypto/serialize'
+import { serializeFactory, concatBuffers } from '@aws-crypto/serialize'
 import {
   _onEncrypt,
   _onDecrypt,
   NodeRawAesMaterial,
   rawAesEncryptedDataKeyFactory,
   rawAesEncryptedPartsFactory,
-  WrappingSuiteIdentifier, // eslint-disable-line no-unused-vars
-  WrapKey, // eslint-disable-line no-unused-vars
-  UnwrapKey // eslint-disable-line no-unused-vars
+  WrappingSuiteIdentifier,
+  WrapKey,
+  UnwrapKey,
 } from '@aws-crypto/raw-keyring'
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
-const toUtf8 = (input: Uint8Array) => Buffer
-  .from(input.buffer, input.byteOffset, input.byteLength)
-  .toString('utf8')
+const toUtf8 = (input: Uint8Array) =>
+  Buffer.from(input.buffer, input.byteOffset, input.byteLength).toString('utf8')
 const { serializeEncryptionContext } = serializeFactory(fromUtf8)
-const { rawAesEncryptedDataKey } = rawAesEncryptedDataKeyFactory(toUtf8, fromUtf8)
+const { rawAesEncryptedDataKey } = rawAesEncryptedDataKeyFactory(
+  toUtf8,
+  fromUtf8
+)
 const { rawAesEncryptedParts } = rawAesEncryptedPartsFactory(fromUtf8)
 
 export type RawAesKeyringNodeInput = {
   keyNamespace: string
   keyName: string
-  unencryptedMasterKey: Uint8Array,
+  unencryptedMasterKey: Uint8Array
   wrappingSuite: WrappingSuiteIdentifier
 }
 
@@ -49,7 +48,7 @@ export class RawAesKeyringNode extends KeyringNode {
   _wrapKey!: WrapKey<NodeAlgorithmSuite>
   _unwrapKey!: UnwrapKey<NodeAlgorithmSuite>
 
-  constructor (input: RawAesKeyringNodeInput) {
+  constructor(input: RawAesKeyringNodeInput) {
     super()
 
     const { keyName, keyNamespace, unencryptedMasterKey, wrappingSuite } = input
@@ -61,7 +60,11 @@ export class RawAesKeyringNode extends KeyringNode {
        * Note: the KeyringTrace and flag are _only_ set because I am reusing an existing implementation.
        * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
        */
-      .setUnencryptedDataKey(unencryptedMasterKey, { keyNamespace, keyName, flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
+      .setUnencryptedDataKey(unencryptedMasterKey, {
+        keyNamespace,
+        keyName,
+        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+      })
 
     const _wrapKey = async (material: NodeEncryptionMaterial) => {
       /* The AAD section is uInt16BE(length) + AAD
@@ -69,25 +72,45 @@ export class RawAesKeyringNode extends KeyringNode {
        * However, the RAW Keyring wants _only_ the ADD.
        * So, I just slice off the length.
        */
-      const { buffer, byteOffset, byteLength } = serializeEncryptionContext(material.encryptionContext).slice(2)
+      const { buffer, byteOffset, byteLength } = serializeEncryptionContext(
+        material.encryptionContext
+      ).slice(2)
       const aad = Buffer.from(buffer, byteOffset, byteLength)
       const { keyNamespace, keyName } = this
 
-      return aesGcmWrapKey(keyNamespace, keyName, material, aad, wrappingMaterial)
+      return aesGcmWrapKey(
+        keyNamespace,
+        keyName,
+        material,
+        aad,
+        wrappingMaterial
+      )
     }
 
-    const _unwrapKey = async (material: NodeDecryptionMaterial, edk: EncryptedDataKey) => {
+    const _unwrapKey = async (
+      material: NodeDecryptionMaterial,
+      edk: EncryptedDataKey
+    ) => {
       const { keyNamespace, keyName } = this
       /* The AAD section is uInt16BE(length) + AAD
        * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
        * However, the RAW Keyring wants _only_ the ADD.
        * So, I just slice off the length.
        */
-      const { buffer, byteOffset, byteLength } = serializeEncryptionContext(material.encryptionContext).slice(2)
+      const { buffer, byteOffset, byteLength } = serializeEncryptionContext(
+        material.encryptionContext
+      ).slice(2)
       const aad = Buffer.from(buffer, byteOffset, byteLength)
       // const aad = Buffer.concat(encodeEncryptionContext(context || {}))
 
-      return aesGcmUnwrapKey(keyNamespace, keyName, material, wrappingMaterial, edk, aad)
+      return aesGcmUnwrapKey(
+        keyNamespace,
+        keyName,
+        material,
+        wrappingMaterial,
+        edk,
+        aad
+      )
     }
 
     readOnlyProperty(this, 'keyName', keyName)
@@ -96,18 +119,24 @@ export class RawAesKeyringNode extends KeyringNode {
     readOnlyProperty(this, '_unwrapKey', _unwrapKey)
   }
 
-  _filter ({ providerId, providerInfo }: EncryptedDataKey) {
+  _filter({ providerId, providerInfo }: EncryptedDataKey) {
     const { keyNamespace, keyName } = this
     return providerId === keyNamespace && providerInfo.startsWith(keyName)
   }
 
-  _onEncrypt = _onEncrypt<NodeAlgorithmSuite, RawAesKeyringNode>(randomBytesAsync)
+  _onEncrypt = _onEncrypt<NodeAlgorithmSuite, RawAesKeyringNode>(
+    randomBytesAsync
+  )
   _onDecrypt = _onDecrypt<NodeAlgorithmSuite, RawAesKeyringNode>()
 }
 immutableClass(RawAesKeyringNode)
 
-const encryptFlags = KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
-const decryptFlags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
+const encryptFlags =
+  KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY |
+  KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
+const decryptFlags =
+  KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY |
+  KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
 
 /**
  * Uses aes-gcm to encrypt the data key and return the passed NodeEncryptionMaterial with
@@ -119,7 +148,7 @@ const decryptFlags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringT
  * @param wrappingMaterial [NodeRawAesMaterial] The material used to decrypt the EncryptedDataKey
  * @returns [NodeEncryptionMaterial] Mutates and returns the same NodeEncryptionMaterial that was passed but with an EncryptedDataKey added
  */
-function aesGcmWrapKey (
+function aesGcmWrapKey(
   keyNamespace: string,
   keyName: string,
   material: NodeEncryptionMaterial,
@@ -132,8 +161,7 @@ function aesGcmWrapKey (
   const wrappingDataKey = wrappingMaterial.getUnencryptedDataKey()
   const dataKey = unwrapDataKey(material.getUnencryptedDataKey())
 
-  const cipher = createCipheriv(encryption, wrappingDataKey, iv)
-    .setAAD(aad)
+  const cipher = createCipheriv(encryption, wrappingDataKey, iv).setAAD(aad)
   // Buffer.concat will use the shared buffer space, and the resultant buffer will have a byteOffset...
   const ciphertext = concatBuffers(cipher.update(dataKey), cipher.final())
   const authTag = cipher.getAuthTag()
@@ -160,7 +188,7 @@ function aesGcmWrapKey (
  * @param aad [Buffer] The serialized aad (EncryptionContext)
  * @returns [NodeDecryptionMaterial] Mutates and returns the same NodeDecryptionMaterial that was passed but with the unencrypted data key set
  */
-function aesGcmUnwrapKey (
+function aesGcmUnwrapKey(
   keyNamespace: string,
   keyName: string,
   material: NodeDecryptionMaterial,
@@ -168,22 +196,33 @@ function aesGcmUnwrapKey (
   edk: EncryptedDataKey,
   aad: Buffer
 ): NodeDecryptionMaterial {
-  const { authTag, ciphertext, iv } = rawAesEncryptedParts(material.suite, keyName, edk)
+  const { authTag, ciphertext, iv } = rawAesEncryptedParts(
+    material.suite,
+    keyName,
+    edk
+  )
   const { encryption } = wrappingMaterial.suite
 
   // createDecipheriv is incorrectly typed in @types/node. It should take key: CipherKey, not key: BinaryLike
-  const decipher = createDecipheriv(encryption, wrappingMaterial.getUnencryptedDataKey() as any, iv)
+  const decipher = createDecipheriv(
+    encryption,
+    wrappingMaterial.getUnencryptedDataKey() as any,
+    iv
+  )
     .setAAD(aad)
     .setAuthTag(authTag)
   // Buffer.concat will use the shared buffer space, and the resultant buffer will have a byteOffset...
-  const unencryptedDataKey = concatBuffers(decipher.update(ciphertext), decipher.final())
+  const unencryptedDataKey = concatBuffers(
+    decipher.update(ciphertext),
+    decipher.final()
+  )
   const trace = { keyNamespace, keyName, flags: decryptFlags }
   return material.setUnencryptedDataKey(unencryptedDataKey, trace)
 }
 
-function randomBytesAsync (size: number): Promise<Buffer> {
+async function randomBytesAsync(size: number): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    randomBytes(size, (err: Error|null, buffer: Buffer) => {
+    randomBytes(size, (err: Error | null, buffer: Buffer) => {
       if (err) return reject(err)
       resolve(buffer)
     })

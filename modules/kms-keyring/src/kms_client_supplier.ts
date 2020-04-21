@@ -2,35 +2,40 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { needs } from '@aws-crypto/material-management'
-import {
-  AwsEsdkKMSInterface // eslint-disable-line no-unused-vars
-} from './kms_types'
+import { AwsEsdkKMSInterface } from './kms_types'
 
-interface KMSConstructibleNonOption<Client extends AwsEsdkKMSInterface, Config> {
-  new(config: Config) : Client
+interface KMSConstructibleNonOption<
+  Client extends AwsEsdkKMSInterface,
+  Config
+> {
+  new (config: Config): Client
 }
 
 interface KMSConstructibleOption<Client extends AwsEsdkKMSInterface, Config> {
-  new(config?: Config) : Client
+  new (config?: Config): Client
 }
 
-export type KMSConstructible<Client extends AwsEsdkKMSInterface, Config> = KMSConstructibleNonOption<Client, Config> | KMSConstructibleOption<Client, Config>
+export type KMSConstructible<Client extends AwsEsdkKMSInterface, Config> =
+  | KMSConstructibleNonOption<Client, Config>
+  | KMSConstructibleOption<Client, Config>
 
 export interface KmsClientSupplier<Client extends AwsEsdkKMSInterface> {
   /* KmsClientProvider is allowed to return undefined if, for example, user wants to exclude particular regions. */
   (region: string): Client | false
 }
 
-export function getClient<Client extends AwsEsdkKMSInterface, Config> (
+export function getClient<Client extends AwsEsdkKMSInterface, Config>(
   KMSClient: KMSConstructible<Client, Config>,
   defaultConfig?: Config
 ): KmsClientSupplier<Client> {
-  return function getKmsClient (region: string) {
+  return function getKmsClient(region: string) {
     /* a KMS alias is supported.  These do not have a region
      * in this case, the Encryption SDK should find the default region
      * or the default region needs to be supplied to this function
      */
-    const config = (region ? { ...defaultConfig, region } : { ...defaultConfig }) as Config
+    const config = (region
+      ? { ...defaultConfig, region }
+      : { ...defaultConfig }) as Config
     const client = new KMSClient(config)
 
     /* Postcondition: A region must be configured.
@@ -44,12 +49,15 @@ export function getClient<Client extends AwsEsdkKMSInterface, Config> (
   }
 }
 
-export function limitRegions<Client extends AwsEsdkKMSInterface> (
+export function limitRegions<Client extends AwsEsdkKMSInterface>(
   regions: string[],
   getClient: KmsClientSupplier<Client>
 ): KmsClientSupplier<Client> {
   /* Precondition: limitRegions requires that region be a string. */
-  needs(regions.every(r => !!r && typeof r === 'string'), 'Can only limit on region strings')
+  needs(
+    regions.every((r) => !!r && typeof r === 'string'),
+    'Can only limit on region strings'
+  )
 
   return (region: string) => {
     if (!regions.includes(region)) return false
@@ -57,12 +65,15 @@ export function limitRegions<Client extends AwsEsdkKMSInterface> (
   }
 }
 
-export function excludeRegions<Client extends AwsEsdkKMSInterface> (
+export function excludeRegions<Client extends AwsEsdkKMSInterface>(
   regions: string[],
   getClient: KmsClientSupplier<Client>
 ): KmsClientSupplier<Client> {
   /* Precondition: excludeRegions requires region be a string. */
-  needs(regions.every(r => !!r && typeof r === 'string'), 'Can only exclude on region strings')
+  needs(
+    regions.every((r) => !!r && typeof r === 'string'),
+    'Can only exclude on region strings'
+  )
 
   return (region: string) => {
     if (regions.includes(region)) return false
@@ -70,14 +81,15 @@ export function excludeRegions<Client extends AwsEsdkKMSInterface> (
   }
 }
 
-export function cacheClients<Client extends AwsEsdkKMSInterface> (
+export function cacheClients<Client extends AwsEsdkKMSInterface>(
   getClient: KmsClientSupplier<Client>
 ): KmsClientSupplier<Client> {
-  const clientsCache: {[key: string]: Client|false} = {}
+  const clientsCache: { [key: string]: Client | false } = {}
 
   return (region: string) => {
     // Do not cache until KMS has been responded in the given region
-    if (!clientsCache.hasOwnProperty(region)) return deferCache(clientsCache, region, getClient(region))
+    if (!Object.prototype.hasOwnProperty.call(clientsCache, region))
+      return deferCache(clientsCache, region, getClient(region))
     return clientsCache[region]
   }
 }
@@ -89,11 +101,11 @@ export function cacheClients<Client extends AwsEsdkKMSInterface> (
  * This does *not* mean that this call is successful,
  * only that the region is backed by a functional KMS service.
  */
-export function deferCache<Client extends AwsEsdkKMSInterface> (
-  clientsCache: {[key: string]: Client|false},
+export function deferCache<Client extends AwsEsdkKMSInterface>(
+  clientsCache: { [key: string]: Client | false },
   region: string,
-  client: Client|false
-): Client|false {
+  client: Client | false
+): Client | false {
   /* Check for early return (Postcondition): No client, then I cache false and move on. */
   if (!client) {
     clientsCache[region] = false
@@ -101,29 +113,46 @@ export function deferCache<Client extends AwsEsdkKMSInterface> (
   }
   const { encrypt, decrypt, generateDataKey } = client
 
-  return (<(keyof AwsEsdkKMSInterface)[]>['encrypt', 'decrypt', 'generateDataKey']).reduce(wrapOperation, client)
+  return ([
+    'encrypt',
+    'decrypt',
+    'generateDataKey',
+  ] as (keyof AwsEsdkKMSInterface)[]).reduce(wrapOperation, client)
 
   /* Wrap each of the operations to cache the client on response */
-  function wrapOperation (client: Client, name: keyof AwsEsdkKMSInterface): Client {
+  function wrapOperation(
+    client: Client,
+    name: keyof AwsEsdkKMSInterface
+  ): Client {
     const original = client[name]
-    client[name] = function wrappedOperation (this: Client, args: any): Promise<any> {
+    client[name] = async function wrappedOperation(
+      this: Client,
+      args: any
+    ): Promise<any> {
       // @ts-ignore (there should be a TypeScript solution for this)
       const v2vsV3Response = original.call(client, args)
-      const v2vsV3Promise = 'promise' in v2vsV3Response
-        ? v2vsV3Response.promise()
-        : v2vsV3Response
+      const v2vsV3Promise =
+        'promise' in v2vsV3Response ? v2vsV3Response.promise() : v2vsV3Response
       return v2vsV3Promise
         .then((response: any) => {
-          clientsCache[region] = Object.assign(client, { encrypt, decrypt, generateDataKey })
+          clientsCache[region] = Object.assign(client, {
+            encrypt,
+            decrypt,
+            generateDataKey,
+          })
           return response
         })
-        .catch((e: any) => {
+        .catch(async (e: any) => {
           /* Errors from a KMS contact mean that the region is "live".
            * As such the client can be cached because the problem is not with the client per se,
            * but with the request made.
            */
           if (e.$metadata && e.$metadata.httpStatusCode) {
-            clientsCache[region] = Object.assign(client, { encrypt, decrypt, generateDataKey })
+            clientsCache[region] = Object.assign(client, {
+              encrypt,
+              decrypt,
+              generateDataKey,
+            })
           }
           // The request was not successful
           return Promise.reject(e)

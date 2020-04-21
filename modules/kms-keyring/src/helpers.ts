@@ -1,74 +1,82 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { KmsClientSupplier } from './kms_client_supplier' // eslint-disable-line no-unused-vars
+import { KmsClientSupplier } from './kms_client_supplier'
 import {
-  AwsEsdkKMSInterface, // eslint-disable-line no-unused-vars
-  GenerateDataKeyResponse, // eslint-disable-line no-unused-vars
-  RequiredGenerateDataKeyResponse, // eslint-disable-line no-unused-vars
-  EncryptResponse, // eslint-disable-line no-unused-vars
-  RequiredEncryptResponse, // eslint-disable-line no-unused-vars
-  DecryptResponse, // eslint-disable-line no-unused-vars
-  RequiredDecryptResponse // eslint-disable-line no-unused-vars
+  AwsEsdkKMSInterface,
+  GenerateDataKeyResponse,
+  RequiredGenerateDataKeyResponse,
+  EncryptResponse,
+  RequiredEncryptResponse,
+  DecryptResponse,
+  RequiredDecryptResponse,
 } from './kms_types'
 import { regionFromKmsKeyArn } from './region_from_kms_key_arn'
 import {
-  EncryptionContext, // eslint-disable-line no-unused-vars
-  EncryptedDataKey, // eslint-disable-line no-unused-vars
-  needs
-} from '@aws-crypto/material-management' // eslint-disable-line no-unused-vars
+  EncryptionContext,
+  EncryptedDataKey,
+  needs,
+} from '@aws-crypto/material-management'
 
 export const KMS_PROVIDER_ID = 'aws-kms'
 
-export async function generateDataKey<Client extends AwsEsdkKMSInterface> (
+export async function generateDataKey<Client extends AwsEsdkKMSInterface>(
   clientProvider: KmsClientSupplier<Client>,
   NumberOfBytes: number,
   KeyId: string,
   EncryptionContext: EncryptionContext,
   GrantTokens?: string[]
-): Promise<RequiredGenerateDataKeyResponse|false> {
+): Promise<RequiredGenerateDataKeyResponse | false> {
   const region = regionFromKmsKeyArn(KeyId)
   const client = clientProvider(region)
 
   /* Check for early return (Postcondition): clientProvider did not return a client for generateDataKey. */
   if (!client) return false
-  const v2vsV3Response = client.generateDataKey({ KeyId, GrantTokens, NumberOfBytes, EncryptionContext })
-  const v2vsV3Promise = 'promise' in v2vsV3Response
-    ? v2vsV3Response.promise()
-    : v2vsV3Response
+  const v2vsV3Response = client.generateDataKey({
+    KeyId,
+    GrantTokens,
+    NumberOfBytes,
+    EncryptionContext,
+  })
+  const v2vsV3Promise =
+    'promise' in v2vsV3Response ? v2vsV3Response.promise() : v2vsV3Response
   const dataKey = await v2vsV3Promise
 
   return safeGenerateDataKey(dataKey)
 }
 
-export async function encrypt<Client extends AwsEsdkKMSInterface> (
+export async function encrypt<Client extends AwsEsdkKMSInterface>(
   clientProvider: KmsClientSupplier<Client>,
   Plaintext: Uint8Array,
   KeyId: string,
   EncryptionContext: EncryptionContext,
   GrantTokens?: string[]
-): Promise<RequiredEncryptResponse|false> {
+): Promise<RequiredEncryptResponse | false> {
   const region = regionFromKmsKeyArn(KeyId)
   const client = clientProvider(region)
 
   /* Check for early return (Postcondition): clientProvider did not return a client for encrypt. */
   if (!client) return false
 
-  const v2vsV3Response = client.encrypt({ KeyId, Plaintext, EncryptionContext, GrantTokens })
-  const v2vsV3Promise = 'promise' in v2vsV3Response
-    ? v2vsV3Response.promise()
-    : v2vsV3Response
+  const v2vsV3Response = client.encrypt({
+    KeyId,
+    Plaintext,
+    EncryptionContext,
+    GrantTokens,
+  })
+  const v2vsV3Promise =
+    'promise' in v2vsV3Response ? v2vsV3Response.promise() : v2vsV3Response
   const kmsEDK = await v2vsV3Promise
 
   return safeEncryptOutput(kmsEDK)
 }
 
-export async function decrypt<Client extends AwsEsdkKMSInterface> (
+export async function decrypt<Client extends AwsEsdkKMSInterface>(
   clientProvider: KmsClientSupplier<Client>,
   { providerId, providerInfo, encryptedDataKey }: EncryptedDataKey,
   EncryptionContext: EncryptionContext,
   GrantTokens?: string[]
-): Promise<RequiredDecryptResponse|false> {
+): Promise<RequiredDecryptResponse | false> {
   /* Precondition:  The EDK must be a KMS edk. */
   needs(providerId === KMS_PROVIDER_ID, 'Unsupported providerId')
   const region = regionFromKmsKeyArn(providerInfo)
@@ -76,54 +84,72 @@ export async function decrypt<Client extends AwsEsdkKMSInterface> (
   /* Check for early return (Postcondition): clientProvider did not return a client for decrypt. */
   if (!client) return false
 
-  const v2vsV3Response = client.decrypt({ CiphertextBlob: encryptedDataKey, EncryptionContext, GrantTokens })
-  const v2vsV3Promise = 'promise' in v2vsV3Response
-    ? v2vsV3Response.promise()
-    : v2vsV3Response
+  const v2vsV3Response = client.decrypt({
+    CiphertextBlob: encryptedDataKey,
+    EncryptionContext,
+    GrantTokens,
+  })
+  const v2vsV3Promise =
+    'promise' in v2vsV3Response ? v2vsV3Response.promise() : v2vsV3Response
   const dataKey = await v2vsV3Promise
 
   return safeDecryptOutput(dataKey)
 }
 
-export function kmsResponseToEncryptedDataKey ({
+export function kmsResponseToEncryptedDataKey({
   KeyId: providerInfo,
-  CiphertextBlob: encryptedDataKey
+  CiphertextBlob: encryptedDataKey,
 }: RequiredEncryptResponse) {
-  return new EncryptedDataKey({ providerId: KMS_PROVIDER_ID, providerInfo, encryptedDataKey })
+  return new EncryptedDataKey({
+    providerId: KMS_PROVIDER_ID,
+    providerInfo,
+    encryptedDataKey,
+  })
 }
 
-function safeGenerateDataKey (
+function safeGenerateDataKey(
   dataKey: GenerateDataKeyResponse
 ): RequiredGenerateDataKeyResponse {
   /* Postcondition: KMS must return serializable generate data key. */
-  needs(typeof dataKey.KeyId === 'string' &&
-    dataKey.Plaintext instanceof Uint8Array &&
-    dataKey.CiphertextBlob instanceof Uint8Array, 'Malformed KMS response.')
+  needs(
+    typeof dataKey.KeyId === 'string' &&
+      dataKey.Plaintext instanceof Uint8Array &&
+      dataKey.CiphertextBlob instanceof Uint8Array,
+    'Malformed KMS response.'
+  )
 
-  return <RequiredGenerateDataKeyResponse>safePlaintext(<RequiredGenerateDataKeyResponse>dataKey)
+  return safePlaintext(
+    dataKey as RequiredGenerateDataKeyResponse
+  ) as RequiredGenerateDataKeyResponse
 }
 
-function safeEncryptOutput (
-  dataKey: EncryptResponse
-): RequiredEncryptResponse {
+function safeEncryptOutput(dataKey: EncryptResponse): RequiredEncryptResponse {
   /* Postcondition: KMS must return serializable encrypted data key. */
-  needs(typeof dataKey.KeyId === 'string' &&
-    dataKey.CiphertextBlob instanceof Uint8Array, 'Malformed KMS response.')
+  needs(
+    typeof dataKey.KeyId === 'string' &&
+      dataKey.CiphertextBlob instanceof Uint8Array,
+    'Malformed KMS response.'
+  )
 
-  return <RequiredEncryptResponse>dataKey
+  return dataKey as RequiredEncryptResponse
 }
 
-function safeDecryptOutput (
-  dataKey: DecryptResponse
-): RequiredDecryptResponse {
+function safeDecryptOutput(dataKey: DecryptResponse): RequiredDecryptResponse {
   /* Postcondition: KMS must return usable decrypted key. */
-  needs(typeof dataKey.KeyId === 'string' &&
-    dataKey.Plaintext instanceof Uint8Array, 'Malformed KMS response.')
+  needs(
+    typeof dataKey.KeyId === 'string' &&
+      dataKey.Plaintext instanceof Uint8Array,
+    'Malformed KMS response.'
+  )
 
-  return <RequiredDecryptResponse>safePlaintext(<RequiredDecryptResponse>dataKey)
+  return safePlaintext(
+    dataKey as RequiredDecryptResponse
+  ) as RequiredDecryptResponse
 }
 
-function safePlaintext (dataKey: RequiredDecryptResponse | RequiredGenerateDataKeyResponse): RequiredDecryptResponse | RequiredGenerateDataKeyResponse {
+function safePlaintext(
+  dataKey: RequiredDecryptResponse | RequiredGenerateDataKeyResponse
+): RequiredDecryptResponse | RequiredGenerateDataKeyResponse {
   /* The KMS Client *may* return a Buffer that is not isolated.
    * i.e. the byteOffset !== 0.
    * This means that the unencrypted data key is possibly accessible to someone else.

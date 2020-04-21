@@ -15,7 +15,7 @@ import {
   MultiKeyringWebCrypto,
   encrypt,
   decrypt,
-  synchronousRandomValues
+  synchronousRandomValues,
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
@@ -25,14 +25,19 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
  * Use any method you like to get credentials into the browser.
  * See kms.webpack.config
  */
-declare const credentials: {accessKeyId: string, secretAccessKey:string, sessionToken:string }
+declare const credentials: {
+  accessKeyId: string
+  secretAccessKey: string
+  sessionToken: string
+}
 
 /* This is done to facilitate testing. */
-export async function testMultiKeyringExample () {
+export async function testMultiKeyringExample() {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
-  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+  const generatorKeyId =
+    'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
   /* Adding alternate KMS keys that can decrypt.
    * Access to kms:Encrypt is required for every CMK in keyIds.
@@ -41,7 +46,9 @@ export async function testMultiKeyringExample () {
    * In this example, I am using the same CMK.
    * This is *only* to demonstrate how the CMK ARNs are configured.
    */
-  const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
+  const keyIds = [
+    'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f',
+  ]
 
   /* Need a client provider that will inject correct credentials.
    * The credentials here are injected by webpack
@@ -63,12 +70,16 @@ export async function testMultiKeyringExample () {
     credentials: {
       accessKeyId,
       secretAccessKey,
-      sessionToken
-    }
+      sessionToken,
+    },
   })
 
   /* The KMS keyring must be configured with the desired CMKs */
-  const kmsKeyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
+  const kmsKeyring = new KmsKeyringBrowser({
+    clientProvider,
+    generatorKeyId,
+    keyIds,
+  })
 
   /* You need to specify a name
    * and a namespace for raw encryption key providers.
@@ -79,19 +90,31 @@ export async function testMultiKeyringExample () {
   const keyNamespace = 'aes-namespace'
 
   /* The wrapping suite defines the AES-GCM algorithm suite to use. */
-  const wrappingSuite = RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
+  const wrappingSuite =
+    RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
 
   // Get your plaintext master key from its storage location.
   const unencryptedMasterKey = synchronousRandomValues(32)
 
   /* The plaintext master key must be imported into a WebCrypto CryptoKey. */
-  const masterKey = await RawAesKeyringWebCrypto.importCryptoKey(unencryptedMasterKey, wrappingSuite)
+  const masterKey = await RawAesKeyringWebCrypto.importCryptoKey(
+    unencryptedMasterKey,
+    wrappingSuite
+  )
 
   /* Configure the Raw AES keyring. */
-  const aesKeyring = new RawAesKeyringWebCrypto({ keyName, keyNamespace, wrappingSuite, masterKey })
+  const aesKeyring = new RawAesKeyringWebCrypto({
+    keyName,
+    keyNamespace,
+    wrappingSuite,
+    masterKey,
+  })
 
   /* Combine the two keyrings into a multi-keyring. */
-  const keyring = new MultiKeyringWebCrypto({ generator: kmsKeyring, children: [ aesKeyring ] })
+  const keyring = new MultiKeyringWebCrypto({
+    generator: kmsKeyring,
+    children: [aesKeyring],
+  })
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
@@ -105,14 +128,16 @@ export async function testMultiKeyringExample () {
   const context = {
     stage: 'demo',
     purpose: 'simple demonstration app',
-    origin: 'us-west-2'
+    origin: 'us-west-2',
   }
 
   /* Find data to encrypt. */
   const plainText = new Uint8Array([1, 2, 3, 4, 5])
 
   /* Encrypt the data. */
-  const { result } = await encrypt(keyring, plainText, { encryptionContext: context })
+  const { result } = await encrypt(keyring, plainText, {
+    encryptionContext: context,
+  })
 
   /* Log the plain text
    * only for testing and to show that it works.
@@ -146,11 +171,10 @@ export async function testMultiKeyringExample () {
    * do not add a test that requires that all key-value pairs match.
    * Instead, verify that the key-value pairs you expect match.
    */
-  Object
-    .entries(context)
-    .forEach(([key, value]) => {
-      if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
-    })
+  Object.entries(context).forEach(([key, value]) => {
+    if (encryptionContext[key] !== value)
+      throw new Error('Encryption Context does not match expected values')
+  })
 
   /* Log the clear message
    * only for testing and to show that it works.

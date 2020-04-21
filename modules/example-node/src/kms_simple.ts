@@ -3,11 +3,12 @@
 
 import { KmsKeyringNode, encrypt, decrypt } from '@aws-crypto/client-node'
 
-export async function kmsSimpleTest () {
+export async function kmsSimpleTest() {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
-  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+  const generatorKeyId =
+    'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
   /* Adding alternate KMS keys that can decrypt.
    * Access to kms:Encrypt is required for every CMK in keyIds.
@@ -16,7 +17,9 @@ export async function kmsSimpleTest () {
    * In this example, I am using the same CMK.
    * This is *only* to demonstrate how the CMK ARNs are configured.
    */
-  const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
+  const keyIds = [
+    'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f',
+  ]
 
   /* The KMS keyring must be configured with the desired CMKs */
   const keyring = new KmsKeyringNode({ generatorKeyId, keyIds })
@@ -33,14 +36,16 @@ export async function kmsSimpleTest () {
   const context = {
     stage: 'demo',
     purpose: 'simple demonstration app',
-    origin: 'us-west-2'
+    origin: 'us-west-2',
   }
 
   /* Find data to encrypt.  A simple string. */
   const cleartext = 'asdf'
 
   /* Encrypt the data. */
-  const { result } = await encrypt(keyring, cleartext, { encryptionContext: context })
+  const { result } = await encrypt(keyring, cleartext, {
+    encryptionContext: context,
+  })
 
   /* Decrypt the data. */
   const { plaintext, messageHeader } = await decrypt(keyring, result)
@@ -55,11 +60,10 @@ export async function kmsSimpleTest () {
    * do not add a test that requires that all key-value pairs match.
    * Instead, verify that the key-value pairs you expect match.
    */
-  Object
-    .entries(context)
-    .forEach(([key, value]) => {
-      if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
-    })
+  Object.entries(context).forEach(([key, value]) => {
+    if (encryptionContext[key] !== value)
+      throw new Error('Encryption Context does not match expected values')
+  })
 
   /* Return the values so the code can be tested. */
   return { plaintext, result, cleartext, messageHeader }
