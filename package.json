@@ -111,7 +111,7 @@
     "chai-as-promised": "^7.1.1",
     "from2": "^2.3.0",
     "istanbul-instrumenter-loader": "^3.0.1",
-    "karma": "^4.4.1",
+    "karma": "^5.0.2",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^3.1.0",
     "karma-coverage-istanbul-reporter": "^2.1.1",
