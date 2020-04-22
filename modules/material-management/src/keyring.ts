@@ -4,11 +4,18 @@
 import { EncryptedDataKey } from './encrypted_data_key'
 import { immutableBaseClass, immutableClass } from './immutable_class'
 
-import { isEncryptionMaterial, isDecryptionMaterial } from './cryptographic_material'
-import { EncryptionMaterial, DecryptionMaterial, SupportedAlgorithmSuites } from './types' // eslint-disable-line no-unused-vars
+import {
+  isEncryptionMaterial,
+  isDecryptionMaterial,
+} from './cryptographic_material'
+import {
+  EncryptionMaterial,
+  DecryptionMaterial,
+  SupportedAlgorithmSuites,
+} from './types'
 import { needs } from './needs'
-import { NodeAlgorithmSuite } from './node_algorithms' // eslint-disable-line no-unused-vars
-import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms' // eslint-disable-line no-unused-vars
+import { NodeAlgorithmSuite } from './node_algorithms'
+import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 
 /*
  * This public interface to the Keyring object is provided for
@@ -18,7 +25,9 @@ import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms' // eslint-disa
  */
 
 export abstract class Keyring<S extends SupportedAlgorithmSuites> {
-  async onEncrypt (material: EncryptionMaterial<S>): Promise<EncryptionMaterial<S>> {
+  async onEncrypt(
+    material: EncryptionMaterial<S>
+  ): Promise<EncryptionMaterial<S>> {
     /* Precondition: material must be a type of isEncryptionMaterial.
      * There are several security properties that NodeEncryptionMaterial and WebCryptoEncryptionMaterial
      * posses.
@@ -36,17 +45,22 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
      * the unencrypted data key and the ability to zero the data key.
      * This is insured by returning the same material.
      */
-    needs(material === _material, 'New EncryptionMaterial instances can not be created.')
+    needs(
+      material === _material,
+      'New EncryptionMaterial instances can not be created.'
+    )
 
     /* Postcondition UNTESTED: If this keyring generated data key, it must be the right length.
      * See cryptographic_materials.ts This is handled in setUnencryptedDataKey
      * this condition is listed here to keep help keep track of important conditions
-    */
+     */
 
     return material
   }
 
-  abstract _onEncrypt(material: EncryptionMaterial<S>): Promise<EncryptionMaterial<S>>
+  abstract _onEncrypt(
+    material: EncryptionMaterial<S>
+  ): Promise<EncryptionMaterial<S>>
 
   /* NOTE: The order of EDK's passed to the onDecrypt function is a clear
    * intent on the part of the person who did the encryption.
@@ -59,7 +73,10 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
    * who called encrypt can control the order of EDK and in the
    * configuration of the KMS Keyring.
    */
-  async onDecrypt (material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[]): Promise<DecryptionMaterial<S>> {
+  async onDecrypt(
+    material: DecryptionMaterial<S>,
+    encryptedDataKeys: EncryptedDataKey[]
+  ): Promise<DecryptionMaterial<S>> {
     /* Precondition: material must be DecryptionMaterial. */
     needs(isDecryptionMaterial(material), 'Unsupported material type.')
 
@@ -67,7 +84,10 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
     if (material.hasValidKey()) return material
 
     /* Precondition: encryptedDataKeys must all be EncryptedDataKey. */
-    needs(encryptedDataKeys.every(edk => edk instanceof EncryptedDataKey), 'Unsupported EncryptedDataKey type')
+    needs(
+      encryptedDataKeys.every((edk) => edk instanceof EncryptedDataKey),
+      'Unsupported EncryptedDataKey type'
+    )
 
     const _material = await this._onDecrypt(material, encryptedDataKeys)
 
@@ -77,7 +97,10 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
      * the unencrypted data key and the ability to zero the data key.
      * This is insured by returning the same material.
      */
-    needs(material === _material, 'New DecryptionMaterial instances can not be created.')
+    needs(
+      material === _material,
+      'New DecryptionMaterial instances can not be created.'
+    )
 
     /* See cryptographic_materials.ts The length condition is handled there.
      * But the condition is important and so repeated here.
@@ -89,12 +112,17 @@ export abstract class Keyring<S extends SupportedAlgorithmSuites> {
     return material
   }
 
-  abstract _onDecrypt(material: DecryptionMaterial<S>, encryptedDataKeys: EncryptedDataKey[]): Promise<DecryptionMaterial<S>>
+  abstract _onDecrypt(
+    material: DecryptionMaterial<S>,
+    encryptedDataKeys: EncryptedDataKey[]
+  ): Promise<DecryptionMaterial<S>>
 }
 
 immutableBaseClass(Keyring)
 
 export abstract class KeyringNode extends Keyring<NodeAlgorithmSuite> {}
 immutableClass(KeyringNode)
-export abstract class KeyringWebCrypto extends Keyring<WebCryptoAlgorithmSuite> {}
+export abstract class KeyringWebCrypto extends Keyring<
+  WebCryptoAlgorithmSuite
+> {}
 immutableClass(KeyringWebCrypto)

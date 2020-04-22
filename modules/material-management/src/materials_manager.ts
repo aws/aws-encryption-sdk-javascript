@@ -1,10 +1,14 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { EncryptionRequest, DecryptionRequest } from '.' // eslint-disable-line no-unused-vars
-import { EncryptionMaterial, DecryptionMaterial, SupportedAlgorithmSuites } from './types' // eslint-disable-line no-unused-vars
-import { NodeAlgorithmSuite } from './node_algorithms' // eslint-disable-line no-unused-vars
-import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms' // eslint-disable-line no-unused-vars
+import { EncryptionRequest, DecryptionRequest } from '.'
+import {
+  EncryptionMaterial,
+  DecryptionMaterial,
+  SupportedAlgorithmSuites,
+} from './types'
+import { NodeAlgorithmSuite } from './node_algorithms'
+import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 
 /*
  * This public interface to the MaterialsManager object is provided for
@@ -26,5 +30,7 @@ export interface MaterialsManager<S extends SupportedAlgorithmSuites> {
   decryptMaterials: GetDecryptMaterials<S>
 }
 
-export interface NodeMaterialsManager extends MaterialsManager<NodeAlgorithmSuite> {}
-export interface WebCryptoMaterialsManager extends MaterialsManager<WebCryptoAlgorithmSuite> {}
+export interface NodeMaterialsManager
+  extends MaterialsManager<NodeAlgorithmSuite> {}
+export interface WebCryptoMaterialsManager
+  extends MaterialsManager<WebCryptoAlgorithmSuite> {}

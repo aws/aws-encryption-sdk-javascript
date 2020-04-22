@@ -2,30 +2,36 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-  TestVectorInfo, // eslint-disable-line no-unused-vars
-  getDecryptTestVectorIterator
+  TestVectorInfo,
+  getDecryptTestVectorIterator,
 } from './get_decrypt_test_iterator'
 import {
-  EncryptTestVectorInfo, // eslint-disable-line no-unused-vars
-  getEncryptTestVectorIterator
+  EncryptTestVectorInfo,
+  getEncryptTestVectorIterator,
 } from './get_encrypt_test_iterator'
-import { decryptMaterialsManagerNode, encryptMaterialsManagerNode } from './decrypt_materials_manager_node'
+import {
+  decryptMaterialsManagerNode,
+  encryptMaterialsManagerNode,
+} from './decrypt_materials_manager_node'
 import { decrypt, encrypt, needs } from '@aws-crypto/client-node'
 import { URL } from 'url'
 import got from 'got'
 import streamToPromise from 'stream-to-promise'
 
-const notSupportedDecryptMessages = [
-  'Not supported at this time.'
-]
+const notSupportedDecryptMessages = ['Not supported at this time.']
 
 const notSupportedEncryptMessages = [
   'frameLength out of bounds: 0 > frameLength >= 4294967295',
-  'Not supported at this time.'
+  'Not supported at this time.',
 ]
 
 // This is only viable for small streams, if we start get get larger streams, an stream equality should get written
-export async function testDecryptVector ({ name, keysInfo, plainTextStream, cipherStream }: TestVectorInfo): Promise<TestVectorResults> {
+export async function testDecryptVector({
+  name,
+  keysInfo,
+  plainTextStream,
+  cipherStream,
+}: TestVectorInfo): Promise<TestVectorResults> {
   try {
     const cmm = decryptMaterialsManagerNode(keysInfo)
     const knowGood = await streamToPromise(await plainTextStream())
@@ -38,18 +44,25 @@ export async function testDecryptVector ({ name, keysInfo, plainTextStream, ciph
 }
 
 // This is only viable for small streams, if we start get get larger streams, an stream equality should get written
-export async function testEncryptVector ({ name, keysInfo, encryptOp, plainTextData }: EncryptTestVectorInfo, decryptOracle: string): Promise<TestVectorResults> {
+export async function testEncryptVector(
+  { name, keysInfo, encryptOp, plainTextData }: EncryptTestVectorInfo,
+  decryptOracle: string
+): Promise<TestVectorResults> {
   try {
     const cmm = encryptMaterialsManagerNode(keysInfo)
-    const { result: encryptResult } = await encrypt(cmm, plainTextData, encryptOp)
+    const { result: encryptResult } = await encrypt(
+      cmm,
+      plainTextData,
+      encryptOp
+    )
 
     const decryptResponse = await got.post(decryptOracle, {
       headers: {
         'Content-Type': 'application/octet-stream',
-        'Accept': 'application/octet-stream'
+        Accept: 'application/octet-stream',
       },
       body: encryptResult,
-      responseType: 'buffer'
+      responseType: 'buffer',
     })
     needs(decryptResponse.statusCode === 200, 'decrypt failure')
     const { body } = decryptResponse
@@ -60,12 +73,17 @@ export async function testEncryptVector ({ name, keysInfo, encryptOp, plainTextD
   }
 }
 
-export async function integrationDecryptTestVectors (vectorFile: string, tolerateFailures: number = 0, testName?: string, concurrency: number = 1) {
+export async function integrationDecryptTestVectors(
+  vectorFile: string,
+  tolerateFailures = 0,
+  testName?: string,
+  concurrency = 1
+) {
   const tests = await getDecryptTestVectorIterator(vectorFile)
 
   return parallelTests(concurrency, tolerateFailures, runTest, tests)
 
-  async function runTest (test: TestVectorInfo): Promise<boolean> {
+  async function runTest(test: TestVectorInfo): Promise<boolean> {
     if (testName) {
       if (test.name !== testName) return true
     }
@@ -84,17 +102,27 @@ export async function integrationDecryptTestVectors (vectorFile: string, tolerat
   }
 }
 
-export async function integrationEncryptTestVectors (manifestFile: string, keyFile: string, decryptOracle: string, tolerateFailures: number = 0, testName?: string, concurrency: number = 1) {
+export async function integrationEncryptTestVectors(
+  manifestFile: string,
+  keyFile: string,
+  decryptOracle: string,
+  tolerateFailures = 0,
+  testName?: string,
+  concurrency = 1
+) {
   const decryptOracleUrl = new URL(decryptOracle).toString()
   const tests = await getEncryptTestVectorIterator(manifestFile, keyFile)
 
   return parallelTests(concurrency, tolerateFailures, runTest, tests)
 
-  async function runTest (test: EncryptTestVectorInfo): Promise<boolean> {
+  async function runTest(test: EncryptTestVectorInfo): Promise<boolean> {
     if (testName) {
       if (test.name !== testName) return true
     }
-    const { result, name, err } = await testEncryptVector(test, decryptOracleUrl)
+    const { result, name, err } = await testEncryptVector(
+      test,
+      decryptOracleUrl
+    )
     if (result) {
       console.log({ name, result })
       return true
@@ -110,9 +138,14 @@ export async function integrationEncryptTestVectors (manifestFile: string, keyFi
 }
 
 async function parallelTests<
-  Test extends EncryptTestVectorInfo|TestVectorInfo,
+  Test extends EncryptTestVectorInfo | TestVectorInfo,
   work extends (test: Test) => Promise<boolean>
->(max: number, tolerateFailures: number, runTest: work, tests: IterableIterator<Test>) {
+>(
+  max: number,
+  tolerateFailures: number,
+  runTest: work,
+  tests: IterableIterator<Test>
+) {
   let _resolve: (failureCount: number) => void
   const queue = new Set<Promise<void>>()
   let failureCount = 0
@@ -122,7 +155,7 @@ async function parallelTests<
     enqueue()
   })
 
-  function enqueue (): void {
+  function enqueue(): void {
     /* If there are more failures than I am willing to tolerate, stop. */
     if (failureCount > tolerateFailures) return _resolve(failureCount)
     /* Do not over-fill the queue! */
@@ -181,7 +214,7 @@ async function parallelTests<
 }
 
 interface TestVectorResults {
-  name: string,
-  result: boolean,
+  name: string
+  result: boolean
   err?: Error
 }

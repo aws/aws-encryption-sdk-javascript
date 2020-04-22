@@ -3,38 +3,54 @@
 
 import {
   KmsKeyringClass,
-  KeyRingConstructible, // eslint-disable-line no-unused-vars
-  KmsKeyringInput, // eslint-disable-line no-unused-vars
-  KMSConstructible, // eslint-disable-line no-unused-vars
-  KmsClientSupplier, // eslint-disable-line no-unused-vars
+  KeyRingConstructible,
+  KmsKeyringInput,
+  KMSConstructible,
+  KmsClientSupplier,
   getClient,
   limitRegions,
   excludeRegions,
-  cacheClients
+  cacheClients,
 } from '@aws-crypto/kms-keyring'
 import {
-  NodeAlgorithmSuite, // eslint-disable-line no-unused-vars
-  immutableClass, KeyringNode
+  NodeAlgorithmSuite,
+  immutableClass,
+  KeyringNode,
 } from '@aws-crypto/material-management-node'
-import { KMS } from 'aws-sdk' // eslint-disable-line no-unused-vars
-const getKmsClient = getClient(KMS, { customUserAgent: 'AwsEncryptionSdkJavascriptNodejs' })
+import { KMS } from 'aws-sdk'
+const getKmsClient = getClient(KMS, {
+  customUserAgent: 'AwsEncryptionSdkJavascriptNodejs',
+})
 const cacheKmsClients = cacheClients(getKmsClient)
 
 export type KmsKeyringNodeInput = Partial<KmsKeyringInput<KMS>>
-export type KMSNodeConstructible = KMSConstructible<KMS, KMS.ClientConfiguration>
+export type KMSNodeConstructible = KMSConstructible<
+  KMS,
+  KMS.ClientConfiguration
+>
 export type KmsNodeClientSupplier = KmsClientSupplier<KMS>
 
-export class KmsKeyringNode extends KmsKeyringClass(KeyringNode as KeyRingConstructible<NodeAlgorithmSuite>) {
-  constructor ({
+export class KmsKeyringNode extends KmsKeyringClass(
+  KeyringNode as KeyRingConstructible<NodeAlgorithmSuite>
+) {
+  constructor({
     clientProvider = cacheKmsClients,
     keyIds,
     generatorKeyId,
     grantTokens,
-    discovery
+    discovery,
   }: KmsKeyringNodeInput = {}) {
     super({ clientProvider, keyIds, generatorKeyId, grantTokens, discovery })
   }
 }
 immutableClass(KmsKeyringNode)
 
-export { getKmsClient, cacheKmsClients, getClient, limitRegions, excludeRegions, cacheClients, KMS }
+export {
+  getKmsClient,
+  cacheKmsClients,
+  getClient,
+  limitRegions,
+  excludeRegions,
+  cacheClients,
+  KMS,
+}

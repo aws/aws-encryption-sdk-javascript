@@ -10,7 +10,7 @@ import {
   KMS,
   getClient,
   encrypt,
-  decrypt
+  decrypt,
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
@@ -20,14 +20,19 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
  * Use any method you like to get credentials into the browser.
  * See kms.webpack.config
  */
-declare const credentials: {accessKeyId: string, secretAccessKey:string, sessionToken:string }
+declare const credentials: {
+  accessKeyId: string
+  secretAccessKey: string
+  sessionToken: string
+}
 
 /* This is done to facilitate testing. */
-export async function testKmsSimpleExample () {
+export async function testKmsSimpleExample() {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
-  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+  const generatorKeyId =
+    'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
   /* Adding alternate KMS keys that can decrypt.
    * Access to kms:Encrypt is required for every CMK in keyIds.
@@ -36,7 +41,9 @@ export async function testKmsSimpleExample () {
    * In this example, I am using the same CMK.
    * This is *only* to demonstrate how the CMK ARNs are configured.
    */
-  const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
+  const keyIds = [
+    'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f',
+  ]
 
   /* Need a client provider that will inject correct credentials.
    * The credentials here are injected by webpack from your environment bundle is created
@@ -56,12 +63,16 @@ export async function testKmsSimpleExample () {
     credentials: {
       accessKeyId,
       secretAccessKey,
-      sessionToken
-    }
+      sessionToken,
+    },
   })
 
   /* The KMS keyring must be configured with the desired CMKs */
-  const keyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
+  const keyring = new KmsKeyringBrowser({
+    clientProvider,
+    generatorKeyId,
+    keyIds,
+  })
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
@@ -75,14 +86,16 @@ export async function testKmsSimpleExample () {
   const context = {
     stage: 'demo',
     purpose: 'simple demonstration app',
-    origin: 'us-west-2'
+    origin: 'us-west-2',
   }
 
   /* Find data to encrypt. */
   const plainText = new Uint8Array([1, 2, 3, 4, 5])
 
   /* Encrypt the data. */
-  const { result } = await encrypt(keyring, plainText, { encryptionContext: context })
+  const { result } = await encrypt(keyring, plainText, {
+    encryptionContext: context,
+  })
 
   /* Log the plain text
    * only for testing and to show that it works.
@@ -109,11 +122,10 @@ export async function testKmsSimpleExample () {
    * do not add a test that requires that all key-value pairs match.
    * Instead, verify that the key-value pairs you expect match.
    */
-  Object
-    .entries(context)
-    .forEach(([key, value]) => {
-      if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
-    })
+  Object.entries(context).forEach(([key, value]) => {
+    if (encryptionContext[key] !== value)
+      throw new Error('Encryption Context does not match expected values')
+  })
 
   /* Log the clear message
    * only for testing and to show that it works.

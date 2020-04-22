@@ -1,13 +1,20 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { KmsKeyringNode, encrypt, decrypt, NodeCachingMaterialsManager, getLocalCryptographicMaterialsCache } from '@aws-crypto/client-node'
+import {
+  KmsKeyringNode,
+  encrypt,
+  decrypt,
+  NodeCachingMaterialsManager,
+  getLocalCryptographicMaterialsCache,
+} from '@aws-crypto/client-node'
 
-export async function cachingCMMNodeSimpleTest () {
+export async function cachingCMMNodeSimpleTest() {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
-  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+  const generatorKeyId =
+    'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
   /* Adding alternate KMS keys that can decrypt.
    * Access to kms:Encrypt is required for every CMK in keyIds.
@@ -21,7 +28,9 @@ export async function cachingCMMNodeSimpleTest () {
    * or omit the `keyIds` parameter.
    * This is *only* to demonstrate how the CMK ARNs are configured.
    */
-  const keyIds = ['arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f']
+  const keyIds = [
+    'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f',
+  ]
 
   /* The KMS keyring must be configured with the desired CMKs
    * This example passes the keyring to the caching CMM
@@ -75,7 +84,7 @@ export async function cachingCMMNodeSimpleTest () {
     partition,
     maxAge,
     maxBytesEncrypted,
-    maxMessagesEncrypted
+    maxMessagesEncrypted,
   })
 
   /* Encryption context is a *very* powerful tool for controlling
@@ -99,7 +108,7 @@ export async function cachingCMMNodeSimpleTest () {
   const encryptionContext = {
     stage: 'demo',
     purpose: 'simple demonstration app',
-    origin: 'us-west-2'
+    origin: 'us-west-2',
   }
 
   /* Find data to encrypt.  A simple string. */
@@ -119,7 +128,10 @@ export async function cachingCMMNodeSimpleTest () {
    * the AWS Encryption SDK uses the actual plaintext length
    * instead of any length you provide.
    */
-  const { result } = await encrypt(cachingCMM, cleartext, { encryptionContext, plaintextLength: 4 })
+  const { result } = await encrypt(cachingCMM, cleartext, {
+    encryptionContext,
+    plaintextLength: 4,
+  })
 
   /* Decrypt the data.
    * NOTE: This decrypt request will not use the data key
@@ -138,11 +150,10 @@ export async function cachingCMMNodeSimpleTest () {
    * do not include a test that requires that all key-value pairs match.
    * Instead, verify that the key-value pairs that you supplied to the `encrypt` function are included in the encryption context that the `decrypt` function returns.
    */
-  Object
-    .entries(encryptionContext)
-    .forEach(([key, value]) => {
-      if (decryptedContext[key] !== value) throw new Error('Encryption Context does not match expected values')
-    })
+  Object.entries(encryptionContext).forEach(([key, value]) => {
+    if (decryptedContext[key] !== value)
+      throw new Error('Encryption Context does not match expected values')
+  })
 
   /* Return the values so the code can be tested. */
   return { plaintext, result, cleartext, messageHeader }

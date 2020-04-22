@@ -15,7 +15,7 @@ declare const fetch: any
 const notSupportedMessages = [
   '192-bit AES keys are not supported',
   'frameLength out of bounds: 0 > frameLength >= 4294967295',
-  'Unsupported right now'
+  'Unsupported right now',
 ]
 
 const tests = __fixtures__['fixtures/encrypt_tests']
@@ -26,7 +26,7 @@ for (let i = 0, j = tests.length; i < j; i += chunk) {
   aGroup(chunk, tests.slice(i, i + chunk), decryptOracle)
 }
 
-function aGroup (groupNumber: number, tests: string[], decryptOracle: string) {
+function aGroup(groupNumber: number, tests: string[], decryptOracle: string) {
   describe(`'browser encrypt tests': ${groupNumber}`, () => {
     for (const testName of tests) {
       aTest(testName, decryptOracle)
@@ -34,7 +34,7 @@ function aGroup (groupNumber: number, tests: string[], decryptOracle: string) {
   })
 }
 
-function aTest (testName: string, decryptOracle: string) {
+function aTest(testName: string, decryptOracle: string) {
   it(testName, async () => {
     console.log(`start: ${testName}`)
     const response = await fetch(`base/fixtures/${testName}.json`)
@@ -48,9 +48,9 @@ function aTest (testName: string, decryptOracle: string) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/octet-stream',
-          'Accept': 'application/octet-stream'
+          Accept: 'application/octet-stream',
         },
-        body: result
+        body: result,
       })
       const body = await response.arrayBuffer()
       needs(response.ok, `Failed to decrypt: ${toUtf8(body)}`)

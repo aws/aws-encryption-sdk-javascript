@@ -12,7 +12,7 @@ import { needs } from '@aws-crypto/material-management'
  */
 const aliasOrKeyResourceType = /^(alias|key)(\/.*)*$/
 
-export function regionFromKmsKeyArn (kmsKeyArn: string): string {
+export function regionFromKmsKeyArn(kmsKeyArn: string): string {
   /* Precondition: A KMS key arn must be a string. */
   needs(typeof kmsKeyArn === 'string', 'KMS key arn must be a string.')
 
@@ -31,20 +31,16 @@ export function regionFromKmsKeyArn (kmsKeyArn: string): string {
    * In this case the arnLiteral should look like an alias.
    */
   needs(
-    (arnLiteral === 'arn' &&
-      partition &&
-      service === 'kms' &&
-      region) ||
-    /* Partition may or may not have a value.
-     * If the resourceType delimiter is /,
-     * it will not have a value.
-     * However if the delimiter is : it will
-     * because of the split(':')
-     */
-    (!service &&
-      !region &&
-      arnLiteral.match(aliasOrKeyResourceType)),
-    'Malformed arn.')
+    (arnLiteral === 'arn' && partition && service === 'kms' && region) ||
+      /* Partition may or may not have a value.
+       * If the resourceType delimiter is /,
+       * it will not have a value.
+       * However if the delimiter is : it will
+       * because of the split(':')
+       */
+      (!service && !region && arnLiteral.match(aliasOrKeyResourceType)),
+    'Malformed arn.'
+  )
 
   return region
 }

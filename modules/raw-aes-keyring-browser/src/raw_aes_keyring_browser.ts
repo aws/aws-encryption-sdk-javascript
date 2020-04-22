@@ -4,47 +4,54 @@
 import {
   KeyringWebCrypto,
   needs,
-  WebCryptoEncryptionMaterial, // eslint-disable-line no-unused-vars
-  WebCryptoDecryptionMaterial, // eslint-disable-line no-unused-vars
-  EncryptedDataKey, // eslint-disable-line no-unused-vars
+  WebCryptoEncryptionMaterial,
+  WebCryptoDecryptionMaterial,
+  EncryptedDataKey,
   KeyringTraceFlag,
   immutableClass,
   readOnlyProperty,
-  WebCryptoAlgorithmSuite, // eslint-disable-line no-unused-vars
+  WebCryptoAlgorithmSuite,
   getSubtleFunction,
   _importCryptoKey,
   unwrapDataKey,
   importForWebCryptoEncryptionMaterial,
   importForWebCryptoDecryptionMaterial,
-  AwsEsdkJsCryptoKey // eslint-disable-line no-unused-vars
+  AwsEsdkJsCryptoKey,
 } from '@aws-crypto/material-management-browser'
-import {
-  serializeFactory,
-  concatBuffers
-} from '@aws-crypto/serialize'
+import { serializeFactory, concatBuffers } from '@aws-crypto/serialize'
 import {
   _onEncrypt,
   _onDecrypt,
   WebCryptoRawAesMaterial,
   rawAesEncryptedDataKeyFactory,
   rawAesEncryptedPartsFactory,
-  WrappingSuiteIdentifier, // eslint-disable-line no-unused-vars
-  WrapKey, // eslint-disable-line no-unused-vars
-  UnwrapKey // eslint-disable-line no-unused-vars
+  WrappingSuiteIdentifier,
+  WrapKey,
+  UnwrapKey,
 } from '@aws-crypto/raw-keyring'
 import { fromUtf8, toUtf8 } from '@aws-sdk/util-utf8-browser'
 import { randomValuesOnly } from '@aws-crypto/random-source-browser'
-import { getWebCryptoBackend, getNonZeroByteBackend } from '@aws-crypto/web-crypto-backend'
+import {
+  getWebCryptoBackend,
+  getNonZeroByteBackend,
+} from '@aws-crypto/web-crypto-backend'
 const { serializeEncryptionContext } = serializeFactory(fromUtf8)
-const { rawAesEncryptedDataKey } = rawAesEncryptedDataKeyFactory(toUtf8, fromUtf8)
+const { rawAesEncryptedDataKey } = rawAesEncryptedDataKeyFactory(
+  toUtf8,
+  fromUtf8
+)
 const { rawAesEncryptedParts } = rawAesEncryptedPartsFactory(fromUtf8)
-const encryptFlags = KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
-const decryptFlags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY | KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
+const encryptFlags =
+  KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY |
+  KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
+const decryptFlags =
+  KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY |
+  KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
 
 export type RawAesKeyringWebCryptoInput = {
   keyNamespace: string
   keyName: string
-  masterKey: AwsEsdkJsCryptoKey,
+  masterKey: AwsEsdkJsCryptoKey
   wrappingSuite: WrappingSuiteIdentifier
 }
 
@@ -54,7 +61,7 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
   _wrapKey!: WrapKey<WebCryptoAlgorithmSuite>
   _unwrapKey!: UnwrapKey<WebCryptoAlgorithmSuite>
 
-  constructor (input: RawAesKeyringWebCryptoInput) {
+  constructor(input: RawAesKeyringWebCryptoInput) {
     super()
     const { keyName, keyNamespace, masterKey, wrappingSuite } = input
     /* Precondition: AesKeyringWebCrypto needs identifying information for encrypt and decrypt. */
@@ -65,7 +72,11 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
        * Note: the KeyringTrace and flag are _only_ set because I am reusing an existing implementation.
        * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
        */
-      .setCryptoKey(masterKey, { keyNamespace, keyName, flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
+      .setCryptoKey(masterKey, {
+        keyNamespace,
+        keyName,
+        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+      })
 
     const _wrapKey = async (material: WebCryptoEncryptionMaterial) => {
       /* The AAD section is uInt16BE(length) + AAD
@@ -73,22 +84,42 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
        * However, the RAW Keyring wants _only_ the ADD.
        * So, I just slice off the length.
        */
-      const aad = serializeEncryptionContext(material.encryptionContext).slice(2)
+      const aad = serializeEncryptionContext(material.encryptionContext).slice(
+        2
+      )
       const { keyNamespace, keyName } = this
 
-      return aesGcmWrapKey(keyNamespace, keyName, material, aad, wrappingMaterial)
+      return aesGcmWrapKey(
+        keyNamespace,
+        keyName,
+        material,
+        aad,
+        wrappingMaterial
+      )
     }
 
-    const _unwrapKey = async (material: WebCryptoDecryptionMaterial, edk: EncryptedDataKey) => {
+    const _unwrapKey = async (
+      material: WebCryptoDecryptionMaterial,
+      edk: EncryptedDataKey
+    ) => {
       /* The AAD section is uInt16BE(length) + AAD
        * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
        * However, the RAW Keyring wants _only_ the ADD.
        * So, I just slice off the length.
        */
-      const aad = serializeEncryptionContext(material.encryptionContext).slice(2)
+      const aad = serializeEncryptionContext(material.encryptionContext).slice(
+        2
+      )
       const { keyNamespace, keyName } = this
 
-      return aesGcmUnwrapKey(keyNamespace, keyName, material, wrappingMaterial, edk, aad)
+      return aesGcmUnwrapKey(
+        keyNamespace,
+        keyName,
+        material,
+        wrappingMaterial,
+        edk,
+        aad
+      )
     }
 
     readOnlyProperty(this, 'keyName', keyName)
@@ -97,12 +128,14 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
     readOnlyProperty(this, '_unwrapKey', _unwrapKey)
   }
 
-  _filter ({ providerId, providerInfo }: EncryptedDataKey) {
+  _filter({ providerId, providerInfo }: EncryptedDataKey) {
     const { keyNamespace, keyName } = this
     return providerId === keyNamespace && providerInfo.startsWith(keyName)
   }
 
-  _rawOnEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, RawAesKeyringWebCrypto>(randomValuesOnly)
+  _rawOnEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, RawAesKeyringWebCrypto>(
+    randomValuesOnly
+  )
   _onEncrypt = async (material: WebCryptoEncryptionMaterial) => {
     const _material = await this._rawOnEncrypt(material)
     return importForWebCryptoEncryptionMaterial(_material)
@@ -114,16 +147,24 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
    */
   _onDecrypt = _onDecrypt<WebCryptoAlgorithmSuite, RawAesKeyringWebCrypto>()
 
-  static async importCryptoKey (masterKey: Uint8Array, wrappingSuite: WrappingSuiteIdentifier): Promise<AwsEsdkJsCryptoKey> {
+  static async importCryptoKey(
+    masterKey: Uint8Array,
+    wrappingSuite: WrappingSuiteIdentifier
+  ): Promise<AwsEsdkJsCryptoKey> {
     needs(masterKey instanceof Uint8Array, 'Unsupported master key type.')
     const material = new WebCryptoRawAesMaterial(wrappingSuite)
       /* Precondition: masterKey must correspond to the algorithm suite specification.
-      * Note: the KeyringTrace and flag are _only_ set because I am reusing an existing implementation.
-      * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
-      */
-      .setUnencryptedDataKey(masterKey, { keyNamespace: 'importOnly', keyName: 'importOnly', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY })
-    return backendForRawAesMasterKey()
-      .then(backend => _importCryptoKey(backend.subtle, material, ['encrypt', 'decrypt']))
+       * Note: the KeyringTrace and flag are _only_ set because I am reusing an existing implementation.
+       * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
+       */
+      .setUnencryptedDataKey(masterKey, {
+        keyNamespace: 'importOnly',
+        keyName: 'importOnly',
+        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+      })
+    return backendForRawAesMasterKey().then(async (backend) =>
+      _importCryptoKey(backend.subtle, material, ['encrypt', 'decrypt'])
+    )
   }
 }
 immutableClass(RawAesKeyringWebCrypto)
@@ -138,7 +179,7 @@ immutableClass(RawAesKeyringWebCrypto)
  * @param wrappingMaterial [WebCryptoRawAesMaterial] The material used to decrypt the EncryptedDataKey
  * @returns [WebCryptoEncryptionMaterial] Mutates and returns the same WebCryptoEncryptionMaterial that was passed but with an EncryptedDataKey added
  */
-async function aesGcmWrapKey (
+async function aesGcmWrapKey(
   keyNamespace: string,
   keyName: string,
   material: WebCryptoEncryptionMaterial,
@@ -148,14 +189,31 @@ async function aesGcmWrapKey (
   const backend = await backendForRawAesMasterKey()
   const iv = await backend.randomValues(material.suite.ivLength)
 
-  const kdfGetSubtleEncrypt = getSubtleFunction(wrappingMaterial, backend, 'encrypt')
+  const kdfGetSubtleEncrypt = getSubtleFunction(
+    wrappingMaterial,
+    backend,
+    'encrypt'
+  )
   const info = new Uint8Array()
   const dataKey = unwrapDataKey(material.getUnencryptedDataKey())
   const buffer = await kdfGetSubtleEncrypt(info)(iv, aad)(dataKey)
-  const ciphertext = new Uint8Array(buffer, 0, buffer.byteLength - material.suite.tagLength / 8)
-  const authTag = new Uint8Array(buffer, buffer.byteLength - material.suite.tagLength / 8)
+  const ciphertext = new Uint8Array(
+    buffer,
+    0,
+    buffer.byteLength - material.suite.tagLength / 8
+  )
+  const authTag = new Uint8Array(
+    buffer,
+    buffer.byteLength - material.suite.tagLength / 8
+  )
 
-  const edk = rawAesEncryptedDataKey(keyNamespace, keyName, iv, ciphertext, authTag)
+  const edk = rawAesEncryptedDataKey(
+    keyNamespace,
+    keyName,
+    iv,
+    ciphertext,
+    authTag
+  )
   return material.addEncryptedDataKey(edk, encryptFlags)
 }
 
@@ -170,7 +228,7 @@ async function aesGcmWrapKey (
  * @param aad [Uint8Array] The serialized aad (EncryptionContext)
  * @returns [WebCryptoDecryptionMaterial] Mutates and returns the same WebCryptoDecryptionMaterial that was passed but with the unencrypted data key set
  */
-async function aesGcmUnwrapKey (
+async function aesGcmUnwrapKey(
   keyNamespace: string,
   keyName: string,
   material: WebCryptoDecryptionMaterial,
@@ -183,9 +241,15 @@ async function aesGcmUnwrapKey (
 
   const backend = await backendForRawAesMasterKey()
 
-  const KdfGetSubtleDecrypt = getSubtleFunction(wrappingMaterial, backend, 'decrypt')
+  const KdfGetSubtleDecrypt = getSubtleFunction(
+    wrappingMaterial,
+    backend,
+    'decrypt'
+  )
   const info = new Uint8Array()
-  const buffer = await KdfGetSubtleDecrypt(info)(iv, aad)(concatBuffers(ciphertext, authTag))
+  const buffer = await KdfGetSubtleDecrypt(info)(iv, aad)(
+    concatBuffers(ciphertext, authTag)
+  )
   const trace = { keyNamespace, keyName, flags: decryptFlags }
   material.setUnencryptedDataKey(new Uint8Array(buffer), trace)
   return importForWebCryptoDecryptionMaterial(material)
@@ -200,7 +264,7 @@ async function aesGcmUnwrapKey (
  * from the native implementation than a JS implementation.
  * So I *force* the master key to be stored in the native implementation **only**.
  */
-async function backendForRawAesMasterKey () {
+async function backendForRawAesMasterKey() {
   const backend = await getWebCryptoBackend()
   const { randomValues } = backend
   const subtle = getNonZeroByteBackend(backend)

@@ -20,36 +20,36 @@
 export const ENCODED_SIGNER_KEY = 'aws-crypto-public-key'
 
 export enum SerializationVersion {
-  V1 = 1 // eslint-disable-line no-unused-vars
+  V1 = 1,
 }
 Object.freeze(SerializationVersion)
 
 export enum ContentType {
-  NO_FRAMING = 1, // eslint-disable-line no-unused-vars
-  FRAMED_DATA = 2 // eslint-disable-line no-unused-vars
+  NO_FRAMING = 1,
+  FRAMED_DATA = 2,
 }
 Object.freeze(ContentType)
 
 export enum ContentAADString {
-  FRAME_STRING_ID = 'AWSKMSEncryptionClient Frame', // eslint-disable-line no-unused-vars
-  FINAL_FRAME_STRING_ID = 'AWSKMSEncryptionClient Final Frame', // eslint-disable-line no-unused-vars
-  NON_FRAMED_STRING_ID = 'AWSKMSEncryptionClient Single Block', // eslint-disable-line no-unused-vars
+  FRAME_STRING_ID = 'AWSKMSEncryptionClient Frame',
+  FINAL_FRAME_STRING_ID = 'AWSKMSEncryptionClient Final Frame',
+  NON_FRAMED_STRING_ID = 'AWSKMSEncryptionClient Single Block',
 }
 Object.freeze(ContentAADString)
 
 export enum ObjectType {
-  CUSTOMER_AE_DATA = 128 // eslint-disable-line no-unused-vars
+  CUSTOMER_AE_DATA = 128,
 }
 Object.freeze(ObjectType)
 
 export enum SequenceIdentifier {
-  SEQUENCE_NUMBER_END = 0xFFFFFFFF // eslint-disable-line no-unused-vars
+  SEQUENCE_NUMBER_END = 0xffffffff,
 }
 Object.freeze(SequenceIdentifier)
 
 export enum Maximum {
   // Maximum number of messages which are allowed to be encrypted under a single cached data key
-  MESSAGES_PER_CACHED_KEY_LIMIT = 2 ** 32, // eslint-disable-line no-unused-vars
+  MESSAGES_PER_CACHED_KEY_LIMIT = 2 ** 32,
   /* Maximum number of bytes that are allowed to be encrypted
    * under a single cached data key across messages.
    * The maximum value defined in the AWS Encryption SDK specification is 2 ** 63 - 1.
@@ -67,22 +67,22 @@ export enum Maximum {
    * This is because in the future Number.MAX_SAFE_INTEGER could be raised to 2 ** 66
    * or some value larger 2 ** 63.
    */
-  BYTES_PER_CACHED_KEY_LIMIT = 2 ** 53 - 1, // eslint-disable-line no-unused-vars
+  BYTES_PER_CACHED_KEY_LIMIT = 2 ** 53 - 1,
   /* This value should be Maximum.FRAME_COUNT * Maximum.FRAME_SIZE.
    * However this would be ~ 2 ** 64, much larger than Number.MAX_SAFE_INTEGER.
    * For the same reasons outlined above in BYTES_PER_CACHED_KEY_LIMIT
    * this value is set to 2 ** 53 - 1.
    */
-  BYTES_PER_MESSAGE = 2 ** 53 - 1, // eslint-disable-line no-unused-vars
+  BYTES_PER_MESSAGE = 2 ** 53 - 1,
   // Maximum number of frames allowed in one message as defined in specification
-  FRAME_COUNT = 2 ** 32 - 1, // eslint-disable-line no-unused-vars
+  FRAME_COUNT = 2 ** 32 - 1,
   // Maximum bytes allowed in a single frame as defined in specification
-  FRAME_SIZE = 2 ** 32 - 1, // eslint-disable-line no-unused-vars
+  FRAME_SIZE = 2 ** 32 - 1,
   // Maximum bytes allowed in a non-framed message ciphertext as defined in specification
-  GCM_CONTENT_SIZE = 2 ** 32 - 1, // eslint-disable-line no-unused-vars
-  NON_FRAMED_SIZE = 2 ** 32 - 1, // eslint-disable-line no-unused-vars
+  GCM_CONTENT_SIZE = 2 ** 32 - 1,
+  NON_FRAMED_SIZE = 2 ** 32 - 1,
   // Maximum number of AAD bytes allowed as defined in specification
-  AAD_BYTE_SIZE = 2 ** 16 - 1, // eslint-disable-line no-unused-vars
+  AAD_BYTE_SIZE = 2 ** 16 - 1,
 }
 Object.freeze(Maximum)
 

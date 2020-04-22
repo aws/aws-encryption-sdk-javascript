@@ -13,7 +13,7 @@ declare const fetch: any
 
 const notSupportedMessages = [
   '192-bit AES keys are not supported',
-  'Unsupported right now'
+  'Unsupported right now',
 ]
 
 const tests: string[] = __fixtures__['fixtures/decrypt_tests']
@@ -23,7 +23,7 @@ for (let i = 0, j = tests.length; i < j; i += chunk) {
   aGroup(chunk, tests.slice(i, i + chunk))
 }
 
-function aGroup (groupNumber: number, tests: string[]) {
+function aGroup(groupNumber: number, tests: string[]) {
   describe(`browser decryption vectors: ${groupNumber}`, () => {
     for (const testName of tests) {
       aTest(testName)
@@ -31,7 +31,7 @@ function aGroup (groupNumber: number, tests: string[]) {
   })
 }
 
-function aTest (testName: string) {
+function aTest(testName: string) {
   it(testName, async () => {
     console.log(`start: ${testName}`)
     const response = await fetch(`base/fixtures/${testName}.json`)

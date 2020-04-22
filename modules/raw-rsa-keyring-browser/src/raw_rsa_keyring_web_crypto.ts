@@ -4,10 +4,10 @@
 import {
   KeyringWebCrypto,
   needs,
-  WebCryptoEncryptionMaterial, // eslint-disable-line no-unused-vars
-  WebCryptoDecryptionMaterial, // eslint-disable-line no-unused-vars
+  WebCryptoEncryptionMaterial,
+  WebCryptoDecryptionMaterial,
   EncryptedDataKey,
-  KeyringTrace, // eslint-disable-line no-unused-vars
+  KeyringTrace,
   KeyringTraceFlag,
   immutableClass,
   readOnlyProperty,
@@ -15,25 +15,29 @@ import {
   keyUsageForMaterial,
   importForWebCryptoEncryptionMaterial,
   unwrapDataKey,
-  MixedBackendCryptoKey, // eslint-disable-line no-unused-vars
-  WebCryptoAlgorithmSuite, // eslint-disable-line no-unused-vars
-  AwsEsdkJsCryptoKey // eslint-disable-line no-unused-vars
+  MixedBackendCryptoKey,
+  WebCryptoAlgorithmSuite,
+  AwsEsdkJsCryptoKey,
 } from '@aws-crypto/material-management-browser'
 
 import {
   getWebCryptoBackend,
   getNonZeroByteBackend,
-  isFullSupportWebCryptoBackend
+  isFullSupportWebCryptoBackend,
 } from '@aws-crypto/web-crypto-backend'
 import {
   _onEncrypt,
   _onDecrypt,
-  WrapKey, // eslint-disable-line no-unused-vars
-  UnwrapKey // eslint-disable-line no-unused-vars
+  WrapKey,
+  UnwrapKey,
 } from '@aws-crypto/raw-keyring'
 import { randomValuesOnly } from '@aws-crypto/random-source-browser'
-import { RawRsaKeyringWebCryptoInput, RsaImportableKey } from './types' // eslint-disable-line no-unused-vars
-import { getImportOptions, getWrappingAlgorithm, flattenMixedCryptoKey } from './get_import_options'
+import { RawRsaKeyringWebCryptoInput, RsaImportableKey } from './types'
+import {
+  getImportOptions,
+  getWrappingAlgorithm,
+  flattenMixedCryptoKey,
+} from './get_import_options'
 
 export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
   public keyNamespace!: string
@@ -41,7 +45,7 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
   _wrapKey!: WrapKey<WebCryptoAlgorithmSuite>
   _unwrapKey!: UnwrapKey<WebCryptoAlgorithmSuite>
 
-  constructor (input: RawRsaKeyringWebCryptoInput) {
+  constructor(input: RawRsaKeyringWebCryptoInput) {
     super()
 
     const { publicKey, privateKey, keyName, keyNamespace } = input
@@ -54,7 +58,8 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
 
     const _wrapKey = async (material: WebCryptoEncryptionMaterial) => {
       /* Precondition: I must have a publicKey to wrap. */
-      if (!publicKey) throw new Error('No publicKey configured, encrypt not supported.')
+      if (!publicKey)
+        throw new Error('No publicKey configured, encrypt not supported.')
 
       // The nonZero backend is used because some browsers support Subtle Crypto
       // but do not support Zero Byte AES-GCM. I want to use the native
@@ -69,19 +74,33 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
       const importFormat = 'jwk'
       const keyUsages: KeyUsage[] = ['wrapKey'] // limit the use of this key (*not* decrypt, encrypt, deriveKey)
       const jwk = bytes2JWK(unwrapDataKey(material.getUnencryptedDataKey()))
-      const cryptoKey = await subtle.importKey(importFormat, jwk, encryption, extractable, keyUsages)
+      const cryptoKey = await subtle.importKey(
+        importFormat,
+        jwk,
+        encryption,
+        extractable,
+        keyUsages
+      )
 
       const wrapFormat = 'raw'
-      const encryptedArrayBuffer = await subtle.wrapKey(wrapFormat, cryptoKey, publicKey, wrappingAlgorithm)
+      const encryptedArrayBuffer = await subtle.wrapKey(
+        wrapFormat,
+        cryptoKey,
+        publicKey,
+        wrappingAlgorithm
+      )
 
       // Can the extractable setting of cryptoKey be changed to false here?  If so, do it.
       const edk = new EncryptedDataKey({
         providerId: keyNamespace,
         providerInfo: keyName,
-        encryptedDataKey: new Uint8Array(encryptedArrayBuffer)
+        encryptedDataKey: new Uint8Array(encryptedArrayBuffer),
       })
 
-      return material.addEncryptedDataKey(edk, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+      return material.addEncryptedDataKey(
+        edk,
+        KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
+      )
     }
 
     /* returns either an array of 1 CryptoKey or an array of both from MixedBackendCryptoKey e.g.
@@ -89,16 +108,20 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
      */
     const privateKeys = flattenMixedCryptoKey(privateKey)
 
-    const _unwrapKey = async (material: WebCryptoDecryptionMaterial, edk: EncryptedDataKey) => {
+    const _unwrapKey = async (
+      material: WebCryptoDecryptionMaterial,
+      edk: EncryptedDataKey
+    ) => {
       /* Precondition: I must have a privateKey to unwrap. */
-      if (!privateKey) throw new Error('No privateKey configured, decrypt not supported.')
+      if (!privateKey)
+        throw new Error('No privateKey configured, decrypt not supported.')
       const backend = await getWebCryptoBackend()
       const { suite } = material
 
       const trace: KeyringTrace = {
         keyName: this.keyName,
         keyNamespace: this.keyNamespace,
-        flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
+        flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
       }
 
       const format = 'raw'
@@ -106,14 +129,14 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
       const algorithm = suite.kdf ? suite.kdf : suite.encryption
       const keyUsages = [keyUsageForMaterial(material)]
 
-      const importArgs:Parameters<SubtleCrypto['unwrapKey']> = [
+      const importArgs: Parameters<SubtleCrypto['unwrapKey']> = [
         format,
         edk.encryptedDataKey,
         privateKeys[0],
         wrappingAlgorithm,
         algorithm,
         extractable,
-        keyUsages
+        keyUsages,
       ]
 
       /* This is superior to importForWebCryptoDecryptionMaterial.
@@ -124,12 +147,17 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
         const cryptoKey = await backend.subtle.unwrapKey(...importArgs)
         return material.setCryptoKey(cryptoKey, trace)
       } else {
-        const importZeroBackend = <Parameters<SubtleCrypto['unwrapKey']>>[...importArgs]
+        const importZeroBackend = [...importArgs] as Parameters<
+          SubtleCrypto['unwrapKey']
+        >
         importZeroBackend[2] = privateKeys[1]
         const mixedDataKey: MixedBackendCryptoKey = await Promise.all([
           backend.nonZeroByteSubtle.unwrapKey(...importArgs),
-          backend.zeroByteSubtle.unwrapKey(...importZeroBackend)
-        ]).then(([nonZeroByteCryptoKey, zeroByteCryptoKey]) => ({ nonZeroByteCryptoKey, zeroByteCryptoKey }))
+          backend.zeroByteSubtle.unwrapKey(...importZeroBackend),
+        ]).then(([nonZeroByteCryptoKey, zeroByteCryptoKey]) => ({
+          nonZeroByteCryptoKey,
+          zeroByteCryptoKey,
+        }))
         return material.setCryptoKey(mixedDataKey, trace)
       }
     }
@@ -140,12 +168,14 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
     readOnlyProperty(this, '_unwrapKey', _unwrapKey)
   }
 
-  _filter ({ providerId, providerInfo }: EncryptedDataKey) {
+  _filter({ providerId, providerInfo }: EncryptedDataKey) {
     const { keyNamespace, keyName } = this
     return providerId === keyNamespace && providerInfo.startsWith(keyName)
   }
 
-  _rawOnEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, RawRsaKeyringWebCrypto>(randomValuesOnly)
+  _rawOnEncrypt = _onEncrypt<WebCryptoAlgorithmSuite, RawRsaKeyringWebCrypto>(
+    randomValuesOnly
+  )
   _onEncrypt = async (material: WebCryptoEncryptionMaterial) => {
     const _material = await this._rawOnEncrypt(material)
     return importForWebCryptoEncryptionMaterial(_material)
@@ -157,24 +187,45 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
    */
   _onDecrypt = _onDecrypt<WebCryptoAlgorithmSuite, RawRsaKeyringWebCrypto>()
 
-  static async importPublicKey (publicKey: RsaImportableKey): Promise<AwsEsdkJsCryptoKey> {
+  static async importPublicKey(
+    publicKey: RsaImportableKey
+  ): Promise<AwsEsdkJsCryptoKey> {
     const { wrappingAlgorithm, format, key } = getImportOptions(publicKey)
     const backend = await getWebCryptoBackend()
     const subtle = getNonZeroByteBackend(backend)
     return subtle.importKey(format, key, wrappingAlgorithm, false, ['wrapKey'])
   }
 
-  static async importPrivateKey (privateKey: RsaImportableKey): Promise<AwsEsdkJsCryptoKey|MixedBackendCryptoKey> {
+  static async importPrivateKey(
+    privateKey: RsaImportableKey
+  ): Promise<AwsEsdkJsCryptoKey | MixedBackendCryptoKey> {
     const { wrappingAlgorithm, format, key } = getImportOptions(privateKey)
     const backend = await getWebCryptoBackend()
 
     if (isFullSupportWebCryptoBackend(backend)) {
-      return backend.subtle.importKey(format, key, wrappingAlgorithm, false, ['unwrapKey'])
+      return backend.subtle.importKey(format, key, wrappingAlgorithm, false, [
+        'unwrapKey',
+      ])
     } else {
       return Promise.all([
-        backend.nonZeroByteSubtle.importKey(format, key, wrappingAlgorithm, false, ['unwrapKey']),
-        backend.zeroByteSubtle.importKey(format, key, wrappingAlgorithm, false, ['unwrapKey'])
-      ]).then(([nonZeroByteCryptoKey, zeroByteCryptoKey]) => ({ nonZeroByteCryptoKey, zeroByteCryptoKey }))
+        backend.nonZeroByteSubtle.importKey(
+          format,
+          key,
+          wrappingAlgorithm,
+          false,
+          ['unwrapKey']
+        ),
+        backend.zeroByteSubtle.importKey(
+          format,
+          key,
+          wrappingAlgorithm,
+          false,
+          ['unwrapKey']
+        ),
+      ]).then(([nonZeroByteCryptoKey, zeroByteCryptoKey]) => ({
+        nonZeroByteCryptoKey,
+        zeroByteCryptoKey,
+      }))
     }
   }
 }

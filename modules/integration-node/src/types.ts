@@ -1,25 +1,25 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { EncryptionContext } from '@aws-crypto/client-node' // eslint-disable-line no-unused-vars
+import { EncryptionContext } from '@aws-crypto/client-node'
 
 export interface DecryptManifestList {
   manifest: DecryptManifest
   client: Client
   keys: string
-  tests: {[testName: string]: DecryptTest}
+  tests: { [testName: string]: DecryptTest }
 }
 
 export interface EncryptManifestList {
   manifest: EncryptManifest
   keys: string
-  plaintexts: {[name: string]: number}
-  tests: {[testName: string]: EncryptTest}
+  plaintexts: { [name: string]: number }
+  tests: { [testName: string]: EncryptTest }
 }
 
 export interface KeyList {
   manifest: Manifest
-  keys: {[key: string]: (KMSKey|AESKey|RSAKey)}
+  keys: { [key: string]: KMSKey | AESKey | RSAKey }
 }
 
 interface Manifest {
@@ -41,21 +41,21 @@ interface Client {
 }
 
 interface KeyInfo {
-  type: 'aws-kms'|'raw'
+  type: 'aws-kms' | 'raw'
   key: string
 }
 
 interface RawKeyInfo extends KeyInfo {
-  type: 'raw',
+  type: 'raw'
   'provider-id': string
-  'encryption-algorithm': 'aes'|'rsa',
-  'padding-algorithm': 'pkcs1'|'oaep-mgf1'|null
+  'encryption-algorithm': 'aes' | 'rsa'
+  'padding-algorithm': 'pkcs1' | 'oaep-mgf1' | null
 }
 
 export interface RsaKeyInfo extends RawKeyInfo {
-  'encryption-algorithm': 'rsa',
-  'padding-algorithm': 'pkcs1'|'oaep-mgf1'
-  'padding-hash'?: 'sha1'|'sha256'|'sha384'|'sha512'
+  'encryption-algorithm': 'rsa'
+  'padding-algorithm': 'pkcs1' | 'oaep-mgf1'
+  'padding-hash'?: 'sha1' | 'sha256' | 'sha384' | 'sha512'
 }
 
 export interface AesKeyInfo extends RawKeyInfo {
@@ -73,18 +73,18 @@ interface EncryptTest {
   algorithm: string
   'frame-size': number
   'encryption-context': EncryptionContext
-  'master-keys': (RsaKeyInfo|AesKeyInfo|KmsKeyInfo)[]
+  'master-keys': (RsaKeyInfo | AesKeyInfo | KmsKeyInfo)[]
 }
 
 interface DecryptTest {
   plaintext: string
   ciphertext: string
-  'master-keys': (RsaKeyInfo|AesKeyInfo|KmsKeyInfo)[]
+  'master-keys': (RsaKeyInfo | AesKeyInfo | KmsKeyInfo)[]
 }
 
 interface Key {
-  'encrypt': boolean
-  'decrypt': boolean
+  encrypt: boolean
+  decrypt: boolean
   'key-id': string
 }
 
@@ -98,7 +98,7 @@ interface RawKey extends Key {
 
 export interface RSAKey extends RawKey {
   algorithm: 'rsa'
-  type: 'public'|'private'
+  type: 'public' | 'private'
   bits: number
   encoding: 'pem'
   material: string
@@ -117,4 +117,7 @@ export interface KMSKey extends Key {
   'key-id': string
 }
 
-export type KeyInfoTuple = [RsaKeyInfo, RSAKey] | [AesKeyInfo, AESKey] | [KmsKeyInfo, KMSKey]
+export type KeyInfoTuple =
+  | [RsaKeyInfo, RSAKey]
+  | [AesKeyInfo, AESKey]
+  | [KmsKeyInfo, KMSKey]

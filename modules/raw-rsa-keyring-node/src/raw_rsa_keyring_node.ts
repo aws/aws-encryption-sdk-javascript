@@ -4,16 +4,16 @@
 import {
   KeyringNode,
   needs,
-  NodeEncryptionMaterial, // eslint-disable-line no-unused-vars
-  NodeDecryptionMaterial, // eslint-disable-line no-unused-vars
+  NodeEncryptionMaterial,
+  NodeDecryptionMaterial,
   EncryptedDataKey,
-  KeyringTrace, // eslint-disable-line no-unused-vars
+  KeyringTrace,
   KeyringTraceFlag,
   immutableClass,
   readOnlyProperty,
   unwrapDataKey,
-  AwsEsdkKeyObject, // eslint-disable-line no-unused-vars
-  NodeAlgorithmSuite // eslint-disable-line no-unused-vars
+  AwsEsdkKeyObject,
+  NodeAlgorithmSuite,
 } from '@aws-crypto/material-management-node'
 
 import {
@@ -21,15 +21,15 @@ import {
   publicEncrypt,
   privateDecrypt,
   randomBytes,
-  RsaPublicKey, // eslint-disable-line no-unused-vars
-  RsaPrivateKey // eslint-disable-line no-unused-vars
+  RsaPublicKey,
+  RsaPrivateKey,
 } from 'crypto'
 
 import {
   _onEncrypt,
   _onDecrypt,
-  WrapKey, // eslint-disable-line no-unused-vars
-  UnwrapKey // eslint-disable-line no-unused-vars
+  WrapKey,
+  UnwrapKey,
 } from '@aws-crypto/raw-keyring'
 
 import { oaepHashSupported } from './oaep_hash_supported'
@@ -49,8 +49,14 @@ interface RsaKey {
   privateKey?: string | Buffer | AwsEsdkKeyObject
 }
 
-export type OaepHash = 'sha1'|'sha256'|'sha384'|'sha512'|undefined
-const supportedOaepHash: OaepHash[] = ['sha1', 'sha256', 'sha384', 'sha512', undefined]
+export type OaepHash = 'sha1' | 'sha256' | 'sha384' | 'sha512' | undefined
+const supportedOaepHash: OaepHash[] = [
+  'sha1',
+  'sha256',
+  'sha384',
+  'sha512',
+  undefined,
+]
 
 export type RawRsaKeyringNodeInput = {
   keyNamespace: string
@@ -66,51 +72,77 @@ export class RawRsaKeyringNode extends KeyringNode {
   _wrapKey!: WrapKey<NodeAlgorithmSuite>
   _unwrapKey!: UnwrapKey<NodeAlgorithmSuite>
 
-  constructor (input: RawRsaKeyringNodeInput) {
+  constructor(input: RawRsaKeyringNodeInput) {
     super()
 
-    const { rsaKey, keyName, keyNamespace, padding = constants.RSA_PKCS1_OAEP_PADDING, oaepHash } = input
+    const {
+      rsaKey,
+      keyName,
+      keyNamespace,
+      padding = constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash,
+    } = input
     const { publicKey, privateKey } = rsaKey
     /* Precondition: RsaKeyringNode needs either a public or a private key to operate. */
     needs(publicKey || privateKey, 'No Key provided.')
     /* Precondition: RsaKeyringNode needs identifying information for encrypt and decrypt. */
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
     /* Precondition: The AWS ESDK only supports specific hash values for OAEP padding. */
-    needs(padding === constants.RSA_PKCS1_OAEP_PADDING
-      ? oaepHashSupported
-        ? supportedOaepHash.includes(oaepHash)
-        : !oaepHash || oaepHash === 'sha1'
-      : !oaepHash, 'Unsupported oaepHash')
+    needs(
+      padding === constants.RSA_PKCS1_OAEP_PADDING
+        ? oaepHashSupported
+          ? supportedOaepHash.includes(oaepHash)
+          : !oaepHash || oaepHash === 'sha1'
+        : !oaepHash,
+      'Unsupported oaepHash'
+    )
 
     const _wrapKey = async (material: NodeEncryptionMaterial) => {
       /* Precondition: Public key must be defined to support encrypt. */
-      if (!publicKey) throw new Error('No public key defined in constructor.  Encrypt disabled.')
-      const { buffer, byteOffset, byteLength } = unwrapDataKey(material.getUnencryptedDataKey())
+      if (!publicKey)
+        throw new Error(
+          'No public key defined in constructor.  Encrypt disabled.'
+        )
+      const { buffer, byteOffset, byteLength } = unwrapDataKey(
+        material.getUnencryptedDataKey()
+      )
       const encryptedDataKey = publicEncrypt(
         { key: publicKey, padding, oaepHash } as RsaPublicKey,
-        Buffer.from(buffer, byteOffset, byteLength))
+        Buffer.from(buffer, byteOffset, byteLength)
+      )
       const providerInfo = this.keyName
       const providerId = this.keyNamespace
       const flag = KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
-      const edk = new EncryptedDataKey({ encryptedDataKey, providerInfo, providerId })
+      const edk = new EncryptedDataKey({
+        encryptedDataKey,
+        providerInfo,
+        providerId,
+      })
       return material.addEncryptedDataKey(edk, flag)
     }
 
-    const _unwrapKey = async (material: NodeDecryptionMaterial, edk: EncryptedDataKey) => {
+    const _unwrapKey = async (
+      material: NodeDecryptionMaterial,
+      edk: EncryptedDataKey
+    ) => {
       /* Precondition: Private key must be defined to support decrypt. */
-      if (!privateKey) throw new Error('No private key defined in constructor.  Decrypt disabled.')
+      if (!privateKey)
+        throw new Error(
+          'No private key defined in constructor.  Decrypt disabled.'
+        )
 
       const trace: KeyringTrace = {
         keyName: this.keyName,
         keyNamespace: this.keyNamespace,
-        flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
+        flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
       }
 
       const { buffer, byteOffset, byteLength } = edk.encryptedDataKey
       const encryptedDataKey = Buffer.from(buffer, byteOffset, byteLength)
       const unencryptedDataKey = privateDecrypt(
         { key: privateKey, padding, oaepHash } as RsaPrivateKey,
-        encryptedDataKey)
+        encryptedDataKey
+      )
       return material.setUnencryptedDataKey(unencryptedDataKey, trace)
     }
 
@@ -120,19 +152,21 @@ export class RawRsaKeyringNode extends KeyringNode {
     readOnlyProperty(this, '_unwrapKey', _unwrapKey)
   }
 
-  _filter ({ providerId, providerInfo }: EncryptedDataKey) {
+  _filter({ providerId, providerInfo }: EncryptedDataKey) {
     const { keyNamespace, keyName } = this
     return providerId === keyNamespace && providerInfo === keyName
   }
 
-  _onEncrypt = _onEncrypt<NodeAlgorithmSuite, RawRsaKeyringNode>(randomBytesAsync)
+  _onEncrypt = _onEncrypt<NodeAlgorithmSuite, RawRsaKeyringNode>(
+    randomBytesAsync
+  )
   _onDecrypt = _onDecrypt<NodeAlgorithmSuite, RawRsaKeyringNode>()
 }
 immutableClass(RawRsaKeyringNode)
 
-function randomBytesAsync (size: number): Promise<Buffer> {
+async function randomBytesAsync(size: number): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    randomBytes(size, (err: Error|null, buffer: Buffer) => {
+    randomBytes(size, (err: Error | null, buffer: Buffer) => {
       if (err) return reject(err)
       resolve(buffer)
     })

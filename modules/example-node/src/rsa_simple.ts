@@ -11,7 +11,7 @@ const generateKeyPairAsync = promisify(generateKeyPair)
  * This function is an example of using the RsaKeyringNode
  * to encrypt and decrypt a simple string
  */
-export async function rsaTest () {
+export async function rsaTest() {
   /* You need to specify a name
    * and a namespace for raw encryption key providers.
    * The name and namespace that you use in the decryption keyring *must* be an exact,
@@ -40,14 +40,16 @@ export async function rsaTest () {
   const context = {
     stage: 'demo',
     purpose: 'simple demonstration app',
-    origin: 'us-west-2'
+    origin: 'us-west-2',
   }
 
   /* Find data to encrypt.  A simple string. */
   const cleartext = 'asdf'
 
   /* Encrypt the data. */
-  const { result } = await encrypt(keyring, cleartext, { encryptionContext: context })
+  const { result } = await encrypt(keyring, cleartext, {
+    encryptionContext: context,
+  })
   /* Decrypt the data. */
   const { plaintext, messageHeader } = await decrypt(keyring, result)
 
@@ -61,11 +63,10 @@ export async function rsaTest () {
    * do not add a test that requires that all key-value pairs match.
    * Instead, verify that the key-value pairs you expect match.
    */
-  Object
-    .entries(context)
-    .forEach(([key, value]) => {
-      if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
-    })
+  Object.entries(context).forEach(([key, value]) => {
+    if (encryptionContext[key] !== value)
+      throw new Error('Encryption Context does not match expected values')
+  })
 
   /* Return the values so the code can be tested. */
   return { plaintext, result, cleartext }
@@ -74,7 +75,7 @@ export async function rsaTest () {
 /**
  * This is a helper function to generate an RSA key pair for testing purposes only.
  */
-async function generateRsaKeys () {
+async function generateRsaKeys() {
   const modulusLength = 3072
   const publicKeyEncoding = { type: 'pkcs1', format: 'pem' }
   const privateKeyEncoding = { type: 'pkcs1', format: 'pem' }
@@ -82,6 +83,6 @@ async function generateRsaKeys () {
   return generateKeyPairAsync('rsa', {
     modulusLength,
     publicKeyEncoding,
-    privateKeyEncoding
+    privateKeyEncoding,
   })
 }

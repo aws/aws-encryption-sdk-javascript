@@ -4,7 +4,9 @@
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
-    "lint": "standard src/*.ts test/**/*.ts",
+    "lint": "run-s lint-*",
+    "lint-eslint": "eslint src/*.ts test/**/*.ts",
+    "lint-prettier": "prettier -c src/*.ts test/**/*.ts",
     "karma": "karma start karma.conf.js",
     "test": "npm run lint && npm run coverage",
     "coverage": "npm run karma && nyc report --exclude-after-remap false -t .karma_output --check-coverage"
@@ -30,11 +32,5 @@
   "types": "./build/main/index.d.ts",
   "files": [
     "build/**/*"
-  ],
-  "standard": {
-    "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "@typescript-eslint"
-    ]
-  }
+  ]
 }

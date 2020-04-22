@@ -12,7 +12,9 @@
   "version": "1.0.5",
   "scripts": {
     "build": "tsc -b tsconfig.json",
-    "lint": "standard src/*.ts test/**/*.ts"
+    "lint": "run-s lint-*",
+    "lint-eslint": "eslint src/*.ts",
+    "lint-prettier": "prettier -c src/*.ts"
   },
   "author": {
     "name": "AWS Crypto Tools Team",
@@ -37,11 +39,5 @@
   "types": "./build/main/index.d.ts",
   "files": [
     "build/**/*"
-  ],
-  "standard": {
-    "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "@typescript-eslint"
-    ]
-  }
+  ]
 }

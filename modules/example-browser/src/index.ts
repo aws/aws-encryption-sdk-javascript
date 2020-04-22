@@ -2,6 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-  * This library has no exported implementation.
-  * It is intended to be used as a reference.
-  */
+ * This library has no exported implementation.
+ * It is intended to be used as a reference.
+ */

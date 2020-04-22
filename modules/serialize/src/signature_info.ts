@@ -14,11 +14,15 @@ import { concatBuffers } from './concat_buffers'
 import { uInt16BE } from './uint_util'
 import { needs } from '@aws-crypto/material-management'
 
-export function serializeSignatureInfo (signature: Uint8Array) {
+export function serializeSignatureInfo(signature: Uint8Array) {
   return concatBuffers(uInt16BE(signature.byteLength), signature)
 }
 
-export function deserializeSignature ({ buffer, byteOffset, byteLength }: Uint8Array) {
+export function deserializeSignature({
+  buffer,
+  byteOffset,
+  byteLength,
+}: Uint8Array) {
   /* Precondition: There must be information for a signature. */
   needs(byteLength, 'Invalid Signature')
   /* Uint8Array is a view on top of the underlying ArrayBuffer.

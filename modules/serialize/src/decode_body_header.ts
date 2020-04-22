@@ -3,7 +3,12 @@
 
 import BN from 'bn.js'
 import { ContentType, SequenceIdentifier } from './identifiers'
-import { HeaderInfo, BodyHeader, FrameBodyHeader, NonFrameBodyHeader } from './types' // eslint-disable-line no-unused-vars
+import {
+  HeaderInfo,
+  BodyHeader,
+  FrameBodyHeader,
+  NonFrameBodyHeader,
+} from './types'
 import { needs } from '@aws-crypto/material-management'
 
 /*
@@ -30,9 +35,16 @@ import { needs } from '@aws-crypto/material-management'
  * @param readPos number
  * @returns BodyHeader|false
  */
-export function decodeBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): BodyHeader|false {
+export function decodeBodyHeader(
+  buffer: Uint8Array,
+  headerInfo: HeaderInfo,
+  readPos: number
+): BodyHeader | false {
   /* Precondition: The contentType must be a supported format. */
-  needs(ContentType[headerInfo.messageHeader.contentType], 'Unknown contentType')
+  needs(
+    ContentType[headerInfo.messageHeader.contentType],
+    'Unknown contentType'
+  )
 
   switch (headerInfo.messageHeader.contentType) {
     case ContentType.FRAMED_DATA:
@@ -49,9 +61,16 @@ export function decodeBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, re
  * @param headerInfo HeaderInfo
  * @param readPos number
  */
-export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): FrameBodyHeader|false {
+export function decodeFrameBodyHeader(
+  buffer: Uint8Array,
+  headerInfo: HeaderInfo,
+  readPos: number
+): FrameBodyHeader | false {
   /* Precondition: The contentType must be FRAMED_DATA. */
-  needs(ContentType.FRAMED_DATA === headerInfo.messageHeader.contentType, 'Unknown contentType')
+  needs(
+    ContentType.FRAMED_DATA === headerInfo.messageHeader.contentType,
+    'Unknown contentType'
+  )
 
   const { frameLength } = headerInfo.messageHeader
   const { ivLength, tagLength } = headerInfo.algorithmSuite
@@ -69,7 +88,10 @@ export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInf
   )
 
   /* Precondition: decodeFrameBodyHeader readPos must be within the byte length of the buffer given. */
-  needs(dataView.byteLength >= readPos && readPos >= 0, 'readPos out of bounds.')
+  needs(
+    dataView.byteLength >= readPos && readPos >= 0,
+    'readPos out of bounds.'
+  )
 
   /* Check for early return (Postcondition): There must be enough data to decodeFrameBodyHeader.
    * The format expressed here is
@@ -86,7 +108,7 @@ export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInf
     return decodeFinalFrameBodyHeader(buffer, headerInfo, readPos)
   }
 
-  const iv = buffer.slice(readPos += 4, readPos += ivLength)
+  const iv = buffer.slice((readPos += 4), (readPos += ivLength))
   return {
     sequenceNumber,
     iv,
@@ -94,7 +116,7 @@ export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInf
     readPos,
     tagLength,
     isFinalFrame: false,
-    contentType: ContentType.FRAMED_DATA
+    contentType: ContentType.FRAMED_DATA,
   }
 }
 
@@ -104,9 +126,16 @@ export function decodeFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInf
  * @param headerInfo HeaderInfo
  * @param readPos number
  */
-export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): FrameBodyHeader|false {
+export function decodeFinalFrameBodyHeader(
+  buffer: Uint8Array,
+  headerInfo: HeaderInfo,
+  readPos: number
+): FrameBodyHeader | false {
   /* Precondition: The contentType must be FRAMED_DATA to be a Final Frame. */
-  needs(ContentType.FRAMED_DATA === headerInfo.messageHeader.contentType, 'Unknown contentType')
+  needs(
+    ContentType.FRAMED_DATA === headerInfo.messageHeader.contentType,
+    'Unknown contentType'
+  )
 
   const { ivLength, tagLength } = headerInfo.algorithmSuite
 
@@ -123,7 +152,10 @@ export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: Head
   )
 
   /* Precondition: decodeFinalFrameBodyHeader readPos must be within the byte length of the buffer given. */
-  needs(dataView.byteLength >= readPos && readPos >= 0, 'readPos out of bounds.')
+  needs(
+    dataView.byteLength >= readPos && readPos >= 0,
+    'readPos out of bounds.'
+  )
   /* Check for early return (Postcondition): There must be enough data to decodeFinalFrameBodyHeader.
    * The format expressed here is
    * SEQUENCE_NUMBER_END: Uint32(FFFF)
@@ -137,14 +169,20 @@ export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: Head
   /* The precondition SEQUENCE_NUMBER_END: Uint32(FFFF) is handled above. */
   const sequenceEnd = dataView.getUint32(readPos, false) // big endian
   /* Postcondition: sequenceEnd must be SEQUENCE_NUMBER_END. */
-  needs(sequenceEnd === SequenceIdentifier.SEQUENCE_NUMBER_END, 'Malformed final frame: Invalid sequence number end value')
-  const sequenceNumber = dataView.getUint32(readPos += 4, false) // big endian
+  needs(
+    sequenceEnd === SequenceIdentifier.SEQUENCE_NUMBER_END,
+    'Malformed final frame: Invalid sequence number end value'
+  )
+  const sequenceNumber = dataView.getUint32((readPos += 4), false) // big endian
   /* Postcondition: decodeFinalFrameBodyHeader sequenceNumber must be greater than 0. */
   needs(sequenceNumber > 0, 'Malformed sequenceNumber.')
-  const iv = buffer.slice(readPos += 4, readPos += ivLength)
+  const iv = buffer.slice((readPos += 4), (readPos += ivLength))
   const contentLength = dataView.getUint32(readPos)
   /* Postcondition: The final frame MUST NOT exceed the frameLength. */
-  needs(headerInfo.messageHeader.frameLength >= contentLength, 'Final frame length exceeds frame length.')
+  needs(
+    headerInfo.messageHeader.frameLength >= contentLength,
+    'Final frame length exceeds frame length.'
+  )
   return {
     sequenceNumber,
     iv,
@@ -152,7 +190,7 @@ export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: Head
     readPos: readPos + 4,
     tagLength,
     isFinalFrame: true,
-    contentType: ContentType.FRAMED_DATA
+    contentType: ContentType.FRAMED_DATA,
   }
 }
 
@@ -162,9 +200,16 @@ export function decodeFinalFrameBodyHeader (buffer: Uint8Array, headerInfo: Head
  * @param headerInfo HeaderInfo
  * @param readPos number
  */
-export function decodeNonFrameBodyHeader (buffer: Uint8Array, headerInfo: HeaderInfo, readPos: number): NonFrameBodyHeader|false {
+export function decodeNonFrameBodyHeader(
+  buffer: Uint8Array,
+  headerInfo: HeaderInfo,
+  readPos: number
+): NonFrameBodyHeader | false {
   /* Precondition: The contentType must be NO_FRAMING. */
-  needs(ContentType.NO_FRAMING === headerInfo.messageHeader.contentType, 'Unknown contentType')
+  needs(
+    ContentType.NO_FRAMING === headerInfo.messageHeader.contentType,
+    'Unknown contentType'
+  )
 
   const { ivLength, tagLength } = headerInfo.algorithmSuite
 
@@ -181,17 +226,20 @@ export function decodeNonFrameBodyHeader (buffer: Uint8Array, headerInfo: Header
   )
 
   /* Precondition: decodeNonFrameBodyHeader readPos must be within the byte length of the buffer given. */
-  needs(dataView.byteLength >= readPos && readPos >= 0, 'readPos out of bounds.')
+  needs(
+    dataView.byteLength >= readPos && readPos >= 0,
+    'readPos out of bounds.'
+  )
 
   /* Check for early return (Postcondition): There must be enough data to decodeNonFrameBodyHeader.
-    * The format expressed here is
-    * IVLength: Uint8
-    * ContentLength: Uint64
-    */
+   * The format expressed here is
+   * IVLength: Uint8
+   * ContentLength: Uint64
+   */
   if (ivLength + 8 + readPos > dataView.byteLength) return false
 
-  const iv = buffer.slice(readPos, readPos += ivLength)
-  const contentLengthBuff = buffer.slice(readPos, readPos += 8)
+  const iv = buffer.slice(readPos, (readPos += ivLength))
+  const contentLengthBuff = buffer.slice(readPos, (readPos += 8))
   const contentLengthBN = new BN([...contentLengthBuff], 16, 'be')
   // This will throw if the number is larger than Number.MAX_SAFE_INTEGER.
   // i.e. a 53 bit number
@@ -203,6 +251,6 @@ export function decodeNonFrameBodyHeader (buffer: Uint8Array, headerInfo: Header
     readPos,
     tagLength,
     isFinalFrame: true,
-    contentType: ContentType.NO_FRAMING
+    contentType: ContentType.NO_FRAMING,
   }
 }

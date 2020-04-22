@@ -11,25 +11,25 @@
  */
 
 import {
-  IvLength, // eslint-disable-line no-unused-vars
+  IvLength,
   AlgorithmSuiteIdentifier,
-  AlgorithmSuite, // eslint-disable-line no-unused-vars
+  AlgorithmSuite,
   EncryptedDataKey,
-  EncryptionContext, // eslint-disable-line no-unused-vars
-  needs
+  EncryptionContext,
+  needs,
 } from '@aws-crypto/material-management'
-import { HeaderInfo, AlgorithmSuiteConstructor, MessageHeader } from './types' // eslint-disable-line no-unused-vars
+import { HeaderInfo, AlgorithmSuiteConstructor, MessageHeader } from './types'
 import { readElements } from './read_element'
 
 // To deal with Browser and Node.js I inject a function to handle utf8 encoding.
-export function deserializeFactory<Suite extends AlgorithmSuite> (
+export function deserializeFactory<Suite extends AlgorithmSuite>(
   toUtf8: (input: Uint8Array) => string,
   SdkSuite: AlgorithmSuiteConstructor<Suite>
 ) {
   return {
     deserializeMessageHeader,
     deserializeEncryptedDataKeys,
-    decodeEncryptionContext
+    decodeEncryptionContext,
   }
 
   /**
@@ -43,7 +43,9 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
    * @param messageBuffer
    * @returns HeaderInfo|undefined
    */
-  function deserializeMessageHeader (messageBuffer: Uint8Array): HeaderInfo|false {
+  function deserializeMessageHeader(
+    messageBuffer: Uint8Array
+  ): HeaderInfo | false {
     /* Uint8Array is a view on top of the underlying ArrayBuffer.
      * This means that raw underlying memory stored in the ArrayBuffer
      * may be larger than the Uint8Array.  This is especially true of
@@ -65,10 +67,14 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
     const version = dataView.getUint8(0)
     const type = dataView.getUint8(1)
     /* Precondition: version and type must be the required values. */
-    needs(version === 1 && type === 128,
-      version === 65 && type === 89 ? 'Malformed Header: This blob may be base64 encoded.' : 'Malformed Header.')
+    needs(
+      version === 1 && type === 128,
+      version === 65 && type === 89
+        ? 'Malformed Header: This blob may be base64 encoded.'
+        : 'Malformed Header.'
+    )
 
-    const suiteId = <AlgorithmSuiteIdentifier>dataView.getUint16(2, false) // big endian
+    const suiteId = dataView.getUint16(2, false) as AlgorithmSuiteIdentifier // big endian
     /* Precondition: suiteId must match supported algorithm suite */
     needs(AlgorithmSuiteIdentifier[suiteId], 'Unsupported algorithm suite.')
     const messageId = messageBuffer.slice(4, 20)
@@ -79,8 +85,13 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
      */
     if (22 + contextLength > dataView.byteLength) return false // not enough data
 
-    const encryptionContext = decodeEncryptionContext(messageBuffer.slice(22, 22 + contextLength))
-    const dataKeyInfo = deserializeEncryptedDataKeys(messageBuffer, 22 + contextLength)
+    const encryptionContext = decodeEncryptionContext(
+      messageBuffer.slice(22, 22 + contextLength)
+    )
+    const dataKeyInfo = deserializeEncryptedDataKeys(
+      messageBuffer,
+      22 + contextLength
+    )
 
     /* Check for early return (Postcondition): Not Enough Data. deserializeEncryptedDataKeys will return false if it does not have enough data.
      * This is the second variable length section.
@@ -98,7 +109,8 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
     const headerLength = readPos + 1 + 4 + 1 + 4
 
     /* Check for early return (Postcondition): Not Enough Data. Need to have the remaining fixed length data to parse. */
-    if (headerLength + ivLength + tagLengthBytes > dataView.byteLength) return false // not enough data
+    if (headerLength + ivLength + tagLengthBytes > dataView.byteLength)
+      return false // not enough data
 
     const contentType = dataView.getUint8(readPos)
     const reservedBytes = dataView.getUint32(readPos + 1, false) // big endian
@@ -106,7 +118,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
      * See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-reserved
      */
     needs(reservedBytes === 0, 'Malformed Header')
-    const headerIvLength = <IvLength>dataView.getUint8(readPos + 1 + 4)
+    const headerIvLength = dataView.getUint8(readPos + 1 + 4) as IvLength
     /* Postcondition: The headerIvLength must match the algorithm suite specification. */
     needs(headerIvLength === ivLength, 'Malformed Header')
     const frameLength = dataView.getUint32(readPos + 1 + 4 + 1, false) // big endian
@@ -121,11 +133,14 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
       encryptedDataKeys,
       contentType,
       headerIvLength,
-      frameLength
+      frameLength,
     }
 
     const headerIv = messageBuffer.slice(headerLength, headerLength + ivLength)
-    const headerAuthTag = messageBuffer.slice(headerLength + ivLength, headerLength + ivLength + tagLengthBytes)
+    const headerAuthTag = messageBuffer.slice(
+      headerLength + ivLength,
+      headerLength + ivLength + tagLengthBytes
+    )
 
     return {
       messageHeader,
@@ -133,7 +148,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
       rawHeader,
       algorithmSuite,
       headerIv,
-      headerAuthTag
+      headerAuthTag,
     }
   }
 
@@ -142,9 +157,17 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
    * @param buffer Uint8Array
    * @param startPos number
    */
-  function deserializeEncryptedDataKeys (buffer: Uint8Array, startPos: number): {encryptedDataKeys: ReadonlyArray<EncryptedDataKey>, readPos: number}|false {
+  function deserializeEncryptedDataKeys(
+    buffer: Uint8Array,
+    startPos: number
+  ):
+    | { encryptedDataKeys: ReadonlyArray<EncryptedDataKey>; readPos: number }
+    | false {
     /* Precondition: startPos must be within the byte length of the buffer given. */
-    needs(buffer.byteLength >= startPos && startPos >= 0, 'startPos out of bounds.')
+    needs(
+      buffer.byteLength >= startPos && startPos >= 0,
+      'startPos out of bounds.'
+    )
 
     /* Check for early return (Postcondition): Need to have at least Uint16 (2) bytes of data. */
     if (startPos + 2 > buffer.byteLength) return false
@@ -165,7 +188,12 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
     /* Precondition: There must be at least 1 EncryptedDataKey element. */
     needs(encryptedDataKeysCount, 'No EncryptedDataKey found.')
 
-    const elementInfo = readElements(encryptedDataKeysCount, 3, buffer, startPos + 2)
+    const elementInfo = readElements(
+      encryptedDataKeysCount,
+      3,
+      buffer,
+      startPos + 2
+    )
     /* Check for early return (Postcondition): readElement will return false if there is not enough data.
      * I can only continue if I have at least the entire EDK section.
      */
@@ -173,10 +201,15 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
     const { elements, readPos } = elementInfo
 
     const encryptedDataKeys = elements.map(
-      ([rawId, rawInfo, encryptedDataKey], _) => {
+      ([rawId, rawInfo, encryptedDataKey]) => {
         const providerId = toUtf8(rawId)
         const providerInfo = toUtf8(rawInfo)
-        return new EncryptedDataKey({ providerInfo, providerId, encryptedDataKey, rawInfo })
+        return new EncryptedDataKey({
+          providerInfo,
+          providerId,
+          encryptedDataKey,
+          rawInfo,
+        })
       }
     )
     Object.freeze(encryptedDataKeys)
@@ -187,7 +220,7 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
    * Exported for testing.  Used by deserializeMessageHeader to compose a complete solution.
    * @param encodedEncryptionContext Uint8Array
    */
-  function decodeEncryptionContext (encodedEncryptionContext: Uint8Array) {
+  function decodeEncryptionContext(encodedEncryptionContext: Uint8Array) {
     const encryptionContext: EncryptionContext = Object.create(null)
     /* Check for early return (Postcondition): The case of 0 length is defined as an empty object. */
     if (!encodedEncryptionContext.byteLength) {
@@ -214,14 +247,20 @@ export function deserializeFactory<Suite extends AlgorithmSuite> (
     const { elements, readPos } = elementInfo
 
     /* Postcondition: The byte length of the encodedEncryptionContext must match the readPos. */
-    needs(encodedEncryptionContext.byteLength === readPos, 'Overflow, too much data.')
+    needs(
+      encodedEncryptionContext.byteLength === readPos,
+      'Overflow, too much data.'
+    )
 
     for (let count = 0; count < pairsCount; count++) {
       const [key, value] = elements[count].map(toUtf8)
       /* Postcondition: The number of keys in the encryptionContext must match the pairsCount.
        * If the same Key value is serialized...
        */
-      needs(encryptionContext[key] === undefined, 'Duplicate encryption context key value.')
+      needs(
+        encryptionContext[key] === undefined,
+        'Duplicate encryption context key value.'
+      )
       encryptionContext[key] = value
     }
     Object.freeze(encryptionContext)

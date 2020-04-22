@@ -9,38 +9,41 @@
  */
 
 import {
-  CryptographicMaterial, // eslint-disable-line no-unused-vars
-  WebCryptoMaterial, // eslint-disable-line no-unused-vars
-  MixedBackendCryptoKey, // eslint-disable-line no-unused-vars
+  CryptographicMaterial,
+  WebCryptoMaterial,
+  MixedBackendCryptoKey,
   decorateCryptographicMaterial,
   decorateWebCryptoMaterial,
   frozenClass,
   NodeAlgorithmSuite,
   WebCryptoAlgorithmSuite,
-  AwsEsdkJsCryptoKey, // eslint-disable-line no-unused-vars
-  AwsEsdkJsKeyUsage, // eslint-disable-line no-unused-vars
-  AwsEsdkKeyObject, // eslint-disable-line no-unused-vars
-  KeyringTrace, // eslint-disable-line no-unused-vars
+  AwsEsdkJsCryptoKey,
+  AwsEsdkJsKeyUsage,
+  AwsEsdkKeyObject,
+  KeyringTrace,
   KeyringTraceFlag,
   needs,
-  EncryptionContext // eslint-disable-line no-unused-vars
+  EncryptionContext,
 } from '@aws-crypto/material-management'
 
 import {
-  WrappingSuiteIdentifier, // eslint-disable-line no-unused-vars
-  RawAesWrappingSuiteIdentifier
+  WrappingSuiteIdentifier,
+  RawAesWrappingSuiteIdentifier,
 } from './raw_aes_algorithm_suite'
 
-export class NodeRawAesMaterial implements
-  Readonly<CryptographicMaterial<NodeRawAesMaterial>> {
+export class NodeRawAesMaterial
+  implements Readonly<CryptographicMaterial<NodeRawAesMaterial>> {
   suite: NodeAlgorithmSuite
-  setUnencryptedDataKey!: (dataKey: Uint8Array|AwsEsdkKeyObject, trace: KeyringTrace) => NodeRawAesMaterial
-  getUnencryptedDataKey!: () => Uint8Array|AwsEsdkKeyObject
+  setUnencryptedDataKey!: (
+    dataKey: Uint8Array | AwsEsdkKeyObject,
+    trace: KeyringTrace
+  ) => NodeRawAesMaterial
+  getUnencryptedDataKey!: () => Uint8Array | AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => NodeRawAesMaterial
   hasUnencryptedDataKey!: boolean
   keyringTrace: KeyringTrace[] = []
   encryptionContext: EncryptionContext = Object.freeze({})
-  constructor (suiteId: WrappingSuiteIdentifier) {
+  constructor(suiteId: WrappingSuiteIdentifier) {
     /* Precondition: NodeRawAesMaterial suiteId must be RawAesWrappingSuiteIdentifier. */
     needs(RawAesWrappingSuiteIdentifier[suiteId], 'suiteId not supported.')
     this.suite = new NodeAlgorithmSuite(suiteId)
@@ -53,31 +56,41 @@ export class NodeRawAesMaterial implements
     Object.setPrototypeOf(this, NodeRawAesMaterial.prototype)
     Object.freeze(this)
   }
-  hasValidKey () {
+  hasValidKey() {
     return this.hasUnencryptedDataKey
   }
 }
 frozenClass(NodeRawAesMaterial)
 
-export class WebCryptoRawAesMaterial implements
-  Readonly<CryptographicMaterial<WebCryptoRawAesMaterial>>,
-  Readonly<WebCryptoMaterial<WebCryptoRawAesMaterial>> {
+export class WebCryptoRawAesMaterial
+  implements
+    Readonly<CryptographicMaterial<WebCryptoRawAesMaterial>>,
+    Readonly<WebCryptoMaterial<WebCryptoRawAesMaterial>> {
   suite: WebCryptoAlgorithmSuite
-  setUnencryptedDataKey!: (dataKey: Uint8Array|AwsEsdkKeyObject, trace: KeyringTrace) => WebCryptoRawAesMaterial
-  getUnencryptedDataKey!: () => Uint8Array|AwsEsdkKeyObject
+  setUnencryptedDataKey!: (
+    dataKey: Uint8Array | AwsEsdkKeyObject,
+    trace: KeyringTrace
+  ) => WebCryptoRawAesMaterial
+  getUnencryptedDataKey!: () => Uint8Array | AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => WebCryptoRawAesMaterial
   hasUnencryptedDataKey!: boolean
   keyringTrace: KeyringTrace[] = []
-  setCryptoKey!: (dataKey: AwsEsdkJsCryptoKey|MixedBackendCryptoKey, trace: KeyringTrace) => WebCryptoRawAesMaterial
-  getCryptoKey!: () => AwsEsdkJsCryptoKey|MixedBackendCryptoKey
+  setCryptoKey!: (
+    dataKey: AwsEsdkJsCryptoKey | MixedBackendCryptoKey,
+    trace: KeyringTrace
+  ) => WebCryptoRawAesMaterial
+  getCryptoKey!: () => AwsEsdkJsCryptoKey | MixedBackendCryptoKey
   hasCryptoKey!: boolean
   validUsages: ReadonlyArray<AwsEsdkJsKeyUsage>
   encryptionContext: EncryptionContext = Object.freeze({})
-  constructor (suiteId: WrappingSuiteIdentifier) {
+  constructor(suiteId: WrappingSuiteIdentifier) {
     /* Precondition: WebCryptoAlgorithmSuite suiteId must be RawAesWrappingSuiteIdentifier. */
     needs(RawAesWrappingSuiteIdentifier[suiteId], 'suiteId not supported.')
     this.suite = new WebCryptoAlgorithmSuite(suiteId)
-    this.validUsages = Object.freeze([<AwsEsdkJsKeyUsage>'decrypt', <AwsEsdkJsKeyUsage>'encrypt'])
+    this.validUsages = Object.freeze([
+      'decrypt',
+      'encrypt',
+    ] as AwsEsdkJsKeyUsage[])
     /* WebCryptoRawAesMaterial need to set a flag, this is an abuse of TraceFlags
      * because the material is not generated.
      * but CryptographicMaterial force a flag to be set.
@@ -88,7 +101,7 @@ export class WebCryptoRawAesMaterial implements
     Object.setPrototypeOf(this, WebCryptoRawAesMaterial.prototype)
     Object.freeze(this)
   }
-  hasValidKey () {
+  hasValidKey() {
     return this.hasUnencryptedDataKey && this.hasCryptoKey
   }
 }

@@ -3,21 +3,20 @@
 
 // @ts-ignore
 import { Transform as PortableTransform } from 'readable-stream'
-import { Transform } from 'stream' // eslint-disable-line no-unused-vars
+import { Transform } from 'stream'
 import {
   needs,
-  GetDecipher, // eslint-disable-line no-unused-vars
-  AwsEsdkJsDecipherGCM // eslint-disable-line no-unused-vars
+  GetDecipher,
+  AwsEsdkJsDecipherGCM,
 } from '@aws-crypto/material-management-node'
-import {
-  aadFactory,
-  ContentType // eslint-disable-line no-unused-vars
-} from '@aws-crypto/serialize'
+import { aadFactory, ContentType } from '@aws-crypto/serialize'
 import { VerifyStream } from './verify_stream'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const aadUtility = aadFactory(fromUtf8)
-const PortableTransformWithType = (<new (...args: any[]) => Transform>PortableTransform)
+const PortableTransformWithType = PortableTransform as new (
+  ...args: any[]
+) => Transform
 
 export interface DecipherInfo {
   messageId: Buffer
@@ -39,17 +38,17 @@ export interface BodyInfo {
   isFinalFrame: boolean
 }
 
-const ioTick = () => new Promise(resolve => setImmediate(resolve))
-const noop = () => {}
+const ioTick = async () => new Promise((resolve) => setImmediate(resolve))
+const noop = () => {} // eslint-disable-line @typescript-eslint/no-empty-function
 
-export function getDecipherStream () {
+export function getDecipherStream() {
   let decipherInfo: DecipherInfo
   let decipherState: DecipherState = {} as any
   let pathologicalDrain: Function = noop
-  let frameComplete: Function|false = false
+  let frameComplete: Function | false = false
 
   return new (class DecipherStream extends PortableTransformWithType {
-    constructor () {
+    constructor() {
       super()
       this.on('pipe', (source: VerifyStream) => {
         /* Precondition: The source must be a VerifyStream to emit the required events. */
@@ -59,32 +58,46 @@ export function getDecipherStream () {
             decipherInfo = info
           })
           .on('BodyInfo', this._onBodyHeader)
-          .on('AuthTag', async (authTag: Buffer, next: Function) => {
-            try {
-              await this._onAuthTag(authTag, next)
-            } catch (e) {
-              this.emit('error', e)
-            }
+          .on('AuthTag', (authTag: Buffer, next: Function) => {
+            this._onAuthTag(authTag, next).catch((e) => this.emit('error', e))
           })
       })
     }
 
-    _onBodyHeader = ({ iv, contentLength, sequenceNumber, isFinalFrame }: BodyInfo) => {
+    _onBodyHeader = ({
+      iv,
+      contentLength,
+      sequenceNumber,
+      isFinalFrame,
+    }: BodyInfo) => {
       /* Precondition: decipherInfo must be set before BodyInfo is sent. */
       needs(decipherInfo, 'Malformed State.')
       /* Precondition: Ciphertext must not be flowing before a BodyHeader is processed. */
       needs(!decipherState.decipher, 'Malformed State.')
 
       const { messageId, contentType, getDecipher } = decipherInfo
-      const aadString = aadUtility.messageAADContentString({ contentType, isFinalFrame })
-      const messageAAD = aadUtility.messageAAD(messageId, aadString, sequenceNumber, contentLength)
-      const decipher = getDecipher(iv)
-        .setAAD(Buffer.from(messageAAD.buffer, messageAAD.byteOffset, messageAAD.byteLength))
+      const aadString = aadUtility.messageAADContentString({
+        contentType,
+        isFinalFrame,
+      })
+      const messageAAD = aadUtility.messageAAD(
+        messageId,
+        aadString,
+        sequenceNumber,
+        contentLength
+      )
+      const decipher = getDecipher(iv).setAAD(
+        Buffer.from(
+          messageAAD.buffer,
+          messageAAD.byteOffset,
+          messageAAD.byteLength
+        )
+      )
       const content: Buffer[] = []
       decipherState = { decipher, content, contentLength }
     }
 
-    _transform (chunk: any, _encoding: string, callback: Function) {
+    _transform(chunk: any, _encoding: string, callback: Function) {
       /* Precondition: BodyHeader must be parsed before frame data. */
       needs(decipherState.decipher, 'Malformed State.')
 
@@ -107,7 +120,7 @@ export function getDecipherStream () {
       }
     }
 
-    _read (size: number) {
+    _read(size: number) {
       /* The _onAuthTag decrypts and pushes the encrypted frame.
        * If this.push returns false then this stream
        * should wait until the destination stream calls read.
@@ -125,7 +138,7 @@ export function getDecipherStream () {
       super._read(size)
     }
 
-    _onAuthTag = async (authTag: Buffer, next:Function) => {
+    _onAuthTag = async (authTag: Buffer, next: Function) => {
       const { decipher, content, contentLength } = decipherState
       /* Precondition: _onAuthTag must be called only after a frame has been accumulated.
        * However there is an edge case.  The final frame _can_ be zero length.
@@ -169,7 +182,9 @@ export function getDecipherStream () {
           /* back pressure: if push returns false, wait until _read
            * has been called.
            */
-          await new Promise(resolve => { pathologicalDrain = resolve })
+          await new Promise((resolve) => {
+            pathologicalDrain = resolve
+          })
         }
       }
 
@@ -190,7 +205,7 @@ export function getDecipherStream () {
       frameComplete = false
     }
 
-    _destroy () {
+    _destroy() {
       // It is possible to have to destroy the stream before
       // decipherInfo is set.  Especially if the HeaderAuth
       // is not valid.

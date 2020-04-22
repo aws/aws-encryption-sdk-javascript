@@ -11,12 +11,12 @@ import {
   RawAesKeyringWebCrypto,
   encrypt,
   decrypt,
-  synchronousRandomValues
+  synchronousRandomValues,
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
 /* This is done to facilitate testing. */
-export async function testAES () {
+export async function testAES() {
   /* You need to specify a name
    * and a namespace for raw encryption key providers.
    * The name and namespace that you use in the decryption keyring *must* be an exact,
@@ -26,16 +26,25 @@ export async function testAES () {
   const keyNamespace = 'aes-namespace'
 
   /* The wrapping suite defines the AES-GCM algorithm suite to use. */
-  const wrappingSuite = RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
+  const wrappingSuite =
+    RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
 
   // Get your plaintext master key from wherever you store it.
   const unencryptedMasterKey = synchronousRandomValues(32)
 
   /* Import the plaintext master key into a WebCrypto CryptoKey. */
-  const masterKey = await RawAesKeyringWebCrypto.importCryptoKey(unencryptedMasterKey, wrappingSuite)
+  const masterKey = await RawAesKeyringWebCrypto.importCryptoKey(
+    unencryptedMasterKey,
+    wrappingSuite
+  )
 
   /* Configure the Raw AES keyring. */
-  const keyring = new RawAesKeyringWebCrypto({ keyName, keyNamespace, wrappingSuite, masterKey })
+  const keyring = new RawAesKeyringWebCrypto({
+    keyName,
+    keyNamespace,
+    wrappingSuite,
+    masterKey,
+  })
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
@@ -49,14 +58,16 @@ export async function testAES () {
   const context = {
     stage: 'demo',
     purpose: 'simple demonstration app',
-    origin: 'us-west-2'
+    origin: 'us-west-2',
   }
 
   /* Find data to encrypt. */
   const plainText = new Uint8Array([1, 2, 3, 4, 5])
 
   /* Encrypt the data. */
-  const { result } = await encrypt(keyring, plainText, { encryptionContext: context })
+  const { result } = await encrypt(keyring, plainText, {
+    encryptionContext: context,
+  })
 
   /* Log the plain text
    * only for testing and to show that it works.
@@ -83,11 +94,10 @@ export async function testAES () {
    * do not add a test that requires that all key-value pairs match.
    * Instead, verify that the key-value pairs you expect match.
    */
-  Object
-    .entries(context)
-    .forEach(([key, value]) => {
-      if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
-    })
+  Object.entries(context).forEach(([key, value]) => {
+    if (encryptionContext[key] !== value)
+      throw new Error('Encryption Context does not match expected values')
+  })
 
   /* Log the clear message
    * only for testing and to show that it works.

@@ -2,22 +2,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-  CachingMaterialsManager, // eslint-disable-line no-unused-vars
+  CachingMaterialsManager,
   decorateProperties,
   getEncryptionMaterials,
   decryptMaterials,
   cacheEntryHasExceededLimits,
   buildCryptographicMaterialsCacheKeyHelpers,
-  CachingMaterialsManagerInput, // eslint-disable-line no-unused-vars
-  CryptographicMaterialsCache // eslint-disable-line no-unused-vars
+  CachingMaterialsManagerInput,
+  CryptographicMaterialsCache,
 } from '@aws-crypto/cache-material'
 import {
-  NodeMaterialsManager, // eslint-disable-line no-unused-vars
+  NodeMaterialsManager,
   NodeDefaultCryptographicMaterialsManager,
-  NodeAlgorithmSuite, // eslint-disable-line no-unused-vars
+  NodeAlgorithmSuite,
   KeyringNode,
-  NodeGetEncryptionMaterials, // eslint-disable-line no-unused-vars
-  NodeGetDecryptMaterials // eslint-disable-line no-unused-vars
+  NodeGetEncryptionMaterials,
+  NodeGetDecryptMaterials,
 } from '@aws-crypto/material-management-node'
 import { sha512 } from './sha512'
 import { randomBytes } from 'crypto'
@@ -25,9 +25,14 @@ import { randomBytes } from 'crypto'
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const toUtf8 = (input: Uint8Array) => Buffer.from(input).toString('utf8')
 
-const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(fromUtf8, toUtf8, sha512)
+const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(
+  fromUtf8,
+  toUtf8,
+  sha512
+)
 
-export class NodeCachingMaterialsManager implements CachingMaterialsManager<NodeAlgorithmSuite> {
+export class NodeCachingMaterialsManager
+  implements CachingMaterialsManager<NodeAlgorithmSuite> {
   readonly _cache!: CryptographicMaterialsCache<NodeAlgorithmSuite>
   readonly _backingMaterialsManager!: NodeMaterialsManager
   readonly _partition!: string
@@ -35,10 +40,11 @@ export class NodeCachingMaterialsManager implements CachingMaterialsManager<Node
   readonly _maxMessagesEncrypted!: number
   readonly _maxAge!: number
 
-  constructor (input: CachingMaterialsManagerInput<NodeAlgorithmSuite>) {
-    const backingMaterialsManager = input.backingMaterials instanceof KeyringNode
-      ? new NodeDefaultCryptographicMaterialsManager(input.backingMaterials)
-      : <NodeDefaultCryptographicMaterialsManager>input.backingMaterials
+  constructor(input: CachingMaterialsManagerInput<NodeAlgorithmSuite>) {
+    const backingMaterialsManager =
+      input.backingMaterials instanceof KeyringNode
+        ? new NodeDefaultCryptographicMaterialsManager(input.backingMaterials)
+        : (input.backingMaterials as NodeDefaultCryptographicMaterialsManager)
 
     /* Precondition: A partition value must exist for NodeCachingMaterialsManager.
      * The maximum hash function at this time is 512.
@@ -49,11 +55,17 @@ export class NodeCachingMaterialsManager implements CachingMaterialsManager<Node
     decorateProperties(this, {
       ...input,
       backingMaterialsManager,
-      partition
+      partition,
     })
   }
 
-  getEncryptionMaterials: NodeGetEncryptionMaterials = getEncryptionMaterials<NodeAlgorithmSuite>(cacheKeyHelpers)
-  decryptMaterials: NodeGetDecryptMaterials = decryptMaterials<NodeAlgorithmSuite>(cacheKeyHelpers)
-  _cacheEntryHasExceededLimits = cacheEntryHasExceededLimits<NodeAlgorithmSuite>()
+  getEncryptionMaterials: NodeGetEncryptionMaterials = getEncryptionMaterials<
+    NodeAlgorithmSuite
+  >(cacheKeyHelpers)
+  decryptMaterials: NodeGetDecryptMaterials = decryptMaterials<
+    NodeAlgorithmSuite
+  >(cacheKeyHelpers)
+  _cacheEntryHasExceededLimits = cacheEntryHasExceededLimits<
+    NodeAlgorithmSuite
+  >()
 }

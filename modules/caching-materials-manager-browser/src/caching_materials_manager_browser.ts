@@ -2,31 +2,36 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-  CachingMaterialsManager, // eslint-disable-line no-unused-vars
+  CachingMaterialsManager,
   decorateProperties,
   getEncryptionMaterials,
   decryptMaterials,
   cacheEntryHasExceededLimits,
   buildCryptographicMaterialsCacheKeyHelpers,
-  CachingMaterialsManagerInput, // eslint-disable-line no-unused-vars
-  CryptographicMaterialsCache // eslint-disable-line no-unused-vars
+  CachingMaterialsManagerInput,
+  CryptographicMaterialsCache,
 } from '@aws-crypto/cache-material'
 import {
-  WebCryptoMaterialsManager, // eslint-disable-line no-unused-vars
+  WebCryptoMaterialsManager,
   WebCryptoDefaultCryptographicMaterialsManager,
-  WebCryptoAlgorithmSuite, // eslint-disable-line no-unused-vars
+  WebCryptoAlgorithmSuite,
   KeyringWebCrypto,
-  WebCryptoGetEncryptionMaterials, // eslint-disable-line no-unused-vars
-  WebCryptoGetDecryptMaterials // eslint-disable-line no-unused-vars
+  WebCryptoGetEncryptionMaterials,
+  WebCryptoGetDecryptMaterials,
 } from '@aws-crypto/material-management-browser'
 import { fromUtf8, toUtf8 } from '@aws-sdk/util-utf8-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 import { synchronousRandomValues } from '@aws-crypto/web-crypto-backend'
 import { sha512 } from './sha512'
 
-const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(fromUtf8, toUtf8, sha512)
+const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(
+  fromUtf8,
+  toUtf8,
+  sha512
+)
 
-export class WebCryptoCachingMaterialsManager implements CachingMaterialsManager<WebCryptoAlgorithmSuite> {
+export class WebCryptoCachingMaterialsManager
+  implements CachingMaterialsManager<WebCryptoAlgorithmSuite> {
   readonly _cache!: CryptographicMaterialsCache<WebCryptoAlgorithmSuite>
   readonly _backingMaterialsManager!: WebCryptoMaterialsManager
   readonly _partition!: string
@@ -34,10 +39,13 @@ export class WebCryptoCachingMaterialsManager implements CachingMaterialsManager
   readonly _maxMessagesEncrypted!: number
   readonly _maxAge!: number
 
-  constructor (input: CachingMaterialsManagerInput<WebCryptoAlgorithmSuite>) {
-    const backingMaterialsManager = input.backingMaterials instanceof KeyringWebCrypto
-      ? new WebCryptoDefaultCryptographicMaterialsManager(input.backingMaterials)
-      : <WebCryptoDefaultCryptographicMaterialsManager>input.backingMaterials
+  constructor(input: CachingMaterialsManagerInput<WebCryptoAlgorithmSuite>) {
+    const backingMaterialsManager =
+      input.backingMaterials instanceof KeyringWebCrypto
+        ? new WebCryptoDefaultCryptographicMaterialsManager(
+            input.backingMaterials
+          )
+        : (input.backingMaterials as WebCryptoDefaultCryptographicMaterialsManager)
 
     /* Precondition: A partition value must exist for WebCryptoCachingMaterialsManager.
      * The maximum hash function at this time is 512.
@@ -48,11 +56,17 @@ export class WebCryptoCachingMaterialsManager implements CachingMaterialsManager
     decorateProperties(this, {
       ...input,
       backingMaterialsManager,
-      partition
+      partition,
     })
   }
 
-  getEncryptionMaterials: WebCryptoGetEncryptionMaterials = getEncryptionMaterials<WebCryptoAlgorithmSuite>(cacheKeyHelpers)
-  decryptMaterials: WebCryptoGetDecryptMaterials = decryptMaterials<WebCryptoAlgorithmSuite>(cacheKeyHelpers)
-  _cacheEntryHasExceededLimits = cacheEntryHasExceededLimits<WebCryptoAlgorithmSuite>()
+  getEncryptionMaterials: WebCryptoGetEncryptionMaterials = getEncryptionMaterials<
+    WebCryptoAlgorithmSuite
+  >(cacheKeyHelpers)
+  decryptMaterials: WebCryptoGetDecryptMaterials = decryptMaterials<
+    WebCryptoAlgorithmSuite
+  >(cacheKeyHelpers)
+  _cacheEntryHasExceededLimits = cacheEntryHasExceededLimits<
+    WebCryptoAlgorithmSuite
+  >()
 }

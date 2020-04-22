@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-  SupportedAlgorithmSuites, // eslint-disable-line no-unused-vars
-  DecryptionRequest, // eslint-disable-line no-unused-vars
-  EncryptionRequest, // eslint-disable-line no-unused-vars
-  EncryptedDataKey, // eslint-disable-line no-unused-vars
-  EncryptionContext // eslint-disable-line no-unused-vars
+  SupportedAlgorithmSuites,
+  DecryptionRequest,
+  EncryptionRequest,
+  EncryptedDataKey,
+  EncryptionContext,
 } from '@aws-crypto/material-management'
 import { serializeFactory, uInt16BE } from '@aws-crypto/serialize'
 import { compare } from './portable_compare'
@@ -14,24 +14,26 @@ import { compare } from './portable_compare'
 //  512 bits of 0 for padding between hashes in decryption materials cache ID generation.
 const BIT_PAD_512 = Buffer.alloc(64)
 
-export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAlgorithmSuites> (
+export function buildCryptographicMaterialsCacheKeyHelpers<
+  S extends SupportedAlgorithmSuites
+>(
   fromUtf8: (input: string) => Uint8Array,
   toUtf8: (input: Uint8Array) => string,
-  sha512: (...data: ((Uint8Array|string))[]) => Promise<Uint8Array>
+  sha512: (...data: (Uint8Array | string)[]) => Promise<Uint8Array>
 ): CryptographicMaterialsCacheKeyHelpersInterface<S> {
   const {
     serializeEncryptionContext,
-    serializeEncryptedDataKey
+    serializeEncryptedDataKey,
   } = serializeFactory(fromUtf8)
 
   return {
     buildEncryptionMaterialCacheKey,
     buildDecryptionMaterialCacheKey,
     encryptedDataKeysHash,
-    encryptionContextHash
+    encryptionContextHash,
   }
 
-  async function buildEncryptionMaterialCacheKey (
+  async function buildEncryptionMaterialCacheKey(
     partition: string,
     { suite, encryptionContext }: EncryptionRequest<S>
   ) {
@@ -47,7 +49,7 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
     return toUtf8(key)
   }
 
-  async function buildDecryptionMaterialCacheKey (
+  async function buildDecryptionMaterialCacheKey(
     partition: string,
     { suite, encryptedDataKeys, encryptionContext }: DecryptionRequest<S>
   ) {
@@ -63,16 +65,18 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
     return toUtf8(key)
   }
 
-  async function encryptedDataKeysHash (encryptedDataKeys: ReadonlyArray<EncryptedDataKey>) {
+  async function encryptedDataKeysHash(
+    encryptedDataKeys: ReadonlyArray<EncryptedDataKey>
+  ) {
     const hashes = await Promise.all(
       encryptedDataKeys
         .map(serializeEncryptedDataKey)
-        .map(edk => sha512(edk))
+        .map(async (edk) => sha512(edk))
     )
     return hashes.sort(compare)
   }
 
-  function encryptionContextHash (context: EncryptionContext) {
+  async function encryptionContextHash(context: EncryptionContext) {
     /* The AAD section is uInt16BE(length) + AAD
      * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
      * However, the RAW Keyring wants _only_ the ADD.
@@ -83,7 +87,9 @@ export function buildCryptographicMaterialsCacheKeyHelpers<S extends SupportedAl
   }
 }
 
-export interface CryptographicMaterialsCacheKeyHelpersInterface<S extends SupportedAlgorithmSuites> {
+export interface CryptographicMaterialsCacheKeyHelpersInterface<
+  S extends SupportedAlgorithmSuites
+> {
   buildEncryptionMaterialCacheKey(
     partition: string,
     { suite, encryptionContext }: EncryptionRequest<S>
@@ -92,6 +98,8 @@ export interface CryptographicMaterialsCacheKeyHelpersInterface<S extends Suppor
     partition: string,
     { suite, encryptedDataKeys, encryptionContext }: DecryptionRequest<S>
   ): Promise<string>
-  encryptedDataKeysHash(encryptedDataKeys: ReadonlyArray<EncryptedDataKey>): Promise<Uint8Array[]>
+  encryptedDataKeysHash(
+    encryptedDataKeys: ReadonlyArray<EncryptedDataKey>
+  ): Promise<Uint8Array[]>
   encryptionContextHash(context: EncryptionContext): Promise<Uint8Array>
 }

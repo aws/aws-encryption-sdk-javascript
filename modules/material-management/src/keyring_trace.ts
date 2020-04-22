@@ -30,36 +30,36 @@
  */
 
 export interface KeyringTrace {
-  readonly keyNamespace: String
-  readonly keyName: String
+  readonly keyNamespace: string
+  readonly keyName: string
   flags: KeyringTraceFlag
 }
 
 export enum KeyringTraceFlag {
-/**
- * Bit flag indicating this wrapping key generated the data key.
- */
-  WRAPPING_KEY_GENERATED_DATA_KEY = 1, // eslint-disable-line no-unused-vars
+  /**
+   * Bit flag indicating this wrapping key generated the data key.
+   */
+  WRAPPING_KEY_GENERATED_DATA_KEY = 1,
 
-/**
- * Bit flag indicating this wrapping key encrypted the data key.
- */
-  WRAPPING_KEY_ENCRYPTED_DATA_KEY = (1 << 1), // eslint-disable-line no-unused-vars
+  /**
+   * Bit flag indicating this wrapping key encrypted the data key.
+   */
+  WRAPPING_KEY_ENCRYPTED_DATA_KEY = 1 << 1,
 
-/**
- * Bit flag indicating this wrapping key decrypted the data key.
- */
-  WRAPPING_KEY_DECRYPTED_DATA_KEY = (1 << 2), // eslint-disable-line no-unused-vars
+  /**
+   * Bit flag indicating this wrapping key decrypted the data key.
+   */
+  WRAPPING_KEY_DECRYPTED_DATA_KEY = 1 << 2,
 
-/**
- * Bit flag indicating this wrapping key signed the encryption context.
- */
-  WRAPPING_KEY_SIGNED_ENC_CTX = (1 << 3), // eslint-disable-line no-unused-vars
+  /**
+   * Bit flag indicating this wrapping key signed the encryption context.
+   */
+  WRAPPING_KEY_SIGNED_ENC_CTX = 1 << 3,
 
-/**
- * Bit flag indicating this wrapping key verified the signature of the encryption context.
- */
-  WRAPPING_KEY_VERIFIED_ENC_CTX = (1 << 4), // eslint-disable-line no-unused-vars
+  /**
+   * Bit flag indicating this wrapping key verified the signature of the encryption context.
+   */
+  WRAPPING_KEY_VERIFIED_ENC_CTX = 1 << 4,
 
   /* KeyringTraceFlags are organized here.
    * The three groupings are set, encrypt, and decrypt.
@@ -77,9 +77,10 @@ export enum KeyringTraceFlag {
    * for listing the WRAPPING_KEY_VERIFIED_ENC_CTX flag.
    */
 
-  ENCRYPT_FLAGS = WRAPPING_KEY_ENCRYPTED_DATA_KEY | WRAPPING_KEY_SIGNED_ENC_CTX, // eslint-disable-line no-unused-vars
+  ENCRYPT_FLAGS = WRAPPING_KEY_ENCRYPTED_DATA_KEY | WRAPPING_KEY_SIGNED_ENC_CTX,
 
-  SET_FLAGS = WRAPPING_KEY_GENERATED_DATA_KEY | WRAPPING_KEY_DECRYPTED_DATA_KEY, // eslint-disable-line no-unused-vars
+  SET_FLAGS = WRAPPING_KEY_GENERATED_DATA_KEY | WRAPPING_KEY_DECRYPTED_DATA_KEY,
 
-  DECRYPT_FLAGS = WRAPPING_KEY_DECRYPTED_DATA_KEY | WRAPPING_KEY_VERIFIED_ENC_CTX, // eslint-disable-line no-unused-vars
+  DECRYPT_FLAGS = WRAPPING_KEY_DECRYPTED_DATA_KEY |
+    WRAPPING_KEY_VERIFIED_ENC_CTX,
 }

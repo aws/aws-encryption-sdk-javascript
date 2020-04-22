@@ -1,7 +1,7 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { EncryptionContext } from '@aws-crypto/material-management' // eslint-disable-line no-unused-vars
+import { EncryptionContext } from '@aws-crypto/material-management'
 
 export interface DecryptRequest {
   CiphertextBlob: Uint8Array
@@ -16,7 +16,7 @@ export interface DecryptResponse {
   Plaintext?: Data
 }
 
-export interface RequiredDecryptResponse extends Required<DecryptResponse>{
+export interface RequiredDecryptResponse extends Required<DecryptResponse> {
   Plaintext: Uint8Array
 }
 
@@ -31,7 +31,7 @@ export interface EncryptResponse {
   KeyId?: string
 }
 
-export interface RequiredEncryptResponse extends Required<EncryptResponse>{
+export interface RequiredEncryptResponse extends Required<EncryptResponse> {
   CiphertextBlob: Uint8Array
 }
 
@@ -48,7 +48,8 @@ export interface GenerateDataKeyResponse {
   KeyId?: string
 }
 
-export interface RequiredGenerateDataKeyResponse extends Required<GenerateDataKeyResponse>{
+export interface RequiredGenerateDataKeyResponse
+  extends Required<GenerateDataKeyResponse> {
   CiphertextBlob: Uint8Array
   Plaintext: Uint8Array
 }
@@ -58,7 +59,15 @@ export interface AwsSdkV2Response<Response> {
 }
 
 export interface AwsEsdkKMSInterface {
-  decrypt(args: DecryptRequest): Promise<DecryptResponse>|AwsSdkV2Response<DecryptResponse>
-  encrypt(args: EncryptRequest): Promise<EncryptResponse>|AwsSdkV2Response<EncryptResponse>
-  generateDataKey(args: GenerateDataKeyRequest): Promise<GenerateDataKeyResponse>|AwsSdkV2Response<GenerateDataKeyResponse>
+  decrypt(
+    args: DecryptRequest
+  ): Promise<DecryptResponse> | AwsSdkV2Response<DecryptResponse>
+  encrypt(
+    args: EncryptRequest
+  ): Promise<EncryptResponse> | AwsSdkV2Response<EncryptResponse>
+  generateDataKey(
+    args: GenerateDataKeyRequest
+  ):
+    | Promise<GenerateDataKeyResponse>
+    | AwsSdkV2Response<GenerateDataKeyResponse>
 }

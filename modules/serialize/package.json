@@ -3,7 +3,9 @@
   "version": "1.0.3",
   "scripts": {
     "prepublishOnly": "tsc -p tsconfig.json && tsc -p tsconfig.module.json",
-    "lint": "standard src/*.ts test/**/*.ts",
+    "lint": "run-s lint-*",
+    "lint-eslint": "eslint src/*.ts test/**/*.ts",
+    "lint-prettier": "prettier -c src/*.ts test/**/*.ts",
     "mocha": "mocha --require ts-node/register test/**/*test.ts",
     "test": "npm run lint && npm run coverage",
     "coverage": "nyc -e .ts npm run mocha"
@@ -26,11 +28,5 @@
   "types": "./build/main/index.d.ts",
   "files": [
     "build/**/*"
-  ],
-  "standard": {
-    "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "@typescript-eslint"
-    ]
-  }
+  ]
 }

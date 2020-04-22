@@ -2,15 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-  NodeMaterialsManager, // eslint-disable-line no-unused-vars
-  KeyringNode // eslint-disable-line no-unused-vars
+  NodeMaterialsManager,
+  KeyringNode,
 } from '@aws-crypto/material-management-node'
 import { decryptStream } from './decrypt_stream'
 
 // @ts-ignore
 import { finished } from 'readable-stream'
-import { Readable, Duplex } from 'stream' // eslint-disable-line no-unused-vars
-import { MessageHeader } from '@aws-crypto/serialize' // eslint-disable-line no-unused-vars
+import { Readable, Duplex } from 'stream'
+import { MessageHeader } from '@aws-crypto/serialize'
 
 export interface DecryptOutput {
   plaintext: Buffer
@@ -22,17 +22,19 @@ export interface DecryptOptions {
   maxBodySize?: number
 }
 
-export async function decrypt (
-  cmm: NodeMaterialsManager|KeyringNode,
-  ciphertext: Buffer|Uint8Array|Readable|string|NodeJS.ReadableStream,
-  { encoding, maxBodySize } : DecryptOptions = {}
+export async function decrypt(
+  cmm: NodeMaterialsManager | KeyringNode,
+  ciphertext: Buffer | Uint8Array | Readable | string | NodeJS.ReadableStream,
+  { encoding, maxBodySize }: DecryptOptions = {}
 ): Promise<DecryptOutput> {
   const stream = decryptStream(cmm, { maxBodySize })
 
   const plaintext: Buffer[] = []
-  let messageHeader: MessageHeader|false = false
+  let messageHeader: MessageHeader | false = false
   stream
-    .once('MessageHeader', (header: MessageHeader) => { messageHeader = header })
+    .once('MessageHeader', (header: MessageHeader) => {
+      messageHeader = header
+    })
     .on('data', (chunk: Buffer) => plaintext.push(chunk))
 
   // This will check both Uint8Array|Buffer
@@ -51,12 +53,12 @@ export async function decrypt (
 
   return {
     plaintext: Buffer.concat(plaintext),
-    messageHeader
+    messageHeader,
   }
 }
 
-function finishedAsync (stream: Duplex) {
+async function finishedAsync(stream: Duplex) {
   return new Promise((resolve, reject) => {
-    finished(stream, (err: Error) => err ? reject(err) : resolve())
+    finished(stream, (err: Error) => (err ? reject(err) : resolve()))
   })
 }

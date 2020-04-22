@@ -1,7 +1,11 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { readOnlyBinaryProperty, readOnlyProperty, frozenClass } from './immutable_class'
+import {
+  readOnlyBinaryProperty,
+  readOnlyProperty,
+  frozenClass,
+} from './immutable_class'
 import { needs } from './needs'
 
 /*
@@ -26,12 +30,13 @@ import { needs } from './needs'
  * *It is not required that the providerInfo string "equal" the binary rawInfo*
  *
  */
-export interface IEncryptedDataKey extends Readonly<{
-  providerInfo: string
-  providerId: string
-  encryptedDataKey: Uint8Array
-  rawInfo?: Uint8Array
-}>{}
+export interface IEncryptedDataKey  // eslint-disable-line @typescript-eslint/interface-name-prefix
+  extends Readonly<{
+    providerInfo: string
+    providerId: string
+    encryptedDataKey: Uint8Array
+    rawInfo?: Uint8Array
+  }> {}
 
 export class EncryptedDataKey {
   readonly providerInfo!: string
@@ -39,13 +44,17 @@ export class EncryptedDataKey {
   readonly encryptedDataKey!: Uint8Array
   readonly rawInfo?: Uint8Array
 
-  constructor (edkInput: IEncryptedDataKey) {
+  constructor(edkInput: IEncryptedDataKey) {
     const { providerInfo, providerId, encryptedDataKey, rawInfo } = edkInput
     needs(
-      typeof providerInfo === 'string' && providerInfo &&
-      typeof providerId === 'string' && providerId &&
-      encryptedDataKey instanceof Uint8Array && encryptedDataKey.byteLength,
-      'Malformed encrypted data key')
+      typeof providerInfo === 'string' &&
+        providerInfo &&
+        typeof providerId === 'string' &&
+        providerId &&
+        encryptedDataKey instanceof Uint8Array &&
+        encryptedDataKey.byteLength,
+      'Malformed encrypted data key'
+    )
 
     readOnlyProperty(this, 'providerInfo', providerInfo)
     readOnlyProperty(this, 'providerId', providerId)

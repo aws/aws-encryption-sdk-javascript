@@ -7,28 +7,28 @@ import {
   WebCryptoEncryptionMaterial,
   WebCryptoDecryptionMaterial,
   isEncryptionMaterial,
-  isDecryptionMaterial
+  isDecryptionMaterial,
 } from './cryptographic_material'
-import {
-  NodeAlgorithmSuite
-} from './node_algorithms'
-import {
-  AwsEsdkKeyObject // eslint-disable-line no-unused-vars
-} from './types'
+import { NodeAlgorithmSuite } from './node_algorithms'
+import { AwsEsdkKeyObject } from './types'
 import { needs } from './needs'
 
-type Material = NodeEncryptionMaterial|NodeDecryptionMaterial|WebCryptoEncryptionMaterial|WebCryptoDecryptionMaterial
+type Material =
+  | NodeEncryptionMaterial
+  | NodeDecryptionMaterial
+  | WebCryptoEncryptionMaterial
+  | WebCryptoDecryptionMaterial
 
-export function cloneMaterial<M extends Material> (source: M): M {
+export function cloneMaterial<M extends Material>(source: M): M {
   const { suite, encryptionContext } = source
 
-  const clone = <M>(suite instanceof NodeAlgorithmSuite
+  const clone = (suite instanceof NodeAlgorithmSuite
     ? source instanceof NodeEncryptionMaterial
       ? new NodeEncryptionMaterial(suite, encryptionContext)
       : new NodeDecryptionMaterial(suite, encryptionContext)
     : source instanceof WebCryptoEncryptionMaterial
-      ? new WebCryptoEncryptionMaterial(suite, encryptionContext)
-      : new WebCryptoDecryptionMaterial(suite, encryptionContext))
+    ? new WebCryptoEncryptionMaterial(suite, encryptionContext)
+    : new WebCryptoDecryptionMaterial(suite, encryptionContext)) as M
 
   /* The setTrace _must_ be the first trace,
    * If the material is an EncryptionMaterial
@@ -49,21 +49,26 @@ export function cloneMaterial<M extends Material> (source: M): M {
     clone.setUnencryptedDataKey(udk, setTrace)
   }
 
-  if ((<WebCryptoDecryptionMaterial>source).hasCryptoKey) {
-    const cryptoKey = (<WebCryptoDecryptionMaterial>source).getCryptoKey()
-    ;(<WebCryptoDecryptionMaterial>clone)
-      .setCryptoKey(cryptoKey, setTrace)
+  if ((source as WebCryptoDecryptionMaterial).hasCryptoKey) {
+    const cryptoKey = (source as WebCryptoDecryptionMaterial).getCryptoKey()
+    ;(clone as WebCryptoDecryptionMaterial).setCryptoKey(cryptoKey, setTrace)
   }
 
   if (isEncryptionMaterial(source) && isEncryptionMaterial(clone)) {
     const encryptedDataKeys = source.encryptedDataKeys
     /* Precondition: For each encrypted data key, there must be a trace. */
-    needs(encryptedDataKeys.length === traces.length, 'KeyringTrace length does not match encrypted data keys.')
+    needs(
+      encryptedDataKeys.length === traces.length,
+      'KeyringTrace length does not match encrypted data keys.'
+    )
     encryptedDataKeys.forEach((edk, i) => {
       const { providerInfo, providerId } = edk
       const { keyNamespace, keyName, flags } = traces[i]
       /* Precondition: The traces must be in the same order as the encrypted data keys. */
-      needs(keyName === providerInfo && keyNamespace === providerId, 'Keyring trace does not match encrypted data key.')
+      needs(
+        keyName === providerInfo && keyNamespace === providerId,
+        'Keyring trace does not match encrypted data key.'
+      )
       clone.addEncryptedDataKey(edk, flags)
     })
 
@@ -83,7 +88,7 @@ export function cloneMaterial<M extends Material> (source: M): M {
   return clone
 }
 
-function cloneUnencryptedDataKey (dataKey: AwsEsdkKeyObject| Uint8Array) {
+function cloneUnencryptedDataKey(dataKey: AwsEsdkKeyObject | Uint8Array) {
   if (dataKey instanceof Uint8Array) {
     return new Uint8Array(dataKey)
   }

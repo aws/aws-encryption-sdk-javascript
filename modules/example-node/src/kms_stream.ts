@@ -5,7 +5,7 @@ import {
   KmsKeyringNode,
   decryptStream,
   encryptStream,
-  MessageHeader // eslint-disable-line no-unused-vars
+  MessageHeader,
 } from '@aws-crypto/client-node'
 
 import { finished } from 'stream'
@@ -13,11 +13,12 @@ import { createReadStream } from 'fs'
 import { promisify } from 'util'
 const finishedAsync = promisify(finished)
 
-export async function kmsStreamTest (filename: string) {
+export async function kmsStreamTest(filename: string) {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
-  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+  const generatorKeyId =
+    'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
 
   /* The KMS keyring must be configured with the desired CMKs */
   const keyring = new KmsKeyringNode({ generatorKeyId })
@@ -34,7 +35,7 @@ export async function kmsStreamTest (filename: string) {
   const context = {
     stage: 'demo',
     purpose: 'simple demonstration app',
-    origin: 'us-west-2'
+    origin: 'us-west-2',
   }
 
   /* Create a simple pipeline to encrypt the package.json for this project. */
@@ -43,17 +44,16 @@ export async function kmsStreamTest (filename: string) {
     .pipe(decryptStream(new KmsKeyringNode({ discovery: true })))
     .on('MessageHeader', ({ encryptionContext }: MessageHeader) => {
       /* Verify the encryption context.
-      * Depending on the Algorithm Suite, the `encryptionContext` _may_ contain additional values.
-      * In Signing Algorithm Suites the public verification key is serialized into the `encryptionContext`.
-      * Because the encryption context might contain additional key-value pairs,
-      * do not add a test that requires that all key-value pairs match.
-      * Instead, verify that the key-value pairs you expect match.
-      */
-      Object
-        .entries(context)
-        .forEach(([key, value]) => {
-          if (encryptionContext[key] !== value) throw new Error('Encryption Context does not match expected values')
-        })
+       * Depending on the Algorithm Suite, the `encryptionContext` _may_ contain additional values.
+       * In Signing Algorithm Suites the public verification key is serialized into the `encryptionContext`.
+       * Because the encryption context might contain additional key-value pairs,
+       * do not add a test that requires that all key-value pairs match.
+       * Instead, verify that the key-value pairs you expect match.
+       */
+      Object.entries(context).forEach(([key, value]) => {
+        if (encryptionContext[key] !== value)
+          throw new Error('Encryption Context does not match expected values')
+      })
     })
 
   /* This is not strictly speaking part of the example.

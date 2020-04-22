@@ -6,77 +6,100 @@ import {
   MultiKeyringNode,
   KmsKeyringNode,
   RawAesKeyringNode,
-  WrappingSuiteIdentifier, // eslint-disable-line no-unused-vars
+  WrappingSuiteIdentifier,
   RawAesWrappingSuiteIdentifier,
   RawRsaKeyringNode,
-  oaepHashSupported
+  oaepHashSupported,
 } from '@aws-crypto/client-node'
 import {
-  RsaKeyInfo, // eslint-disable-line no-unused-vars
-  AesKeyInfo, // eslint-disable-line no-unused-vars
-  KmsKeyInfo, // eslint-disable-line no-unused-vars
-  RSAKey, // eslint-disable-line no-unused-vars
-  AESKey, // eslint-disable-line no-unused-vars
-  KMSKey, // eslint-disable-line no-unused-vars
-  KeyInfoTuple // eslint-disable-line no-unused-vars
+  RsaKeyInfo,
+  AesKeyInfo,
+  KmsKeyInfo,
+  RSAKey,
+  AESKey,
+  KMSKey,
+  KeyInfoTuple,
 } from './types'
 import { constants } from 'crypto'
 
-const Bits2RawAesWrappingSuiteIdentifier: {[key: number]: WrappingSuiteIdentifier} = {
+const Bits2RawAesWrappingSuiteIdentifier: {
+  [key: number]: WrappingSuiteIdentifier
+} = {
   128: RawAesWrappingSuiteIdentifier.AES128_GCM_IV12_TAG16_NO_PADDING,
   192: RawAesWrappingSuiteIdentifier.AES192_GCM_IV12_TAG16_NO_PADDING,
-  256: RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
+  256: RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING,
 }
 
-export function encryptMaterialsManagerNode (keyInfos: KeyInfoTuple[]) {
+export function encryptMaterialsManagerNode(keyInfos: KeyInfoTuple[]) {
   const [generator, ...children] = keyInfos.map(keyringNode)
   return new MultiKeyringNode({ generator, children })
 }
 
-export function decryptMaterialsManagerNode (keyInfos: KeyInfoTuple[]) {
+export function decryptMaterialsManagerNode(keyInfos: KeyInfoTuple[]) {
   const children = keyInfos.map(keyringNode)
   return new MultiKeyringNode({ children })
 }
 
-export function keyringNode ([ info, key ]: KeyInfoTuple) {
+export function keyringNode([info, key]: KeyInfoTuple) {
   if (info.type === 'aws-kms' && key.type === 'aws-kms') {
     return kmsKeyring(info, key)
   }
-  if (info.type === 'raw' && info['encryption-algorithm'] === 'aes' && key.type === 'symmetric') {
+  if (
+    info.type === 'raw' &&
+    info['encryption-algorithm'] === 'aes' &&
+    key.type === 'symmetric'
+  ) {
     return aesKeyring(info, key)
   }
-  if (info.type === 'raw' && info['encryption-algorithm'] === 'rsa' && (key.type === 'public' || key.type === 'private')) {
+  if (
+    info.type === 'raw' &&
+    info['encryption-algorithm'] === 'rsa' &&
+    (key.type === 'public' || key.type === 'private')
+  ) {
     return rsaKeyring(info, key)
   }
   throw new Error('Unsupported keyring type')
 }
 
-export function kmsKeyring (_keyInfo: KmsKeyInfo, key: KMSKey) {
+export function kmsKeyring(_keyInfo: KmsKeyInfo, key: KMSKey) {
   const generatorKeyId = key['key-id']
   return new KmsKeyringNode({ generatorKeyId })
 }
 
-export function aesKeyring (keyInfo:AesKeyInfo, key: AESKey) {
+export function aesKeyring(keyInfo: AesKeyInfo, key: AESKey) {
   const keyName = key['key-id']
   const keyNamespace = keyInfo['provider-id']
   const { encoding, material } = key
   const unencryptedMasterKey = Buffer.alloc(key.bits / 8, material, encoding)
   const wrappingSuite = Bits2RawAesWrappingSuiteIdentifier[key.bits]
-  return new RawAesKeyringNode({ keyName, keyNamespace, unencryptedMasterKey, wrappingSuite })
+  return new RawAesKeyringNode({
+    keyName,
+    keyNamespace,
+    unencryptedMasterKey,
+    wrappingSuite,
+  })
 }
 
-export function rsaKeyring (keyInfo: RsaKeyInfo, key: RSAKey) {
+export function rsaKeyring(keyInfo: RsaKeyInfo, key: RSAKey) {
   const keyName = key['key-id']
   const keyNamespace = keyInfo['provider-id']
-  const rsaKey = key.type === 'private'
-    ? { privateKey: key.material }
-    : { publicKey: key.material }
+  const rsaKey =
+    key.type === 'private'
+      ? { privateKey: key.material }
+      : { publicKey: key.material }
   const { padding, oaepHash } = rsaPadding(keyInfo)
-  return new RawRsaKeyringNode({ keyName, keyNamespace, rsaKey, padding, oaepHash })
+  return new RawRsaKeyringNode({
+    keyName,
+    keyNamespace,
+    rsaKey,
+    padding,
+    oaepHash,
+  })
 }
 
-export function rsaPadding (keyInfo: RsaKeyInfo) {
-  if (keyInfo['padding-algorithm'] === 'pkcs1') return { padding: constants.RSA_PKCS1_PADDING }
+export function rsaPadding(keyInfo: RsaKeyInfo) {
+  if (keyInfo['padding-algorithm'] === 'pkcs1')
+    return { padding: constants.RSA_PKCS1_PADDING }
   const padding = constants.RSA_PKCS1_OAEP_PADDING
   const oaepHash = keyInfo['padding-hash']
   needs(oaepHashSupported || oaepHash === 'sha1', 'Not supported at this time.')
@@ -85,7 +108,7 @@ export function rsaPadding (keyInfo: RsaKeyInfo) {
 
 export class NotSupported extends Error {
   code: string
-  constructor (message?: string) {
+  constructor(message?: string) {
     super(message)
     Object.setPrototypeOf(this, NotSupported.prototype)
     this.code = 'NOT_SUPPORTED'

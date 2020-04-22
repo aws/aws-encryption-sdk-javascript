@@ -6,10 +6,8 @@
  * This is a simple compare function that is portable.
  * This function is *not* constant time.
  */
-export function compare (a: Uint8Array, b: Uint8Array) {
-  const length = a.byteLength > b.byteLength
-    ? b.byteLength
-    : a.byteLength
+export function compare(a: Uint8Array, b: Uint8Array) {
+  const length = a.byteLength > b.byteLength ? b.byteLength : a.byteLength
 
   for (let i = 0; length > i; i += 1) {
     if (a[i] > b[i]) return 1

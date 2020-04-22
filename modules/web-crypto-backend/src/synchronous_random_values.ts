@@ -9,7 +9,7 @@ import { locateWindow } from '@aws-sdk/util-locate-window'
  * For example constructors need to be synchronous.
  * The AWS JS SDK uses IRandomValues to have a consistent interface.
  */
-export function synchronousRandomValues (byteLength: number): Uint8Array {
+export function synchronousRandomValues(byteLength: number): Uint8Array {
   // Find the global scope for this runtime
   const globalScope = locateWindow()
 

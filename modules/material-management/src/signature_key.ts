@@ -1,12 +1,20 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { AlgorithmSuite, NodeECDHCurve, WebCryptoECDHCurve } from './algorithm_suites' // eslint-disable-line no-unused-vars
+import {
+  AlgorithmSuite,
+  NodeECDHCurve,
+  WebCryptoECDHCurve,
+} from './algorithm_suites'
 import { encodeNamedCurves } from './ecc_encode'
 import { decodeNamedCurves } from './ecc_decode'
-import { frozenClass, readOnlyBinaryProperty, readOnlyProperty } from './immutable_class'
+import {
+  frozenClass,
+  readOnlyBinaryProperty,
+  readOnlyProperty,
+} from './immutable_class'
 import { publicKeyPem, privateKeyPem } from './pem_helpers'
-import { AwsEsdkJsCryptoKey } from './types' // eslint-disable-line no-unused-vars
+import { AwsEsdkJsCryptoKey } from './types'
 
 /*
  * This public interface to the SignatureKey object is provided for
@@ -16,10 +24,14 @@ import { AwsEsdkJsCryptoKey } from './types' // eslint-disable-line no-unused-va
  */
 
 export class SignatureKey {
-  public readonly privateKey!: string|AwsEsdkJsCryptoKey
+  public readonly privateKey!: string | AwsEsdkJsCryptoKey
   public readonly compressPoint!: Uint8Array
-  public readonly signatureCurve!: NodeECDHCurve|WebCryptoECDHCurve
-  constructor (privateKey: Uint8Array|AwsEsdkJsCryptoKey, compressPoint: Uint8Array, suite: AlgorithmSuite) {
+  public readonly signatureCurve!: NodeECDHCurve | WebCryptoECDHCurve
+  constructor(
+    privateKey: Uint8Array | AwsEsdkJsCryptoKey,
+    compressPoint: Uint8Array,
+    suite: AlgorithmSuite
+  ) {
     const { signatureCurve: namedCurve } = suite
     /* Precondition: Do not create a SignatureKey for an algorithm suite that does not have an EC named curve. */
     if (!namedCurve) throw new Error('Unsupported Algorithm')
@@ -31,10 +43,18 @@ export class SignatureKey {
      * _only_ the raw points.
      */
     if (privateKey instanceof Uint8Array) {
-      const pem = privateKeyPem(namedCurve, fromBuffer(privateKey), fromBuffer(compressPoint))
+      const pem = privateKeyPem(
+        namedCurve,
+        fromBuffer(privateKey),
+        fromBuffer(compressPoint)
+      )
       readOnlyProperty<SignatureKey, 'privateKey'>(this, 'privateKey', pem)
     } else {
-      readOnlyProperty<SignatureKey, 'privateKey'>(this, 'privateKey', privateKey)
+      readOnlyProperty<SignatureKey, 'privateKey'>(
+        this,
+        'privateKey',
+        privateKey
+      )
     }
     readOnlyBinaryProperty(this, 'compressPoint', compressPoint)
     readOnlyProperty(this, 'signatureCurve', namedCurve)
@@ -42,7 +62,10 @@ export class SignatureKey {
     Object.freeze(this)
   }
 
-  static encodeCompressPoint (publicKeyBytes: Uint8Array, suite: AlgorithmSuite) {
+  static encodeCompressPoint(
+    publicKeyBytes: Uint8Array,
+    suite: AlgorithmSuite
+  ) {
     const { signatureCurve: namedCurve } = suite
     /* Precondition: Do not return a compress point for an algorithm suite that does not have an EC named curve. */
     if (!namedCurve) throw new Error('Unsupported Algorithm')
@@ -52,9 +75,12 @@ export class SignatureKey {
 frozenClass(SignatureKey)
 
 export class VerificationKey {
-  public readonly publicKey!: string|AwsEsdkJsCryptoKey
-  public readonly signatureCurve!: NodeECDHCurve|WebCryptoECDHCurve
-  constructor (publicKey: Uint8Array|AwsEsdkJsCryptoKey, suite: AlgorithmSuite) {
+  public readonly publicKey!: string | AwsEsdkJsCryptoKey
+  public readonly signatureCurve!: NodeECDHCurve | WebCryptoECDHCurve
+  constructor(
+    publicKey: Uint8Array | AwsEsdkJsCryptoKey,
+    suite: AlgorithmSuite
+  ) {
     const { signatureCurve: namedCurve } = suite
     /* Precondition: Do not create a VerificationKey for an algorithm suite that does not have an EC named curve. */
     if (!namedCurve) throw new Error('Unsupported Algorithm')
@@ -69,14 +95,18 @@ export class VerificationKey {
       const pem = publicKeyPem(namedCurve, fromBuffer(publicKey))
       readOnlyProperty<VerificationKey, 'publicKey'>(this, 'publicKey', pem)
     } else {
-      readOnlyProperty<VerificationKey, 'publicKey'>(this, 'publicKey', publicKey)
+      readOnlyProperty<VerificationKey, 'publicKey'>(
+        this,
+        'publicKey',
+        publicKey
+      )
     }
     readOnlyProperty(this, 'signatureCurve', namedCurve)
     Object.setPrototypeOf(this, VerificationKey.prototype)
     Object.freeze(this)
   }
 
-  static decodeCompressPoint (compressPoint: Uint8Array, suite: AlgorithmSuite) {
+  static decodeCompressPoint(compressPoint: Uint8Array, suite: AlgorithmSuite) {
     const { signatureCurve: namedCurve } = suite
     /* Precondition: Do not decode a public key for an algorithm suite that does not have an EC named curve. */
     if (!namedCurve) throw new Error('Unsupported Algorithm')
@@ -86,7 +116,7 @@ export class VerificationKey {
 }
 frozenClass(VerificationKey)
 
-function fromBuffer (uint: Uint8Array) {
+function fromBuffer(uint: Uint8Array) {
   const { buffer, byteOffset, byteLength } = uint
   return Buffer.from(buffer, byteOffset, byteLength)
 }

@@ -12,9 +12,13 @@
  */
 
 import {
-  AlgorithmSuite, AlgorithmSuiteIdentifier,
-  IWebCryptoAlgorithmSuite, WebCryptoEncryption, WebCryptoHash, // eslint-disable-line no-unused-vars
-  WebCryptoECDHCurve, AlgorithmSuiteTypeWebCrypto // eslint-disable-line no-unused-vars
+  AlgorithmSuite,
+  AlgorithmSuiteIdentifier,
+  IWebCryptoAlgorithmSuite,
+  WebCryptoEncryption,
+  WebCryptoHash,
+  WebCryptoECDHCurve,
+  AlgorithmSuiteTypeWebCrypto,
 } from './algorithm_suites'
 import { needs } from './needs'
 
@@ -28,7 +32,7 @@ const webCryptoAlgAes128GcmIv12Tag16: IWebCryptoAlgorithmSuite = {
   keyLength: 128,
   ivLength: 12,
   tagLength: 128,
-  cacheSafe: false
+  cacheSafe: false,
 }
 /* Web browsers do not support 192 bit key lengths at this time. */
 const webCryptoAlgAes192GcmIv12Tag16: IWebCryptoAlgorithmSuite = {
@@ -37,7 +41,7 @@ const webCryptoAlgAes192GcmIv12Tag16: IWebCryptoAlgorithmSuite = {
   keyLength: 192,
   ivLength: 12,
   tagLength: 128,
-  cacheSafe: false
+  cacheSafe: false,
 }
 const webCryptoAlgAes256GcmIv12Tag16: IWebCryptoAlgorithmSuite = {
   id: AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16,
@@ -45,7 +49,7 @@ const webCryptoAlgAes256GcmIv12Tag16: IWebCryptoAlgorithmSuite = {
   keyLength: 256,
   ivLength: 12,
   tagLength: 128,
-  cacheSafe: false
+  cacheSafe: false,
 }
 const webCryptoAlgAes128GcmIv12Tag16HkdfSha256: IWebCryptoAlgorithmSuite = {
   id: AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256,
@@ -55,7 +59,7 @@ const webCryptoAlgAes128GcmIv12Tag16HkdfSha256: IWebCryptoAlgorithmSuite = {
   tagLength: 128,
   kdf: 'HKDF',
   kdfHash: 'SHA-256',
-  cacheSafe: true
+  cacheSafe: true,
 }
 /* Web browsers do not support 192 bit key lengths at this time. */
 const webCryptoAlgAes192GcmIv12Tag16HkdfSha256: IWebCryptoAlgorithmSuite = {
@@ -66,7 +70,7 @@ const webCryptoAlgAes192GcmIv12Tag16HkdfSha256: IWebCryptoAlgorithmSuite = {
   tagLength: 128,
   kdf: 'HKDF',
   kdfHash: 'SHA-256',
-  cacheSafe: true
+  cacheSafe: true,
 }
 const webCryptoAlgAes256GcmIv12Tag16HkdfSha256: IWebCryptoAlgorithmSuite = {
   id: AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256,
@@ -76,7 +80,7 @@ const webCryptoAlgAes256GcmIv12Tag16HkdfSha256: IWebCryptoAlgorithmSuite = {
   tagLength: 128,
   kdf: 'HKDF',
   kdfHash: 'SHA-256',
-  cacheSafe: true
+  cacheSafe: true,
 }
 const webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256: IWebCryptoAlgorithmSuite = {
   id: AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256,
@@ -88,7 +92,7 @@ const webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256: IWebCryptoAlgorithmSuit
   kdfHash: 'SHA-256',
   cacheSafe: true,
   signatureCurve: 'P-256',
-  signatureHash: 'SHA-256'
+  signatureHash: 'SHA-256',
 }
 /* Web browsers do not support 192 bit key lengths at this time. */
 const webCryptoAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384: IWebCryptoAlgorithmSuite = {
@@ -101,7 +105,7 @@ const webCryptoAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384: IWebCryptoAlgorithmSuit
   kdfHash: 'SHA-384',
   cacheSafe: true,
   signatureCurve: 'P-384',
-  signatureHash: 'SHA-384'
+  signatureHash: 'SHA-384',
 }
 const webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384: IWebCryptoAlgorithmSuite = {
   id: AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384,
@@ -113,20 +117,40 @@ const webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384: IWebCryptoAlgorithmSuit
   kdfHash: 'SHA-384',
   cacheSafe: true,
   signatureCurve: 'P-384',
-  signatureHash: 'SHA-384'
+  signatureHash: 'SHA-384',
 }
 
-type WebCryptoAlgorithms = Readonly<{[id in AlgorithmSuiteIdentifier]: IWebCryptoAlgorithmSuite}>
+type WebCryptoAlgorithms = Readonly<
+  { [id in AlgorithmSuiteIdentifier]: IWebCryptoAlgorithmSuite }
+>
 const webCryptoAlgorithms: WebCryptoAlgorithms = Object.freeze({
-  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16]: Object.freeze(webCryptoAlgAes128GcmIv12Tag16),
-  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16]: Object.freeze(webCryptoAlgAes256GcmIv12Tag16),
-  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(webCryptoAlgAes128GcmIv12Tag16HkdfSha256),
-  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16HkdfSha256),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(webCryptoAlgAes256GcmIv12Tag16HkdfSha256),
-  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256]: Object.freeze(webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256),
-  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384)
+  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16]: Object.freeze(
+    webCryptoAlgAes128GcmIv12Tag16
+  ),
+  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16]: Object.freeze(
+    webCryptoAlgAes192GcmIv12Tag16
+  ),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16]: Object.freeze(
+    webCryptoAlgAes256GcmIv12Tag16
+  ),
+  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(
+    webCryptoAlgAes128GcmIv12Tag16HkdfSha256
+  ),
+  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(
+    webCryptoAlgAes192GcmIv12Tag16HkdfSha256
+  ),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(
+    webCryptoAlgAes256GcmIv12Tag16HkdfSha256
+  ),
+  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256]: Object.freeze(
+    webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256
+  ),
+  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(
+    webCryptoAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384
+  ),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(
+    webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384
+  ),
 })
 
 /* Web browsers do not support 192 bit key lengths at this time.
@@ -134,36 +158,62 @@ const webCryptoAlgorithms: WebCryptoAlgorithms = Object.freeze({
  * I need to have the same list of AlgorithmSuiteIdentifier.
  * This list is maintained here to make sure that the error message is helpful.
  */
-type WebCryptoAlgorithmSuiteIdentifier = Exclude<Exclude<Exclude<AlgorithmSuiteIdentifier,
-  AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16>,
-  AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256>,
-  AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384>
-type SupportedWebCryptoAlgorithms = Readonly<{[id in WebCryptoAlgorithmSuiteIdentifier]: IWebCryptoAlgorithmSuite}>
-const supportedWebCryptoAlgorithms: SupportedWebCryptoAlgorithms = Object.freeze({
-  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16]: Object.freeze(webCryptoAlgAes128GcmIv12Tag16),
-  // [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16]: Object.freeze(webCryptoAlgAes256GcmIv12Tag16),
-  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(webCryptoAlgAes128GcmIv12Tag16HkdfSha256),
-  // [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16HkdfSha256),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(webCryptoAlgAes256GcmIv12Tag16HkdfSha256),
-  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256]: Object.freeze(webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256),
-  // [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384)
-})
+type WebCryptoAlgorithmSuiteIdentifier = Exclude<
+  Exclude<
+    Exclude<
+      AlgorithmSuiteIdentifier,
+      AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16
+    >,
+    AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256
+  >,
+  AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+>
+type SupportedWebCryptoAlgorithms = Readonly<
+  { [id in WebCryptoAlgorithmSuiteIdentifier]: IWebCryptoAlgorithmSuite }
+>
+const supportedWebCryptoAlgorithms: SupportedWebCryptoAlgorithms = Object.freeze(
+  {
+    [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16]: Object.freeze(
+      webCryptoAlgAes128GcmIv12Tag16
+    ),
+    // [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16),
+    [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16]: Object.freeze(
+      webCryptoAlgAes256GcmIv12Tag16
+    ),
+    [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(
+      webCryptoAlgAes128GcmIv12Tag16HkdfSha256
+    ),
+    // [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16HkdfSha256),
+    [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(
+      webCryptoAlgAes256GcmIv12Tag16HkdfSha256
+    ),
+    [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256]: Object.freeze(
+      webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256
+    ),
+    // [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384),
+    [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(
+      webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384
+    ),
+  }
+)
 
-export class WebCryptoAlgorithmSuite extends AlgorithmSuite implements IWebCryptoAlgorithmSuite {
+export class WebCryptoAlgorithmSuite extends AlgorithmSuite
+  implements IWebCryptoAlgorithmSuite {
   encryption!: WebCryptoEncryption
   kdfHash?: WebCryptoHash
   signatureCurve?: WebCryptoECDHCurve
   signatureHash?: WebCryptoHash
   type: AlgorithmSuiteTypeWebCrypto = 'webCrypto'
-  constructor (id: AlgorithmSuiteIdentifier) {
+  constructor(id: AlgorithmSuiteIdentifier) {
     super(webCryptoAlgorithms[id])
     /* Precondition: Browsers do not support 192 bit keys so the AlgorithmSuiteIdentifier is removed.
      * This is primarily an error in decrypt but this make it clear.
      * The error can manifest deep in the decrypt loop making it hard to debug.
      */
-    needs(supportedWebCryptoAlgorithms.hasOwnProperty(id), '192-bit AES keys are not supported')
+    needs(
+      Object.prototype.hasOwnProperty.call(supportedWebCryptoAlgorithms, id),
+      '192-bit AES keys are not supported'
+    )
     Object.setPrototypeOf(this, WebCryptoAlgorithmSuite.prototype)
     Object.freeze(this)
   }

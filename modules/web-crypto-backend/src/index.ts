@@ -4,10 +4,9 @@
 import { locateWindow } from '@aws-sdk/util-locate-window'
 import { webCryptoBackendFactory } from './backend-factory'
 
-const {
-  getWebCryptoBackend,
-  configureFallback
-} = webCryptoBackendFactory(locateWindow())
+const { getWebCryptoBackend, configureFallback } = webCryptoBackendFactory(
+  locateWindow()
+)
 export { getWebCryptoBackend, configureFallback }
 
 export {
@@ -16,7 +15,7 @@ export {
   isFullSupportWebCryptoBackend,
   WebCryptoBackend,
   FullSupportWebCryptoBackend,
-  MixedSupportWebCryptoBackend
+  MixedSupportWebCryptoBackend,
 } from './backend-factory'
 
 export { synchronousRandomValues } from './synchronous_random_values'

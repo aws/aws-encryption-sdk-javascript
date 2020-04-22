@@ -2,26 +2,35 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-  NodeDefaultCryptographicMaterialsManager, NodeAlgorithmSuite, AlgorithmSuiteIdentifier, // eslint-disable-line no-unused-vars
-  KeyringNode, NodeEncryptionMaterial, getEncryptHelper, EncryptionContext, // eslint-disable-line no-unused-vars
-  NodeMaterialsManager, // eslint-disable-line no-unused-vars
-  needs
+  NodeDefaultCryptographicMaterialsManager,
+  NodeAlgorithmSuite,
+  AlgorithmSuiteIdentifier,
+  KeyringNode,
+  NodeEncryptionMaterial,
+  getEncryptHelper,
+  EncryptionContext,
+  NodeMaterialsManager,
+  needs,
 } from '@aws-crypto/material-management-node'
 import { getFramedEncryptStream } from './framed_encrypt_stream'
 import { SignatureStream } from './signature_stream'
 import Duplexify from 'duplexify'
 import { randomBytes } from 'crypto'
 import {
-  MessageHeader, // eslint-disable-line no-unused-vars
-  serializeFactory, kdfInfo, ContentType, SerializationVersion, ObjectType,
+  MessageHeader,
+  serializeFactory,
+  kdfInfo,
+  ContentType,
+  SerializationVersion,
+  ObjectType,
   FRAME_LENGTH,
   MESSAGE_ID_LENGTH,
-  Maximum
+  Maximum,
 } from '@aws-crypto/serialize'
 
 // @ts-ignore
 import { pipeline } from 'readable-stream'
-import { Duplex } from 'stream' // eslint-disable-line no-unused-vars
+import { Duplex } from 'stream'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const { serializeMessageHeader, headerAuthIv } = serializeFactory(fromUtf8)
@@ -40,50 +49,71 @@ export interface EncryptStreamInput {
  * @param cmm NodeMaterialsManager|KeyringNode
  * @param op EncryptStreamInput
  */
-export function encryptStream (
-  cmm: KeyringNode|NodeMaterialsManager,
+export function encryptStream(
+  cmm: KeyringNode | NodeMaterialsManager,
   op: EncryptStreamInput = {}
 ): Duplex {
-  const { suiteId, encryptionContext = {}, frameLength = FRAME_LENGTH, plaintextLength } = op
+  const {
+    suiteId,
+    encryptionContext = {},
+    frameLength = FRAME_LENGTH,
+    plaintextLength,
+  } = op
 
   /* Precondition: The frameLength must be less than the maximum frame size Node.js stream. */
-  needs(frameLength > 0 && Maximum.FRAME_SIZE >= frameLength, `frameLength out of bounds: 0 > frameLength >= ${Maximum.FRAME_SIZE}`)
+  needs(
+    frameLength > 0 && Maximum.FRAME_SIZE >= frameLength,
+    `frameLength out of bounds: 0 > frameLength >= ${Maximum.FRAME_SIZE}`
+  )
 
   /* If the cmm is a Keyring, wrap it with NodeDefaultCryptographicMaterialsManager. */
-  cmm = cmm instanceof KeyringNode
-    ? new NodeDefaultCryptographicMaterialsManager(cmm)
-    : cmm
+  cmm =
+    cmm instanceof KeyringNode
+      ? new NodeDefaultCryptographicMaterialsManager(cmm)
+      : cmm
 
   const suite = suiteId && new NodeAlgorithmSuite(suiteId)
 
   const wrappingStream = new Duplexify()
 
-  cmm.getEncryptionMaterials({ suite, encryptionContext, plaintextLength })
+  cmm
+    .getEncryptionMaterials({ suite, encryptionContext, plaintextLength })
     .then(async (material) => {
       const { dispose, getSigner } = getEncryptHelper(material)
 
-      const { getCipher, messageHeader, rawHeader } = getEncryptionInfo(material, frameLength)
+      const { getCipher, messageHeader, rawHeader } = getEncryptionInfo(
+        material,
+        frameLength
+      )
 
       wrappingStream.emit('MessageHeader', messageHeader)
 
-      const encryptStream = getFramedEncryptStream(getCipher, messageHeader, dispose, plaintextLength)
+      const encryptStream = getFramedEncryptStream(
+        getCipher,
+        messageHeader,
+        dispose,
+        plaintextLength
+      )
       const signatureStream = new SignatureStream(getSigner)
 
       pipeline(encryptStream, signatureStream)
 
       wrappingStream.setReadable(signatureStream)
       // Flush the rawHeader through the signatureStream
-      rawHeader.forEach(buff => signatureStream.write(buff))
+      rawHeader.forEach((buff) => signatureStream.write(buff))
 
       // @ts-ignore until readable-stream exports v3 types...
       wrappingStream.setWritable(encryptStream)
     })
-    .catch(err => wrappingStream.emit('error', err))
+    .catch((err) => wrappingStream.emit('error', err))
 
   return wrappingStream
 }
 
-export function getEncryptionInfo (material : NodeEncryptionMaterial, frameLength: number) {
+export function getEncryptionInfo(
+  material: NodeEncryptionMaterial,
+  frameLength: number
+) {
   const { kdfGetCipher } = getEncryptHelper(material)
   const { encryptionContext } = material
 
@@ -98,10 +128,12 @@ export function getEncryptionInfo (material : NodeEncryptionMaterial, frameLengt
     encryptedDataKeys: Object.freeze(material.encryptedDataKeys), // freeze me please
     contentType: ContentType.FRAMED_DATA,
     headerIvLength: ivLength,
-    frameLength
+    frameLength,
   })
 
-  const { buffer, byteOffset, byteLength } = serializeMessageHeader(messageHeader)
+  const { buffer, byteOffset, byteLength } = serializeMessageHeader(
+    messageHeader
+  )
   const headerBuffer = Buffer.from(buffer, byteOffset, byteLength)
   const info = kdfInfo(messageHeader.suiteId, messageHeader.messageId)
   const getCipher = kdfGetCipher(info)
@@ -115,6 +147,6 @@ export function getEncryptionInfo (material : NodeEncryptionMaterial, frameLengt
   return {
     getCipher,
     messageHeader,
-    rawHeader: [headerBuffer, headerIv, headerAuth]
+    rawHeader: [headerBuffer, headerIv, headerAuth],
   }
 }

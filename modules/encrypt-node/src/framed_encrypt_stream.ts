@@ -2,17 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-  serializeFactory, aadFactory,
-  MessageHeader, // eslint-disable-line no-unused-vars
-  Maximum
+  serializeFactory,
+  aadFactory,
+  MessageHeader,
+  Maximum,
 } from '@aws-crypto/serialize'
 // @ts-ignore
 import { Transform as PortableTransform } from 'readable-stream'
-import { Transform } from 'stream' // eslint-disable-line no-unused-vars
+import { Transform } from 'stream'
 import {
-  GetCipher, // eslint-disable-line no-unused-vars
-  AwsEsdkJsCipherGCM, // eslint-disable-line no-unused-vars
-  needs
+  GetCipher,
+  AwsEsdkJsCipherGCM,
+  needs,
 } from '@aws-crypto/material-management-node'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
@@ -30,16 +31,28 @@ interface EncryptFrame {
   content: Buffer[]
   bodyHeader: Buffer
   headerSent?: boolean
-  cipher: AwsEsdkJsCipherGCM,
+  cipher: AwsEsdkJsCipherGCM
   isFinalFrame: boolean
 }
+const PortableTransformWithType = PortableTransform as new (
+  ...args: any[]
+) => Transform
 
-const ioTick = () => new Promise(resolve => setImmediate(resolve))
-const noop = () => {}
+const ioTick = async () => new Promise((resolve) => setImmediate(resolve))
+const noop = () => {} // eslint-disable-line @typescript-eslint/no-empty-function
 type ErrBack = (err?: Error) => void
 
-export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: MessageHeader, dispose: Function, plaintextLength?: number) {
-  let accumulatingFrame: AccumulatingFrame = { contentLength: 0, content: [], sequenceNumber: 1 }
+export function getFramedEncryptStream(
+  getCipher: GetCipher,
+  messageHeader: MessageHeader,
+  dispose: Function,
+  plaintextLength?: number
+) {
+  let accumulatingFrame: AccumulatingFrame = {
+    contentLength: 0,
+    content: [],
+    sequenceNumber: 1,
+  }
   let pathologicalDrain: Function = noop
   const { frameLength } = messageHeader
 
@@ -47,21 +60,28 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
    * The Maximum.BYTES_PER_MESSAGE is set to be within Number.MAX_SAFE_INTEGER
    * See serialize/identifiers.ts enum Maximum for more details.
    */
-  needs(!plaintextLength || (plaintextLength >= 0 && Maximum.BYTES_PER_MESSAGE >= plaintextLength), 'plaintextLength out of bounds.')
+  needs(
+    !plaintextLength ||
+      (plaintextLength >= 0 && Maximum.BYTES_PER_MESSAGE >= plaintextLength),
+    'plaintextLength out of bounds.'
+  )
 
   /* Keeping the messageHeader, accumulatingFrame and pathologicalDrain private is the intention here.
    * It is already unlikely that these values could be touched in the current composition of streams,
    * but a different composition may change this.
    * Since we are handling the plain text here, it seems prudent to take extra measures.
    */
-  return new (class FramedEncryptStream extends (<new (...args: any[]) => Transform>PortableTransform) {
-    _transform (chunk: Buffer, encoding: string, callback: ErrBack) {
+  return new (class FramedEncryptStream extends PortableTransformWithType {
+    _transform(chunk: Buffer, encoding: string, callback: ErrBack) {
       const contentLeft = frameLength - accumulatingFrame.contentLength
 
       /* Precondition: Must not process more than plaintextLength.
        * The plaintextLength is the MAXIMUM value that can be encrypted.
        */
-      needs(!plaintextLength || (plaintextLength -= chunk.length) >= 0, 'Encrypted data exceeded plaintextLength.')
+      needs(
+        !plaintextLength || (plaintextLength -= chunk.length) >= 0,
+        'Encrypted data exceeded plaintextLength.'
+      )
 
       /* Check for early return (Postcondition): Have not accumulated a frame. */
       if (contentLeft > chunk.length) {
@@ -81,7 +101,7 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
         pendingFrame: accumulatingFrame,
         messageHeader,
         getCipher,
-        isFinalFrame: false
+        isFinalFrame: false,
       })
 
       // Reset frame state for next frame
@@ -89,7 +109,7 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
       accumulatingFrame = {
         contentLength: 0,
         content: [],
-        sequenceNumber: sequenceNumber + 1
+        sequenceNumber: sequenceNumber + 1,
       }
 
       this._flushEncryptFrame(encryptFrame)
@@ -97,12 +117,12 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
         .catch(callback)
     }
 
-    _flush (callback: ErrBack) {
+    _flush(callback: ErrBack) {
       const encryptFrame = getEncryptFrame({
         pendingFrame: accumulatingFrame,
         messageHeader,
         getCipher,
-        isFinalFrame: true
+        isFinalFrame: true,
       })
 
       this._flushEncryptFrame(encryptFrame)
@@ -110,11 +130,11 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
         .catch(callback)
     }
 
-    _destroy () {
+    _destroy() {
       dispose()
     }
 
-    _read (size: number) {
+    _read(size: number) {
       super._read(size)
       /* The _flushEncryptFrame encrypts and pushes the frame.
        * If this.push returns false then this stream
@@ -131,7 +151,7 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
       pathologicalDrain = noop
     }
 
-    async _flushEncryptFrame (encryptingFrame: EncryptFrame) {
+    async _flushEncryptFrame(encryptingFrame: EncryptFrame) {
       const { content, cipher, bodyHeader, isFinalFrame } = encryptingFrame
 
       this.push(bodyHeader)
@@ -152,14 +172,19 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
       /* Push the authTag onto the end.  Yes, I am abusing the name. */
       cipherContent.push(cipher.getAuthTag())
 
-      needs(frameSize === frameLength || (isFinalFrame && frameLength >= frameSize), 'Malformed frame')
+      needs(
+        frameSize === frameLength || (isFinalFrame && frameLength >= frameSize),
+        'Malformed frame'
+      )
 
       for (const cipherText of cipherContent) {
         if (!this.push(cipherText)) {
           /* back pressure: if push returns false, wait until _read
            * has been called.
            */
-          await new Promise(resolve => { pathologicalDrain = resolve })
+          await new Promise((resolve) => {
+            pathologicalDrain = resolve
+          })
         }
       }
 
@@ -169,13 +194,13 @@ export function getFramedEncryptStream (getCipher: GetCipher, messageHeader: Mes
 }
 
 type EncryptFrameInput = {
-  pendingFrame: AccumulatingFrame,
-  messageHeader: MessageHeader,
-  getCipher: GetCipher,
+  pendingFrame: AccumulatingFrame
+  messageHeader: MessageHeader
+  getCipher: GetCipher
   isFinalFrame: boolean
 }
 
-export function getEncryptFrame (input: EncryptFrameInput): EncryptFrame {
+export function getEncryptFrame(input: EncryptFrameInput): EncryptFrame {
   const { pendingFrame, messageHeader, getCipher, isFinalFrame } = input
   const { sequenceNumber, contentLength, content } = pendingFrame
   const { frameLength, contentType, messageId, headerIvLength } = messageHeader
@@ -185,13 +210,31 @@ export function getEncryptFrame (input: EncryptFrameInput): EncryptFrame {
    * In the case of the final frame,
    * it MUST NOT be larger than the frame length.
    */
-  needs(frameLength === contentLength || (isFinalFrame && frameLength >= contentLength), `Malformed frame length and content length: ${JSON.stringify({ frameLength, contentLength, isFinalFrame })}`)
+  needs(
+    frameLength === contentLength ||
+      (isFinalFrame && frameLength >= contentLength),
+    `Malformed frame length and content length: ${JSON.stringify({
+      frameLength,
+      contentLength,
+      isFinalFrame,
+    })}`
+  )
   const frameIv = serialize.frameIv(headerIvLength, sequenceNumber)
-  const bodyHeader = Buffer.from(isFinalFrame
-    ? finalFrameHeader(sequenceNumber, frameIv, contentLength)
-    : frameHeader(sequenceNumber, frameIv))
-  const contentString = aadUtility.messageAADContentString({ contentType, isFinalFrame })
-  const { buffer, byteOffset, byteLength } = aadUtility.messageAAD(messageId, contentString, sequenceNumber, contentLength)
+  const bodyHeader = Buffer.from(
+    isFinalFrame
+      ? finalFrameHeader(sequenceNumber, frameIv, contentLength)
+      : frameHeader(sequenceNumber, frameIv)
+  )
+  const contentString = aadUtility.messageAADContentString({
+    contentType,
+    isFinalFrame,
+  })
+  const { buffer, byteOffset, byteLength } = aadUtility.messageAAD(
+    messageId,
+    contentString,
+    sequenceNumber,
+    contentLength
+  )
   const cipher = getCipher(frameIv)
   cipher.setAAD(Buffer.from(buffer, byteOffset, byteLength))
 
