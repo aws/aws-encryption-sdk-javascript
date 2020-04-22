@@ -27,7 +27,9 @@ import { toBase64 } from '@aws-sdk/util-base64-browser'
  */
 // @ts-ignore
 import { subtle } from './msrcrypto'
-configureFallback(subtle)
+configureFallback(subtle).catch((e) => {
+  throw e
+})
 
 /* This is done to facilitate testing. */
 export async function testFallback() {

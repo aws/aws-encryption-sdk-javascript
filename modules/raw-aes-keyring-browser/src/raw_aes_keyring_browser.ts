@@ -162,7 +162,7 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
         keyName: 'importOnly',
         flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
       })
-    return backendForRawAesMasterKey().then((backend) =>
+    return backendForRawAesMasterKey().then(async (backend) =>
       _importCryptoKey(backend.subtle, material, ['encrypt', 'decrypt'])
     )
   }
