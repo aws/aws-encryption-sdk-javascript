@@ -29,11 +29,5 @@
   "types": "./build/main/index.d.ts",
   "files": [
     "build/**/*"
-  ],
-  "standard": {
-    "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "@typescript-eslint"
-    ]
-  }
+  ]
 }

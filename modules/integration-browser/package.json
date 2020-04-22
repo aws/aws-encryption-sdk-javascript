@@ -48,11 +48,5 @@
   "files": [
     "build/**/*",
     "karma.conf.js"
-  ],
-  "standard": {
-    "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "@typescript-eslint"
-    ]
-  }
+  ]
 }

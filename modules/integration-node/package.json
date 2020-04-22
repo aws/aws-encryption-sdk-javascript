@@ -33,11 +33,5 @@
   "bin": "./build/main/cli.js",
   "files": [
     "build/**/*"
-  ],
-  "standard": {
-    "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "@typescript-eslint"
-    ]
-  }
+  ]
 }
