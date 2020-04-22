@@ -6,8 +6,8 @@
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
     "lint": "run-s lint-*",
-    "lint-eslint": "npx eslint modules/**/src/*.ts modules/**/test/**/*.ts",
-    "lint-prettier": "prettier -c modules/**/src/*.ts modules/**/test/**/*.ts",
+    "lint-eslint": "eslint src/*.ts test/**/*.ts",
+    "lint-prettier": "prettier -c src/*.ts test/**/*.ts",
     "mocha": "mocha --require ts-node/register test/**/*test.ts",
     "test": "npm run lint && npm run coverage",
     "coverage": "nyc -e .ts npm run mocha"

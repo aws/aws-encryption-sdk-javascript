@@ -4,8 +4,8 @@
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "run-s lint-*",
-    "lint-eslint": "npx eslint modules/**/src/*.ts modules/**/test/**/*.ts",
-    "lint-prettier": "prettier -c modules/**/src/*.ts modules/**/test/**/*.ts",
+    "lint-eslint": "eslint src/*.ts",
+    "lint-prettier": "prettier -c src/*.ts",
     "karma": "karma start karma.conf.js",
     "build_fixtures": "npx .",
     "test": "npm run lint && npm run karma"
