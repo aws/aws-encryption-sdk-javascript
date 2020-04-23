@@ -16,8 +16,12 @@ const { expect } = chai
  * because the promisify code is all the same.
  */
 describe('promisifyMsSubtleCrypto', () => {
-  const backendComplete = promisifyMsSubtleCrypto(fixtures.fakeWindowIE11OnComplete.msCrypto.subtle)
-  const backendError = promisifyMsSubtleCrypto(fixtures.fakeWindowIE11OnError.msCrypto.subtle)
+  const backendComplete = promisifyMsSubtleCrypto(
+    fixtures.fakeWindowIE11OnComplete.msCrypto.subtle
+  )
+  const backendError = promisifyMsSubtleCrypto(
+    fixtures.fakeWindowIE11OnError.msCrypto.subtle
+  )
 
   it('backendComplete:decrypt', async () => {
     // @ts-ignore These methods are stubs, ignore ts errors
@@ -25,8 +29,8 @@ describe('promisifyMsSubtleCrypto', () => {
     expect(test).to.equal(true)
   })
 
-  it('backendError:decrypt', () => {
+  it('backendError:decrypt', async () => {
     // @ts-ignore These methods are stubs, ignore ts errors
-    expect(backendError.decrypt()).to.rejectedWith(Error)
+    await expect(backendError.decrypt()).to.rejectedWith(Error)
   })
 })

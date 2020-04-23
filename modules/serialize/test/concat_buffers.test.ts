@@ -9,7 +9,9 @@ import { Buffer } from 'buffer'
 
 describe('concatBuffers', () => {
   it('should concatenate simple Uint8Array', () => {
-    const buff = Array(5).fill(1).map((_, i) => new Uint8Array([i]))
+    const buff = Array(5)
+      .fill(1)
+      .map((_, i) => new Uint8Array([i]))
     const test = concatBuffers(...buff)
     expect(test).to.be.instanceof(Uint8Array)
     expect(test.byteLength).to.eql(5)
@@ -17,7 +19,9 @@ describe('concatBuffers', () => {
   })
 
   it('should concatenate simple ArrayBuffer', () => {
-    const buff = Array(5).fill(1).map((_, i) => new Uint8Array([i]).buffer)
+    const buff = Array(5)
+      .fill(1)
+      .map((_, i) => new Uint8Array([i]).buffer)
     const test = concatBuffers(...buff)
     expect(test).to.be.instanceof(Uint8Array)
     expect(test.byteLength).to.eql(5)
@@ -25,7 +29,9 @@ describe('concatBuffers', () => {
   })
 
   it('should concatenate simple Node Buffer', () => {
-    const buff = Array(5).fill(1).map((_, i) => Buffer.alloc(1, i))
+    const buff = Array(5)
+      .fill(1)
+      .map((_, i) => Buffer.alloc(1, i))
     const test = concatBuffers(...buff)
     expect(test).to.be.instanceof(Uint8Array)
     expect(test.byteLength).to.eql(5)

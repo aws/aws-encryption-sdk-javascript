@@ -8,7 +8,7 @@ import {
   decorateProperties,
   cacheEntryHasExceededLimits,
   getEncryptionMaterials,
-  decryptMaterials
+  decryptMaterials,
 } from '../src/caching_cryptographic_materials_decorators'
 import { getLocalCryptographicMaterialsCache } from '../src/get_local_cryptographic_materials_cache'
 import { buildCryptographicMaterialsCacheKeyHelpers } from '../src/build_cryptographic_materials_cache_key_helpers'
@@ -20,7 +20,7 @@ import {
   KeyringTraceFlag,
   EncryptedDataKey,
   NodeEncryptionMaterial,
-  NodeDecryptionMaterial
+  NodeDecryptionMaterial,
 } from '@aws-crypto/material-management'
 
 describe('decorateProperties', () => {
@@ -32,7 +32,7 @@ describe('decorateProperties', () => {
       maxAge: 10,
       partition: 'something',
       maxBytesEncrypted: 100,
-      maxMessagesEncrypted: 200
+      maxMessagesEncrypted: 200,
     } as any)
 
     expect(test._cache).to.equal('cache')
@@ -49,7 +49,7 @@ describe('decorateProperties', () => {
     const input = {
       backingMaterialsManager: 'backingMaterialsManager' as any,
       maxAge: 10,
-      partition: 'something'
+      partition: 'something',
     } as any
     expect(() => decorateProperties(test, input)).to.throw()
   })
@@ -59,7 +59,7 @@ describe('decorateProperties', () => {
     const input = {
       cache: 'cache' as any,
       maxAge: 10,
-      partition: 'something'
+      partition: 'something',
     } as any
     expect(() => decorateProperties(test, input)).to.throw()
   })
@@ -69,7 +69,7 @@ describe('decorateProperties', () => {
     const input = {
       cache: 'cache' as any,
       backingMaterialsManager: 'backingMaterialsManager' as any,
-      partition: 'something'
+      partition: 'something',
     } as any
     expect(() => decorateProperties(test, input)).to.throw()
   })
@@ -81,7 +81,7 @@ describe('decorateProperties', () => {
       backingMaterialsManager: 'backingMaterialsManager' as any,
       maxAge: 10,
       partition: 'something',
-      maxBytesEncrypted: -1
+      maxBytesEncrypted: -1,
     } as any
     expect(() => decorateProperties(test, input)).to.throw()
   })
@@ -93,7 +93,7 @@ describe('decorateProperties', () => {
       backingMaterialsManager: 'backingMaterialsManager' as any,
       maxAge: 10,
       partition: 'something',
-      maxMessagesEncrypted: -1
+      maxMessagesEncrypted: -1,
     } as any
     expect(() => decorateProperties(test, input)).to.throw()
   })
@@ -103,7 +103,7 @@ describe('decorateProperties', () => {
     const input = {
       cache: 'cache' as any,
       backingMaterialsManager: 'backingMaterialsManager' as any,
-      maxAge: 10
+      maxAge: 10,
     } as any
     expect(() => decorateProperties(test, input)).to.throw()
   })
@@ -120,7 +120,7 @@ describe('cacheEntryHasExceededLimits', () => {
     maxAge,
     partition: 'something',
     maxBytesEncrypted,
-    maxMessagesEncrypted
+    maxMessagesEncrypted,
   } as any)
 
   test.cacheEntryHasExceededLimits = cacheEntryHasExceededLimits()
@@ -129,7 +129,7 @@ describe('cacheEntryHasExceededLimits', () => {
     const entry = {
       now: Date.now(),
       messagesEncrypted: 0,
-      bytesEncrypted: 0
+      bytesEncrypted: 0,
     } as any
 
     expect(test.cacheEntryHasExceededLimits(entry)).to.equal(false)
@@ -140,7 +140,7 @@ describe('cacheEntryHasExceededLimits', () => {
       // Time is in the past, so I have to subtract.
       now: Date.now() - maxAge,
       messagesEncrypted: maxBytesEncrypted,
-      bytesEncrypted: maxMessagesEncrypted
+      bytesEncrypted: maxMessagesEncrypted,
     } as any
 
     expect(test.cacheEntryHasExceededLimits(entry)).to.equal(false)
@@ -151,7 +151,7 @@ describe('cacheEntryHasExceededLimits', () => {
       // Time is in the past, so I have to subtract.
       now: Date.now() - (maxAge + 1),
       messagesEncrypted: maxBytesEncrypted - 1,
-      bytesEncrypted: maxMessagesEncrypted - 1
+      bytesEncrypted: maxMessagesEncrypted - 1,
     } as any
 
     expect(test.cacheEntryHasExceededLimits(entry)).to.equal(true)
@@ -162,7 +162,7 @@ describe('cacheEntryHasExceededLimits', () => {
       // Time is in the past, so I have to subtract.
       now: Date.now() - maxAge,
       messagesEncrypted: maxBytesEncrypted + 1,
-      bytesEncrypted: maxMessagesEncrypted
+      bytesEncrypted: maxMessagesEncrypted,
     } as any
 
     expect(test.cacheEntryHasExceededLimits(entry)).to.equal(true)
@@ -173,7 +173,7 @@ describe('cacheEntryHasExceededLimits', () => {
       // Time is in the past, so I have to subtract.
       now: Date.now() - maxAge,
       messagesEncrypted: maxBytesEncrypted,
-      bytesEncrypted: maxMessagesEncrypted + 1
+      bytesEncrypted: maxMessagesEncrypted + 1,
     } as any
 
     expect(test.cacheEntryHasExceededLimits(entry)).to.equal(true)
@@ -184,28 +184,55 @@ describe('Cryptographic Material Functions', () => {
   const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
 
   const nodeSuite = new NodeAlgorithmSuite(suiteId)
-  const udk128 = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+  const udk128 = new Uint8Array([
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+  ])
   const encryptTrace = {
     keyNamespace: 'keyNamespace',
     keyName: 'keyName',
-    flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
+    flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
   }
   const decryptTrace = {
     keyNamespace: 'keyNamespace',
     keyName: 'keyName',
-    flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
+    flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
   }
 
-  const edk1 = new EncryptedDataKey({ providerId: 'keyNamespace', providerInfo: 'keyName', encryptedDataKey: new Uint8Array([1]) })
-  const edk2 = new EncryptedDataKey({ providerId: 'p2', providerInfo: 'pi2', encryptedDataKey: new Uint8Array([2]) })
+  const edk1 = new EncryptedDataKey({
+    providerId: 'keyNamespace',
+    providerInfo: 'keyName',
+    encryptedDataKey: new Uint8Array([1]),
+  })
+  const edk2 = new EncryptedDataKey({
+    providerId: 'p2',
+    providerInfo: 'pi2',
+    encryptedDataKey: new Uint8Array([2]),
+  })
 
   const encryptionMaterial = new NodeEncryptionMaterial(nodeSuite, {})
     .setUnencryptedDataKey(udk128, encryptTrace)
     .addEncryptedDataKey(edk1, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
     .addEncryptedDataKey(edk2, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
 
-  const decryptionMaterial = new NodeDecryptionMaterial(nodeSuite, {})
-    .setUnencryptedDataKey(udk128, decryptTrace)
+  const decryptionMaterial = new NodeDecryptionMaterial(
+    nodeSuite,
+    {}
+  ).setUnencryptedDataKey(udk128, decryptTrace)
 
   const context = {}
 
@@ -214,22 +241,29 @@ describe('Cryptographic Material Functions', () => {
   const _maxMessagesEncrypted = 10
   const _cache = getLocalCryptographicMaterialsCache(100)
   const _backingMaterialsManager = {
-    getEncryptionMaterials () {
+    getEncryptionMaterials() {
       return encryptionMaterial
     },
-    decryptMaterials () {
+    decryptMaterials() {
       return decryptionMaterial
-    }
+    },
   } as any
   const _partition = 'partition'
 
   const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
   const toUtf8 = (input: Uint8Array) => Buffer.from(input).toString('utf8')
-  const sha512 = async (...data: (Uint8Array|string)[]) => data
-    .map(item => typeof item === 'string' ? Buffer.from(item, 'hex') : item)
-    .reduce((hash, item) => hash.update(item), createHash('sha512'))
-    .digest()
-  const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(fromUtf8, toUtf8, sha512)
+  const sha512 = async (...data: (Uint8Array | string)[]) =>
+    data
+      .map((item) =>
+        typeof item === 'string' ? Buffer.from(item, 'hex') : item
+      )
+      .reduce((hash, item) => hash.update(item), createHash('sha512'))
+      .digest()
+  const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(
+    fromUtf8,
+    toUtf8,
+    sha512
+  )
 
   const testCMM = {
     _partition,
@@ -240,7 +274,7 @@ describe('Cryptographic Material Functions', () => {
     _backingMaterialsManager,
     _cacheEntryHasExceededLimits: cacheEntryHasExceededLimits(),
     getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
-    decryptMaterials: decryptMaterials(cacheKeyHelpers)
+    decryptMaterials: decryptMaterials(cacheKeyHelpers),
   } as any
 
   describe('getEncryptionMaterials', () => {
@@ -249,12 +283,16 @@ describe('Cryptographic Material Functions', () => {
         suite: nodeSuite,
         encryptionContext: context,
         frameLength: 10,
-        plaintextLength: 10
+        plaintextLength: 10,
       })
       // The response must be cloned... i.e. not the same.
       expect(test === encryptionMaterial).to.equal(false)
-      expect(test.encryptionContext).to.deep.equal(encryptionMaterial.encryptionContext)
-      expect(test.getUnencryptedDataKey()).to.deep.equal(encryptionMaterial.getUnencryptedDataKey())
+      expect(test.encryptionContext).to.deep.equal(
+        encryptionMaterial.encryptionContext
+      )
+      expect(test.getUnencryptedDataKey()).to.deep.equal(
+        encryptionMaterial.getUnencryptedDataKey()
+      )
     })
 
     it('Check for early return (Postcondition): If I can not cache the EncryptionMaterial, do not even look.', async () => {
@@ -264,21 +302,23 @@ describe('Cryptographic Material Functions', () => {
         _maxBytesEncrypted,
         _maxMessagesEncrypted,
         _cache: {
-          getEncryptionMaterial () {
+          getEncryptionMaterial() {
             throw new Error('should not happen')
-          }
+          },
         },
         _backingMaterialsManager,
         _cacheEntryHasExceededLimits: cacheEntryHasExceededLimits(),
         getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
-        decryptMaterials: decryptMaterials(cacheKeyHelpers)
+        decryptMaterials: decryptMaterials(cacheKeyHelpers),
       } as any
 
       const testSuiteCacheSafe = await testCMM.getEncryptionMaterials({
-        suite: new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16),
+        suite: new NodeAlgorithmSuite(
+          AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+        ),
         encryptionContext: context,
         frameLength: 10,
-        plaintextLength: 10
+        plaintextLength: 10,
       })
       // The response was not cloned... because it did not come from the cache
       expect(testSuiteCacheSafe === encryptionMaterial).to.equal(true)
@@ -286,7 +326,7 @@ describe('Cryptographic Material Functions', () => {
       const testPlaintext = await testCMM.getEncryptionMaterials({
         suite: nodeSuite,
         encryptionContext: context,
-        frameLength: 10
+        frameLength: 10,
       })
       // The response was not cloned... because it did not come from the cache
       expect(testPlaintext === encryptionMaterial).to.equal(true)
@@ -300,12 +340,12 @@ describe('Cryptographic Material Functions', () => {
         _maxBytesEncrypted,
         _maxMessagesEncrypted,
         _cache: {
-          getEncryptionMaterial () {
+          getEncryptionMaterial() {
             assertCount += 1
             return {
-              response: encryptionMaterial
+              response: encryptionMaterial,
             }
-          }
+          },
         },
         _backingMaterialsManager,
         _cacheEntryHasExceededLimits: () => {
@@ -315,14 +355,14 @@ describe('Cryptographic Material Functions', () => {
         getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
         decryptMaterials: () => {
           throw new Error('this should never happen')
-        }
+        },
       } as any
 
       await testCMM.getEncryptionMaterials({
         suite: nodeSuite,
         encryptionContext: context,
         frameLength: 10,
-        plaintextLength: 10
+        plaintextLength: 10,
       })
 
       expect(assertCount).to.equal(2)
@@ -334,20 +374,51 @@ describe('Cryptographic Material Functions', () => {
       const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
 
       const nodeSuite = new NodeAlgorithmSuite(suiteId)
-      const udk128 = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+      const udk128 = new Uint8Array([
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+      ])
       const encryptTrace = {
         keyNamespace: 'keyNamespace',
         keyName: 'keyName',
-        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
+        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
       }
 
-      const edk1 = new EncryptedDataKey({ providerId: 'keyNamespace', providerInfo: 'keyName', encryptedDataKey: new Uint8Array([1]) })
-      const edk2 = new EncryptedDataKey({ providerId: 'p2', providerInfo: 'pi2', encryptedDataKey: new Uint8Array([2]) })
+      const edk1 = new EncryptedDataKey({
+        providerId: 'keyNamespace',
+        providerInfo: 'keyName',
+        encryptedDataKey: new Uint8Array([1]),
+      })
+      const edk2 = new EncryptedDataKey({
+        providerId: 'p2',
+        providerInfo: 'pi2',
+        encryptedDataKey: new Uint8Array([2]),
+      })
 
       const encryptionMaterial = new NodeEncryptionMaterial(nodeSuite, {})
         .setUnencryptedDataKey(udk128, encryptTrace)
-        .addEncryptedDataKey(edk1, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
-        .addEncryptedDataKey(edk2, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+        .addEncryptedDataKey(
+          edk1,
+          KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
+        )
+        .addEncryptedDataKey(
+          edk2,
+          KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
+        )
 
       const testCMM = {
         _partition,
@@ -355,16 +426,16 @@ describe('Cryptographic Material Functions', () => {
         _maxBytesEncrypted,
         _maxMessagesEncrypted,
         _cache: {
-          getEncryptionMaterial () {
+          getEncryptionMaterial() {
             throw new Error('this should never happen')
           },
-          del () {}
+          del() {},
         },
         _backingMaterialsManager: {
-          getEncryptionMaterials () {
+          getEncryptionMaterials() {
             assertCount += 1
             return encryptionMaterial
-          }
+          },
         },
         _cacheEntryHasExceededLimits: () => {
           throw new Error('this should never happen')
@@ -372,14 +443,14 @@ describe('Cryptographic Material Functions', () => {
         getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
         decryptMaterials: () => {
           throw new Error('this should never happen')
-        }
+        },
       } as any
 
       const test = await testCMM.getEncryptionMaterials({
         suite: nodeSuite,
         encryptionContext: context,
         frameLength: 10,
-        plaintextLength: 10
+        plaintextLength: 10,
       })
 
       expect(assertCount).to.equal(1)
@@ -389,23 +460,55 @@ describe('Cryptographic Material Functions', () => {
     it('Postcondition: If the material has exceeded limits it MUST NOT be cloned.', async () => {
       let assertCount = 0
 
-      const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
+      const suiteId =
+        AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
 
       const nodeSuite = new NodeAlgorithmSuite(suiteId)
-      const udk128 = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+      const udk128 = new Uint8Array([
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+      ])
       const encryptTrace = {
         keyNamespace: 'keyNamespace',
         keyName: 'keyName',
-        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
+        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
       }
 
-      const edk1 = new EncryptedDataKey({ providerId: 'keyNamespace', providerInfo: 'keyName', encryptedDataKey: new Uint8Array([1]) })
-      const edk2 = new EncryptedDataKey({ providerId: 'p2', providerInfo: 'pi2', encryptedDataKey: new Uint8Array([2]) })
+      const edk1 = new EncryptedDataKey({
+        providerId: 'keyNamespace',
+        providerInfo: 'keyName',
+        encryptedDataKey: new Uint8Array([1]),
+      })
+      const edk2 = new EncryptedDataKey({
+        providerId: 'p2',
+        providerInfo: 'pi2',
+        encryptedDataKey: new Uint8Array([2]),
+      })
 
       const encryptionMaterial = new NodeEncryptionMaterial(nodeSuite, {})
         .setUnencryptedDataKey(udk128, encryptTrace)
-        .addEncryptedDataKey(edk1, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
-        .addEncryptedDataKey(edk2, KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
+        .addEncryptedDataKey(
+          edk1,
+          KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
+        )
+        .addEncryptedDataKey(
+          edk2,
+          KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
+        )
 
       const testCMM = {
         _partition,
@@ -413,17 +516,17 @@ describe('Cryptographic Material Functions', () => {
         _maxBytesEncrypted,
         _maxMessagesEncrypted,
         _cache: {
-          getEncryptionMaterial () {
+          getEncryptionMaterial() {
             assertCount += 1
             return false
           },
-          del () {}
+          del() {},
         },
         _backingMaterialsManager: {
-          getEncryptionMaterials () {
+          getEncryptionMaterials() {
             assertCount += 1
             return encryptionMaterial
-          }
+          },
         },
         _cacheEntryHasExceededLimits: () => {
           // This is the test.
@@ -435,14 +538,14 @@ describe('Cryptographic Material Functions', () => {
         getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
         decryptMaterials: () => {
           throw new Error('this should never happen')
-        }
+        },
       } as any
 
       const test = await testCMM.getEncryptionMaterials({
         suite: nodeSuite,
         encryptionContext: context,
         frameLength: 10,
-        plaintextLength: 10
+        plaintextLength: 10,
       })
 
       expect(assertCount).to.equal(3)
@@ -455,12 +558,16 @@ describe('Cryptographic Material Functions', () => {
       const test = await testCMM.decryptMaterials({
         suite: nodeSuite,
         encryptionContext: context,
-        encryptedDataKeys: [edk1]
+        encryptedDataKeys: [edk1],
       })
       // The response must be cloned... i.e. not the same.
       expect(test === decryptionMaterial).to.equal(false)
-      expect(test.encryptionContext).to.deep.equal(decryptionMaterial.encryptionContext)
-      expect(test.getUnencryptedDataKey()).to.deep.equal(decryptionMaterial.getUnencryptedDataKey())
+      expect(test.encryptionContext).to.deep.equal(
+        decryptionMaterial.encryptionContext
+      )
+      expect(test.getUnencryptedDataKey()).to.deep.equal(
+        decryptionMaterial.getUnencryptedDataKey()
+      )
     })
 
     it('Check for early return (Postcondition): If I can not cache the DecryptionMaterial, do not even look.', async () => {
@@ -470,20 +577,22 @@ describe('Cryptographic Material Functions', () => {
         _maxBytesEncrypted,
         _maxMessagesEncrypted,
         _cache: {
-          getDecryptionMaterial () {
+          getDecryptionMaterial() {
             throw new Error('should not happen')
-          }
+          },
         },
         _backingMaterialsManager,
         _cacheEntryHasExceededLimits: cacheEntryHasExceededLimits(),
         getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
-        decryptMaterials: decryptMaterials(cacheKeyHelpers)
+        decryptMaterials: decryptMaterials(cacheKeyHelpers),
       } as any
 
       const testSuiteCacheSafe = await testCMM.decryptMaterials({
-        suite: new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16),
+        suite: new NodeAlgorithmSuite(
+          AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+        ),
         encryptionContext: context,
-        encryptedDataKeys: [edk1]
+        encryptedDataKeys: [edk1],
       })
       // The response was not cloned... because it did not come from the cache
       expect(testSuiteCacheSafe === decryptionMaterial).to.equal(true)
@@ -497,12 +606,12 @@ describe('Cryptographic Material Functions', () => {
         _maxBytesEncrypted,
         _maxMessagesEncrypted,
         _cache: {
-          getDecryptionMaterial () {
+          getDecryptionMaterial() {
             assertCount += 1
             return {
-              response: decryptionMaterial
+              response: decryptionMaterial,
             }
-          }
+          },
         },
         _backingMaterialsManager,
         _cacheEntryHasExceededLimits: () => {
@@ -510,13 +619,13 @@ describe('Cryptographic Material Functions', () => {
           return false
         },
         getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
-        decryptMaterials: decryptMaterials(cacheKeyHelpers)
+        decryptMaterials: decryptMaterials(cacheKeyHelpers),
       } as any
 
       await testCMM.decryptMaterials({
         suite: nodeSuite,
         encryptionContext: context,
-        encryptedDataKeys: [edk1]
+        encryptedDataKeys: [edk1],
       })
       expect(assertCount).to.equal(2)
     })

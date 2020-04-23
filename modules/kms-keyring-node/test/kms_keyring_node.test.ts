@@ -10,15 +10,17 @@ import {
   NodeEncryptionMaterial,
   NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier,
-  EncryptedDataKey, // eslint-disable-line no-unused-vars
+  EncryptedDataKey,
   NodeDecryptionMaterial,
-  unwrapDataKey
+  unwrapDataKey,
 } from '@aws-crypto/material-management-node'
 
 describe('KmsKeyringNode::constructor', () => {
   it('constructor decorates', async () => {
-    const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
-    const keyArn = 'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f'
+    const generatorKeyId =
+      'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+    const keyArn =
+      'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f'
     const keyIds = [keyArn]
 
     const test = new KmsKeyringNode({ generatorKeyId, keyIds })
@@ -37,15 +39,19 @@ describe('KmsKeyringNode::constructor', () => {
 })
 
 describe('KmsKeyringNode encrypt/decrypt', () => {
-  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
-  const keyArn = 'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f'
+  const generatorKeyId =
+    'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+  const keyArn =
+    'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f'
   const keyIds = [keyArn]
   const keyring = new KmsKeyringNode({ generatorKeyId, keyIds })
   let encryptedDataKey: EncryptedDataKey
   let udk: Uint8Array
 
   it('can encrypt and create unencrypted data key', async () => {
-    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
+    const suite = new NodeAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256
+    )
     const material = new NodeEncryptionMaterial(suite, {})
     const test = await keyring.onEncrypt(material)
     expect(test.hasValidKey()).to.equal(true)
@@ -57,7 +63,9 @@ describe('KmsKeyringNode encrypt/decrypt', () => {
   })
 
   it('can decrypt an EncryptedDataKey', async () => {
-    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
+    const suite = new NodeAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256
+    )
     const material = new NodeDecryptionMaterial(suite, {})
     const test = await keyring.onDecrypt(material, [encryptedDataKey])
     expect(test.hasValidKey()).to.equal(true)

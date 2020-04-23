@@ -4,7 +4,12 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import { generateDataKey, encrypt, decrypt, kmsResponseToEncryptedDataKey } from '../src/helpers'
+import {
+  generateDataKey,
+  encrypt,
+  decrypt,
+  kmsResponseToEncryptedDataKey,
+} from '../src/helpers'
 import { EncryptedDataKey } from '@aws-crypto/material-management'
 
 describe('kmsResponseToEncryptedDataKey', () => {
@@ -12,7 +17,7 @@ describe('kmsResponseToEncryptedDataKey', () => {
     const response = {
       KeyId: 'asdf',
       CiphertextBlob: new Uint8Array(5),
-      $metadata: {} as any
+      $metadata: {} as any,
     }
     const test = kmsResponseToEncryptedDataKey(response)
     expect(test).instanceOf(EncryptedDataKey)
@@ -25,7 +30,7 @@ describe('kmsResponseToEncryptedDataKey', () => {
 describe('generateDataKey', () => {
   it('return', async () => {
     // the string Plaintext as bytes
-    const key = [ 80, 108, 97, 105, 110, 116, 101, 120, 116 ]
+    const key = [80, 108, 97, 105, 110, 116, 101, 120, 116]
     const Plaintext = new Uint8Array(key)
     const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const GrantTokens = ['grantToken']
@@ -35,7 +40,7 @@ describe('generateDataKey', () => {
     const clientProvider: any = (region: string) => {
       expect(region).to.equal('us-east-1')
       return { generateDataKey }
-      async function generateDataKey (input: any) {
+      async function generateDataKey(input: any) {
         expect(input.KeyId).to.equal(KeyId)
         expect(input.GrantTokens).to.equal(GrantTokens)
         expect(input.NumberOfBytes).to.equal(NumberOfBytes)
@@ -43,12 +48,18 @@ describe('generateDataKey', () => {
         return {
           Plaintext,
           KeyId: 'KeyId',
-          CiphertextBlob: new Uint8Array([1, 2, 3, 4])
+          CiphertextBlob: new Uint8Array([1, 2, 3, 4]),
         }
       }
     }
 
-    const test = await generateDataKey(clientProvider, NumberOfBytes, KeyId, EncryptionContext, GrantTokens)
+    const test = await generateDataKey(
+      clientProvider,
+      NumberOfBytes,
+      KeyId,
+      EncryptionContext,
+      GrantTokens
+    )
     if (!test) throw new Error('never')
     expect(test.Plaintext).to.deep.equal(new Uint8Array(key))
     expect(test.KeyId).to.equal('KeyId')
@@ -65,7 +76,13 @@ describe('generateDataKey', () => {
       return false
     }
 
-    const test = await generateDataKey(clientProvider, NumberOfBytes, KeyId, EncryptionContext, GrantTokens)
+    const test = await generateDataKey(
+      clientProvider,
+      NumberOfBytes,
+      KeyId,
+      EncryptionContext,
+      GrantTokens
+    )
     expect(test).to.equal(false)
   })
 
@@ -77,13 +94,19 @@ describe('generateDataKey', () => {
 
     const clientProvider: any = () => {
       return { generateDataKey }
-      function generateDataKey () {
+      function generateDataKey() {
         return {}
       }
     }
 
     try {
-      await generateDataKey(clientProvider, NumberOfBytes, KeyId, EncryptionContext, GrantTokens)
+      await generateDataKey(
+        clientProvider,
+        NumberOfBytes,
+        KeyId,
+        EncryptionContext,
+        GrantTokens
+      )
     } catch {
       return
     }
@@ -102,19 +125,25 @@ describe('encrypt', () => {
     const clientProvider: any = (region: string) => {
       expect(region).to.equal('us-east-1')
       return { encrypt }
-      function encrypt (input: any) {
+      function encrypt(input: any) {
         expect(input.KeyId).to.equal(KeyId)
         expect(input.GrantTokens).to.equal(GrantTokens)
         expect(input.Plaintext).to.equal(Plaintext)
         expect(input.EncryptionContext).to.equal(EncryptionContext)
         return {
           KeyId: 'KeyId',
-          CiphertextBlob
+          CiphertextBlob,
         }
       }
     }
 
-    const test = await encrypt(clientProvider, Plaintext, KeyId, EncryptionContext, GrantTokens)
+    const test = await encrypt(
+      clientProvider,
+      Plaintext,
+      KeyId,
+      EncryptionContext,
+      GrantTokens
+    )
     if (!test) throw new Error('never')
     expect(test.KeyId).to.equal('KeyId')
     expect(test.CiphertextBlob).to.deep.equal(CiphertextBlob)
@@ -130,7 +159,13 @@ describe('encrypt', () => {
       return false
     }
 
-    const test = await encrypt(clientProvider, Plaintext, KeyId, EncryptionContext, GrantTokens)
+    const test = await encrypt(
+      clientProvider,
+      Plaintext,
+      KeyId,
+      EncryptionContext,
+      GrantTokens
+    )
     expect(test).to.equal(false)
   })
 
@@ -142,13 +177,19 @@ describe('encrypt', () => {
 
     const clientProvider: any = () => {
       return { encrypt }
-      function encrypt () {
+      function encrypt() {
         return {}
       }
     }
 
     try {
-      await encrypt(clientProvider, Plaintext, KeyId, EncryptionContext, GrantTokens)
+      await encrypt(
+        clientProvider,
+        Plaintext,
+        KeyId,
+        EncryptionContext,
+        GrantTokens
+      )
     } catch {
       return
     }
@@ -159,32 +200,37 @@ describe('encrypt', () => {
 describe('decrypt', () => {
   it('return', async () => {
     // the string Plaintext as bytes
-    const key = [ 80, 108, 97, 105, 110, 116, 101, 120, 116 ]
+    const key = [80, 108, 97, 105, 110, 116, 101, 120, 116]
     const Plaintext = new Uint8Array(key)
     const GrantTokens = ['grantToken']
     const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const edk = new EncryptedDataKey({
       providerId: 'aws-kms',
       providerInfo: KeyId,
-      encryptedDataKey: new Uint8Array(5)
+      encryptedDataKey: new Uint8Array(5),
     })
     const EncryptionContext = { some: 'context' }
 
     const clientProvider: any = (region: string) => {
       expect(region).to.equal('us-east-1')
       return { decrypt }
-      function decrypt (input: any) {
+      function decrypt(input: any) {
         expect(input.GrantTokens).to.equal(GrantTokens)
         expect(input.CiphertextBlob).lengthOf(5)
         expect(input.EncryptionContext).to.equal(EncryptionContext)
         return {
           KeyId: 'KeyId',
-          Plaintext
+          Plaintext,
         }
       }
     }
 
-    const test = await decrypt(clientProvider, edk, EncryptionContext, GrantTokens)
+    const test = await decrypt(
+      clientProvider,
+      edk,
+      EncryptionContext,
+      GrantTokens
+    )
     if (!test) throw new Error('never')
     expect(test.KeyId).to.equal('KeyId')
     expect(test.Plaintext).to.deep.equal(new Uint8Array(key))
@@ -196,16 +242,16 @@ describe('decrypt', () => {
     const edk = new EncryptedDataKey({
       providerId: 'NOTaws-kms',
       providerInfo: KeyId,
-      encryptedDataKey: new Uint8Array(5)
+      encryptedDataKey: new Uint8Array(5),
     })
     const EncryptionContext = { some: 'context' }
 
     const clientProvider: any = () => {
       return { decrypt }
-      function decrypt () {
+      function decrypt() {
         return {
           KeyId: 'KeyId',
-          Plaintext: 'Plaintext'
+          Plaintext: 'Plaintext',
         }
       }
     }
@@ -224,7 +270,7 @@ describe('decrypt', () => {
     const edk = new EncryptedDataKey({
       providerId: 'aws-kms',
       providerInfo: KeyId,
-      encryptedDataKey: new Uint8Array(5)
+      encryptedDataKey: new Uint8Array(5),
     })
     const EncryptionContext = { some: 'context' }
 
@@ -232,7 +278,12 @@ describe('decrypt', () => {
       return false
     }
 
-    const test = await decrypt(clientProvider, edk, EncryptionContext, GrantTokens)
+    const test = await decrypt(
+      clientProvider,
+      edk,
+      EncryptionContext,
+      GrantTokens
+    )
     expect(test).to.equal(false)
   })
 
@@ -242,13 +293,13 @@ describe('decrypt', () => {
     const edk = new EncryptedDataKey({
       providerId: 'aws-kms',
       providerInfo: KeyId,
-      encryptedDataKey: new Uint8Array(5)
+      encryptedDataKey: new Uint8Array(5),
     })
     const EncryptionContext = { some: 'context' }
 
     const clientProvider: any = () => {
       return { decrypt }
-      function decrypt () {
+      function decrypt() {
         return {}
       }
     }

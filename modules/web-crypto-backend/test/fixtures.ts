@@ -5,84 +5,140 @@ export const fakeWindowWebCryptoSupportsZeroByteGCM: Window = {
   crypto: {
     getRandomValues: () => {},
     subtle: {
-      async decrypt () { return {} as any },
-      async digest () { return {} as any },
-      async encrypt () {
+      async decrypt() {
+        return {} as any
+      },
+      async digest() {
+        return {} as any
+      },
+      async encrypt() {
         // Mock a valid default tagLength
         // so we support zero byte encryption...
         return { byteLength: 16 } as any
       },
-      async exportKey () { return {} as any },
-      async generateKey () { return {} as any },
-      async importKey () { return {} as any },
-      async sign () { return {} as any },
-      async verify () { return {} as any }
-    }
-  }
+      async exportKey() {
+        return {} as any
+      },
+      async generateKey() {
+        return {} as any
+      },
+      async importKey() {
+        return {} as any
+      },
+      async sign() {
+        return {} as any
+      },
+      async verify() {
+        return {} as any
+      },
+    },
+  },
 } as any
 
 export const fakeWindowWebCryptoZeroByteEncryptFail: Window = {
   crypto: {
     getRandomValues: () => {},
     subtle: {
-      async decrypt () { return {} as any },
-      async digest () { return {} as any },
-      async encrypt (...args: any[]) {
-        const [,, data] = args
+      async decrypt() {
+        return {} as any
+      },
+      async digest() {
+        return {} as any
+      },
+      async encrypt(...args: any[]) {
+        const [, , data] = args
         if (data.byteLength === 0) {
           throw new Error('Does not support')
         } else {
           return {} as any
         }
       },
-      async exportKey () { return {} as any },
-      async generateKey () { return {} as any },
-      async importKey () { return {} as any },
-      async sign () { return {} as any },
-      async verify () { return {} as any }
-    }
-  }
+      async exportKey() {
+        return {} as any
+      },
+      async generateKey() {
+        return {} as any
+      },
+      async importKey() {
+        return {} as any
+      },
+      async sign() {
+        return {} as any
+      },
+      async verify() {
+        return {} as any
+      },
+    },
+  },
 } as any
 
 export const fakeWindowWebCryptoOnlyRandomSource: Window = {
   crypto: {
-    getRandomValues: () => {}
-  }
+    getRandomValues: () => {},
+  },
 } as any
 
 export const fakeWindowNoWebCrypto: Window = {} as any
 
 export const subtleFallbackSupportsZeroByteGCM = {
-  async decrypt () { return {} as any },
-  async digest () { return {} as any },
-  async encrypt () {
+  async decrypt() {
+    return {} as any
+  },
+  async digest() {
+    return {} as any
+  },
+  async encrypt() {
     // Mock a valid default tagLength
     // so we support zero byte encryption...
     return { byteLength: 16 } as any
   },
-  async exportKey () { return {} as any },
-  async generateKey () { return {} as any },
-  async importKey () { return {} as any },
-  async sign () { return {} as any },
-  async verify () { return {} as any }
+  async exportKey() {
+    return {} as any
+  },
+  async generateKey() {
+    return {} as any
+  },
+  async importKey() {
+    return {} as any
+  },
+  async sign() {
+    return {} as any
+  },
+  async verify() {
+    return {} as any
+  },
 } as any
 
 export const subtleFallbackZeroByteEncryptFail = {
-  async decrypt () { return {} as any },
-  async digest () { return {} as any },
-  async encrypt (...args: any[]) {
-    const [,, data] = args
+  async decrypt() {
+    return {} as any
+  },
+  async digest() {
+    return {} as any
+  },
+  async encrypt(...args: any[]) {
+    const [, , data] = args
     if (data.byteLength === 0) {
       throw new Error('Does not support')
     } else {
       return {} as any
     }
   },
-  async exportKey () { return {} as any },
-  async generateKey () { return {} as any },
-  async importKey () { return {} as any },
-  async sign () { return {} as any },
-  async verify () { return {} as any }
+  async exportKey() {
+    return {} as any
+  },
+  async generateKey() {
+    return {} as any
+  },
+  async importKey() {
+    return {} as any
+  },
+  async sign() {
+    return {} as any
+  },
+  async verify() {
+    return {} as any
+  },
 } as any
 
 export const subtleFallbackNoWebCrypto = {} as any
@@ -93,7 +149,7 @@ export const fakeWindowIE11OnComplete = {
       return values.fill(1)
     },
     subtle: {
-      decrypt () {
+      decrypt() {
         const obj = {} as any
         setTimeout(() => {
           obj.result = true
@@ -101,7 +157,7 @@ export const fakeWindowIE11OnComplete = {
         })
         return obj
       },
-      digest () {
+      digest() {
         const obj = {} as any
         setTimeout(() => {
           obj.result = true
@@ -109,7 +165,7 @@ export const fakeWindowIE11OnComplete = {
         })
         return obj
       },
-      encrypt () {
+      encrypt() {
         const obj = {} as any
         setTimeout(() => {
           obj.result = true
@@ -117,7 +173,7 @@ export const fakeWindowIE11OnComplete = {
         })
         return obj
       },
-      exportKey () {
+      exportKey() {
         const obj = {} as any
         setTimeout(() => {
           obj.result = true
@@ -125,7 +181,7 @@ export const fakeWindowIE11OnComplete = {
         })
         return obj
       },
-      generateKey () {
+      generateKey() {
         const obj = {} as any
         setTimeout(() => {
           obj.result = true
@@ -133,7 +189,7 @@ export const fakeWindowIE11OnComplete = {
         })
         return obj
       },
-      importKey () {
+      importKey() {
         const obj = {} as any
         setTimeout(() => {
           obj.result = true
@@ -141,7 +197,7 @@ export const fakeWindowIE11OnComplete = {
         })
         return obj
       },
-      sign () {
+      sign() {
         const obj = {} as any
         setTimeout(() => {
           obj.result = true
@@ -149,17 +205,17 @@ export const fakeWindowIE11OnComplete = {
         })
         return obj
       },
-      verify () {
+      verify() {
         const obj = {} as any
         setTimeout(() => {
           obj.result = true
           obj.oncomplete()
         })
         return obj
-      }
-    }
+      },
+    },
   },
-  MSInputMethodContext: {} as any
+  MSInputMethodContext: {} as any,
 } as any
 
 export const fakeWindowIE11OnError = {
@@ -168,63 +224,63 @@ export const fakeWindowIE11OnError = {
       return values.fill(1)
     },
     subtle: {
-      decrypt () {
+      decrypt() {
         const obj = {} as any
         setTimeout(() => {
           obj.onerror(new Error('stub error'))
         })
         return obj
       },
-      digest () {
+      digest() {
         const obj = {} as any
         setTimeout(() => {
           obj.onerror(new Error('stub error'))
         })
         return obj
       },
-      encrypt () {
+      encrypt() {
         const obj = {} as any
         setTimeout(() => {
           obj.onerror(new Error('stub error'))
         })
         return obj
       },
-      exportKey () {
+      exportKey() {
         const obj = {} as any
         setTimeout(() => {
           obj.onerror(new Error('stub error'))
         })
         return obj
       },
-      generateKey () {
+      generateKey() {
         const obj = {} as any
         setTimeout(() => {
           obj.onerror(new Error('stub error'))
         })
         return obj
       },
-      importKey () {
+      importKey() {
         const obj = {} as any
         setTimeout(() => {
           obj.onerror(new Error('stub error'))
         })
         return obj
       },
-      sign () {
+      sign() {
         const obj = {} as any
         setTimeout(() => {
           obj.onerror(new Error('stub error'))
         })
         return obj
       },
-      verify () {
+      verify() {
         const obj = {} as any
         setTimeout(() => {
           obj.onerror(new Error('stub error'))
         })
         return obj
-      }
-    }
+      },
+    },
   },
-  MSInputMethodContext: {} as any
+  MSInputMethodContext: {} as any,
 } as any

@@ -18,7 +18,9 @@ describe('synchronousRandomValues', () => {
 
   it('should return msCrypto random values', () => {
     const { locateWindow } = browserWindow
-    sinon.stub(browserWindow, 'locateWindow').returns(fixtures.fakeWindowIE11OnComplete)
+    sinon
+      .stub(browserWindow, 'locateWindow')
+      .returns(fixtures.fakeWindowIE11OnComplete)
 
     const test = synchronousRandomValues(5)
     expect(test).to.be.instanceOf(Uint8Array)

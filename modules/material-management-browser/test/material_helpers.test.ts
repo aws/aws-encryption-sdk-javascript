@@ -11,7 +11,7 @@ import {
   WebCryptoKdf,
   getSubtleFunction,
   getEncryptHelper,
-  getDecryptionHelper
+  getDecryptionHelper,
 } from '../src/index'
 import {
   WebCryptoEncryptionMaterial,
@@ -21,9 +21,14 @@ import {
   KeyringTraceFlag,
   isValidCryptoKey,
   SignatureKey,
-  VerificationKey
+  VerificationKey,
 } from '@aws-crypto/material-management'
-import { synchronousRandomValues, getWebCryptoBackend, getZeroByteSubtle, getNonZeroByteBackend } from '@aws-crypto/web-crypto-backend'
+import {
+  synchronousRandomValues,
+  getWebCryptoBackend,
+  getZeroByteSubtle,
+  getNonZeroByteBackend,
+} from '@aws-crypto/web-crypto-backend'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -32,10 +37,16 @@ declare const CryptoKey: CryptoKey
 
 describe('_importCryptoKey', () => {
   it('can import WebCryptoEncryptionMaterial with a algorithm suite without a KDF', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
@@ -47,10 +58,16 @@ describe('_importCryptoKey', () => {
   })
 
   it('can import WebCryptoEncryptionMaterial with a algorithm suite with a KDF', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
@@ -61,10 +78,16 @@ describe('_importCryptoKey', () => {
   })
 
   it('can import WebCryptoDecryptionMaterial with a algorithm suite without a KDF', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const material = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
@@ -75,10 +98,16 @@ describe('_importCryptoKey', () => {
   })
 
   it('can import WebCryptoDecryptionMaterial with a algorithm suite with a KDF', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+    )
     const material = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
@@ -91,10 +120,16 @@ describe('_importCryptoKey', () => {
 
 describe('importCryptoKey', () => {
   it('can import when backend is isFullSupportWebCryptoBackend', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
 
@@ -104,10 +139,16 @@ describe('importCryptoKey', () => {
   })
 
   it('can import when backend is mixed support', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const realBackend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(realBackend)
@@ -116,12 +157,19 @@ describe('importCryptoKey', () => {
      */
     const mixedSupportBackend = {
       nonZeroByteSubtle: subtle,
-      zeroByteSubtle: subtle
+      zeroByteSubtle: subtle,
     } as any
 
-    const mixedBackendCryptoKey = await importCryptoKey(mixedSupportBackend, material, ['encrypt'])
+    const mixedBackendCryptoKey = await importCryptoKey(
+      mixedSupportBackend,
+      material,
+      ['encrypt']
+    )
     expect(mixedBackendCryptoKey).to.not.be.instanceOf(CryptoKey)
-    const { nonZeroByteCryptoKey, zeroByteCryptoKey } = mixedBackendCryptoKey as any
+    const {
+      nonZeroByteCryptoKey,
+      zeroByteCryptoKey,
+    } = mixedBackendCryptoKey as any
     expect(nonZeroByteCryptoKey).to.be.instanceOf(CryptoKey)
     expect(zeroByteCryptoKey).to.be.instanceOf(CryptoKey)
     expect(isValidCryptoKey(nonZeroByteCryptoKey, material)).to.equal(true)
@@ -131,16 +179,28 @@ describe('importCryptoKey', () => {
 
 describe('WebCryptoKdf', () => {
   it('returns a valid kdf key', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
 
     const cryptoKey = await _importCryptoKey(subtle, material, ['deriveKey'])
-    const kdfKey = await WebCryptoKdf(subtle, material, cryptoKey, ['encrypt'], new Uint8Array(5))
+    const kdfKey = await WebCryptoKdf(
+      subtle,
+      material,
+      cryptoKey,
+      ['encrypt'],
+      new Uint8Array(5)
+    )
     expect(kdfKey).to.be.instanceOf(CryptoKey)
     expect(isValidCryptoKey(kdfKey, material)).to.equal(true)
     // for kdf...
@@ -148,16 +208,28 @@ describe('WebCryptoKdf', () => {
   })
 
   it('Check for early return (Postcondition): No WebCrypto KDF, just return the unencrypted data key.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
 
     const cryptoKey = await _importCryptoKey(subtle, material, ['encrypt'])
-    const kdfKey = await WebCryptoKdf(subtle, material, cryptoKey, ['encrypt'], new Uint8Array(5))
+    const kdfKey = await WebCryptoKdf(
+      subtle,
+      material,
+      cryptoKey,
+      ['encrypt'],
+      new Uint8Array(5)
+    )
     expect(kdfKey).to.be.instanceOf(CryptoKey)
     expect(isValidCryptoKey(kdfKey, material)).to.equal(true)
     // for non-kdf...
@@ -165,44 +237,72 @@ describe('WebCryptoKdf', () => {
   })
 
   it('Precondition: Valid HKDF values must exist for browsers.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
 
     const cryptoKey = await _importCryptoKey(subtle, material, ['deriveKey'])
-    expect(WebCryptoKdf(subtle, material, cryptoKey, ['encrypt'], new Uint8Array(0))).to.rejectedWith(Error)
+    await expect(
+      WebCryptoKdf(subtle, material, cryptoKey, ['encrypt'], new Uint8Array(0))
+    ).to.rejectedWith(Error)
   })
 
   it('Postcondition: The derived key must conform to the algorith suite specification.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
 
     const subtleHack = {
-      deriveKey () {
+      deriveKey() {
         return {} as any
-      }
+      },
     } as any
 
     const cryptoKey = await _importCryptoKey(subtle, material, ['deriveKey'])
-    expect(WebCryptoKdf(subtleHack, material, cryptoKey, ['encrypt'], new Uint8Array(5))).to.rejectedWith(Error)
+    await expect(
+      WebCryptoKdf(
+        subtleHack,
+        material,
+        cryptoKey,
+        ['encrypt'],
+        new Uint8Array(5)
+      )
+    ).to.rejectedWith(Error)
   })
 })
 
 describe('getSubtleFunction', () => {
   it('can get encrypt', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
 
@@ -222,10 +322,16 @@ describe('getSubtleFunction', () => {
   })
 
   it('Precondition: The material must have a CryptoKey.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
 
@@ -233,10 +339,16 @@ describe('getSubtleFunction', () => {
   })
 
   it('Precondition: The cryptoKey and backend must match in terms of Mixed vs Full support.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
@@ -245,21 +357,29 @@ describe('getSubtleFunction', () => {
      */
     const mixedSupportBackend = {
       nonZeroByteSubtle: subtle,
-      zeroByteSubtle: subtle
+      zeroByteSubtle: subtle,
     } as any
 
     /* I always want the cryptoKey to not match the backend. */
     const cryptoKey = await _importCryptoKey(subtle, material, ['encrypt'])
     material.setCryptoKey(cryptoKey, trace)
 
-    expect(() => getSubtleFunction(mixedSupportBackend, backend, 'encrypt')).to.throw()
+    expect(() =>
+      getSubtleFunction(mixedSupportBackend, backend, 'encrypt')
+    ).to.throw()
   })
 
   it('Precondition: The length of the IV must match the WebCryptoAlgorithmSuite specification.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
 
@@ -276,10 +396,16 @@ describe('getSubtleFunction', () => {
   })
 
   it('can encrypt/decrypt 0 bytes', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
 
     const backend = await getWebCryptoBackend()
@@ -289,10 +415,13 @@ describe('getSubtleFunction', () => {
     const mixedBackend = {
       nonZeroByteSubtle: getZeroByteSubtle(backend),
       zeroByteSubtle: getNonZeroByteBackend(backend),
-      randomValues: backend.randomValues
+      randomValues: backend.randomValues,
     }
 
-    const cryptoKey = await importCryptoKey(mixedBackend, material, ['encrypt', 'decrypt'])
+    const cryptoKey = await importCryptoKey(mixedBackend, material, [
+      'encrypt',
+      'decrypt',
+    ])
     material.setCryptoKey(cryptoKey, trace)
 
     const iv = new Uint8Array(suite.ivLength)
@@ -311,17 +440,25 @@ describe('getSubtleFunction', () => {
     const testDecryptInfo = getSubtleFunction(material, mixedBackend, 'decrypt')
     const testDecryptIvAad = testDecryptInfo(new Uint8Array(1))
     const testDecryptFunction = testDecryptIvAad(iv, aad)
-    const testDecryptedData = await testDecryptFunction(new Uint8Array(testEncryptedData))
+    const testDecryptedData = await testDecryptFunction(
+      new Uint8Array(testEncryptedData)
+    )
 
     // Because I encrypted 0 bytes, the data should be 0 length
     expect(testDecryptedData.byteLength).to.equal(0)
   })
 
   it('Precondition: The WebCrypto AES-GCM decrypt API expects the data *and* tag together.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     material.setUnencryptedDataKey(udk, trace)
 
     const backend = await getWebCryptoBackend()
@@ -331,10 +468,13 @@ describe('getSubtleFunction', () => {
     const mixedBackend = {
       nonZeroByteSubtle: getZeroByteSubtle(backend),
       zeroByteSubtle: getNonZeroByteBackend(backend),
-      randomValues: backend.randomValues
+      randomValues: backend.randomValues,
     }
 
-    const cryptoKey = await importCryptoKey(mixedBackend, material, ['encrypt', 'decrypt'])
+    const cryptoKey = await importCryptoKey(mixedBackend, material, [
+      'encrypt',
+      'decrypt',
+    ])
     material.setCryptoKey(cryptoKey, trace)
 
     const iv = new Uint8Array(suite.ivLength)
@@ -356,23 +496,37 @@ describe('getSubtleFunction', () => {
     const testDecryptFunction = testDecryptIvAad(iv, aad)
 
     for (let i = 0; tagLengthBytes > i; i++) {
-      await expect(testDecryptFunction(new Uint8Array(testEncryptedData.slice(0, i))))
-        .to.eventually.rejectedWith(Error, 'Invalid data length.')
+      await expect(
+        testDecryptFunction(new Uint8Array(testEncryptedData.slice(0, i)))
+      ).to.eventually.rejectedWith(Error, 'Invalid data length.')
     }
   })
 
   it('no kdf, simple backend, can encrypt/decrypt', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
-    const decryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    const encryptTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
+    const decryptTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+    }
     encryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
-    const cryptoKey = await _importCryptoKey(subtle, encryptionMaterial, ['encrypt', 'decrypt'])
+    const cryptoKey = await _importCryptoKey(subtle, encryptionMaterial, [
+      'encrypt',
+      'decrypt',
+    ])
 
     encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
     decryptionMaterial.setCryptoKey(cryptoKey, decryptTrace)
@@ -382,24 +536,50 @@ describe('getSubtleFunction', () => {
     const aad = synchronousRandomValues(5)
     const data = new Uint8Array([1, 2, 3, 4, 5])
 
-    const ciphertext = await getSubtleFunction(encryptionMaterial, backend, 'encrypt')(info)(iv, aad)(data)
-    const plaintext = await getSubtleFunction(decryptionMaterial, backend, 'decrypt')(info)(iv, aad)(new Uint8Array(ciphertext))
+    const ciphertext = await getSubtleFunction(
+      encryptionMaterial,
+      backend,
+      'encrypt'
+    )(info)(
+      iv,
+      aad
+    )(data)
+    const plaintext = await getSubtleFunction(
+      decryptionMaterial,
+      backend,
+      'decrypt'
+    )(info)(
+      iv,
+      aad
+    )(new Uint8Array(ciphertext))
 
     expect(new Uint8Array(plaintext)).to.deep.equal(data)
   })
 
   it('KDF, simple backend, can encrypt/decrypt', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+    )
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
-    const decryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    const encryptTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
+    const decryptTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+    }
     encryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
-    const cryptoKey = await _importCryptoKey(subtle, encryptionMaterial, ['deriveKey'])
+    const cryptoKey = await _importCryptoKey(subtle, encryptionMaterial, [
+      'deriveKey',
+    ])
 
     encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
     decryptionMaterial.setCryptoKey(cryptoKey, decryptTrace)
@@ -409,19 +589,43 @@ describe('getSubtleFunction', () => {
     const aad = synchronousRandomValues(5)
     const data = new Uint8Array([1, 2, 3, 4, 5])
 
-    const ciphertext = await getSubtleFunction(encryptionMaterial, backend, 'encrypt')(info)(iv, aad)(data)
-    const plaintext = await getSubtleFunction(decryptionMaterial, backend, 'decrypt')(info)(iv, aad)(new Uint8Array(ciphertext))
+    const ciphertext = await getSubtleFunction(
+      encryptionMaterial,
+      backend,
+      'encrypt'
+    )(info)(
+      iv,
+      aad
+    )(data)
+    const plaintext = await getSubtleFunction(
+      decryptionMaterial,
+      backend,
+      'decrypt'
+    )(info)(
+      iv,
+      aad
+    )(new Uint8Array(ciphertext))
 
     expect(new Uint8Array(plaintext)).to.deep.equal(data)
   })
 
   it('no kdf, mixed backend, can encrypt/decrypt', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
-    const decryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    const encryptTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
+    const decryptTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+    }
     encryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
 
     const backend = await getWebCryptoBackend()
@@ -432,10 +636,14 @@ describe('getSubtleFunction', () => {
      */
     const mixedSupportBackend = {
       nonZeroByteSubtle: subtle,
-      zeroByteSubtle: subtle
+      zeroByteSubtle: subtle,
     } as any
 
-    const cryptoKey = await importCryptoKey(mixedSupportBackend, encryptionMaterial, ['encrypt', 'decrypt'])
+    const cryptoKey = await importCryptoKey(
+      mixedSupportBackend,
+      encryptionMaterial,
+      ['encrypt', 'decrypt']
+    )
 
     encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
     decryptionMaterial.setCryptoKey(cryptoKey, decryptTrace)
@@ -445,24 +653,64 @@ describe('getSubtleFunction', () => {
     const aad = synchronousRandomValues(5)
     const data = new Uint8Array([1, 2, 3, 4, 5])
 
-    const ciphertext = await getSubtleFunction(encryptionMaterial, mixedSupportBackend, 'encrypt')(info)(iv, aad)(data)
-    const plaintext = await getSubtleFunction(decryptionMaterial, mixedSupportBackend, 'decrypt')(info)(iv, aad)(new Uint8Array(ciphertext))
+    const ciphertext = await getSubtleFunction(
+      encryptionMaterial,
+      mixedSupportBackend,
+      'encrypt'
+    )(info)(
+      iv,
+      aad
+    )(data)
+    const plaintext = await getSubtleFunction(
+      decryptionMaterial,
+      mixedSupportBackend,
+      'decrypt'
+    )(info)(
+      iv,
+      aad
+    )(new Uint8Array(ciphertext))
 
     expect(new Uint8Array(plaintext)).to.deep.equal(data)
 
-    const ciphertextZeroByteData = await getSubtleFunction(encryptionMaterial, mixedSupportBackend, 'encrypt')(info)(iv, aad)(new Uint8Array(0))
-    const plaintextZeroByteData = await getSubtleFunction(decryptionMaterial, mixedSupportBackend, 'decrypt')(info)(iv, aad)(new Uint8Array(ciphertextZeroByteData))
+    const ciphertextZeroByteData = await getSubtleFunction(
+      encryptionMaterial,
+      mixedSupportBackend,
+      'encrypt'
+    )(info)(
+      iv,
+      aad
+    )(new Uint8Array(0))
+    const plaintextZeroByteData = await getSubtleFunction(
+      decryptionMaterial,
+      mixedSupportBackend,
+      'decrypt'
+    )(info)(
+      iv,
+      aad
+    )(new Uint8Array(ciphertextZeroByteData))
 
-    expect(new Uint8Array(plaintextZeroByteData)).to.deep.equal(new Uint8Array(0))
+    expect(new Uint8Array(plaintextZeroByteData)).to.deep.equal(
+      new Uint8Array(0)
+    )
   })
 
   it('kdf, mixed backend, can encrypt/decrypt', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+    )
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
-    const decryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    const encryptTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
+    const decryptTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+    }
     encryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
 
     const backend = await getWebCryptoBackend()
@@ -473,10 +721,14 @@ describe('getSubtleFunction', () => {
      */
     const mixedSupportBackend = {
       nonZeroByteSubtle: subtle,
-      zeroByteSubtle: subtle
+      zeroByteSubtle: subtle,
     } as any
 
-    const cryptoKey = await importCryptoKey(mixedSupportBackend, encryptionMaterial, ['deriveKey'])
+    const cryptoKey = await importCryptoKey(
+      mixedSupportBackend,
+      encryptionMaterial,
+      ['deriveKey']
+    )
 
     encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
     decryptionMaterial.setCryptoKey(cryptoKey, decryptTrace)
@@ -486,15 +738,45 @@ describe('getSubtleFunction', () => {
     const aad = synchronousRandomValues(5)
     const data = new Uint8Array([1, 2, 3, 4, 5])
 
-    const ciphertext = await getSubtleFunction(encryptionMaterial, mixedSupportBackend, 'encrypt')(info)(iv, aad)(data)
-    const plaintext = await getSubtleFunction(decryptionMaterial, mixedSupportBackend, 'decrypt')(info)(iv, aad)(new Uint8Array(ciphertext))
+    const ciphertext = await getSubtleFunction(
+      encryptionMaterial,
+      mixedSupportBackend,
+      'encrypt'
+    )(info)(
+      iv,
+      aad
+    )(data)
+    const plaintext = await getSubtleFunction(
+      decryptionMaterial,
+      mixedSupportBackend,
+      'decrypt'
+    )(info)(
+      iv,
+      aad
+    )(new Uint8Array(ciphertext))
 
     expect(new Uint8Array(plaintext)).to.deep.equal(data)
 
-    const ciphertextZeroByteData = await getSubtleFunction(encryptionMaterial, mixedSupportBackend, 'encrypt')(info)(iv, aad)(new Uint8Array(0))
-    const plaintextZeroByteData = await getSubtleFunction(decryptionMaterial, mixedSupportBackend, 'decrypt')(info)(iv, aad)(new Uint8Array(ciphertextZeroByteData))
+    const ciphertextZeroByteData = await getSubtleFunction(
+      encryptionMaterial,
+      mixedSupportBackend,
+      'encrypt'
+    )(info)(
+      iv,
+      aad
+    )(new Uint8Array(0))
+    const plaintextZeroByteData = await getSubtleFunction(
+      decryptionMaterial,
+      mixedSupportBackend,
+      'decrypt'
+    )(info)(
+      iv,
+      aad
+    )(new Uint8Array(ciphertextZeroByteData))
 
-    expect(new Uint8Array(plaintextZeroByteData)).to.deep.equal(new Uint8Array(0))
+    expect(new Uint8Array(plaintextZeroByteData)).to.deep.equal(
+      new Uint8Array(0)
+    )
   })
 })
 
@@ -503,15 +785,23 @@ describe('getSubtleFunction', () => {
 
 describe('getEncryptHelper/getDecryptionHelper', () => {
   it('encryption helpers without a signature', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+    )
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const encryptTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     encryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
-    const cryptoKey = await _importCryptoKey(subtle, encryptionMaterial, ['deriveKey'])
+    const cryptoKey = await _importCryptoKey(subtle, encryptionMaterial, [
+      'deriveKey',
+    ])
     encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
 
     const test = await getEncryptHelper(encryptionMaterial)
@@ -521,15 +811,23 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
   })
 
   it('decryption helpers without a signature ', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+    )
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    const encryptTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+    }
     decryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
-    const cryptoKey = await _importCryptoKey(subtle, decryptionMaterial, ['deriveKey'])
+    const cryptoKey = await _importCryptoKey(subtle, decryptionMaterial, [
+      'deriveKey',
+    ])
     decryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
 
     const test = await getDecryptionHelper(decryptionMaterial)
@@ -539,18 +837,26 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
   })
 
   it('encryption helpers with a signature', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
+    )
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const { signatureKey } = await sigKeys(suite)
-    const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+    const encryptTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
     encryptionMaterial
       .setUnencryptedDataKey(udk, encryptTrace)
       .setSignatureKey(signatureKey)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
-    const cryptoKey = await _importCryptoKey(subtle, encryptionMaterial, ['deriveKey'])
+    const cryptoKey = await _importCryptoKey(subtle, encryptionMaterial, [
+      'deriveKey',
+    ])
     encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
 
     const test = await getEncryptHelper(encryptionMaterial)
@@ -560,18 +866,26 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
   })
 
   it('decryption helpers with a signature ', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
+    )
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const { verificationKey } = await sigKeys(suite)
-    const decryptionTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    const decryptionTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+    }
     decryptionMaterial
       .setUnencryptedDataKey(udk, decryptionTrace)
       .setVerificationKey(verificationKey)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
-    const cryptoKey = await _importCryptoKey(subtle, decryptionMaterial, ['deriveKey'])
+    const cryptoKey = await _importCryptoKey(subtle, decryptionMaterial, [
+      'deriveKey',
+    ])
     decryptionMaterial.setCryptoKey(cryptoKey, decryptionTrace)
 
     const test = await getDecryptionHelper(decryptionMaterial)
@@ -581,27 +895,41 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
   })
 
   it('Precondition: WebCryptoEncryptionMaterial must have a valid data key.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
+    )
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
 
-    expect(getEncryptHelper(encryptionMaterial)).to.rejectedWith(Error)
+    await expect(getEncryptHelper(encryptionMaterial)).to.rejectedWith(Error)
   })
 
   it('Precondition: WebCryptoDecryptionMaterial must have a valid data key.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
+    )
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
 
-    expect(getDecryptionHelper(decryptionMaterial)).to.rejectedWith(Error)
+    await expect(getDecryptionHelper(decryptionMaterial)).to.rejectedWith(Error)
   })
 
   it('can verify what was signed', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
+    )
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const { signatureKey, verificationKey } = await sigKeys(suite)
-    const encryptTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
-    const decryptionTrace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+    const encryptTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
+    const decryptionTrace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+    }
     decryptionMaterial
       .setUnencryptedDataKey(udk, decryptionTrace)
       .setVerificationKey(verificationKey)
@@ -611,7 +939,9 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
-    const cryptoKey = await _importCryptoKey(subtle, encryptionMaterial, ['deriveKey'])
+    const cryptoKey = await _importCryptoKey(subtle, encryptionMaterial, [
+      'deriveKey',
+    ])
 
     encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
     decryptionMaterial.setCryptoKey(cryptoKey, decryptionTrace)
@@ -632,7 +962,7 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
 /* A simple helper to get signature/verification keys.
  * Basically a copy from the cmm.
  */
-async function sigKeys (suite: WebCryptoAlgorithmSuite) {
+async function sigKeys(suite: WebCryptoAlgorithmSuite) {
   const { signatureCurve: namedCurve } = suite
   if (!namedCurve) throw new Error('never')
   const backend = await getWebCryptoBackend()
@@ -643,9 +973,16 @@ async function sigKeys (suite: WebCryptoAlgorithmSuite) {
   const usages = ['sign', 'verify']
   const format = 'raw'
 
-  const { publicKey, privateKey } = await subtle.generateKey(webCryptoAlgorithm, extractable, usages)
+  const { publicKey, privateKey } = await subtle.generateKey(
+    webCryptoAlgorithm,
+    extractable,
+    usages
+  )
   const publicKeyBytes = await subtle.exportKey(format, publicKey)
-  const compressPoint = SignatureKey.encodeCompressPoint(new Uint8Array(publicKeyBytes), suite)
+  const compressPoint = SignatureKey.encodeCompressPoint(
+    new Uint8Array(publicKeyBytes),
+    suite
+  )
 
   const signatureKey = new SignatureKey(privateKey, compressPoint, suite)
   const verificationKey = new VerificationKey(publicKey, suite)

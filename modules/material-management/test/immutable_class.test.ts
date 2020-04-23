@@ -4,21 +4,25 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import { immutableClass, immutableBaseClass, frozenClass } from '../src/immutable_class'
+import {
+  immutableClass,
+  immutableBaseClass,
+  frozenClass,
+} from '../src/immutable_class'
 
 describe('frozenClass', () => {
   class Test {
     public name: string
-    constructor (name: string) {
+    constructor(name: string) {
       this.name = name
       // This is important, or the new instance
       // can be modified
       Object.freeze(this)
     }
-    qwer () {
+    qwer() {
       return 'qwer'
     }
-    static asdf () {
+    static asdf() {
       return 'asdf'
     }
   }
@@ -37,32 +41,40 @@ describe('frozenClass', () => {
   })
 
   it('can not change static properties', () => {
-    expect(() => { (<any>Test).asdf = 'something' }).to.throw()
+    expect(() => {
+      ;(Test as any).asdf = 'something'
+    }).to.throw()
   })
 
   it('can not add new static properties', () => {
-    expect(() => { (<any>Test).something = 'something' }).to.throw()
+    expect(() => {
+      ;(Test as any).something = 'something'
+    }).to.throw()
   })
 
   it('can not change prototype properties', () => {
-    expect(() => { (<any>Test).prototype.qwer = 'something' }).to.throw()
+    expect(() => {
+      ;(Test as any).prototype.qwer = 'something'
+    }).to.throw()
   })
 
   it('can not add new prototype properties', () => {
-    expect(() => { (<any>Test).prototype.something = 'something' }).to.throw()
+    expect(() => {
+      ;(Test as any).prototype.something = 'something'
+    }).to.throw()
   })
 })
 
 describe('immutableBaseClass', () => {
   class Test {
     public name: string
-    constructor (name: string) {
+    constructor(name: string) {
       this.name = name
     }
-    qwer () {
+    qwer() {
       return 'qwer'
     }
-    static asdf () {
+    static asdf() {
       return 'asdf'
     }
   }
@@ -82,56 +94,68 @@ describe('immutableBaseClass', () => {
 
   it('is an orphaned object (not an connected to Object)', () => {
     const test = new Test('test')
-    expect(Object.prototype.isPrototypeOf(test)).to.equal(false)
+    // This test is VERY deliberate.
+    // I want to know that test is not in the prototype chain, with Object.
+    expect(Object.prototype.isPrototypeOf(test)).to.equal(false) // eslint-disable-line no-prototype-builtins
   })
 
   it('can not change static properties', () => {
-    expect(() => { (<any>Test).asdf = 'something' }).to.throw()
+    expect(() => {
+      ;(Test as any).asdf = 'something'
+    }).to.throw()
   })
 
   it('can not add new static properties', () => {
-    expect(() => { (<any>Test).something = 'something' }).to.throw()
+    expect(() => {
+      ;(Test as any).something = 'something'
+    }).to.throw()
   })
 
   it('can not change prototype properties', () => {
-    expect(() => { (<any>Test).prototype.qwer = 'something' }).to.throw()
+    expect(() => {
+      ;(Test as any).prototype.qwer = 'something'
+    }).to.throw()
   })
 
   it('can not add new prototype properties', () => {
-    expect(() => { (<any>Test).prototype.something = 'something' }).to.throw()
+    expect(() => {
+      ;(Test as any).prototype.something = 'something'
+    }).to.throw()
   })
 
   it('can not change the prototype of Test', () => {
     class Sneaky {}
-    expect(() => Object.setPrototypeOf(Test.prototype, Sneaky.prototype)).to.throw()
+    expect(() =>
+      Object.setPrototypeOf(Test.prototype, Sneaky.prototype)
+    ).to.throw()
   })
 })
 
 describe('immutableClass: Extending a BaseClass', () => {
   class Base {
     public name: string
-    constructor (name: string) {
+    constructor(name: string) {
       this.name = name
     }
-    qwer () {
+    qwer() {
       return 'qwer'
     }
-    static asdf () {
+    static asdf() {
       return 'asdf'
     }
   }
   immutableBaseClass(Base)
   class Test extends Base {
     public thing: string
-    constructor (thing: string) {
+    constructor(thing: string) {
       super('extend')
       this.thing = thing
       Object.freeze(this)
     }
-    more () {
+    more() {
       return 'more'
     }
-    static myCount () {
+    static myCount() {
       return 1
     }
   }
@@ -158,15 +182,23 @@ describe('immutableClass: Extending a BaseClass', () => {
   // Properties of test are covered by tests of immutableBaseClass
   // which calls immutableClass
   it('can not change static properties', () => {
-    expect(() => { (<any>Test).asdf = 'something' }).to.throw()
+    expect(() => {
+      ;(Test as any).asdf = 'something'
+    }).to.throw()
   })
   it('can not add new static properties', () => {
-    expect(() => { (<any>Test).something = 'something' }).to.throw()
+    expect(() => {
+      ;(Test as any).something = 'something'
+    }).to.throw()
   })
   it('can not change prototype properties', () => {
-    expect(() => { (<any>Test).prototype.qwer = 'something' }).to.throw()
+    expect(() => {
+      ;(Test as any).prototype.qwer = 'something'
+    }).to.throw()
   })
   it('can not add new prototype properties', () => {
-    expect(() => { (<any>Test).prototype.something = 'something' }).to.throw()
+    expect(() => {
+      ;(Test as any).prototype.something = 'something'
+    }).to.throw()
   })
 })

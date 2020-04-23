@@ -9,10 +9,12 @@ import {
   NodeAlgorithmSuite,
   NodeEncryptionMaterial,
   NodeDecryptionMaterial,
-  AlgorithmSuiteIdentifier
+  AlgorithmSuiteIdentifier,
 } from '@aws-crypto/material-management'
 
-const nodeSuite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256)
+const nodeSuite = new NodeAlgorithmSuite(
+  AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+)
 const encryptionMaterial = new NodeEncryptionMaterial(nodeSuite, {})
 const decryptionMaterial = new NodeDecryptionMaterial(nodeSuite, {})
 
@@ -22,7 +24,7 @@ describe('getLocalCryptographicMaterialsCache', () => {
     getDecryptionMaterial,
     del,
     putEncryptionMaterial,
-    putDecryptionMaterial
+    putDecryptionMaterial,
   } = getLocalCryptographicMaterialsCache(100)
 
   it('putEncryptionMaterial', () => {
@@ -58,7 +60,9 @@ describe('getLocalCryptographicMaterialsCache', () => {
 
   it('Precondition: Only cache EncryptionMaterial that is cacheSafe.', () => {
     const key = 'some encryption key'
-    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new NodeAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const response: any = new NodeEncryptionMaterial(suite, {})
 
     expect(() => putEncryptionMaterial(key, response, 1)).to.throw()
@@ -86,7 +90,9 @@ describe('getLocalCryptographicMaterialsCache', () => {
 
   it('Precondition: Only cache DecryptionMaterial that is cacheSafe.', () => {
     const key = 'some decryption key'
-    const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new NodeAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const response: any = new NodeEncryptionMaterial(suite, {})
 
     expect(() => putDecryptionMaterial(key, response)).to.throw()
@@ -148,7 +154,7 @@ describe('cache eviction', () => {
   it('putDecryptionMaterial can exceed capacity', () => {
     const {
       getDecryptionMaterial,
-      putDecryptionMaterial
+      putDecryptionMaterial,
     } = getLocalCryptographicMaterialsCache(1)
 
     const key1 = 'key lost'
@@ -167,7 +173,7 @@ describe('cache eviction', () => {
     const {
       getDecryptionMaterial,
       putDecryptionMaterial,
-      del
+      del,
     } = getLocalCryptographicMaterialsCache(1)
 
     const key = 'key deleted'
@@ -182,14 +188,14 @@ describe('cache eviction', () => {
   it('putDecryptionMaterial can be garbage collected', async () => {
     const {
       getDecryptionMaterial,
-      putDecryptionMaterial
+      putDecryptionMaterial,
     } = getLocalCryptographicMaterialsCache(1, 10)
 
     const key = 'key lost'
     const response: any = decryptionMaterial
 
     putDecryptionMaterial(key, response, 1)
-    await new Promise(resolve => setTimeout(resolve, 20))
+    await new Promise((resolve) => setTimeout(resolve, 20))
     const lost = getDecryptionMaterial(key)
     expect(lost).to.equal(false)
   })
@@ -197,7 +203,7 @@ describe('cache eviction', () => {
   it('putEncryptionMaterial can exceed capacity', () => {
     const {
       getEncryptionMaterial,
-      putEncryptionMaterial
+      putEncryptionMaterial,
     } = getLocalCryptographicMaterialsCache(1)
 
     const key1 = 'key lost'
@@ -216,7 +222,7 @@ describe('cache eviction', () => {
     const {
       getEncryptionMaterial,
       putEncryptionMaterial,
-      del
+      del,
     } = getLocalCryptographicMaterialsCache(1, 10)
 
     const key = 'key lost'
@@ -231,14 +237,14 @@ describe('cache eviction', () => {
   it('putEncryptionMaterial can be garbage collected', async () => {
     const {
       getEncryptionMaterial,
-      putEncryptionMaterial
+      putEncryptionMaterial,
     } = getLocalCryptographicMaterialsCache(1, 10)
 
     const key = 'key lost'
     const response: any = encryptionMaterial
 
     putEncryptionMaterial(key, response, 1, 1)
-    await new Promise(resolve => setTimeout(resolve, 20))
+    await new Promise((resolve) => setTimeout(resolve, 20))
     const lost = getEncryptionMaterial(key, 1)
     expect(lost).to.equal(false)
   })

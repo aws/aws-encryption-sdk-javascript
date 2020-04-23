@@ -15,8 +15,12 @@ describe('decrypt', () => {
       fixtures.ciphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384()
     )
 
-    expect(messageHeader.suiteId).to.equal(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
-    expect(messageHeader.encryptionContext).to.deep.equal(fixtures.encryptionContext())
+    expect(messageHeader.suiteId).to.equal(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+    )
+    expect(messageHeader.encryptionContext).to.deep.equal(
+      fixtures.encryptionContext()
+    )
     expect(test).to.deep.equal(fixtures.plaintext())
   })
 
@@ -24,22 +28,28 @@ describe('decrypt', () => {
     return decrypt(
       fixtures.decryptKeyring(),
       fixtures.frameSequenceOutOfOrder()
-    ).then(() => {
-      throw new Error('should not succeed')
-    }, err => {
-      expect(err).to.be.instanceOf(Error)
-    })
+    ).then(
+      () => {
+        throw new Error('should not succeed')
+      },
+      (err) => {
+        expect(err).to.be.instanceOf(Error)
+      }
+    )
   })
 
   it('Postcondition: subtleVerify must validate the signature.', async () => {
     return decrypt(
       fixtures.decryptKeyring(),
       fixtures.invalidSignatureCiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384()
-    ).then(() => {
-      throw new Error('should not succeed')
-    }, err => {
-      expect(err).to.be.instanceOf(Error)
-      expect(err.message).to.equal('Invalid Signature')
-    })
+    ).then(
+      () => {
+        throw new Error('should not succeed')
+      },
+      (err) => {
+        expect(err).to.be.instanceOf(Error)
+        expect(err.message).to.equal('Invalid Signature')
+      }
+    )
   })
 })

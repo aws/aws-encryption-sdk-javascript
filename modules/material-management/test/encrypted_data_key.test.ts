@@ -12,7 +12,11 @@ describe('EncryptedDataKey', () => {
     const providerId = 'providerId'
     const encryptedDataKey = new Uint8Array([1, 2, 3])
 
-    const test = new EncryptedDataKey({ providerInfo, providerId, encryptedDataKey })
+    const test = new EncryptedDataKey({
+      providerInfo,
+      providerId,
+      encryptedDataKey,
+    })
 
     expect(Object.isFrozen(test)).to.eql(true)
     expect(test.providerInfo).to.eql(providerInfo)

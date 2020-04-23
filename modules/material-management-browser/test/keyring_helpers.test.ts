@@ -8,14 +8,14 @@ import chaiAsPromised from 'chai-as-promised'
 import {
   importCryptoKeyToMaterial,
   importForWebCryptoEncryptionMaterial,
-  importForWebCryptoDecryptionMaterial
+  importForWebCryptoDecryptionMaterial,
 } from '../src/index'
 import {
   WebCryptoEncryptionMaterial,
   WebCryptoDecryptionMaterial,
   WebCryptoAlgorithmSuite,
   AlgorithmSuiteIdentifier,
-  KeyringTraceFlag
+  KeyringTraceFlag,
 } from '@aws-crypto/material-management'
 import { synchronousRandomValues } from '@aws-crypto/web-crypto-backend'
 
@@ -31,7 +31,7 @@ describe('importCryptoKeyToMaterial', () => {
   })
 })
 
-describe('importForWebCryptoEncryptionMaterial', async () => {
+describe('importForWebCryptoEncryptionMaterial', () => {
   it('adds a cryptoKey to Encryption Material', async () => {
     const material = getWebCryptoEncryptionMaterial()
 
@@ -76,7 +76,9 @@ describe('importForWebCryptoDecryptionMaterial', () => {
   })
 
   it('Check for early return (Postcondition): If no key was able to be decrypted, return.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
     const material = new WebCryptoDecryptionMaterial(suite, {})
 
     await importForWebCryptoDecryptionMaterial(material)
@@ -84,18 +86,30 @@ describe('importForWebCryptoDecryptionMaterial', () => {
   })
 })
 
-function getWebCryptoDecryptionMaterial () {
-  const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+function getWebCryptoDecryptionMaterial() {
+  const suite = new WebCryptoAlgorithmSuite(
+    AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+  )
   const material = new WebCryptoDecryptionMaterial(suite, {})
   const udk = synchronousRandomValues(suite.keyLengthBytes)
-  const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY }
+  const trace = {
+    keyName: 'keyName',
+    keyNamespace: 'keyNamespace',
+    flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+  }
   return material.setUnencryptedDataKey(udk, trace)
 }
 
-function getWebCryptoEncryptionMaterial () {
-  const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16)
+function getWebCryptoEncryptionMaterial() {
+  const suite = new WebCryptoAlgorithmSuite(
+    AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+  )
   const material = new WebCryptoEncryptionMaterial(suite, {})
   const udk = synchronousRandomValues(suite.keyLengthBytes)
-  const trace = { keyName: 'keyName', keyNamespace: 'keyNamespace', flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY }
+  const trace = {
+    keyName: 'keyName',
+    keyNamespace: 'keyNamespace',
+    flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+  }
   return material.setUnencryptedDataKey(udk, trace)
 }

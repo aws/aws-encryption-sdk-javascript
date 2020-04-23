@@ -6,21 +6,21 @@
 import { expect } from 'chai'
 // import 'mocha'
 import { WebCryptoCachingMaterialsManager } from '../src/index'
-import { } from '@aws-crypto/cache-material'
+import {} from '@aws-crypto/cache-material'
 import {
   KeyringWebCrypto,
   WebCryptoDefaultCryptographicMaterialsManager,
-  WebCryptoEncryptionMaterial, // eslint-disable-line no-unused-vars
-  WebCryptoDecryptionMaterial // eslint-disable-line no-unused-vars
+  WebCryptoEncryptionMaterial,
+  WebCryptoDecryptionMaterial,
 } from '@aws-crypto/material-management-browser'
 
 describe('WebCryptoCachingMaterialsManager', () => {
   it('constructor will decorate', () => {
     class TestKeyring extends KeyringWebCrypto {
-      async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
+      async _onEncrypt(): Promise<WebCryptoEncryptionMaterial> {
         throw new Error('never')
       }
-      async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
+      async _onDecrypt(): Promise<WebCryptoDecryptionMaterial> {
         throw new Error('never')
       }
     }
@@ -37,10 +37,12 @@ describe('WebCryptoCachingMaterialsManager', () => {
       partition,
       maxAge,
       maxBytesEncrypted,
-      maxMessagesEncrypted
+      maxMessagesEncrypted,
     })
 
-    expect(test._backingMaterialsManager).to.be.instanceOf(WebCryptoDefaultCryptographicMaterialsManager)
+    expect(test._backingMaterialsManager).to.be.instanceOf(
+      WebCryptoDefaultCryptographicMaterialsManager
+    )
     expect(test._cache).to.equal(cache)
     expect(test._partition).to.equal(partition)
     expect(test._maxAge).to.equal(maxAge)
@@ -50,10 +52,10 @@ describe('WebCryptoCachingMaterialsManager', () => {
 
   it('Precondition: A partition value must exist for WebCryptoCachingMaterialsManager.', () => {
     class TestKeyring extends KeyringWebCrypto {
-      async _onEncrypt (): Promise<WebCryptoEncryptionMaterial> {
+      async _onEncrypt(): Promise<WebCryptoEncryptionMaterial> {
         throw new Error('never')
       }
-      async _onDecrypt (): Promise<WebCryptoDecryptionMaterial> {
+      async _onDecrypt(): Promise<WebCryptoDecryptionMaterial> {
         throw new Error('never')
       }
     }
@@ -64,7 +66,7 @@ describe('WebCryptoCachingMaterialsManager', () => {
     const test = new WebCryptoCachingMaterialsManager({
       backingMaterials: keyring,
       cache,
-      maxAge
+      maxAge,
     })
     /* 64 Bytes of data encoded as base64 will be 88 characters long.
      */

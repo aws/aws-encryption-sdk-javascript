@@ -4,84 +4,86 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import {
-  _getDecryptTestVectorIterator
-} from '../src/index'
-import { DecryptManifestList, KeyList } from '../src/types' // eslint-disable-line no-unused-vars
+import { _getDecryptTestVectorIterator } from '../src/index'
+import { DecryptManifestList, KeyList } from '../src/types'
 import { PassThrough } from 'stream'
 
 const keyList: KeyList = {
-  'manifest': {
-    'type': 'keys',
-    'version': 3
+  manifest: {
+    type: 'keys',
+    version: 3,
   },
-  'keys': {
+  keys: {
     'us-west-2-decryptable': {
-      'type': 'aws-kms',
+      type: 'aws-kms',
       'key-id': 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt',
-      'encrypt': true,
-      'decrypt': true
-    }
-  }
+      encrypt: true,
+      decrypt: true,
+    },
+  },
 }
 
-const manifest:DecryptManifestList = {
-  'manifest': {
-    'type': 'awses-decrypt',
-    'version': 1
+const manifest: DecryptManifestList = {
+  manifest: {
+    type: 'awses-decrypt',
+    version: 1,
   },
-  'client': {
-    'name': 'aws/aws-encryption-sdk-python',
-    'version': '1.3.8'
+  client: {
+    name: 'aws/aws-encryption-sdk-python',
+    version: '1.3.8',
   },
-  'keys': 'file://keys.json',
-  'tests': {
+  keys: 'file://keys.json',
+  tests: {
     'c17b05d0-915e-44cc-98a3-cc29b71aa42b': {
-      'plaintext': 'file://plaintexts/small',
-      'ciphertext': 'file://ciphertexts/460bd892-c137-4178-8201-4ab5ee5d3041',
+      plaintext: 'file://plaintexts/small',
+      ciphertext: 'file://ciphertexts/460bd892-c137-4178-8201-4ab5ee5d3041',
       'master-keys': [
         {
-          'type': 'aws-kms',
-          'key': 'us-west-2-decryptable'
-        }
-      ]
-    }
-  }
+          type: 'aws-kms',
+          key: 'us-west-2-decryptable',
+        },
+      ],
+    },
+  },
 }
 
 const filesMap = new Map([
   [
-    'file://manifest.json', {
-      async stream () {
+    'file://manifest.json',
+    {
+      async stream() {
         const stream = new PassThrough()
         setImmediate(() => stream.end(Buffer.from(JSON.stringify(manifest))))
         return stream
-      }
-    } as any
+      },
+    } as any,
   ],
   [
-    'file://keys.json', {
-      async stream () {
+    'file://keys.json',
+    {
+      async stream() {
         const stream = new PassThrough()
         setImmediate(() => stream.end(Buffer.from(JSON.stringify(keyList))))
         return stream
-      }
-    } as any
+      },
+    } as any,
   ],
   [
-    'file://ciphertexts/460bd892-c137-4178-8201-4ab5ee5d3041', {
-      async stream () {
+    'file://ciphertexts/460bd892-c137-4178-8201-4ab5ee5d3041',
+    {
+      async stream() {
         return {} as any
-      }
-    } as any
+      },
+    } as any,
   ],
   [
-    'file://plaintexts/small', {
-      async stream () {
+    'file://plaintexts/small',
+    {
+      async stream() {
         return {} as any
-      }
-    } as any
-  ]
+      },
+    } as any,
+  ],
 ])
 
 describe('_getDecryptTestVectorIterator', () => {

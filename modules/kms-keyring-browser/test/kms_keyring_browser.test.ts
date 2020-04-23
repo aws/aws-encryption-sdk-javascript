@@ -5,18 +5,14 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import {
-  KmsKeyringBrowser,
-  getClient,
-  KMS
-} from '../src/index'
+import { KmsKeyringBrowser, getClient, KMS } from '../src/index'
 import {
   KeyringWebCrypto,
   WebCryptoEncryptionMaterial,
   WebCryptoAlgorithmSuite,
   AlgorithmSuiteIdentifier,
-  EncryptedDataKey, // eslint-disable-line no-unused-vars
-  WebCryptoDecryptionMaterial
+  EncryptedDataKey,
+  WebCryptoDecryptionMaterial,
 } from '@aws-crypto/material-management-browser'
 
 chai.use(chaiAsPromised)
@@ -27,12 +23,18 @@ declare const credentials: any
 
 describe('KmsKeyringBrowser::constructor', () => {
   it('constructor decorates', async () => {
-    const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
-    const keyArn = 'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f'
+    const generatorKeyId =
+      'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+    const keyArn =
+      'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f'
     const keyIds = [keyArn]
     const clientProvider = getClient(KMS, { credentials })
 
-    const test = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
+    const test = new KmsKeyringBrowser({
+      clientProvider,
+      generatorKeyId,
+      keyIds,
+    })
 
     expect(test.generatorKeyId).to.equal(generatorKeyId)
     expect(test.keyIds).to.have.lengthOf(1)
@@ -48,15 +50,23 @@ describe('KmsKeyringBrowser::constructor', () => {
 })
 
 describe('KmsKeyringBrowser encrypt/decrypt', () => {
-  const generatorKeyId = 'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
-  const keyArn = 'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f'
+  const generatorKeyId =
+    'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'
+  const keyArn =
+    'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f'
   const keyIds = [keyArn]
   const clientProvider = getClient(KMS, { credentials })
-  const keyring = new KmsKeyringBrowser({ clientProvider, generatorKeyId, keyIds })
+  const keyring = new KmsKeyringBrowser({
+    clientProvider,
+    generatorKeyId,
+    keyIds,
+  })
   let encryptedDataKey: EncryptedDataKey
 
   it('can encrypt and create unencrypted data key', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256
+    )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const test = await keyring.onEncrypt(material)
     expect(test.hasValidKey()).to.equal(true)
@@ -68,7 +78,9 @@ describe('KmsKeyringBrowser encrypt/decrypt', () => {
   })
 
   it('can decrypt an EncryptedDataKey', async () => {
-    const suite = new WebCryptoAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256)
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256
+    )
     const material = new WebCryptoDecryptionMaterial(suite, {})
     const test = await keyring.onDecrypt(material, [encryptedDataKey])
     expect(test.hasValidKey()).to.equal(true)
