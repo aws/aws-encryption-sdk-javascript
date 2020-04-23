@@ -287,7 +287,7 @@ describe('KmsKeyring: _onEncrypt', () => {
     ).to.equal(KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
   })
 
-  it('clientProvider may not return a client, in this case there is not an EDK to add', async () => {
+  it('clientProvider may not return a client, There MUST be a EDK for every KeyId', async () => {
     const generatorKeyId =
       'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const suite = new NodeAlgorithmSuite(
@@ -315,10 +315,8 @@ describe('KmsKeyring: _onEncrypt', () => {
       flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
     })
 
-    const material = await testKeyring.onEncrypt(seedMaterial)
-
-    // only setUnencryptedDataKey on seedMaterial
-    expect(material.encryptedDataKeys).to.have.lengthOf(0)
-    expect(material.keyringTrace).to.have.lengthOf(1)
+    await expect(testKeyring.onEncrypt(seedMaterial)).to.rejectedWith(
+      'No client returned by clientProvider from region:'
+    )
   })
 })
