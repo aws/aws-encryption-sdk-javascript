@@ -159,9 +159,15 @@ export function KmsKeyringClass<
           grantTokens
         )
 
-        /* clientProvider may not return a client, in this case there is not an EDK to add */
-        if (kmsEDK)
-          material.addEncryptedDataKey(kmsResponseToEncryptedDataKey(kmsEDK))
+        /* There MUST be a EDK for every KeyId
+         * When a user configures a KMS keyring with IDs
+         * the intent is to be able to independently decrypt
+         * with ANY of these IDs.
+         * See: https://github.com/awslabs/aws-encryption-sdk-specification/blob/master/framework/kms-keyring.md#onencrypt-goal
+         */
+        material.addEncryptedDataKey(
+          kmsResponseToEncryptedDataKey(kmsEDK)
+        )
       }
 
       return material
