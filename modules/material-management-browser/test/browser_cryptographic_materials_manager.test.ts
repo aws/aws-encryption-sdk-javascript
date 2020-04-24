@@ -361,7 +361,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
 
     await expect(
       cmm.getEncryptionMaterials({ encryptionContext })
-    ).to.rejectedWith(Error)
+    ).to.rejectedWith(Error, 'No keyring generated an unencrypted data key.')
   })
 
   it('Postcondition: The WebCryptoEncryptionMaterial must contain at least 1 EncryptedDataKey.', async () => {
@@ -485,6 +485,9 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
         encryptionContext,
         encryptedDataKeys: [edk],
       })
-    ).to.rejectedWith(Error)
+    ).to.rejectedWith(
+      Error,
+      'No keyring attempted to decrypted any of the encrypted data keys.'
+    )
   })
 })

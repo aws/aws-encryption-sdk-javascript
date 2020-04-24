@@ -78,7 +78,11 @@ export class NodeDefaultCryptographicMaterialsManager
      * and that the unencrypted data key is non-NULL.
      * See: cryptographic_materials.ts, `getUnencryptedDataKey`
      */
-    needs(material.getUnencryptedDataKey(), 'Unencrypted data key is invalid.')
+    needs(
+      material.hasValidKey(),
+      'No keyring generated an unencrypted data key.' +
+        '\nYou may not have access to any wrapping keys.'
+    )
 
     /* Postcondition: The NodeEncryptionMaterial must contain at least 1 EncryptedDataKey. */
     needs(
@@ -105,7 +109,11 @@ export class NodeDefaultCryptographicMaterialsManager
      * that the data key matches the algorithm suite specification
      * and that the unencrypted data key is non-NULL.
      */
-    needs(material.getUnencryptedDataKey(), 'Unencrypted data key is invalid.')
+    needs(
+      material.hasValidKey(),
+      'No keyring attempted to decrypted any of the encrypted data keys.' +
+        '\nYou may not have access to any wrapping keys.'
+    )
 
     return material
   }
