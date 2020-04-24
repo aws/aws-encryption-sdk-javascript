@@ -248,7 +248,7 @@ export function decodeNonFrameBodyHeader(
    * https://github.com/awslabs/aws-encryption-sdk-specification/blob/master/data-format/message-body.md#encrypted-content-length
    */
   needs(
-    Maximum.BYTES_PER_AES_GCM_NONCE >= contentLength,
+    Maximum.BYTES_PER_AES_GCM_NONCE > contentLength,
     'Content length out of bounds.'
   )
   return {
