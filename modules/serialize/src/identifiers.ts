@@ -77,7 +77,7 @@ export enum Maximum {
   /* Maximum number of bytes for a single AES-GCM "operation."
    * This is related to the GHASH block size,
    * and can be thought of as the maximum bytes
-   * that can be encrypted with a single IV.
+   * that can be encrypted with a single key/IV pair.
    * The AWS Encryption SDK for Javascript
    * does not support non-framed encrypt
    * https://github.com/awslabs/aws-encryption-sdk-specification/blob/master/data-format/message-body.md#non-framed-data
