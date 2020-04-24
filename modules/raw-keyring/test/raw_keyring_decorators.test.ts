@@ -225,7 +225,7 @@ describe('_onDecrypt', () => {
     expect(filterCalled).to.equal(1)
   })
 
-  it('errors in _unwrapKey should not cause _onDecrypt to throw.', async () => {
+  it('Postcondition: An EDK must provide a valid data key or _unwrapKey must not have raised any errors.', async () => {
     const suite = new NodeAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
@@ -258,8 +258,10 @@ describe('_onDecrypt', () => {
       _filter,
     } as any
 
-    const test = await testKeyring._onDecrypt(material, [edk])
-    expect(test.hasValidKey()).to.equal(false)
+    await expect(testKeyring._onDecrypt(material, [edk])).to.rejectedWith(
+      Error,
+      'Unable to decrypt data key'
+    )
     expect(unwrapCalled).to.equal(1)
     expect(filterCalled).to.equal(1)
   })

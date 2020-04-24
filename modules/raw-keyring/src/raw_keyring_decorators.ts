@@ -8,6 +8,7 @@ import {
   KeyringTrace,
   KeyringTraceFlag,
   EncryptedDataKey,
+  needs,
 } from '@aws-crypto/material-management'
 
 export interface RawKeyRing<S extends SupportedAlgorithmSuites> {
@@ -54,16 +55,36 @@ export function _onDecrypt<
     /* Check for early return (Postcondition): If there are not EncryptedDataKeys for this keyring, do nothing. */
     if (!edks.length) return material
 
+    const cmkErrors: Error[] = []
+
     for (const edk of edks) {
       try {
         return await this._unwrapKey(material, edk)
       } catch (e) {
-        // there should be some debug here?  or wrap?
-        // Failures decrypt should not short-circuit the process
-        // If the caller does not have access they may have access
-        // through another Keyring.
+        /* Failures onDecrypt should not short-circuit the process
+         * If the caller does not have access they may have access
+         * through another Keyring.
+         */
+        cmkErrors.push(e)
       }
     }
+
+    /* Postcondition: An EDK must provide a valid data key or _unwrapKey must not have raised any errors.
+     * If I have a data key,
+     * decrypt errors can be ignored.
+     * However, if I was unable to decrypt a data key AND I have errors,
+     * these errors should bubble up.
+     * Otherwise, the only error customers will see is that
+     * the material does not have an unencrypted data key.
+     * So I return a concatenated Error message
+     */
+    needs(
+      material.hasValidKey() || (!material.hasValidKey() && !cmkErrors.length),
+      cmkErrors.reduce(
+        (m, e, i) => `${m} Error #${i + 1} \n ${e.stack} \n`,
+        `Unable to decrypt data key ${this.keyName} ${this.keyNamespace}.\n `
+      )
+    )
 
     return material
   }
