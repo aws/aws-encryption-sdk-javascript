@@ -1338,7 +1338,7 @@ export function invalidNonFrameHeaderContentLengthExcedsLimits() {
     255,
     255,
     255,
-    225,
+    224,
   ])
 }
 
