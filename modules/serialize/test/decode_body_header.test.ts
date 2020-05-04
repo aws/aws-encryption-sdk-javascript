@@ -502,6 +502,7 @@ describe('decodeNonFrameBodyHeader', () => {
     expect(test.tagLength).to.eql(16)
     expect(test.isFinalFrame).to.eql(true)
     expect(test.contentType).to.eql(ContentType.NO_FRAMING)
+    expect(test.contentLength).to.eql(0)
   })
 
   it('Precondition: The contentType must be NO_FRAMING.', () => {
@@ -560,6 +561,26 @@ describe('decodeNonFrameBodyHeader', () => {
       decodeNonFrameBodyHeader(buffer, headerInfo, buffer.byteLength + 1)
     ).to.throw()
     expect(() => decodeNonFrameBodyHeader(buffer, headerInfo, -1)).to.throw()
+  })
+
+  it('Postcondition: Non-framed content length MUST NOT exceed AES-GCM safe limits.', () => {
+    const headerInfo = {
+      messageHeader: {
+        contentType: ContentType.NO_FRAMING,
+      },
+      algorithmSuite: {
+        ivLength: 12,
+        tagLength: 16,
+      },
+    } as any
+
+    expect(() =>
+      decodeNonFrameBodyHeader(
+        fixtures.invalidNonFrameHeaderContentLengthExcedsLimits(),
+        headerInfo,
+        0
+      )
+    ).to.throw('Content length out of bounds.')
   })
 
   it('ArrayBuffer for a Uint8Array or Buffer may be larger than the Uint8Array or Buffer that it is a view over is.', () => {
