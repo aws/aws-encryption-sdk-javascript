@@ -57,7 +57,7 @@
     "url": "git@github.com:awslabs/aws-encryption-sdk-javascript.git"
   },
   "author": "aws-crypto-tools-team@amazon.com",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/cache-material": "file:modules/cache-material",
     "@aws-crypto/caching-materials-manager-browser": "file:modules/caching-materials-manager-browser",
