@@ -1,0 +1,19 @@
+[include]
+# Use "include" rather than "prefix" because
+# some CLI entry point files have shebang lines
+# that need to come first.
+"**/*.ts" = """
+// Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+"""
+"**/package.json" = "\"license\": \"Apache-2.0\""
+"**/*.sh" = """
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""
+[prefix]
+# Exclude the copies of msrcrypto included in examples packages.
+"**/[!msrcrypto]*.js" = """
+// Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+"""
