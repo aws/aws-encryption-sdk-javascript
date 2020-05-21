@@ -3,7 +3,11 @@
 
 /* eslint-env mocha */
 
-import { expect } from 'chai'
+import * as chai from 'chai'
+import chaiAsPromised from 'chai-as-promised'
+import * as util from 'util'
+import * as stream from 'stream'
+const pipeline = util.promisify(stream.pipeline)
 import { VerifyStream } from '../src/verify_stream'
 import { ParseHeaderStream } from '../src/parse_header_stream'
 import * as fixtures from './fixtures'
@@ -12,7 +16,11 @@ import { ContentType } from '@aws-crypto/serialize'
 import {
   NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier,
+  NodeDefaultCryptographicMaterialsManager,
+  needs,
 } from '@aws-crypto/material-management-node'
+chai.use(chaiAsPromised)
+const { expect } = chai
 
 describe('VerifyStream', () => {
   it('can be created', () => {
@@ -71,10 +79,109 @@ describe('VerifyStream', () => {
   it('Check for early return (Postcondition): If there is no verify stream do not attempt to verify.', () => {
     // This works because there is no state, and any state would cause _flush to throw
     const test = new VerifyStream({})
+    // test.
     let called = false
     test._flush(() => {
       called = true
     })
     expect(called).to.equal(true)
   })
+
+  it('Precondition: All ciphertext MUST have been received.', async () => {
+    const cmm = new NodeDefaultCryptographicMaterialsManager(
+      fixtures.decryptKeyring()
+    )
+    const data = Buffer.from(
+      fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfWith4Frames(),
+      'base64'
+    )
+    const completeHeaderLength = 73
+
+    // First we make sure that the test vector is well formed
+    await testStream(cmm, data)
+
+    // This make sure we still get nice errors when composed
+    for (let i = 0; completeHeaderLength > i; i++) {
+      await expect(testStream(cmm, data.slice(0, i))).rejectedWith(
+        Error,
+        'Incomplete Header'
+      )
+    }
+
+    // This is the real test, after the header the body MUST be complete
+    for (let i = completeHeaderLength; data.byteLength > i; i++) {
+      await expect(testStream(cmm, data.slice(0, i))).rejectedWith(
+        Error,
+        'Incomplete message'
+      )
+    }
+  })
+
+  it('Precondition: The signature must be well formed.', async () => {
+    const cmm = new NodeDefaultCryptographicMaterialsManager(
+      fixtures.decryptKeyring()
+    )
+    const data = Buffer.from(
+      fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384With4Frames(),
+      'base64'
+    )
+    const completeHeaderLength = 168
+    const lengthToFooter = 340
+
+    // First we make sure that the test vector is well formed
+    await testStream(cmm, data)
+
+    // This make sure we still get nice errors when composed
+    for (let i = 0; completeHeaderLength > i; i++) {
+      await expect(testStream(cmm, data.slice(0, i))).rejectedWith(
+        Error,
+        'Incomplete Header'
+      )
+    }
+
+    // This is similar to the test above, and in included for completeness
+    for (let i = completeHeaderLength; lengthToFooter > i; i++) {
+      await expect(testStream(cmm, data.slice(0, i))).rejectedWith(
+        Error,
+        'Incomplete message'
+      )
+    }
+
+    // This is the real test, the signature must be well formed
+    for (let i = lengthToFooter; data.byteLength > i; i++) {
+      await expect(testStream(cmm, data.slice(0, i))).rejectedWith(
+        Error,
+        'Invalid Signature'
+      )
+    }
+  })
 })
+
+async function testStream(
+  cmm: NodeDefaultCryptographicMaterialsManager,
+  data: Buffer
+) {
+  const source = new ParseHeaderStream(cmm)
+  const test = new VerifyStream({})
+  let DecipherInfoEmitted = false
+  let BodyInfoEmitted = false
+  let AuthTagEmitted = false
+  test
+    .on('DecipherInfo', (d) => {
+      DecipherInfoEmitted = !!d
+    })
+    .on('BodyInfo', (b) => {
+      BodyInfoEmitted = !!b
+    })
+    .on('AuthTag', (a, next) => {
+      AuthTagEmitted = !!a
+      next()
+    })
+  source.end(data)
+  return pipeline(source, test).then(() => {
+    needs(
+      DecipherInfoEmitted && BodyInfoEmitted && AuthTagEmitted,
+      'Required events not emitted.'
+    )
+  })
+}

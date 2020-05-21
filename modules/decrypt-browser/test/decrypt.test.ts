@@ -3,10 +3,13 @@
 
 /* eslint-env mocha */
 
-import { expect } from 'chai'
+import * as chai from 'chai'
+import chaiAsPromised from 'chai-as-promised'
 import { decrypt } from '../src/index'
 import { AlgorithmSuiteIdentifier } from '@aws-crypto/material-management-browser'
 import * as fixtures from './fixtures'
+chai.use(chaiAsPromised)
+const { expect } = chai
 
 describe('decrypt', () => {
   it('buffer', async () => {
@@ -51,5 +54,35 @@ describe('decrypt', () => {
         expect(err.message).to.equal('Invalid Signature')
       }
     )
+  })
+
+  it('verify incomplete chipertext will fail for an un-signed algorithm suite', async () => {
+    const data = fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfWith4Frames()
+    const keyring = fixtures.decryptKeyring()
+
+    // First we make sure that the test vector is well formed
+    await decrypt(keyring, data)
+
+    // This is the real test:
+    // trying to decrypt
+    // on EVERY boundary
+    for (let i = 0; data.byteLength > i; i++) {
+      await expect(decrypt(keyring, data.slice(0, i))).to.rejectedWith(Error)
+    }
+  })
+
+  it('verify incomplete chipertext will fail for a signed algorithm suite', async () => {
+    const data = fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384With4Frames()
+    const keyring = fixtures.decryptKeyring()
+
+    // First we make sure that the test vector is well formed
+    await decrypt(keyring, data)
+
+    // This is the real test:
+    // trying to decrypt
+    // on EVERY boundary
+    for (let i = 0; data.byteLength > i; i++) {
+      await expect(decrypt(keyring, data.slice(0, i))).to.rejectedWith(Error)
+    }
   })
 })
