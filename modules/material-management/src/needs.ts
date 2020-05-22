@@ -16,7 +16,7 @@ export function needs(
   condition: any,
   errorMessage: string,
   Err: ErrorConstructor = Error
-) {
+): asserts condition {
   if (!condition) {
     throw new Err(errorMessage)
   }
