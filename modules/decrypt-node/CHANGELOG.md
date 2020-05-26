@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.5](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/decrypt-node@1.0.4...@aws-crypto/decrypt-node@1.0.5) (2020-05-26)
+
+
+### Bug Fixes
+
+* resource exhaustion from an incomplete encrypted message ([#348](https://github.com/aws/aws-encryption-sdk-javascript/issues/348)) ([8c81013](https://github.com/aws/aws-encryption-sdk-javascript/commit/8c810131986b782c0702da4988b3999279daf2a3))
+
+
+
+
+
 ## [1.0.4](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/decrypt-node@1.0.3...@aws-crypto/decrypt-node@1.0.4) (2020-04-02)
 
 **Note:** Version bump only for package @aws-crypto/decrypt-node
