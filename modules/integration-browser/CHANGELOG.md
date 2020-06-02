@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/integration-browser@1.2.0...@aws-crypto/integration-browser@1.2.1) (2020-05-26)
+
+
+### Bug Fixes
+
+* integration-browser error condition ([#308](https://github.com/aws/aws-encryption-sdk-javascript/issues/308)) ([dab43a0](https://github.com/aws/aws-encryption-sdk-javascript/commit/dab43a0d3678416798e2df0b04309f7a24b3a4b0))
+
+
+
+
+
 # [1.2.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/integration-browser@1.1.0...@aws-crypto/integration-browser@1.2.0) (2020-04-02)
 
 

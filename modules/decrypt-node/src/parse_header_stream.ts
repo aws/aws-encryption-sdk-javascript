@@ -21,6 +21,7 @@ const PortableTransformWithType = PortableTransform as new (
 
 interface HeaderState {
   buffer: Buffer
+  headerParsed: boolean
 }
 
 export class ParseHeaderStream extends PortableTransformWithType {
@@ -34,6 +35,7 @@ export class ParseHeaderStream extends PortableTransformWithType {
     })
     this._headerState = {
       buffer: Buffer.alloc(0),
+      headerParsed: false,
     }
   }
 
@@ -92,6 +94,8 @@ export class ParseHeaderStream extends PortableTransformWithType {
         this.emit('VerifyInfo', verifyInfo)
         this.emit('MessageHeader', headerInfo.messageHeader)
 
+        this._headerState.headerParsed = true
+
         // The header is parsed, pass control
         const readPos =
           rawHeader.byteLength + headerIv.byteLength + headerAuthTag.byteLength
@@ -111,5 +115,17 @@ export class ParseHeaderStream extends PortableTransformWithType {
         return setImmediate(() => this._transform(tail, encoding, callback))
       })
       .catch((err) => callback(err))
+  }
+
+  _flush(callback: Function) {
+    /* Postcondition: A completed header MUST have been processed.
+     * callback is an errBack function,
+     * so it expects either an error OR undefined
+     */
+    callback(
+      this._headerState.headerParsed
+        ? undefined
+        : new Error('Incomplete Header')
+    )
   }
 }

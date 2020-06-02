@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.4](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/material-management@1.0.3...@aws-crypto/material-management@1.0.4) (2020-05-26)
+
+
+### Bug Fixes
+
+* add asserts to `needs` ([#327](https://github.com/aws/aws-encryption-sdk-javascript/issues/327)) ([c103fa4](https://github.com/aws/aws-encryption-sdk-javascript/commit/c103fa4cf58c89a1a9b57a70744a92e23d923c74))
+
+
+
+
+
 ## [1.0.3](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/material-management@1.0.2...@aws-crypto/material-management@1.0.3) (2020-04-02)
 
 

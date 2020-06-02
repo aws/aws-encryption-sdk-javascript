@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.2](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/caching-materials-manager-browser@1.1.1...@aws-crypto/caching-materials-manager-browser@1.1.2) (2020-05-26)
+
+
+### Bug Fixes
+
+* missing dependency in caching-materials-manager-browser ([#307](https://github.com/aws/aws-encryption-sdk-javascript/issues/307)) ([30b6619](https://github.com/aws/aws-encryption-sdk-javascript/commit/30b66193a9b4526ffb8d1bc35ebef4b1a911ace4))
+
+
+
+
+
 ## [1.1.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/caching-materials-manager-browser@1.1.0...@aws-crypto/caching-materials-manager-browser@1.1.1) (2020-04-02)
 
 **Note:** Version bump only for package @aws-crypto/caching-materials-manager-browser

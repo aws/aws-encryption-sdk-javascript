@@ -1317,6 +1317,31 @@ export function basicNonFrameHeader() {
   ])
 }
 
+export function invalidNonFrameHeaderContentLengthExcedsLimits() {
+  return new Uint8Array([
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    15,
+    255,
+    255,
+    255,
+    224,
+  ])
+}
+
 export function basicEncryptionContext() {
   return new Uint8Array([
     0,

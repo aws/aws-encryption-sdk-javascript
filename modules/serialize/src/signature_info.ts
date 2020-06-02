@@ -24,7 +24,7 @@ export function deserializeSignature({
   byteLength,
 }: Uint8Array) {
   /* Precondition: There must be information for a signature. */
-  needs(byteLength, 'Invalid Signature')
+  needs(byteLength && byteLength > 2, 'Invalid Signature')
   /* Uint8Array is a view on top of the underlying ArrayBuffer.
    * This means that raw underlying memory stored in the ArrayBuffer
    * may be larger than the Uint8Array.  This is especially true of

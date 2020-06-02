@@ -40,6 +40,7 @@ interface VerifyState {
   currentFrame?: BodyHeader
   signatureInfo: Buffer
   sequenceNumber: number
+  finalAuthTagReceived: boolean
 }
 
 export class VerifyStream extends PortableTransformWithType {
@@ -49,6 +50,7 @@ export class VerifyStream extends PortableTransformWithType {
     authTagBuffer: Buffer.alloc(0),
     signatureInfo: Buffer.alloc(0),
     sequenceNumber: 0,
+    finalAuthTagReceived: false,
   }
   private _verify?: AWSVerify
   private _maxBodySize?: number
@@ -198,6 +200,11 @@ export class VerifyStream extends PortableTransformWithType {
          * After the final frame, just moving on to concatenate the signature is much simpler.
          */
         if (currentFrame.isFinalFrame) {
+          /* Signal that the we are at the end of the ciphertext.
+           * See decodeBodyHeader, non-framed will set isFinalFrame
+           * for the single frame.
+           */
+          this._verifyState.finalAuthTagReceived = true
           /* Overwriting the _transform function.
            * Data flow control is not handled here.
            */
@@ -244,16 +251,28 @@ export class VerifyStream extends PortableTransformWithType {
   }
 
   _flush(callback: Function) {
+    const { finalAuthTagReceived } = this._verifyState
+    /* Precondition: All ciphertext MUST have been received.
+     * The verify stream has ended,
+     * there will be no more data.
+     * Therefore we MUST have reached the end.
+     */
+    if (!finalAuthTagReceived) return callback(new Error('Incomplete message'))
     /* Check for early return (Postcondition): If there is no verify stream do not attempt to verify. */
     if (!this._verify) return callback()
-    const { signatureInfo } = this._verifyState
-    const { buffer, byteOffset, byteLength } = deserializeSignature(
-      signatureInfo
-    )
-    const signature = Buffer.from(buffer, byteOffset, byteLength)
-    const isVerified = this._verify.awsCryptoVerify(signature)
-    /* Postcondition: The signature must be valid. */
-    needs(isVerified, 'Invalid Signature')
-    callback()
+    try {
+      const { signatureInfo } = this._verifyState
+      /* Precondition: The signature must be well formed. */
+      const { buffer, byteOffset, byteLength } = deserializeSignature(
+        signatureInfo
+      )
+      const signature = Buffer.from(buffer, byteOffset, byteLength)
+      const isVerified = this._verify.awsCryptoVerify(signature)
+      /* Postcondition: The signature must be valid. */
+      needs(isVerified, 'Invalid Signature')
+      callback()
+    } catch (e) {
+      callback(e)
+    }
   }
 }

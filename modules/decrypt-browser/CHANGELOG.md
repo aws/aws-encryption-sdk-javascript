@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.2](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/decrypt-browser@1.1.1...@aws-crypto/decrypt-browser@1.1.2) (2020-05-26)
+
+
+### Bug Fixes
+
+* resource exhaustion from an incomplete encrypted message ([#348](https://github.com/aws/aws-encryption-sdk-javascript/issues/348)) ([8c81013](https://github.com/aws/aws-encryption-sdk-javascript/commit/8c810131986b782c0702da4988b3999279daf2a3))
+
+
+
+
+
 ## [1.1.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/decrypt-browser@1.1.0...@aws-crypto/decrypt-browser@1.1.1) (2020-04-02)
 
 **Note:** Version bump only for package @aws-crypto/decrypt-browser

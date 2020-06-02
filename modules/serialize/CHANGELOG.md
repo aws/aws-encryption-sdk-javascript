@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.4](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/serialize@1.0.3...@aws-crypto/serialize@1.0.4) (2020-05-26)
+
+
+### Bug Fixes
+
+* nonFramed maximum content length ([#316](https://github.com/aws/aws-encryption-sdk-javascript/issues/316)) ([9c2f26c](https://github.com/aws/aws-encryption-sdk-javascript/commit/9c2f26c3d5203b8372f127423121f6e194550c23))
+* resource exhaustion from an incomplete encrypted message ([#348](https://github.com/aws/aws-encryption-sdk-javascript/issues/348)) ([8c81013](https://github.com/aws/aws-encryption-sdk-javascript/commit/8c810131986b782c0702da4988b3999279daf2a3))
+
+
+
+
+
 ## [1.0.3](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/serialize@1.0.2...@aws-crypto/serialize@1.0.3) (2020-04-02)
 
 

@@ -25,6 +25,9 @@ describe('deserializeSignature', () => {
 
   it('Precondition: There must be information for a signature.', () => {
     expect(() => deserializeSignature({} as any)).to.throw()
+    expect(() => deserializeSignature(new Uint8Array())).to.throw()
+    expect(() => deserializeSignature(new Uint8Array(1))).to.throw()
+    expect(() => deserializeSignature(new Uint8Array(2))).to.throw()
   })
 
   it('Precondition: The signature length must be positive.', () => {

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import BN from 'bn.js'
-import { ContentType, SequenceIdentifier } from './identifiers'
+import { ContentType, SequenceIdentifier, Maximum } from './identifiers'
 import {
   HeaderInfo,
   BodyHeader,
@@ -244,6 +244,13 @@ export function decodeNonFrameBodyHeader(
   // This will throw if the number is larger than Number.MAX_SAFE_INTEGER.
   // i.e. a 53 bit number
   const contentLength = contentLengthBN.toNumber()
+  /* Postcondition: Non-framed content length MUST NOT exceed AES-GCM safe limits.
+   * https://github.com/awslabs/aws-encryption-sdk-specification/blob/master/data-format/message-body.md#encrypted-content-length
+   */
+  needs(
+    Maximum.BYTES_PER_AES_GCM_NONCE > contentLength,
+    'Content length out of bounds.'
+  )
   return {
     sequenceNumber: 1,
     iv,
