@@ -61,7 +61,7 @@ const cleartext = 'asdf'
  * the Encryption SDK returns an "encrypted message" (`result`) that includes the ciphertext
  * the encryption context, and the encrypted data keys.
  */ 
-const { result } = await encrypt(keyring, cleartext, { context })
+const { result } = await encrypt(keyring, cleartext, { encryptionContext: context })
 
 /* Decrypt the result using the same keyring */
 const { plaintext, messageHeader } = await decrypt(keyring, result)
