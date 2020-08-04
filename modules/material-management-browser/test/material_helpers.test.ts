@@ -22,6 +22,8 @@ import {
   isValidCryptoKey,
   SignatureKey,
   VerificationKey,
+  AwsEsdkJsCryptoKeyPair,
+  AwsEsdkJsKeyUsage,
 } from '@aws-crypto/material-management'
 import {
   synchronousRandomValues,
@@ -970,14 +972,14 @@ async function sigKeys(suite: WebCryptoAlgorithmSuite) {
 
   const webCryptoAlgorithm = { name: 'ECDSA', namedCurve }
   const extractable = false
-  const usages = ['sign', 'verify']
+  const usages = ['sign', 'verify'] as AwsEsdkJsKeyUsage[]
   const format = 'raw'
 
-  const { publicKey, privateKey } = await subtle.generateKey(
+  const { publicKey, privateKey } = (await subtle.generateKey(
     webCryptoAlgorithm,
     extractable,
     usages
-  )
+  )) as AwsEsdkJsCryptoKeyPair
   const publicKeyBytes = await subtle.exportKey(format, publicKey)
   const compressPoint = SignatureKey.encodeCompressPoint(
     new Uint8Array(publicKeyBytes),
