@@ -83,6 +83,7 @@ This SDK is distributed under the
 [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0),
 see LICENSE.txt and NOTICE.txt for more information.
 
+
 # Breaking changes from `preview` to `1.0.0`
 
 The AWS Encryption SDK for JavaScript is generally available
