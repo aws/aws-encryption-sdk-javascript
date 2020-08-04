@@ -35,6 +35,11 @@ export interface AwsEsdkJsCryptoKey {
   readonly usages: AwsEsdkJsKeyUsage[]
 }
 
+export interface AwsEsdkJsCryptoKeyPair {
+  readonly publicKey: AwsEsdkJsCryptoKey
+  readonly privateKey: AwsEsdkJsCryptoKey
+}
+
 export type MixedBackendCryptoKey = {
   nonZeroByteCryptoKey: AwsEsdkJsCryptoKey
   zeroByteCryptoKey: AwsEsdkJsCryptoKey

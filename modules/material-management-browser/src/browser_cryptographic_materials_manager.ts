@@ -18,6 +18,8 @@ import {
   KeyringWebCrypto,
   GetEncryptionMaterials,
   GetDecryptMaterials,
+  AwsEsdkJsKeyUsage,
+  AwsEsdkJsCryptoKeyPair,
 } from '@aws-crypto/material-management'
 
 import { ENCODED_SIGNER_KEY } from '@aws-crypto/serialize'
@@ -133,14 +135,15 @@ export class WebCryptoDefaultCryptographicMaterialsManager
 
     const webCryptoAlgorithm = { name: 'ECDSA', namedCurve }
     const extractable = false
-    const usages = ['sign']
+    const usages = ['sign'] as AwsEsdkJsKeyUsage[]
     const format = 'raw'
 
-    const { publicKey, privateKey } = await subtle.generateKey(
+    const { publicKey, privateKey } = (await subtle.generateKey(
       webCryptoAlgorithm,
       extractable,
       usages
-    )
+    )) as AwsEsdkJsCryptoKeyPair
+
     const publicKeyBytes = await subtle.exportKey(format, publicKey)
     const compressPoint = SignatureKey.encodeCompressPoint(
       new Uint8Array(publicKeyBytes),
@@ -178,7 +181,7 @@ export class WebCryptoDefaultCryptographicMaterialsManager
     const subtle = getNonZeroByteBackend(backend)
     const webCryptoAlgorithm = { name: 'ECDSA', namedCurve }
     const extractable = false
-    const usages = ['verify']
+    const usages = ['verify'] as AwsEsdkJsKeyUsage[]
     const format = 'raw'
 
     const publicKeyBytes = VerificationKey.decodeCompressPoint(
