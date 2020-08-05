@@ -4,8 +4,6 @@
 /* Here I am reusing the Material implementation and interface from material-management.
  * This is because there are many security guarantees that this implementations offer
  * that map to the current implementation of raw AES keyrings.
- * The KeyringTrace is an unfortunate case because there is no mapping.
- * However the trade off seems worth it and the convolutions to make it work seem minimal.
  */
 
 import {
@@ -20,8 +18,6 @@ import {
   AwsEsdkJsCryptoKey,
   AwsEsdkJsKeyUsage,
   AwsEsdkKeyObject,
-  KeyringTrace,
-  KeyringTraceFlag,
   needs,
   EncryptionContext,
 } from '@aws-crypto/material-management'
@@ -35,24 +31,17 @@ export class NodeRawAesMaterial
   implements Readonly<CryptographicMaterial<NodeRawAesMaterial>> {
   suite: NodeAlgorithmSuite
   setUnencryptedDataKey!: (
-    dataKey: Uint8Array | AwsEsdkKeyObject,
-    trace: KeyringTrace
+    dataKey: Uint8Array | AwsEsdkKeyObject
   ) => NodeRawAesMaterial
   getUnencryptedDataKey!: () => Uint8Array | AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => NodeRawAesMaterial
   hasUnencryptedDataKey!: boolean
-  keyringTrace: KeyringTrace[] = []
   encryptionContext: EncryptionContext = Object.freeze({})
   constructor(suiteId: WrappingSuiteIdentifier) {
     /* Precondition: NodeRawAesMaterial suiteId must be RawAesWrappingSuiteIdentifier. */
     needs(RawAesWrappingSuiteIdentifier[suiteId], 'suiteId not supported.')
     this.suite = new NodeAlgorithmSuite(suiteId)
-    /* NodeRawAesMaterial need to set a flag, this is an abuse of TraceFlags
-     * because the material is not generated.
-     * but CryptographicMaterial force a flag to be set.
-     */
-    const setFlags = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
-    decorateCryptographicMaterial<NodeRawAesMaterial>(this, setFlags)
+    decorateCryptographicMaterial<NodeRawAesMaterial>(this)
     Object.setPrototypeOf(this, NodeRawAesMaterial.prototype)
     Object.freeze(this)
   }
@@ -68,16 +57,13 @@ export class WebCryptoRawAesMaterial
     Readonly<WebCryptoMaterial<WebCryptoRawAesMaterial>> {
   suite: WebCryptoAlgorithmSuite
   setUnencryptedDataKey!: (
-    dataKey: Uint8Array | AwsEsdkKeyObject,
-    trace: KeyringTrace
+    dataKey: Uint8Array | AwsEsdkKeyObject
   ) => WebCryptoRawAesMaterial
   getUnencryptedDataKey!: () => Uint8Array | AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => WebCryptoRawAesMaterial
   hasUnencryptedDataKey!: boolean
-  keyringTrace: KeyringTrace[] = []
   setCryptoKey!: (
-    dataKey: AwsEsdkJsCryptoKey | MixedBackendCryptoKey,
-    trace: KeyringTrace
+    dataKey: AwsEsdkJsCryptoKey | MixedBackendCryptoKey
   ) => WebCryptoRawAesMaterial
   getCryptoKey!: () => AwsEsdkJsCryptoKey | MixedBackendCryptoKey
   hasCryptoKey!: boolean
@@ -91,13 +77,8 @@ export class WebCryptoRawAesMaterial
       'decrypt',
       'encrypt',
     ] as AwsEsdkJsKeyUsage[])
-    /* WebCryptoRawAesMaterial need to set a flag, this is an abuse of TraceFlags
-     * because the material is not generated.
-     * but CryptographicMaterial force a flag to be set.
-     */
-    const setFlag = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
-    decorateCryptographicMaterial<WebCryptoRawAesMaterial>(this, setFlag)
-    decorateWebCryptoMaterial<WebCryptoRawAesMaterial>(this, setFlag)
+    decorateCryptographicMaterial<WebCryptoRawAesMaterial>(this)
+    decorateWebCryptoMaterial<WebCryptoRawAesMaterial>(this)
     Object.setPrototypeOf(this, WebCryptoRawAesMaterial.prototype)
     Object.freeze(this)
   }

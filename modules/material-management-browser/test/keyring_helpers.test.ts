@@ -15,7 +15,6 @@ import {
   WebCryptoDecryptionMaterial,
   WebCryptoAlgorithmSuite,
   AlgorithmSuiteIdentifier,
-  KeyringTraceFlag,
 } from '@aws-crypto/material-management'
 import { synchronousRandomValues } from '@aws-crypto/web-crypto-backend'
 
@@ -92,12 +91,8 @@ function getWebCryptoDecryptionMaterial() {
   )
   const material = new WebCryptoDecryptionMaterial(suite, {})
   const udk = synchronousRandomValues(suite.keyLengthBytes)
-  const trace = {
-    keyName: 'keyName',
-    keyNamespace: 'keyNamespace',
-    flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-  }
-  return material.setUnencryptedDataKey(udk, trace)
+
+  return material.setUnencryptedDataKey(udk)
 }
 
 function getWebCryptoEncryptionMaterial() {
@@ -106,10 +101,5 @@ function getWebCryptoEncryptionMaterial() {
   )
   const material = new WebCryptoEncryptionMaterial(suite, {})
   const udk = synchronousRandomValues(suite.keyLengthBytes)
-  const trace = {
-    keyName: 'keyName',
-    keyNamespace: 'keyNamespace',
-    flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-  }
-  return material.setUnencryptedDataKey(udk, trace)
+  return material.setUnencryptedDataKey(udk)
 }

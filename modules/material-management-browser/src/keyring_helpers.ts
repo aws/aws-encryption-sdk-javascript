@@ -44,8 +44,5 @@ export async function importCryptoKeyToMaterial<T extends WebCryptoMaterial<T>>(
 ) {
   const backend = await getWebCryptoBackend()
   const cryptoKey = await importCryptoKey(backend, material)
-  // The trace is only set when the material does not already have
-  // an hasUnencryptedDataKey.  This is an implementation detail :(
-  const [trace] = material.keyringTrace
-  return material.setCryptoKey(cryptoKey, trace)
+  return material.setCryptoKey(cryptoKey)
 }

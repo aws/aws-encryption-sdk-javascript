@@ -9,7 +9,6 @@ import {
   AlgorithmSuiteIdentifier,
   NodeEncryptionMaterial,
   NodeAlgorithmSuite,
-  KeyringTraceFlag,
   NodeDecryptionMaterial,
   EncryptedDataKey,
   unwrapDataKey,
@@ -42,12 +41,7 @@ describe('_onEncrypt', () => {
     expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(
       new Uint8Array(Array(suite.keyLengthBytes).fill(1))
     )
-    expect(test.keyringTrace).to.have.lengthOf(1)
-    expect(test.keyringTrace[0].keyName).to.equal(keyName)
-    expect(test.keyringTrace[0].keyNamespace).to.equal(keyNamespace)
-    expect(test.keyringTrace[0].flags).to.equal(
-      KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
-    )
+
     expect(wrapCalled).to.equal(1)
   })
 
@@ -61,11 +55,7 @@ describe('_onEncrypt', () => {
     const material = new NodeEncryptionMaterial(
       suite,
       {}
-    ).setUnencryptedDataKey(new Uint8Array(udk), {
-      keyName,
-      keyNamespace,
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    })
+    ).setUnencryptedDataKey(new Uint8Array(udk))
     let wrapCalled = 0
     const notRandomBytes = async () => {
       throw new Error('never')
@@ -112,11 +102,7 @@ describe('_onDecrypt', () => {
     }
     const _unwrapKey = (material: NodeDecryptionMaterial) => {
       unwrapCalled += 1
-      return material.setUnencryptedDataKey(new Uint8Array(udk), {
-        keyName,
-        keyNamespace,
-        flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-      })
+      return material.setUnencryptedDataKey(new Uint8Array(udk))
     }
 
     const testKeyring = {
@@ -129,12 +115,7 @@ describe('_onDecrypt', () => {
 
     const test = await testKeyring._onDecrypt(material, [edk])
     expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(udk)
-    expect(test.keyringTrace).to.have.lengthOf(1)
-    expect(test.keyringTrace[0].keyName).to.equal(keyName)
-    expect(test.keyringTrace[0].keyNamespace).to.equal(keyNamespace)
-    expect(test.keyringTrace[0].flags).to.equal(
-      KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
-    )
+
     expect(unwrapCalled).to.equal(1)
     expect(filterCalled).to.equal(1)
   })
@@ -149,11 +130,7 @@ describe('_onDecrypt', () => {
     const material = new NodeDecryptionMaterial(
       suite,
       {}
-    ).setUnencryptedDataKey(new Uint8Array(udk), {
-      keyName,
-      keyNamespace,
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    })
+    ).setUnencryptedDataKey(new Uint8Array(udk))
 
     const edk = new EncryptedDataKey({
       providerId: keyName,

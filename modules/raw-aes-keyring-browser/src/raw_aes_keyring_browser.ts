@@ -7,7 +7,6 @@ import {
   WebCryptoEncryptionMaterial,
   WebCryptoDecryptionMaterial,
   EncryptedDataKey,
-  KeyringTraceFlag,
   immutableClass,
   readOnlyProperty,
   WebCryptoAlgorithmSuite,
@@ -41,12 +40,6 @@ const { rawAesEncryptedDataKey } = rawAesEncryptedDataKeyFactory(
   fromUtf8
 )
 const { rawAesEncryptedParts } = rawAesEncryptedPartsFactory(fromUtf8)
-const encryptFlags =
-  KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY |
-  KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
-const decryptFlags =
-  KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY |
-  KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
 
 export type RawAesKeyringWebCryptoInput = {
   keyNamespace: string
@@ -68,15 +61,8 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
     /* Precondition: RawAesKeyringWebCrypto requires a wrappingSuite to be a valid RawAesWrappingSuite. */
     const wrappingMaterial = new WebCryptoRawAesMaterial(wrappingSuite)
-      /* Precondition: unencryptedMasterKey must correspond to the WebCryptoAlgorithmSuite specification.
-       * Note: the KeyringTrace and flag are _only_ set because I am reusing an existing implementation.
-       * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
-       */
-      .setCryptoKey(masterKey, {
-        keyNamespace,
-        keyName,
-        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-      })
+      /* Precondition: unencryptedMasterKey must correspond to the WebCryptoAlgorithmSuite specification. */
+      .setCryptoKey(masterKey)
 
     const _wrapKey = async (material: WebCryptoEncryptionMaterial) => {
       /* The AAD section is uInt16BE(length) + AAD
@@ -110,16 +96,9 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
       const aad = serializeEncryptionContext(material.encryptionContext).slice(
         2
       )
-      const { keyNamespace, keyName } = this
+      const { keyName } = this
 
-      return aesGcmUnwrapKey(
-        keyNamespace,
-        keyName,
-        material,
-        wrappingMaterial,
-        edk,
-        aad
-      )
+      return aesGcmUnwrapKey(keyName, material, wrappingMaterial, edk, aad)
     }
 
     readOnlyProperty(this, 'keyName', keyName)
@@ -153,15 +132,8 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
   ): Promise<AwsEsdkJsCryptoKey> {
     needs(masterKey instanceof Uint8Array, 'Unsupported master key type.')
     const material = new WebCryptoRawAesMaterial(wrappingSuite)
-      /* Precondition: masterKey must correspond to the algorithm suite specification.
-       * Note: the KeyringTrace and flag are _only_ set because I am reusing an existing implementation.
-       * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
-       */
-      .setUnencryptedDataKey(masterKey, {
-        keyNamespace: 'importOnly',
-        keyName: 'importOnly',
-        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-      })
+      /* Precondition: masterKey must correspond to the algorithm suite specification. */
+      .setUnencryptedDataKey(masterKey)
     return backendForRawAesMasterKey().then(async (backend) =>
       _importCryptoKey(backend.subtle, material, ['encrypt', 'decrypt'])
     )
@@ -172,8 +144,8 @@ immutableClass(RawAesKeyringWebCrypto)
 /**
  * Uses aes-gcm to encrypt the data key and return the passed WebCryptoEncryptionMaterial with
  * an EncryptedDataKey added.
- * @param keyNamespace [String] The keyring namespace (for KeyringTrace)
- * @param keyName [String] The keyring name (for KeyringTrace and to extract the extra info stored in providerInfo)
+ * @param keyNamespace [String] The keyring namespace
+ * @param keyName [String] The keyring name (to extract the extra info stored in providerInfo)
  * @param material [WebCryptoEncryptionMaterial] The target material to which the EncryptedDataKey will be added
  * @param aad [Uint8Array] The serialized aad (EncryptionContext)
  * @param wrappingMaterial [WebCryptoRawAesMaterial] The material used to decrypt the EncryptedDataKey
@@ -214,14 +186,13 @@ async function aesGcmWrapKey(
     ciphertext,
     authTag
   )
-  return material.addEncryptedDataKey(edk, encryptFlags)
+  return material.addEncryptedDataKey(edk)
 }
 
 /**
  * Uses aes-gcm to decrypt the encrypted data key and return the passed WebCryptoDecryptionMaterial with
  * the unencrypted data key set.
- * @param keyNamespace [String] The keyring namespace (for KeyringTrace)
- * @param keyName [String] The keyring name (for KeyringTrace and to extract the extra info stored in providerInfo)
+ * @param keyName [String] The keyring name (to extract the extra info stored in providerInfo)
  * @param material [WebCryptoDecryptionMaterial] The target material to which the decrypted data key will be added
  * @param wrappingMaterial [WebCryptoRawAesMaterial] The material used to decrypt the EncryptedDataKey
  * @param edk [EncryptedDataKey] The EncryptedDataKey on which to operate
@@ -229,7 +200,6 @@ async function aesGcmWrapKey(
  * @returns [WebCryptoDecryptionMaterial] Mutates and returns the same WebCryptoDecryptionMaterial that was passed but with the unencrypted data key set
  */
 async function aesGcmUnwrapKey(
-  keyNamespace: string,
   keyName: string,
   material: WebCryptoDecryptionMaterial,
   wrappingMaterial: WebCryptoRawAesMaterial,
@@ -250,8 +220,8 @@ async function aesGcmUnwrapKey(
   const buffer = await KdfGetSubtleDecrypt(info)(iv, aad)(
     concatBuffers(ciphertext, authTag)
   )
-  const trace = { keyNamespace, keyName, flags: decryptFlags }
-  material.setUnencryptedDataKey(new Uint8Array(buffer), trace)
+
+  material.setUnencryptedDataKey(new Uint8Array(buffer))
   return importForWebCryptoDecryptionMaterial(material)
 }
 

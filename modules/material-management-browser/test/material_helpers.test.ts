@@ -18,7 +18,6 @@ import {
   WebCryptoDecryptionMaterial,
   WebCryptoAlgorithmSuite,
   AlgorithmSuiteIdentifier,
-  KeyringTraceFlag,
   isValidCryptoKey,
   SignatureKey,
   VerificationKey,
@@ -44,12 +43,8 @@ describe('_importCryptoKey', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
 
@@ -65,12 +60,8 @@ describe('_importCryptoKey', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
 
@@ -85,12 +76,8 @@ describe('_importCryptoKey', () => {
     )
     const material = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
 
@@ -105,12 +92,8 @@ describe('_importCryptoKey', () => {
     )
     const material = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
 
@@ -127,12 +110,8 @@ describe('importCryptoKey', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
 
     const cryptoKey = await importCryptoKey(backend, material, ['encrypt'])
@@ -146,12 +125,8 @@ describe('importCryptoKey', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const realBackend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(realBackend)
     /* Insuring that the backend support is mixed is complicated.
@@ -186,12 +161,8 @@ describe('WebCryptoKdf', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
 
@@ -215,12 +186,8 @@ describe('WebCryptoKdf', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
 
@@ -244,12 +211,8 @@ describe('WebCryptoKdf', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
 
@@ -265,12 +228,8 @@ describe('WebCryptoKdf', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
 
@@ -300,16 +259,12 @@ describe('getSubtleFunction', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
 
     const cryptoKey = await importCryptoKey(backend, material, ['encrypt'])
-    material.setCryptoKey(cryptoKey, trace)
+    material.setCryptoKey(cryptoKey)
 
     const testInfo = getSubtleFunction(material, backend, 'encrypt')
     expect(testInfo).to.be.a('function')
@@ -329,12 +284,8 @@ describe('getSubtleFunction', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
 
     expect(() => getSubtleFunction(material, backend, 'encrypt')).to.throw()
@@ -346,12 +297,8 @@ describe('getSubtleFunction', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
     /* Insuring that the backend support is mixed is complicated.
@@ -364,7 +311,7 @@ describe('getSubtleFunction', () => {
 
     /* I always want the cryptoKey to not match the backend. */
     const cryptoKey = await _importCryptoKey(subtle, material, ['encrypt'])
-    material.setCryptoKey(cryptoKey, trace)
+    material.setCryptoKey(cryptoKey)
 
     expect(() =>
       getSubtleFunction(mixedSupportBackend, backend, 'encrypt')
@@ -377,16 +324,12 @@ describe('getSubtleFunction', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
 
     const cryptoKey = await importCryptoKey(backend, material, ['encrypt'])
-    material.setCryptoKey(cryptoKey, trace)
+    material.setCryptoKey(cryptoKey)
 
     const testInfo = getSubtleFunction(material, backend, 'encrypt')
     expect(testInfo).to.be.a('function')
@@ -403,12 +346,8 @@ describe('getSubtleFunction', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
 
     const backend = await getWebCryptoBackend()
     /* All of this _only_ matters in the case of a mixed backend.
@@ -424,7 +363,7 @@ describe('getSubtleFunction', () => {
       'encrypt',
       'decrypt',
     ])
-    material.setCryptoKey(cryptoKey, trace)
+    material.setCryptoKey(cryptoKey)
 
     const iv = new Uint8Array(suite.ivLength)
     const aad = new Uint8Array(1)
@@ -456,12 +395,8 @@ describe('getSubtleFunction', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+
+    material.setUnencryptedDataKey(udk)
 
     const backend = await getWebCryptoBackend()
     /* All of this _only_ matters in the case of a mixed backend.
@@ -477,7 +412,7 @@ describe('getSubtleFunction', () => {
       'encrypt',
       'decrypt',
     ])
-    material.setCryptoKey(cryptoKey, trace)
+    material.setCryptoKey(cryptoKey)
 
     const iv = new Uint8Array(suite.ivLength)
     const aad = new Uint8Array(1)
@@ -511,17 +446,8 @@ describe('getSubtleFunction', () => {
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const encryptTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    const decryptTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
-    encryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
+
+    encryptionMaterial.setUnencryptedDataKey(udk)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
@@ -530,8 +456,8 @@ describe('getSubtleFunction', () => {
       'decrypt',
     ])
 
-    encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
-    decryptionMaterial.setCryptoKey(cryptoKey, decryptTrace)
+    encryptionMaterial.setCryptoKey(cryptoKey)
+    decryptionMaterial.setCryptoKey(cryptoKey)
 
     const info = synchronousRandomValues(5)
     const iv = synchronousRandomValues(suite.ivLength)
@@ -565,17 +491,8 @@ describe('getSubtleFunction', () => {
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const encryptTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    const decryptTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
-    encryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
+
+    encryptionMaterial.setUnencryptedDataKey(udk)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
@@ -583,8 +500,8 @@ describe('getSubtleFunction', () => {
       'deriveKey',
     ])
 
-    encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
-    decryptionMaterial.setCryptoKey(cryptoKey, decryptTrace)
+    encryptionMaterial.setCryptoKey(cryptoKey)
+    decryptionMaterial.setCryptoKey(cryptoKey)
 
     const info = synchronousRandomValues(5)
     const iv = synchronousRandomValues(suite.ivLength)
@@ -618,17 +535,8 @@ describe('getSubtleFunction', () => {
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const encryptTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    const decryptTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
-    encryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
+
+    encryptionMaterial.setUnencryptedDataKey(udk)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
@@ -647,8 +555,8 @@ describe('getSubtleFunction', () => {
       ['encrypt', 'decrypt']
     )
 
-    encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
-    decryptionMaterial.setCryptoKey(cryptoKey, decryptTrace)
+    encryptionMaterial.setCryptoKey(cryptoKey)
+    decryptionMaterial.setCryptoKey(cryptoKey)
 
     const info = synchronousRandomValues(5)
     const iv = synchronousRandomValues(suite.ivLength)
@@ -703,17 +611,8 @@ describe('getSubtleFunction', () => {
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const encryptTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    const decryptTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
-    encryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
+
+    encryptionMaterial.setUnencryptedDataKey(udk)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
@@ -732,8 +631,8 @@ describe('getSubtleFunction', () => {
       ['deriveKey']
     )
 
-    encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
-    decryptionMaterial.setCryptoKey(cryptoKey, decryptTrace)
+    encryptionMaterial.setCryptoKey(cryptoKey)
+    decryptionMaterial.setCryptoKey(cryptoKey)
 
     const info = synchronousRandomValues(5)
     const iv = synchronousRandomValues(suite.ivLength)
@@ -792,19 +691,15 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
     )
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const encryptTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    encryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
+
+    encryptionMaterial.setUnencryptedDataKey(udk)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
     const cryptoKey = await _importCryptoKey(subtle, encryptionMaterial, [
       'deriveKey',
     ])
-    encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
+    encryptionMaterial.setCryptoKey(cryptoKey)
 
     const test = await getEncryptHelper(encryptionMaterial)
     expect(test.kdfGetSubtleEncrypt).to.be.a('function')
@@ -818,19 +713,14 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
     )
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const encryptTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
-    decryptionMaterial.setUnencryptedDataKey(udk, encryptTrace)
+    decryptionMaterial.setUnencryptedDataKey(udk)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
     const cryptoKey = await _importCryptoKey(subtle, decryptionMaterial, [
       'deriveKey',
     ])
-    decryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
+    decryptionMaterial.setCryptoKey(cryptoKey)
 
     const test = await getDecryptionHelper(decryptionMaterial)
     expect(test.kdfGetSubtleDecrypt).to.be.a('function')
@@ -845,21 +735,15 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const { signatureKey } = await sigKeys(suite)
-    const encryptTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    encryptionMaterial
-      .setUnencryptedDataKey(udk, encryptTrace)
-      .setSignatureKey(signatureKey)
+
+    encryptionMaterial.setUnencryptedDataKey(udk).setSignatureKey(signatureKey)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
     const cryptoKey = await _importCryptoKey(subtle, encryptionMaterial, [
       'deriveKey',
     ])
-    encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
+    encryptionMaterial.setCryptoKey(cryptoKey)
 
     const test = await getEncryptHelper(encryptionMaterial)
     expect(test.kdfGetSubtleEncrypt).to.be.a('function')
@@ -874,13 +758,9 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
     const decryptionMaterial = new WebCryptoDecryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const { verificationKey } = await sigKeys(suite)
-    const decryptionTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
+
     decryptionMaterial
-      .setUnencryptedDataKey(udk, decryptionTrace)
+      .setUnencryptedDataKey(udk)
       .setVerificationKey(verificationKey)
 
     const backend = await getWebCryptoBackend()
@@ -888,7 +768,7 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
     const cryptoKey = await _importCryptoKey(subtle, decryptionMaterial, [
       'deriveKey',
     ])
-    decryptionMaterial.setCryptoKey(cryptoKey, decryptionTrace)
+    decryptionMaterial.setCryptoKey(cryptoKey)
 
     const test = await getDecryptionHelper(decryptionMaterial)
     expect(test.kdfGetSubtleDecrypt).to.be.a('function')
@@ -922,22 +802,11 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
     const encryptionMaterial = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
     const { signatureKey, verificationKey } = await sigKeys(suite)
-    const encryptTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    const decryptionTrace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
+
     decryptionMaterial
-      .setUnencryptedDataKey(udk, decryptionTrace)
+      .setUnencryptedDataKey(udk)
       .setVerificationKey(verificationKey)
-    encryptionMaterial
-      .setUnencryptedDataKey(udk, encryptTrace)
-      .setSignatureKey(signatureKey)
+    encryptionMaterial.setUnencryptedDataKey(udk).setSignatureKey(signatureKey)
 
     const backend = await getWebCryptoBackend()
     const subtle = getZeroByteSubtle(backend)
@@ -945,8 +814,8 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
       'deriveKey',
     ])
 
-    encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
-    decryptionMaterial.setCryptoKey(cryptoKey, decryptionTrace)
+    encryptionMaterial.setCryptoKey(cryptoKey)
+    decryptionMaterial.setCryptoKey(cryptoKey)
 
     const { subtleSign } = await getEncryptHelper(encryptionMaterial)
     const { subtleVerify } = await getDecryptionHelper(decryptionMaterial)

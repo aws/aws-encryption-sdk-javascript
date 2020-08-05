@@ -10,7 +10,6 @@ import {
   WebCryptoEncryptionMaterial,
   KeyringWebCrypto,
   EncryptedDataKey,
-  KeyringTraceFlag,
   WebCryptoAlgorithmSuite,
   importForWebCryptoEncryptionMaterial,
 } from '@aws-crypto/material-management-browser'
@@ -50,17 +49,10 @@ describe('encrypt structural testing', () => {
       const unencryptedDataKey = new Uint8Array(
         material.suite.keyLengthBytes
       ).fill(0)
-      const trace = {
-        keyNamespace: 'k',
-        keyName: 'k',
-        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-      }
+
       material
-        .setUnencryptedDataKey(unencryptedDataKey, trace)
-        .addEncryptedDataKey(
-          edk,
-          KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
-        )
+        .setUnencryptedDataKey(unencryptedDataKey)
+        .addEncryptedDataKey(edk)
       return importForWebCryptoEncryptionMaterial(material)
     }
     async _onDecrypt(): Promise<WebCryptoDecryptionMaterial> {
