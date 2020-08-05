@@ -14,12 +14,14 @@ module.exports = function (wallaby) {
       'modules/**/fixtures.ts',
       '!modules/**/test/**/*.test.ts',
       '!modules/**/node_modules/**',
-      '!modules/**/build/**'
+      '!modules/**/build/**',
+      '!modules/*-+(browser|backend)/**/*.ts'
     ],
     tests: [
       'modules/**/test/**/*test.ts',
       '!modules/**/node_modules/**',
-      '!modules/**/build/**'
+      '!modules/**/build/**',
+      '!modules/*-+(browser|backend)/**/*.ts'
     ],
     filesWithNoCoverageCalculated: [
       'modules/**/src/index.ts'
