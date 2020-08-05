@@ -8,7 +8,10 @@ import chaiAsPromised from 'chai-as-promised'
 import * as util from 'util'
 import * as stream from 'stream'
 const pipeline = util.promisify(stream.pipeline)
-import { ParseHeaderStream } from '../src/parse_header_stream'
+import {
+  ParseHeaderStream,
+  ParseHeaderStreamOptions,
+} from '../src/parse_header_stream'
 import {
   NodeDefaultCryptographicMaterialsManager,
   needs,
@@ -39,15 +42,38 @@ describe('ParseHeaderStream', () => {
       await testStream(cmm, data.slice(0, i))
     }
   })
+
+  it('Precondition: If maxHeaderSize was set I can not buffer a header larger than maxHeaderSize.', async () => {
+    const completeHeaderLength = 73
+    const data = Buffer.from(
+      fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfWith4Frames(),
+      'base64'
+    )
+    const cmm = new NodeDefaultCryptographicMaterialsManager(
+      fixtures.decryptKeyring()
+    )
+
+    for (let i = 1; completeHeaderLength > i; i++) {
+      await expect(testStream(cmm, data, { maxHeaderSize: i })).rejectedWith(
+        Error,
+        'maxHeaderSize exceeded.'
+      )
+    }
+
+    for (let i = completeHeaderLength; data.byteLength > i; i++) {
+      await testStream(cmm, data.slice(0, i), { maxHeaderSize: i })
+    }
+  })
 })
 
 async function testStream(
   cmm: NodeDefaultCryptographicMaterialsManager,
-  data: Buffer
+  data: Buffer,
+  op: ParseHeaderStreamOptions = {}
 ) {
   let VerifyInfoEmitted = false
   let MessageHeaderEmitted = false
-  const parseHeader = new ParseHeaderStream(cmm)
+  const parseHeader = new ParseHeaderStream(cmm, op)
     .on('VerifyInfo', () => {
       VerifyInfoEmitted = true
     })

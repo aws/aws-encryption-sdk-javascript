@@ -22,12 +22,20 @@ const PortableTransformWithType = PortableTransform as new (
 interface HeaderState {
   buffer: Buffer
   headerParsed: boolean
+  maxHeaderSize?: number
+}
+
+export interface ParseHeaderStreamOptions {
+  maxHeaderSize?: number
 }
 
 export class ParseHeaderStream extends PortableTransformWithType {
   private materialsManager!: NodeMaterialsManager
   private _headerState: HeaderState
-  constructor(cmm: NodeMaterialsManager) {
+  constructor(
+    cmm: NodeMaterialsManager,
+    { maxHeaderSize }: ParseHeaderStreamOptions = {}
+  ) {
     super()
     Object.defineProperty(this, 'materialsManager', {
       value: cmm,
@@ -36,14 +44,34 @@ export class ParseHeaderStream extends PortableTransformWithType {
     this._headerState = {
       buffer: Buffer.alloc(0),
       headerParsed: false,
+      maxHeaderSize: maxHeaderSize,
     }
   }
 
   _transform(chunk: any, encoding: string, callback: Function) {
-    const { buffer } = this._headerState
+    const { buffer, maxHeaderSize } = this._headerState
     const headerBuffer = Buffer.concat([buffer, chunk])
-    const headerInfo = deserialize.deserializeMessageHeader(headerBuffer)
+
+    /* maxHeaderSize is the maximum
+     * size we MUST attempt
+     * to deserialize.
+     */
+    const headerInfo = deserialize.deserializeMessageHeader(
+      maxHeaderSize && headerBuffer.byteLength > maxHeaderSize
+        ? headerBuffer.slice(0, maxHeaderSize)
+        : headerBuffer
+    )
     if (!headerInfo) {
+      /* Precondition: If maxHeaderSize was set I can not buffer a header larger than maxHeaderSize.
+       * The header can be up to ~12GB
+       * and the entire header MUST be process
+       * before it can be determined to be valid.
+       * Depending on your requirements this represents
+       * an unbounded input.
+       * maxHeaderSize is the control to bound this input.
+       */
+      if (maxHeaderSize && headerBuffer.byteLength > maxHeaderSize)
+        return callback(new Error('maxHeaderSize exceeded.'))
       this._headerState.buffer = headerBuffer
       return callback()
     }

@@ -17,11 +17,12 @@ import { pipeline, PassThrough } from 'readable-stream'
 
 export interface DecryptStreamOptions {
   maxBodySize?: number
+  maxHeaderSize?: number
 }
 
 export function decryptStream(
   cmm: KeyringNode | NodeMaterialsManager,
-  { maxBodySize }: DecryptStreamOptions = {}
+  { maxBodySize, maxHeaderSize }: DecryptStreamOptions = {}
 ): Duplex {
   /* If the cmm is a Keyring, wrap it with NodeDefaultCryptographicMaterialsManager. */
   cmm =
@@ -29,7 +30,7 @@ export function decryptStream(
       ? new NodeDefaultCryptographicMaterialsManager(cmm)
       : cmm
 
-  const parseHeaderStream = new ParseHeaderStream(cmm)
+  const parseHeaderStream = new ParseHeaderStream(cmm, { maxHeaderSize })
   const verifyStream = new VerifyStream({ maxBodySize })
   const decipherStream = getDecipherStream()
   const stream = new Duplexify(parseHeaderStream, decipherStream)
