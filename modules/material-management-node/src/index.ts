@@ -19,8 +19,6 @@ export {
   AlgorithmSuiteIdentifier,
   EncryptionContext,
   EncryptedDataKey,
-  KeyringTrace,
-  KeyringTraceFlag,
   needs,
   KeyringNode,
   MultiKeyringNode,

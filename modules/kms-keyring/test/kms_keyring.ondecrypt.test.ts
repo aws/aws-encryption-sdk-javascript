@@ -9,7 +9,6 @@ import { KmsKeyringClass, KeyRingConstructible } from '../src/kms_keyring'
 import {
   NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier,
-  KeyringTraceFlag,
   NodeDecryptionMaterial,
   EncryptedDataKey,
   Keyring,
@@ -68,17 +67,6 @@ describe('KmsKeyring: _onDecrypt', () => {
     )
 
     expect(material.hasUnencryptedDataKey).to.equal(true)
-
-    expect(material.keyringTrace).to.have.lengthOf(1)
-    const [traceDecrypt] = material.keyringTrace
-    expect(traceDecrypt.keyNamespace).to.equal('aws-kms')
-    expect(traceDecrypt.keyName).to.equal(generatorKeyId)
-    expect(
-      traceDecrypt.flags & KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
-    ).to.equal(KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
-    expect(
-      traceDecrypt.flags & KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
-    ).to.equal(KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX)
   })
 
   it('discovery keyring should return material', async () => {
@@ -128,17 +116,6 @@ describe('KmsKeyring: _onDecrypt', () => {
     )
 
     expect(material.hasUnencryptedDataKey).to.equal(true)
-
-    expect(material.keyringTrace).to.have.lengthOf(1)
-    const [traceDecrypt] = material.keyringTrace
-    expect(traceDecrypt.keyNamespace).to.equal('aws-kms')
-    expect(traceDecrypt.keyName).to.equal(generatorKeyId)
-    expect(
-      traceDecrypt.flags & KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
-    ).to.equal(KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY)
-    expect(
-      traceDecrypt.flags & KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
-    ).to.equal(KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX)
   })
 
   it('decrypt errors should not halt', async () => {
@@ -193,7 +170,6 @@ describe('KmsKeyring: _onDecrypt', () => {
     )
 
     expect(material.hasUnencryptedDataKey).to.equal(true)
-    expect(material.keyringTrace).to.have.lengthOf(1)
   })
 
   it('Check for early return (Postcondition): clientProvider may not return a client.', async () => {
@@ -232,7 +208,6 @@ describe('KmsKeyring: _onDecrypt', () => {
     )
 
     expect(material.hasUnencryptedDataKey).to.equal(false)
-    expect(material.keyringTrace).to.have.lengthOf(0)
   })
 
   it('Postcondition: The KeyId from KMS must match the encoded KeyID.', async () => {

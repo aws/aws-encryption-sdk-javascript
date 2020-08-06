@@ -7,8 +7,6 @@ import {
   NodeEncryptionMaterial,
   NodeDecryptionMaterial,
   EncryptedDataKey,
-  KeyringTrace,
-  KeyringTraceFlag,
   immutableClass,
   readOnlyProperty,
   unwrapDataKey,
@@ -112,13 +110,12 @@ export class RawRsaKeyringNode extends KeyringNode {
       )
       const providerInfo = this.keyName
       const providerId = this.keyNamespace
-      const flag = KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
       const edk = new EncryptedDataKey({
         encryptedDataKey,
         providerInfo,
         providerId,
       })
-      return material.addEncryptedDataKey(edk, flag)
+      return material.addEncryptedDataKey(edk)
     }
 
     const _unwrapKey = async (
@@ -131,19 +128,13 @@ export class RawRsaKeyringNode extends KeyringNode {
           'No private key defined in constructor.  Decrypt disabled.'
         )
 
-      const trace: KeyringTrace = {
-        keyName: this.keyName,
-        keyNamespace: this.keyNamespace,
-        flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-      }
-
       const { buffer, byteOffset, byteLength } = edk.encryptedDataKey
       const encryptedDataKey = Buffer.from(buffer, byteOffset, byteLength)
       const unencryptedDataKey = privateDecrypt(
         { key: privateKey, padding, oaepHash } as RsaPrivateKey,
         encryptedDataKey
       )
-      return material.setUnencryptedDataKey(unencryptedDataKey, trace)
+      return material.setUnencryptedDataKey(unencryptedDataKey)
     }
 
     readOnlyProperty(this, 'keyName', keyName)
