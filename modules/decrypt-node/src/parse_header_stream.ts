@@ -65,7 +65,9 @@ export class ParseHeaderStream extends PortableTransformWithType {
      * overlap should be avoided.
      * Only "read" the max size.
      */
-    const headerInfo = deserialize.deserializeMessageHeader(headerBuffer.slice(0, maxHeaderRead))
+    const headerInfo = deserialize.deserializeMessageHeader(
+      headerBuffer.slice(0, maxHeaderRead)
+    )
     if (!headerInfo) {
       /* Precondition: If maxHeaderSize was set I can not buffer a header larger than maxHeaderSize.
        * The header can be up to ~12GB
