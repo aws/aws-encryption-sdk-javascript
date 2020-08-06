@@ -202,7 +202,6 @@ describe('decorateEncryptionMaterial', () => {
     )
     const test: any = decorateEncryptionMaterial({
       suite,
-
       hasUnencryptedDataKey: true,
     } as any)
     const edk = new EncryptedDataKey({
@@ -236,7 +235,6 @@ describe('decorateEncryptionMaterial', () => {
     })
     const test: any = decorateEncryptionMaterial({
       suite,
-
       hasUnencryptedDataKey: false,
     } as any)
     expect(() => test.addEncryptedDataKey(edk)).to.throw()
