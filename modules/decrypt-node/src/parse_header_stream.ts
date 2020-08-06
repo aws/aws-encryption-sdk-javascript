@@ -52,15 +52,20 @@ export class ParseHeaderStream extends PortableTransformWithType {
     const { buffer, maxHeaderSize } = this._headerState
     const headerBuffer = Buffer.concat([buffer, chunk])
 
-    /* maxHeaderSize is the maximum
-     * size we MUST attempt
-     * to deserialize.
+    /* We MUST NOT attempt to deserialize
+     * more than maxHeaderSize bytes.
      */
-    const headerInfo = deserialize.deserializeMessageHeader(
-      maxHeaderSize && headerBuffer.byteLength > maxHeaderSize
-        ? headerBuffer.slice(0, maxHeaderSize)
-        : headerBuffer
-    )
+    const maxHeaderRead = maxHeaderSize || headerBuffer.byteLength
+
+    /* The intention of this control
+     * it to protect against
+     * resources with a unexpectedly high bound.
+     * Therefore degenerative edge cases
+     * where there chunk and the buffer
+     * overlap should be avoided.
+     * Only "read" the max size.
+     */
+    const headerInfo = deserialize.deserializeMessageHeader(headerBuffer.slice(0, maxHeaderRead))
     if (!headerInfo) {
       /* Precondition: If maxHeaderSize was set I can not buffer a header larger than maxHeaderSize.
        * The header can be up to ~12GB
@@ -70,7 +75,7 @@ export class ParseHeaderStream extends PortableTransformWithType {
        * an unbounded input.
        * maxHeaderSize is the control to bound this input.
        */
-      if (maxHeaderSize && headerBuffer.byteLength > maxHeaderSize)
+      if (headerBuffer.byteLength > maxHeaderRead)
         return callback(new Error('maxHeaderSize exceeded.'))
       this._headerState.buffer = headerBuffer
       return callback()

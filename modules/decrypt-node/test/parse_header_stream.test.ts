@@ -53,6 +53,13 @@ describe('ParseHeaderStream', () => {
       fixtures.decryptKeyring()
     )
 
+    /* Starting from 1
+     * test every maxHeaderSize up to
+     * 1 less than the actual header size.
+     * There is a subtle JS assumption here,
+     * that 0 is false and thus an irrational value
+     * to push into `maxHeaderSize`.
+     */
     for (let i = 1; completeHeaderLength > i; i++) {
       await expect(testStream(cmm, data, { maxHeaderSize: i })).rejectedWith(
         Error,
@@ -60,6 +67,11 @@ describe('ParseHeaderStream', () => {
       )
     }
 
+    /* Picking up from the exact header size
+     * test every maxHeaderSize equal to
+     * or greater than the actual header size
+     * (up to the message size).
+     */
     for (let i = completeHeaderLength; data.byteLength > i; i++) {
       await testStream(cmm, data.slice(0, i), { maxHeaderSize: i })
     }
