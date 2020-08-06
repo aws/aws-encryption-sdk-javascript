@@ -111,7 +111,7 @@ describe('MultiKeyring: onEncrypt', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
     const unencryptedDataKey = new Uint8Array(suite.keyLengthBytes)
-    const [edk0] = makeEDKandTraceForEncrypt(0)
+    const [edk0] = makeEDKForEncrypt(0)
     const generator = keyRingFactory({
       async onEncrypt(material: NodeEncryptionMaterial) {
         return material
@@ -141,8 +141,8 @@ describe('MultiKeyring: onEncrypt', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
     const unencryptedDataKey = new Uint8Array(suite.keyLengthBytes)
-    const [edk0] = makeEDKandTraceForEncrypt(0)
-    const [edk1] = makeEDKandTraceForEncrypt(1)
+    const [edk0] = makeEDKForEncrypt(0)
+    const [edk1] = makeEDKForEncrypt(1)
     const generator = keyRingFactory({
       async onEncrypt(material: NodeEncryptionMaterial) {
         return material
@@ -180,7 +180,7 @@ describe('MultiKeyring: onEncrypt', () => {
     const suite = new NodeAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
-    const [,] = makeEDKandTraceForEncrypt(0)
+    const [,] = makeEDKForEncrypt(0)
     const generator = keyRingFactory({
       async onEncrypt(material: NodeEncryptionMaterial) {
         return material
@@ -221,7 +221,7 @@ describe('MultiKeyring: onEncrypt', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
     const unencryptedDataKey = new Uint8Array(suite.keyLengthBytes)
-    const [edk0] = makeEDKandTraceForEncrypt(0)
+    const [edk0] = makeEDKForEncrypt(0)
     const generator = keyRingFactory({
       async onEncrypt(material: NodeEncryptionMaterial) {
         return material.addEncryptedDataKey(edk0)
@@ -243,7 +243,7 @@ describe('MultiKeyring: onEncrypt', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
     const unencryptedDataKey = new Uint8Array(suite.keyLengthBytes)
-    const [edk0] = makeEDKandTraceForEncrypt(0)
+    const [edk0] = makeEDKForEncrypt(0)
     const child = keyRingFactory({
       async onEncrypt(material: NodeEncryptionMaterial) {
         return material.addEncryptedDataKey(edk0)
@@ -267,7 +267,7 @@ describe('MultiKeyring: onDecrypt', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
     const unencryptedDataKey = new Uint8Array(suite.keyLengthBytes)
-    const [edk0] = makeEDKandTraceForDecrypt(0)
+    const [edk0] = makeEDKForDecrypt(0)
     const material = new NodeDecryptionMaterial(suite, {})
 
     const generator = keyRingFactory({
@@ -297,7 +297,7 @@ describe('MultiKeyring: onDecrypt', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
     const unencryptedDataKey = new Uint8Array(suite.keyLengthBytes)
-    const [edk0] = makeEDKandTraceForDecrypt(0)
+    const [edk0] = makeEDKForDecrypt(0)
     const material = new NodeDecryptionMaterial(suite, {})
 
     const child = keyRingFactory({
@@ -327,7 +327,7 @@ describe('MultiKeyring: onDecrypt', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
     const unencryptedDataKey = new Uint8Array(suite.keyLengthBytes)
-    const [edk0] = makeEDKandTraceForDecrypt(0)
+    const [edk0] = makeEDKForDecrypt(0)
     const material = new NodeDecryptionMaterial(suite, {})
 
     const child = keyRingFactory({
@@ -367,7 +367,7 @@ describe('MultiKeyring: onDecrypt', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
     const unencryptedDataKey = new Uint8Array(suite.keyLengthBytes)
-    const [edk0] = makeEDKandTraceForDecrypt(0)
+    const [edk0] = makeEDKForDecrypt(0)
     const material = new NodeDecryptionMaterial(suite, {})
 
     const child = keyRingFactory({
@@ -407,7 +407,7 @@ describe('MultiKeyring: onDecrypt', () => {
     const suite = new NodeAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
-    const [edk0] = makeEDKandTraceForDecrypt(0)
+    const [edk0] = makeEDKForDecrypt(0)
     const material = new NodeDecryptionMaterial(suite, {})
     const childNotSucceeded = keyRingFactory({
       async onDecrypt() {
@@ -446,15 +446,15 @@ describe('MultiKeyring: onDecrypt', () => {
   })
 })
 
-function makeEDKandTraceForEncrypt(num: number): [EncryptedDataKey] {
-  return makeEDKandTrace(num)
+function makeEDKForEncrypt(num: number): [EncryptedDataKey] {
+  return makeEDK(num)
 }
 
-function makeEDKandTraceForDecrypt(num: number): [EncryptedDataKey] {
-  return makeEDKandTrace(num)
+function makeEDKForDecrypt(num: number): [EncryptedDataKey] {
+  return makeEDK(num)
 }
 
-function makeEDKandTrace(num: number): [EncryptedDataKey] {
+function makeEDK(num: number): [EncryptedDataKey] {
   const providerId = 'providerId' + num
   const providerInfo = 'providerInfo' + num
   const encryptedDataKey = new Uint8Array([0, 0, 0]).fill(num)

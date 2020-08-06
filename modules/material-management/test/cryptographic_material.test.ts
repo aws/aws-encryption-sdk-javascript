@@ -53,10 +53,7 @@ describe('decorateCryptographicMaterial', () => {
     )
     const test = decorateCryptographicMaterial({ suite } as any)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    test.setUnencryptedDataKey(new Uint8Array(dataKey), {
-      keyNamespace: 'k',
-      keyName: 'k',
-    })
+    test.setUnencryptedDataKey(new Uint8Array(dataKey))
     expect(test.hasUnencryptedDataKey).to.equal(true)
     const udk = unwrapDataKey(test.getUnencryptedDataKey())
     expect(udk).to.deep.equal(dataKey)
@@ -74,10 +71,7 @@ describe('decorateCryptographicMaterial', () => {
      * But in this case, if this is a version of Node.js that does not support KeyObjects
      * passing the dataKey lets me verify that the value memory is really zeroed.
      */
-    test.setUnencryptedDataKey(dataKey, {
-      keyNamespace: 'k',
-      keyName: 'k',
-    })
+    test.setUnencryptedDataKey(dataKey)
     test.zeroUnencryptedDataKey()
     expect(test.hasUnencryptedDataKey).to.equal(false)
     if (!supportsKeyObject) {
@@ -105,10 +99,7 @@ describe('decorateCryptographicMaterial', () => {
     )
     const test = decorateCryptographicMaterial({ suite } as any)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    test.setUnencryptedDataKey(new Uint8Array(dataKey), {
-      keyNamespace: 'k',
-      keyName: 'k',
-    })
+    test.setUnencryptedDataKey(new Uint8Array(dataKey))
     test.zeroUnencryptedDataKey()
     expect(() => test.getUnencryptedDataKey()).to.throw()
   })
@@ -126,14 +117,11 @@ describe('decorateCryptographicMaterial', () => {
     const test = decorateCryptographicMaterial({ suite } as any)
     test.zeroUnencryptedDataKey()
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-    }
-    // It is very hard to test this perfectly.  However, this tests the spirit.
-    expect(() =>
-      test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
-    ).to.throw()
+    const trace =
+      // It is very hard to test this perfectly.  However, this tests the spirit.
+      expect(() =>
+        test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+      ).to.throw()
   })
 
   it('Precondition: dataKey must be Binary Data', () => {
@@ -150,11 +138,7 @@ describe('decorateCryptographicMaterial', () => {
     )
     const test = decorateCryptographicMaterial({ suite } as any)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-    }
-    test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+    const trace = test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
     expect(() =>
       test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
     ).to.throw('unencryptedDataKey has already been set')
@@ -170,13 +154,9 @@ describe('decorateCryptographicMaterial', () => {
       5,
       suite.keyLengthBytes
     ).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-    }
-    expect(() => test.setUnencryptedDataKey(dataKey, trace)).to.throw(
-      'Unencrypted Master Key must be an isolated buffer.'
-    )
+    const trace = expect(() =>
+      test.setUnencryptedDataKey(dataKey, trace)
+    ).to.throw('Unencrypted Master Key must be an isolated buffer.')
   })
 
   it('Precondition: The unencryptedDataKey must not have been modified.', () => {
@@ -185,10 +165,7 @@ describe('decorateCryptographicMaterial', () => {
     )
     const material = decorateCryptographicMaterial({ suite } as any)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    material.setUnencryptedDataKey(dataKey, {
-      keyNamespace: 'k',
-      keyName: 'k',
-    })
+    material.setUnencryptedDataKey(dataKey)
     const test = material.getUnencryptedDataKey()
     test[0] = 12
     expect(() => {
@@ -209,9 +186,7 @@ describe('decorateEncryptionMaterial', () => {
     const suite = new NodeAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
-    const test: any = decorateEncryptionMaterial({
-      suite,
-    } as any)
+    const test: any = decorateEncryptionMaterial({ suite } as any)
     expect(test)
       .to.haveOwnProperty('addEncryptedDataKey')
       .and.to.be.a('function')
@@ -246,9 +221,7 @@ describe('decorateEncryptionMaterial', () => {
     const suite = new NodeAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
     )
-    const test: any = decorateEncryptionMaterial({
-      suite,
-    } as any)
+    const test: any = decorateEncryptionMaterial({ suite } as any)
     const key = new SignatureKey(new Uint8Array(3), new Uint8Array(3), suite)
     test.setSignatureKey(key)
     expect(test.signatureKey === key).to.equal(true)
@@ -276,9 +249,7 @@ describe('decorateEncryptionMaterial', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
     const edk: any = {}
-    const test: any = decorateEncryptionMaterial({
-      suite,
-    } as any)
+    const test: any = decorateEncryptionMaterial({ suite } as any)
     expect(() => test.addEncryptedDataKey(edk)).to.throw()
   })
 
@@ -294,9 +265,7 @@ describe('decorateEncryptionMaterial', () => {
       new Uint8Array(3),
       suiteWithSig
     )
-    const test: any = decorateEncryptionMaterial({
-      suite,
-    } as any)
+    const test: any = decorateEncryptionMaterial({ suite } as any)
     expect(() => test.setSignatureKey(key)).to.throw()
   })
 
@@ -305,9 +274,7 @@ describe('decorateEncryptionMaterial', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
     )
     const key = new SignatureKey(new Uint8Array(3), new Uint8Array(3), suite)
-    const test: any = decorateEncryptionMaterial({
-      suite,
-    } as any)
+    const test: any = decorateEncryptionMaterial({ suite } as any)
     test.setSignatureKey(key)
     expect(() => test.setSignatureKey(key)).to.throw()
   })
@@ -317,9 +284,7 @@ describe('decorateEncryptionMaterial', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
     )
     const key: any = {}
-    const test: any = decorateEncryptionMaterial({
-      suite,
-    } as any)
+    const test: any = decorateEncryptionMaterial({ suite } as any)
     expect(() => test.setSignatureKey(key)).to.throw()
   })
 
@@ -327,9 +292,7 @@ describe('decorateEncryptionMaterial', () => {
     const suite = new NodeAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
     )
-    const test: any = decorateEncryptionMaterial({
-      suite,
-    } as any)
+    const test: any = decorateEncryptionMaterial({ suite } as any)
     expect(() => test.signatureKey).to.throw()
   })
 })
@@ -339,9 +302,7 @@ describe('decorateDecryptionMaterial', () => {
     const suite = new NodeAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
-    const test: any = decorateDecryptionMaterial({
-      suite,
-    } as any)
+    const test: any = decorateDecryptionMaterial({ suite } as any)
     expect(test)
       .to.haveOwnProperty('setVerificationKey')
       .and.to.be.a('function')
@@ -352,9 +313,7 @@ describe('decorateDecryptionMaterial', () => {
     const suite = new NodeAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
     )
-    const test: any = decorateDecryptionMaterial({
-      suite,
-    } as any)
+    const test: any = decorateDecryptionMaterial({ suite } as any)
     const key = new VerificationKey(new Uint8Array(3), suite)
     test.setVerificationKey(key)
     expect(test.verificationKey === key).to.equal(true)
@@ -368,9 +327,7 @@ describe('decorateDecryptionMaterial', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
     const key = new VerificationKey(new Uint8Array(3), suiteWithSig)
-    const test: any = decorateDecryptionMaterial({
-      suite,
-    } as any)
+    const test: any = decorateDecryptionMaterial({ suite } as any)
     expect(() => test.setVerificationKey(key)).to.throw()
   })
 
@@ -379,9 +336,7 @@ describe('decorateDecryptionMaterial', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
     )
     const key = new VerificationKey(new Uint8Array(3), suite)
-    const test: any = decorateDecryptionMaterial({
-      suite,
-    } as any)
+    const test: any = decorateDecryptionMaterial({ suite } as any)
     test.setVerificationKey(key)
     expect(() => test.setVerificationKey(key)).to.throw()
   })
@@ -391,9 +346,7 @@ describe('decorateDecryptionMaterial', () => {
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
     )
     const key: any = {}
-    const test: any = decorateDecryptionMaterial({
-      suite,
-    } as any)
+    const test: any = decorateDecryptionMaterial({ suite } as any)
     expect(() => test.setVerificationKey(key)).to.throw()
   })
 
@@ -401,9 +354,7 @@ describe('decorateDecryptionMaterial', () => {
     const suite = new NodeAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
     )
-    const test: any = decorateDecryptionMaterial({
-      suite,
-    } as any)
+    const test: any = decorateDecryptionMaterial({ suite } as any)
     expect(() => test.verificationKey).to.throw()
   })
 })
@@ -423,11 +374,7 @@ describe('decorateWebCryptoMaterial', () => {
       usages: ['deriveKey'],
       extractable: false,
     }
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-    }
-    test.setCryptoKey(key, trace)
+    const trace = test.setCryptoKey(key, trace)
     expect(test.getCryptoKey() === key).to.equal(true)
     expect(test.hasCryptoKey).to.equal(true)
     expect(test.hasUnencryptedDataKey).to.equal(false)
@@ -448,11 +395,7 @@ describe('decorateWebCryptoMaterial', () => {
       extractable: false,
     }
     const mixedKey: any = { zeroByteCryptoKey: key, nonZeroByteCryptoKey: key }
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-    }
-    test.setCryptoKey(mixedKey, trace)
+    const trace = test.setCryptoKey(mixedKey, trace)
     expect(test.getCryptoKey() !== mixedKey).to.equal(true)
     expect(test.hasCryptoKey).to.equal(true)
     expect(test.hasUnencryptedDataKey).to.equal(false)
@@ -484,11 +427,7 @@ describe('decorateWebCryptoMaterial', () => {
       usages: ['deriveKey'],
       extractable: false,
     }
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-    }
-    test.setCryptoKey(key, trace)
+    const trace = test.setCryptoKey(key, trace)
     expect(() => test.setCryptoKey(key, trace)).to.throw()
   })
 
@@ -528,11 +467,7 @@ describe('decorateWebCryptoMaterial', () => {
         extractable: true,
       },
     }
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-    }
-    expect(() => test.setCryptoKey(key, trace)).to.throw()
+    const trace = expect(() => test.setCryptoKey(key, trace)).to.throw()
     expect(() => test.setCryptoKey(key1, trace)).to.throw()
     expect(() => test.setCryptoKey(key2, trace)).to.throw()
   })
@@ -540,11 +475,7 @@ describe('decorateWebCryptoMaterial', () => {
   it('Precondition: dataKey must be a supported type.', () => {
     const test: any = decorateWebCryptoMaterial({} as any)
     const key: any = {}
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-    }
-    expect(() => test.setCryptoKey(key, trace)).to.throw()
+    const trace = expect(() => test.setCryptoKey(key, trace)).to.throw()
   })
 })
 

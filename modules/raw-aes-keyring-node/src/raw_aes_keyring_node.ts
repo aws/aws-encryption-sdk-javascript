@@ -158,7 +158,6 @@ function aesGcmWrapKey(
 /**
  * Uses aes-gcm to decrypt the encrypted data key and return the passed NodeDecryptionMaterial with
  * the unencrypted data key set.
- * @param keyNamespace [String] The keyring namespace
  * @param keyName [String] The keyring name (to extract the extra info stored in providerInfo)
  * @param material [NodeDecryptionMaterial] The target material to which the decrypted data key will be added
  * @param wrappingMaterial [NodeRawAesMaterial] The material used to decrypt the EncryptedDataKey
