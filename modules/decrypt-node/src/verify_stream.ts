@@ -252,7 +252,11 @@ export class VerifyStream extends PortableTransformWithType {
     callback()
   }
 
-  _transformSignature = (chunk: Buffer, _enc: string, callback: Function) => {
+  _transformSignature = (
+    chunk: Buffer,
+    _enc: string,
+    callback: (err?: Error) => void
+  ) => {
     const state = this._verifyState
 
     // EOF is an empty buffer, so I need to handle that kind of end.

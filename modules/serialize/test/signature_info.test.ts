@@ -37,7 +37,9 @@ describe('deserializeSignature', () => {
   })
 
   it('Precondition: The signature length must be positive.', () => {
-    expect(() => deserializeSignature(new Uint8Array([0, 0]))).to.throw('Invalid Signature')
+    expect(() => deserializeSignature(new Uint8Array([0, 0]))).to.throw(
+      'Invalid Signature'
+    )
   })
 
   it('Precondition: The data must match the serialized length.', () => {
