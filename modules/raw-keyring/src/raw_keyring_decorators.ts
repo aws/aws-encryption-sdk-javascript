@@ -5,8 +5,6 @@ import {
   EncryptionMaterial,
   DecryptionMaterial,
   SupportedAlgorithmSuites,
-  KeyringTrace,
-  KeyringTraceFlag,
   EncryptedDataKey,
 } from '@aws-crypto/material-management'
 
@@ -27,13 +25,8 @@ export function _onEncrypt<
     material: EncryptionMaterial<S>
   ): Promise<EncryptionMaterial<S>> {
     if (!material.hasUnencryptedDataKey) {
-      const trace: KeyringTrace = {
-        keyName: this.keyName,
-        keyNamespace: this.keyNamespace,
-        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-      }
       const udk = await randomBytes(material.suite.keyLengthBytes)
-      material.setUnencryptedDataKey(udk, trace)
+      material.setUnencryptedDataKey(udk)
     }
     return this._wrapKey(material)
   }

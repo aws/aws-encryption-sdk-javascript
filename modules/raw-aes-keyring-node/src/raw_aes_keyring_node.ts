@@ -7,7 +7,6 @@ import {
   NodeEncryptionMaterial,
   NodeDecryptionMaterial,
   EncryptedDataKey,
-  KeyringTraceFlag,
   immutableClass,
   readOnlyProperty,
   unwrapDataKey,
@@ -56,15 +55,8 @@ export class RawAesKeyringNode extends KeyringNode {
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
     /* Precondition: RawAesKeyringNode requires wrappingSuite to be a valid RawAesWrappingSuite. */
     const wrappingMaterial = new NodeRawAesMaterial(wrappingSuite)
-      /* Precondition: unencryptedMasterKey must correspond to the NodeAlgorithmSuite specification.
-       * Note: the KeyringTrace and flag are _only_ set because I am reusing an existing implementation.
-       * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
-       */
-      .setUnencryptedDataKey(unencryptedMasterKey, {
-        keyNamespace,
-        keyName,
-        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-      })
+      /* Precondition: unencryptedMasterKey must correspond to the NodeAlgorithmSuite specification. */
+      .setUnencryptedDataKey(unencryptedMasterKey)
 
     const _wrapKey = async (material: NodeEncryptionMaterial) => {
       /* The AAD section is uInt16BE(length) + AAD
@@ -91,7 +83,7 @@ export class RawAesKeyringNode extends KeyringNode {
       material: NodeDecryptionMaterial,
       edk: EncryptedDataKey
     ) => {
-      const { keyNamespace, keyName } = this
+      const { keyName } = this
       /* The AAD section is uInt16BE(length) + AAD
        * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
        * However, the RAW Keyring wants _only_ the ADD.
@@ -103,14 +95,7 @@ export class RawAesKeyringNode extends KeyringNode {
       const aad = Buffer.from(buffer, byteOffset, byteLength)
       // const aad = Buffer.concat(encodeEncryptionContext(context || {}))
 
-      return aesGcmUnwrapKey(
-        keyNamespace,
-        keyName,
-        material,
-        wrappingMaterial,
-        edk,
-        aad
-      )
+      return aesGcmUnwrapKey(keyName, material, wrappingMaterial, edk, aad)
     }
 
     readOnlyProperty(this, 'keyName', keyName)
@@ -131,18 +116,11 @@ export class RawAesKeyringNode extends KeyringNode {
 }
 immutableClass(RawAesKeyringNode)
 
-const encryptFlags =
-  KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY |
-  KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
-const decryptFlags =
-  KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY |
-  KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
-
 /**
  * Uses aes-gcm to encrypt the data key and return the passed NodeEncryptionMaterial with
  * an EncryptedDataKey added.
- * @param keyNamespace [String] The keyring namespace (for KeyringTrace)
- * @param keyName [String] The keyring name (for KeyringTrace and to extract the extra info stored in providerInfo)
+ * @param keyNamespace [String] The keyring namespace
+ * @param keyName [String] The keyring name (to extract the extra info stored in providerInfo)
  * @param material [NodeEncryptionMaterial] The target material to which the EncryptedDataKey will be added
  * @param aad [Buffer] The serialized aad (EncryptionContext)
  * @param wrappingMaterial [NodeRawAesMaterial] The material used to decrypt the EncryptedDataKey
@@ -174,14 +152,13 @@ function aesGcmWrapKey(
     authTag
   )
 
-  return material.addEncryptedDataKey(edk, encryptFlags)
+  return material.addEncryptedDataKey(edk)
 }
 
 /**
  * Uses aes-gcm to decrypt the encrypted data key and return the passed NodeDecryptionMaterial with
  * the unencrypted data key set.
- * @param keyNamespace [String] The keyring namespace (for KeyringTrace)
- * @param keyName [String] The keyring name (for KeyringTrace and to extract the extra info stored in providerInfo)
+ * @param keyName [String] The keyring name (to extract the extra info stored in providerInfo)
  * @param material [NodeDecryptionMaterial] The target material to which the decrypted data key will be added
  * @param wrappingMaterial [NodeRawAesMaterial] The material used to decrypt the EncryptedDataKey
  * @param edk [EncryptedDataKey] The EncryptedDataKey on which to operate
@@ -189,7 +166,6 @@ function aesGcmWrapKey(
  * @returns [NodeDecryptionMaterial] Mutates and returns the same NodeDecryptionMaterial that was passed but with the unencrypted data key set
  */
 function aesGcmUnwrapKey(
-  keyNamespace: string,
   keyName: string,
   material: NodeDecryptionMaterial,
   wrappingMaterial: NodeRawAesMaterial,
@@ -216,8 +192,7 @@ function aesGcmUnwrapKey(
     decipher.update(ciphertext),
     decipher.final()
   )
-  const trace = { keyNamespace, keyName, flags: decryptFlags }
-  return material.setUnencryptedDataKey(unencryptedDataKey, trace)
+  return material.setUnencryptedDataKey(unencryptedDataKey)
 }
 
 async function randomBytesAsync(size: number): Promise<Buffer> {

@@ -9,7 +9,6 @@ import {
   NodeEncryptionMaterial,
   NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier,
-  KeyringTraceFlag,
   SignatureKey,
   VerificationKey,
   unwrapDataKey,
@@ -38,12 +37,8 @@ describe('nodeKdf', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
 
     const test = unwrapDataKey(nodeKdf(material, new Uint8Array(5)).derivedKey)
     expect(test).to.deep.equal(dataKey)
@@ -55,12 +50,7 @@ describe('nodeKdf', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
 
     expect(() =>
       nodeKdf(material, new Uint8Array(5), new Uint8Array(12))
@@ -73,12 +63,8 @@ describe('nodeKdf', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
 
     const test = unwrapDataKey(nodeKdf(material, new Uint8Array(5)).derivedKey)
     expect(test).to.not.deep.equal(dataKey)
@@ -91,12 +77,8 @@ describe('nodeKdf', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
 
     const test = unwrapDataKey(nodeKdf(material, new Uint8Array(5)).derivedKey)
     expect(test).to.not.deep.equal(dataKey)
@@ -109,12 +91,7 @@ describe('nodeKdf', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
     const { derivedKey, keyCommitment } = nodeKdf(material, new Uint8Array(32))
     const testKey = unwrapDataKey(derivedKey)
     expect(testKey).to.not.deep.equal(dataKey)
@@ -175,12 +152,7 @@ describe('nodeKdf', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
 
     expect(() =>
       nodeKdf(material, new Uint8Array(5), new Uint8Array(1))
@@ -192,12 +164,7 @@ describe('nodeKdf', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
     expect(() => nodeKdf(material, new Uint8Array(5))).to.throw(
       'Nonce is not the correct length for committed algorithm suite.'
     )
@@ -211,19 +178,11 @@ describe('nodeKdf', () => {
     const encryptionMaterial = new NodeEncryptionMaterial(
       suite,
       {}
-    ).setUnencryptedDataKey(new Uint8Array(dataKey), {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    })
+    ).setUnencryptedDataKey(new Uint8Array(dataKey))
     const decryptionMaterial = new NodeDecryptionMaterial(
       suite,
       {}
-    ).setUnencryptedDataKey(new Uint8Array(dataKey), {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    })
+    ).setUnencryptedDataKey(new Uint8Array(dataKey))
     const nonce = new Uint8Array(32)
     const wrongKeyCommitment = new Uint8Array(32)
 
@@ -243,12 +202,8 @@ describe('curryCryptoStream', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
 
     const { getCipher: test } = curryCryptoStream(
       material,
@@ -265,12 +220,8 @@ describe('curryCryptoStream', () => {
     )
     const material = new NodeDecryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
 
     const test = curryCryptoStream(
       material,
@@ -296,12 +247,8 @@ describe('curryCryptoStream', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
 
     const { getCipher: test } = curryCryptoStream(
       material,
@@ -317,12 +264,8 @@ describe('curryCryptoStream', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
 
     const { getCipher: test } = curryCryptoStream(
       material,
@@ -341,12 +284,8 @@ describe('getEncryptHelper', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
 
     const helper = getEncryptHelper(material)
     expect(helper).to.haveOwnProperty('getCipherInfo').and.to.be.a('function')
@@ -370,12 +309,7 @@ describe('getEncryptHelper', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
 
     const helper = getEncryptHelper(material)
     expect(helper).to.haveOwnProperty('getCipherInfo').and.to.be.a('function')
@@ -403,11 +337,6 @@ describe('getEncryptHelper', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
 
     const ecdh = createECDH(suite.signatureCurve || '')
     ecdh.generateKeys()
@@ -417,7 +346,7 @@ describe('getEncryptHelper', () => {
       suite
     )
 
-    material.setUnencryptedDataKey(dataKey, trace).setSignatureKey(sigKey)
+    material.setUnencryptedDataKey(dataKey).setSignatureKey(sigKey)
 
     const helper = getEncryptHelper(material)
     if (typeof helper.getSigner !== 'function') throw new Error('bad')
@@ -451,11 +380,6 @@ describe('getEncryptHelper', () => {
     )
     const material = new NodeEncryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
 
     const ecdh = createECDH(suite.signatureCurve || '')
     ecdh.generateKeys()
@@ -465,7 +389,7 @@ describe('getEncryptHelper', () => {
       suite
     )
 
-    material.setUnencryptedDataKey(dataKey, trace).setSignatureKey(sigKey)
+    material.setUnencryptedDataKey(dataKey).setSignatureKey(sigKey)
 
     const helper = getEncryptHelper(material)
     material.zeroUnencryptedDataKey()
@@ -484,12 +408,8 @@ describe('getDecryptionHelper', () => {
     )
     const material = new NodeDecryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
 
     const helper = getDecryptionHelper(material)
     expect(helper).to.haveOwnProperty('getDecipherInfo').and.to.be.a('function')
@@ -510,12 +430,7 @@ describe('getDecryptionHelper', () => {
     )
     const material = new NodeDecryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
+    material.setUnencryptedDataKey(new Uint8Array(dataKey))
 
     const helper = getDecryptionHelper(material)
     expect(helper).to.haveOwnProperty('getDecipherInfo').and.to.be.a('function')
@@ -539,19 +454,12 @@ describe('getDecryptionHelper', () => {
     )
     const material = new NodeDecryptionMaterial(suite, {})
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
 
     const ecdh = createECDH(suite.signatureCurve || '')
     ecdh.generateKeys()
     const verificationKey = new VerificationKey(ecdh.getPublicKey(), suite)
 
-    material
-      .setUnencryptedDataKey(dataKey, trace)
-      .setVerificationKey(verificationKey)
+    material.setUnencryptedDataKey(dataKey).setVerificationKey(verificationKey)
 
     const helper = getDecryptionHelper(material)
     if (typeof helper.getVerify !== 'function') throw new Error('bad')

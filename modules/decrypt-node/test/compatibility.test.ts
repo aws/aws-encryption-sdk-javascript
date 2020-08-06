@@ -7,7 +7,6 @@ import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import {
   KeyringNode,
-  KeyringTraceFlag,
   NodeDecryptionMaterial,
   NodeEncryptionMaterial,
 } from '@aws-crypto/material-management-node'
@@ -79,12 +78,7 @@ describe('committing algorithm test', () => {
       }
       async _onDecrypt(material: NodeDecryptionMaterial) {
         const unencryptedDataKey = dataKey
-        const trace = {
-          keyNamespace: 'k',
-          keyName: 'k',
-          flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-        }
-        return material.setUnencryptedDataKey(unencryptedDataKey, trace)
+        return material.setUnencryptedDataKey(unencryptedDataKey)
       }
     })()
   }

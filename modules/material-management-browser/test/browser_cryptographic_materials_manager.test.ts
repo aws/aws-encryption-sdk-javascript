@@ -16,7 +16,6 @@ import {
   KeyringWebCrypto,
   WebCryptoAlgorithmSuite,
   AlgorithmSuiteIdentifier,
-  KeyringTraceFlag,
   EncryptedDataKey,
   CommitmentPolicy,
 } from '@aws-crypto/material-management'
@@ -214,22 +213,12 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
         material: WebCryptoEncryptionMaterial
       ): Promise<WebCryptoEncryptionMaterial> {
         const udk = synchronousRandomValues(suite.keyLengthBytes)
-        const trace = {
-          keyName: 'keyName',
-          keyNamespace: 'keyNamespace',
-          flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-        }
         const edk = new EncryptedDataKey({
           providerId: ' keyNamespace',
           providerInfo: 'keyName',
           encryptedDataKey: new Uint8Array(5),
         })
-        material
-          .setUnencryptedDataKey(udk, trace)
-          .addEncryptedDataKey(
-            edk,
-            KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
-          )
+        material.setUnencryptedDataKey(udk).addEncryptedDataKey(edk)
 
         return importForWebCryptoEncryptionMaterial(material)
       }
@@ -265,22 +254,13 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
         material: WebCryptoEncryptionMaterial
       ): Promise<WebCryptoEncryptionMaterial> {
         const udk = synchronousRandomValues(material.suite.keyLengthBytes)
-        const trace = {
-          keyName: 'keyName',
-          keyNamespace: 'keyNamespace',
-          flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-        }
+
         const edk = new EncryptedDataKey({
           providerId: ' keyNamespace',
           providerInfo: 'keyName',
           encryptedDataKey: new Uint8Array(5),
         })
-        material
-          .setUnencryptedDataKey(udk, trace)
-          .addEncryptedDataKey(
-            edk,
-            KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
-          )
+        material.setUnencryptedDataKey(udk).addEncryptedDataKey(edk)
 
         return importForWebCryptoEncryptionMaterial(material)
       }
@@ -339,22 +319,13 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
         material: WebCryptoEncryptionMaterial
       ): Promise<WebCryptoEncryptionMaterial> {
         const udk = synchronousRandomValues(material.suite.keyLengthBytes)
-        const trace = {
-          keyName: 'keyName',
-          keyNamespace: 'keyNamespace',
-          flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-        }
+
         const edk = new EncryptedDataKey({
           providerId: ' keyNamespace',
           providerInfo: 'keyName',
           encryptedDataKey: new Uint8Array(5),
         })
-        return material
-          .setUnencryptedDataKey(udk, trace)
-          .addEncryptedDataKey(
-            edk,
-            KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
-          )
+        return material.setUnencryptedDataKey(udk).addEncryptedDataKey(edk)
       }
       async _onDecrypt(): Promise<WebCryptoDecryptionMaterial> {
         throw new Error('I should never see this error')
@@ -381,12 +352,8 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
         material: WebCryptoEncryptionMaterial
       ): Promise<WebCryptoEncryptionMaterial> {
         const udk = synchronousRandomValues(material.suite.keyLengthBytes)
-        const trace = {
-          keyName: 'keyName',
-          keyNamespace: 'keyNamespace',
-          flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-        }
-        material.setUnencryptedDataKey(udk, trace)
+
+        material.setUnencryptedDataKey(udk)
 
         return importForWebCryptoEncryptionMaterial(material)
       }
@@ -418,12 +385,8 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
         material: WebCryptoDecryptionMaterial
       ): Promise<WebCryptoDecryptionMaterial> {
         const udk = synchronousRandomValues(material.suite.keyLengthBytes)
-        const trace = {
-          keyName: 'keyName',
-          keyNamespace: 'keyNamespace',
-          flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-        }
-        material.setUnencryptedDataKey(udk, trace)
+
+        material.setUnencryptedDataKey(udk)
 
         return importForWebCryptoDecryptionMaterial(material)
       }
@@ -466,15 +429,11 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
         material: WebCryptoDecryptionMaterial
       ): Promise<WebCryptoDecryptionMaterial> {
         const udk = synchronousRandomValues(material.suite.keyLengthBytes)
-        const trace = {
-          keyName: 'keyName',
-          keyNamespace: 'keyNamespace',
-          flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-        }
+
         /* This is intentionally trickery.
          * An unencrypted data key *without* a cryptoKey, should not be valid.
          */
-        return material.setUnencryptedDataKey(udk, trace)
+        return material.setUnencryptedDataKey(udk)
       }
     }
 

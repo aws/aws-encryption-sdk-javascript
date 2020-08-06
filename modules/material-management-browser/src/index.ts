@@ -13,8 +13,6 @@ export {
   EncryptionContext,
   EncryptedDataKey,
   KeyringWebCrypto,
-  KeyringTrace,
-  KeyringTraceFlag,
   needs,
   MixedBackendCryptoKey,
   MultiKeyringWebCrypto,

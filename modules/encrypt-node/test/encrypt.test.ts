@@ -10,7 +10,6 @@ import {
   NodeEncryptionMaterial,
   KeyringNode,
   EncryptedDataKey,
-  KeyringTraceFlag,
   AlgorithmSuiteIdentifier,
   NodeAlgorithmSuite,
   CommitmentPolicy,
@@ -61,17 +60,10 @@ describe('encrypt structural testing', () => {
       const unencryptedDataKey = new Uint8Array(
         material.suite.keyLengthBytes
       ).fill(0)
-      const trace = {
-        keyNamespace: 'k',
-        keyName: 'k',
-        flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-      }
+
       return material
-        .setUnencryptedDataKey(unencryptedDataKey, trace)
-        .addEncryptedDataKey(
-          edk,
-          KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
-        )
+        .setUnencryptedDataKey(unencryptedDataKey)
+        .addEncryptedDataKey(edk)
     }
     async _onDecrypt(): Promise<NodeDecryptionMaterial> {
       throw new Error('I should never see this error')

@@ -10,7 +10,6 @@ import {
   NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier,
   NodeEncryptionMaterial,
-  KeyringTraceFlag,
   Keyring,
 } from '@aws-crypto/material-management'
 chai.use(chaiAsPromised)
@@ -72,37 +71,6 @@ describe('KmsKeyring: _onEncrypt', () => {
     expect(edkGenerate.providerInfo).to.equal(generatorKeyId)
     expect(edkEncrypt.providerId).to.equal('aws-kms')
     expect(edkEncrypt.providerInfo).to.equal(encryptKmsKey)
-
-    expect(material.keyringTrace).to.have.lengthOf(3)
-    const [traceGenerate, traceEncrypt1, traceEncrypt2] = material.keyringTrace
-    expect(traceGenerate.keyNamespace).to.equal('aws-kms')
-    expect(traceGenerate.keyName).to.equal(generatorKeyId)
-    expect(
-      traceGenerate.flags & KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
-    ).to.equal(KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY)
-    expect(
-      traceGenerate.flags & KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
-    ).to.equal(KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
-    expect(
-      traceGenerate.flags & KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
-    ).to.equal(KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
-
-    expect(traceEncrypt1.keyNamespace).to.equal('aws-kms')
-    expect(traceEncrypt1.keyName).to.equal(generatorKeyId)
-    expect(
-      traceEncrypt1.flags & KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
-    ).to.equal(KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
-    expect(
-      traceEncrypt1.flags & KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
-    ).to.equal(KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
-    expect(traceEncrypt2.keyNamespace).to.equal('aws-kms')
-    expect(traceEncrypt2.keyName).to.equal(encryptKmsKey)
-    expect(
-      traceEncrypt2.flags & KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
-    ).to.equal(KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
-    expect(
-      traceEncrypt2.flags & KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
-    ).to.equal(KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
   })
 
   it('Check for early return (Postcondition): Discovery Keyrings do not encrypt.', async () => {
@@ -261,11 +229,7 @@ describe('KmsKeyring: _onEncrypt', () => {
     const seedMaterial = new NodeEncryptionMaterial(
       suite,
       {}
-    ).setUnencryptedDataKey(new Uint8Array(suite.keyLengthBytes), {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    })
+    ).setUnencryptedDataKey(new Uint8Array(suite.keyLengthBytes))
 
     const material = await testKeyring.onEncrypt(seedMaterial)
 
@@ -274,17 +238,6 @@ describe('KmsKeyring: _onEncrypt', () => {
     const [kmsEDK] = material.encryptedDataKeys
     expect(kmsEDK.providerId).to.equal('aws-kms')
     expect(kmsEDK.providerInfo).to.equal(generatorKeyId)
-
-    expect(material.keyringTrace).to.have.lengthOf(2)
-    const [, kmsTrace] = material.keyringTrace
-    expect(kmsTrace.keyNamespace).to.equal('aws-kms')
-    expect(kmsTrace.keyName).to.equal(generatorKeyId)
-    expect(
-      kmsTrace.flags & KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
-    ).to.equal(KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY)
-    expect(
-      kmsTrace.flags & KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
-    ).to.equal(KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX)
   })
 
   it('clientProvider may not return a client, in this case there is not an EDK to add', async () => {
@@ -309,16 +262,11 @@ describe('KmsKeyring: _onEncrypt', () => {
     const seedMaterial = new NodeEncryptionMaterial(
       suite,
       {}
-    ).setUnencryptedDataKey(new Uint8Array(suite.keyLengthBytes), {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    })
+    ).setUnencryptedDataKey(new Uint8Array(suite.keyLengthBytes))
 
     const material = await testKeyring.onEncrypt(seedMaterial)
 
     // only setUnencryptedDataKey on seedMaterial
     expect(material.encryptedDataKeys).to.have.lengthOf(0)
-    expect(material.keyringTrace).to.have.lengthOf(1)
   })
 })

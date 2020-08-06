@@ -13,7 +13,6 @@ import { AlgorithmSuiteIdentifier } from '../src/algorithm_suites'
 import { NodeAlgorithmSuite } from '../src/node_algorithms'
 import { EncryptedDataKey } from '../src/encrypted_data_key'
 import { Keyring } from '../src/keyring'
-import { KeyringTraceFlag } from '../src'
 chai.use(chaiAsPromised)
 const { expect } = chai
 const never = () => {
@@ -46,13 +45,8 @@ describe('Keyring', () => {
       async _onEncrypt(material: NodeEncryptionMaterial) {
         expect(material.suite === suite).to.equal(true)
         expect(material.hasUnencryptedDataKey).to.equal(false)
-        const trace = {
-          keyNamespace: 'k',
-          keyName: 'k',
-          flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-        }
         assertCount += 1
-        return material.setUnencryptedDataKey(unencryptedDataKey, trace)
+        return material.setUnencryptedDataKey(unencryptedDataKey)
       }
       async _onDecrypt(material: NodeDecryptionMaterial) {
         never()
@@ -172,12 +166,8 @@ describe('Keyring: onDecrypt', () => {
     )
     const material = new NodeDecryptionMaterial(suite, {})
     const unencryptedDataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(unencryptedDataKey, trace)
+
+    material.setUnencryptedDataKey(unencryptedDataKey)
     const edk = new EncryptedDataKey({
       providerId: 'p',
       providerInfo: 'i',

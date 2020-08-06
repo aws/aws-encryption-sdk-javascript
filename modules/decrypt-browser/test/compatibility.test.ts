@@ -9,7 +9,6 @@ import { buildDecrypt } from '../src/index'
 import {
   needs,
   importForWebCryptoDecryptionMaterial,
-  KeyringTraceFlag,
   KeyringWebCrypto,
   WebCryptoDecryptionMaterial,
   WebCryptoEncryptionMaterial,
@@ -86,11 +85,7 @@ describe('committing algorithm test', () => {
       async _onDecrypt(material: WebCryptoDecryptionMaterial) {
         const unencryptedDataKey = dataKey
         return importForWebCryptoDecryptionMaterial(
-          material.setUnencryptedDataKey(unencryptedDataKey, {
-            keyNamespace: 'k',
-            keyName: 'k',
-            flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-          })
+          material.setUnencryptedDataKey(unencryptedDataKey)
         )
       }
     })()

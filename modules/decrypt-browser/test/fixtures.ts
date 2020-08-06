@@ -7,7 +7,6 @@ import {
   WebCryptoDecryptionMaterial,
   WebCryptoEncryptionMaterial,
   KeyringWebCrypto,
-  KeyringTraceFlag,
   importForWebCryptoDecryptionMaterial,
 } from '@aws-crypto/material-management-browser'
 
@@ -258,13 +257,8 @@ class TestKeyring extends KeyringWebCrypto {
     const unencryptedDataKey = new Uint8Array(
       material.suite.keyLengthBytes
     ).fill(0)
-    const trace = {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    }
     return importForWebCryptoDecryptionMaterial(
-      material.setUnencryptedDataKey(unencryptedDataKey, trace)
+      material.setUnencryptedDataKey(unencryptedDataKey)
     )
   }
 }

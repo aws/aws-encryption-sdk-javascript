@@ -13,7 +13,6 @@ import {
 import { EncryptedDataKey } from './encrypted_data_key'
 import { SignatureKey, VerificationKey } from './signature_key'
 import { frozenClass, readOnlyProperty } from './immutable_class'
-import { KeyringTrace, KeyringTraceFlag } from './keyring_trace'
 import { NodeAlgorithmSuite } from './node_algorithms'
 import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 import { needs } from './needs'
@@ -106,21 +105,17 @@ export interface FunctionalCryptographicMaterial {
 
 export interface CryptographicMaterial<T extends CryptographicMaterial<T>> {
   suite: SupportedAlgorithmSuites
-  setUnencryptedDataKey: (
-    dataKey: Uint8Array | AwsEsdkKeyObject,
-    trace: KeyringTrace
-  ) => T
+  setUnencryptedDataKey: (dataKey: Uint8Array | AwsEsdkKeyObject) => T
   getUnencryptedDataKey: () => Uint8Array | AwsEsdkKeyObject
   zeroUnencryptedDataKey: () => T
   hasUnencryptedDataKey: boolean
-  keyringTrace: KeyringTrace[]
   encryptionContext: Readonly<EncryptionContext>
 }
 
 export interface EncryptionMaterial<T extends CryptographicMaterial<T>>
   extends CryptographicMaterial<T> {
   encryptedDataKeys: EncryptedDataKey[]
-  addEncryptedDataKey: (edk: EncryptedDataKey, flags: KeyringTraceFlag) => T
+  addEncryptedDataKey: (edk: EncryptedDataKey) => T
   setSignatureKey: (key: SignatureKey) => T
   signatureKey?: SignatureKey
 }
@@ -133,10 +128,7 @@ export interface DecryptionMaterial<T extends CryptographicMaterial<T>>
 
 export interface WebCryptoMaterial<T extends CryptographicMaterial<T>>
   extends CryptographicMaterial<T> {
-  setCryptoKey: (
-    dataKey: AwsEsdkJsCryptoKey | MixedBackendCryptoKey,
-    trace: KeyringTrace
-  ) => T
+  setCryptoKey: (dataKey: AwsEsdkJsCryptoKey | MixedBackendCryptoKey) => T
   getCryptoKey: () => AwsEsdkJsCryptoKey | MixedBackendCryptoKey
   hasCryptoKey: boolean
   validUsages: ReadonlyArray<AwsEsdkJsKeyUsage>
@@ -148,18 +140,13 @@ export class NodeEncryptionMaterial
     FunctionalCryptographicMaterial {
   suite: NodeAlgorithmSuite
   setUnencryptedDataKey!: (
-    dataKey: Uint8Array | AwsEsdkKeyObject,
-    trace: KeyringTrace
+    dataKey: Uint8Array | AwsEsdkKeyObject
   ) => NodeEncryptionMaterial
   getUnencryptedDataKey!: () => Uint8Array | AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => NodeEncryptionMaterial
   hasUnencryptedDataKey!: boolean
-  keyringTrace: KeyringTrace[] = []
   encryptedDataKeys!: EncryptedDataKey[]
-  addEncryptedDataKey!: (
-    edk: EncryptedDataKey,
-    flags: KeyringTraceFlag
-  ) => NodeEncryptionMaterial
+  addEncryptedDataKey!: (edk: EncryptedDataKey) => NodeEncryptionMaterial
   setSignatureKey!: (key: SignatureKey) => NodeEncryptionMaterial
   signatureKey?: SignatureKey
   encryptionContext: Readonly<EncryptionContext>
@@ -176,9 +163,7 @@ export class NodeEncryptionMaterial
       'Encryption context must be set'
     )
     this.encryptionContext = Object.freeze({ ...encryptionContext })
-    // EncryptionMaterial have generated a data key on setUnencryptedDataKey
-    const setFlags = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
-    decorateCryptographicMaterial<NodeEncryptionMaterial>(this, setFlags)
+    decorateCryptographicMaterial<NodeEncryptionMaterial>(this)
     decorateEncryptionMaterial<NodeEncryptionMaterial>(this)
     Object.setPrototypeOf(this, NodeEncryptionMaterial.prototype)
     Object.freeze(this)
@@ -195,13 +180,11 @@ export class NodeDecryptionMaterial
     FunctionalCryptographicMaterial {
   suite: NodeAlgorithmSuite
   setUnencryptedDataKey!: (
-    dataKey: Uint8Array | AwsEsdkKeyObject,
-    trace: KeyringTrace
+    dataKey: Uint8Array | AwsEsdkKeyObject
   ) => NodeDecryptionMaterial
   getUnencryptedDataKey!: () => Uint8Array | AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => NodeDecryptionMaterial
   hasUnencryptedDataKey!: boolean
-  keyringTrace: KeyringTrace[] = []
   setVerificationKey!: (key: VerificationKey) => NodeDecryptionMaterial
   verificationKey?: VerificationKey
   encryptionContext: Readonly<EncryptionContext>
@@ -218,9 +201,7 @@ export class NodeDecryptionMaterial
       'Encryption context must be set'
     )
     this.encryptionContext = Object.freeze({ ...encryptionContext })
-    // DecryptionMaterial have decrypted a data key on setUnencryptedDataKey
-    const setFlags = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
-    decorateCryptographicMaterial<NodeDecryptionMaterial>(this, setFlags)
+    decorateCryptographicMaterial<NodeDecryptionMaterial>(this)
     decorateDecryptionMaterial<NodeDecryptionMaterial>(this)
     Object.setPrototypeOf(this, NodeDecryptionMaterial.prototype)
     Object.freeze(this)
@@ -238,23 +219,17 @@ export class WebCryptoEncryptionMaterial
     FunctionalCryptographicMaterial {
   suite: WebCryptoAlgorithmSuite
   setUnencryptedDataKey!: (
-    dataKey: Uint8Array | AwsEsdkKeyObject,
-    trace: KeyringTrace
+    dataKey: Uint8Array | AwsEsdkKeyObject
   ) => WebCryptoEncryptionMaterial
   getUnencryptedDataKey!: () => Uint8Array | AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => WebCryptoEncryptionMaterial
   hasUnencryptedDataKey!: boolean
-  keyringTrace: KeyringTrace[] = []
   encryptedDataKeys!: EncryptedDataKey[]
-  addEncryptedDataKey!: (
-    edk: EncryptedDataKey,
-    flags: KeyringTraceFlag
-  ) => WebCryptoEncryptionMaterial
+  addEncryptedDataKey!: (edk: EncryptedDataKey) => WebCryptoEncryptionMaterial
   setSignatureKey!: (key: SignatureKey) => WebCryptoEncryptionMaterial
   signatureKey?: SignatureKey
   setCryptoKey!: (
-    dataKey: AwsEsdkJsCryptoKey | MixedBackendCryptoKey,
-    trace: KeyringTrace
+    dataKey: AwsEsdkJsCryptoKey | MixedBackendCryptoKey
   ) => WebCryptoEncryptionMaterial
   getCryptoKey!: () => AwsEsdkJsCryptoKey | MixedBackendCryptoKey
   hasCryptoKey!: boolean
@@ -280,11 +255,9 @@ export class WebCryptoEncryptionMaterial
       'Encryption context must be set'
     )
     this.encryptionContext = Object.freeze({ ...encryptionContext })
-    // EncryptionMaterial have generated a data key on setUnencryptedDataKey
-    const setFlag = KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
-    decorateCryptographicMaterial<WebCryptoEncryptionMaterial>(this, setFlag)
+    decorateCryptographicMaterial<WebCryptoEncryptionMaterial>(this)
     decorateEncryptionMaterial<WebCryptoEncryptionMaterial>(this)
-    decorateWebCryptoMaterial<WebCryptoEncryptionMaterial>(this, setFlag)
+    decorateWebCryptoMaterial<WebCryptoEncryptionMaterial>(this)
     Object.setPrototypeOf(this, WebCryptoEncryptionMaterial.prototype)
     Object.freeze(this)
   }
@@ -301,18 +274,15 @@ export class WebCryptoDecryptionMaterial
     FunctionalCryptographicMaterial {
   suite: WebCryptoAlgorithmSuite
   setUnencryptedDataKey!: (
-    dataKey: Uint8Array | AwsEsdkKeyObject,
-    trace: KeyringTrace
+    dataKey: Uint8Array | AwsEsdkKeyObject
   ) => WebCryptoDecryptionMaterial
   getUnencryptedDataKey!: () => Uint8Array | AwsEsdkKeyObject
   zeroUnencryptedDataKey!: () => WebCryptoDecryptionMaterial
   hasUnencryptedDataKey!: boolean
-  keyringTrace: KeyringTrace[] = []
   setVerificationKey!: (key: VerificationKey) => WebCryptoDecryptionMaterial
   verificationKey?: VerificationKey
   setCryptoKey!: (
-    dataKey: AwsEsdkJsCryptoKey | MixedBackendCryptoKey,
-    trace: KeyringTrace
+    dataKey: AwsEsdkJsCryptoKey | MixedBackendCryptoKey
   ) => WebCryptoDecryptionMaterial
   getCryptoKey!: () => AwsEsdkJsCryptoKey | MixedBackendCryptoKey
   hasCryptoKey!: boolean
@@ -338,11 +308,9 @@ export class WebCryptoDecryptionMaterial
       'Encryption context must be set'
     )
     this.encryptionContext = Object.freeze({ ...encryptionContext })
-    // DecryptionMaterial have decrypted a data key on setUnencryptedDataKey
-    const setFlag = KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
-    decorateCryptographicMaterial<WebCryptoDecryptionMaterial>(this, setFlag)
+    decorateCryptographicMaterial<WebCryptoDecryptionMaterial>(this)
     decorateDecryptionMaterial<WebCryptoDecryptionMaterial>(this)
-    decorateWebCryptoMaterial<WebCryptoDecryptionMaterial>(this, setFlag)
+    decorateWebCryptoMaterial<WebCryptoDecryptionMaterial>(this)
     Object.setPrototypeOf(this, WebCryptoDecryptionMaterial.prototype)
     Object.freeze(this)
   }
@@ -372,21 +340,7 @@ export function isDecryptionMaterial(
 
 export function decorateCryptographicMaterial<
   T extends CryptographicMaterial<T>
->(material: T, setFlag: KeyringTraceFlag) {
-  /* Precondition: setFlag must be in the set of KeyringTraceFlag.SET_FLAGS. */
-  needs(setFlag & KeyringTraceFlag.SET_FLAGS, 'Invalid setFlag')
-  /* When a KeyringTraceFlag is passed to setUnencryptedDataKey,
-   * it must be valid for the type of material.
-   * It is invalid to claim that EncryptionMaterial were decrypted.
-   */
-  const deniedSetFlags =
-    (KeyringTraceFlag.SET_FLAGS ^ setFlag) |
-    (setFlag === KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
-      ? KeyringTraceFlag.DECRYPT_FLAGS
-      : setFlag === KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
-      ? KeyringTraceFlag.ENCRYPT_FLAGS
-      : 0)
-
+>(material: T) {
   let unencryptedDataKeyZeroed = false
   let unencryptedDataKey: AwsEsdkKeyObject | Uint8Array
   // This copy of the unencryptedDataKey is stored to insure that the
@@ -395,18 +349,14 @@ export function decorateCryptographicMaterial<
   // to it would be propagated to any cached versions.
   let udkForVerification: Uint8Array
 
-  const setUnencryptedDataKey = (
-    dataKey: Uint8Array | AwsEsdkKeyObject,
-    trace: KeyringTrace
-  ) => {
+  const setUnencryptedDataKey = (dataKey: Uint8Array | AwsEsdkKeyObject) => {
     /* Avoid making unnecessary copies of the dataKey. */
     const tempUdk =
       dataKey instanceof Uint8Array ? dataKey : unwrapDataKey(dataKey)
     /* All security conditions are tested here and failures will throw. */
-    verifyUnencryptedDataKeyForSet(tempUdk, trace)
+    verifyUnencryptedDataKeyForSet(tempUdk)
     unencryptedDataKey = wrapWithKeyObjectIfSupported(dataKey)
     udkForVerification = new Uint8Array(tempUdk)
-    material.keyringTrace.push(trace)
 
     return material
   }
@@ -480,10 +430,7 @@ export function decorateCryptographicMaterial<
 
   return material
 
-  function verifyUnencryptedDataKeyForSet(
-    dataKey: Uint8Array,
-    trace: KeyringTrace
-  ) {
+  function verifyUnencryptedDataKeyForSet(dataKey: Uint8Array) {
     /* Precondition: unencryptedDataKey must not be set.  Modifying the unencryptedDataKey is denied */
     needs(!unencryptedDataKey, 'unencryptedDataKey has already been set')
     /* Precondition: dataKey must be Binary Data */
@@ -505,33 +452,16 @@ export function decorateCryptographicMaterial<
       dataKey.byteLength === material.suite.keyLengthBytes,
       'Key length does not agree with the algorithm specification.'
     )
-
-    /* Precondition: Trace must be set, and the flag must indicate that the data key was generated. */
-    needs(
-      trace && trace.keyName && trace.keyNamespace,
-      'Malformed KeyringTrace'
-    )
-    /* Precondition: On set the required KeyringTraceFlag must be set. */
-    needs(trace.flags & setFlag, 'Required KeyringTraceFlag not set')
-    /* Precondition: Only valid flags are allowed.
-     * An unencrypted data key can not be both generated and decrypted.
-     */
-    needs(!(trace.flags & deniedSetFlags), 'Invalid KeyringTraceFlags set.')
   }
 }
 
 export function decorateEncryptionMaterial<T extends EncryptionMaterial<T>>(
   material: T
 ) {
-  const deniedEncryptFlags =
-    KeyringTraceFlag.SET_FLAGS | KeyringTraceFlag.DECRYPT_FLAGS
   const encryptedDataKeys: EncryptedDataKey[] = []
   let signatureKey: Readonly<SignatureKey> | undefined
 
-  const addEncryptedDataKey = (
-    edk: EncryptedDataKey,
-    flags: KeyringTraceFlag
-  ) => {
+  const addEncryptedDataKey = (edk: EncryptedDataKey) => {
     /* Precondition: If a data key has not already been generated, there must be no EDKs.
      * Pushing EDKs on the list before the data key has been generated may cause the list of
      * EDKs to be inconsistent. (i.e., they would decrypt to different data keys.)
@@ -545,28 +475,6 @@ export function decorateEncryptionMaterial<T extends EncryptionMaterial<T>>(
       edk instanceof EncryptedDataKey,
       'Unsupported instance of encryptedDataKey'
     )
-
-    /* Precondition: flags must indicate that the key was encrypted. */
-    needs(
-      flags & KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY,
-      'Encrypted data key flag must be set.'
-    )
-
-    /* Precondition: flags must not include a setFlag or a decrypt flag.
-     * The setFlag is reserved for setting the unencrypted data key
-     * and must only occur once in the set of KeyringTrace flags.
-     * The two setFlags in use are:
-     * KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY
-     * KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY
-     *
-     * KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX is reserved for the decrypt path
-     */
-    needs(!(flags & deniedEncryptFlags), 'Invalid flag for EncryptedDataKey.')
-    material.keyringTrace.push({
-      keyName: edk.providerInfo,
-      keyNamespace: edk.providerId,
-      flags,
-    })
 
     encryptedDataKeys.push(edk)
     return material
@@ -655,16 +563,14 @@ export function decorateDecryptionMaterial<T extends DecryptionMaterial<T>>(
 }
 
 export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>>(
-  material: T,
-  setFlags: KeyringTraceFlag
+  material: T
 ) {
   let cryptoKey:
     | Readonly<AwsEsdkJsCryptoKey | MixedBackendCryptoKey>
     | undefined
 
   const setCryptoKey = (
-    dataKey: AwsEsdkJsCryptoKey | MixedBackendCryptoKey,
-    trace: KeyringTrace
+    dataKey: AwsEsdkJsCryptoKey | MixedBackendCryptoKey
   ) => {
     /* Precondition: cryptoKey must not be set.  Modifying the cryptoKey is denied */
     needs(!cryptoKey, 'cryptoKey is already set.')
@@ -680,16 +586,9 @@ export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>>(
     )
 
     /* If the material does not have an unencrypted data key,
-     * then we are setting the crypto key here and need a keyring trace .
+     * then we are setting the crypto key here.
      */
     if (!material.hasUnencryptedDataKey) {
-      /* Precondition: If the CryptoKey is the only version, the trace information must be set here. */
-      needs(
-        trace && trace.keyName && trace.keyNamespace,
-        'Malformed KeyringTrace'
-      )
-      /* Precondition: On setting the CryptoKey the required KeyringTraceFlag must be set. */
-      needs(trace.flags & setFlags, 'Required KeyringTraceFlag not set')
       /* If I a setting a cryptoKey without an unencrypted data key,
        * an unencrypted data should never be set.
        * The expectation is if you are setting the cryptoKey *first* then
@@ -697,7 +596,6 @@ export function decorateWebCryptoMaterial<T extends WebCryptoMaterial<T>>(
        * This ensures that a cryptoKey and an unencrypted data key always match.
        */
       material.zeroUnencryptedDataKey()
-      material.keyringTrace.push(trace)
     }
 
     if (isCryptoKey(dataKey)) {

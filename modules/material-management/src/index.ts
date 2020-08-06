@@ -28,7 +28,6 @@ export { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 export { NodeAlgorithmSuite } from './node_algorithms'
 
 export { Keyring, KeyringNode, KeyringWebCrypto } from './keyring'
-export { KeyringTrace, KeyringTraceFlag } from './keyring_trace'
 export { MultiKeyringNode, MultiKeyringWebCrypto } from './multi_keyring'
 export * from './materials_manager'
 

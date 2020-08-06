@@ -12,7 +12,6 @@ import {
   NodeDecryptionMaterial,
   NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier,
-  KeyringTraceFlag,
   EncryptedDataKey,
 } from '../src/index'
 import { ENCODED_SIGNER_KEY } from '@aws-crypto/serialize'
@@ -248,12 +247,8 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
         material: NodeEncryptionMaterial
       ): Promise<NodeEncryptionMaterial> {
         const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-        const trace = {
-          keyNamespace: 'k',
-          keyName: 'k',
-          flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-        }
-        return material.setUnencryptedDataKey(dataKey, trace)
+
+        return material.setUnencryptedDataKey(dataKey)
       }
       async _onDecrypt(): Promise<NodeDecryptionMaterial> {
         throw new Error('never')
@@ -314,12 +309,8 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
         material: NodeDecryptionMaterial
       ): Promise<NodeDecryptionMaterial> {
         const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-        const trace = {
-          keyNamespace: 'k',
-          keyName: 'k',
-          flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-        }
-        return material.setUnencryptedDataKey(dataKey, trace)
+
+        return material.setUnencryptedDataKey(dataKey)
       }
     }
     const keyring = new TestKeyring()

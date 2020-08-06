@@ -7,8 +7,6 @@ import {
   WebCryptoEncryptionMaterial,
   WebCryptoDecryptionMaterial,
   EncryptedDataKey,
-  KeyringTrace,
-  KeyringTraceFlag,
   immutableClass,
   readOnlyProperty,
   bytes2JWK,
@@ -97,10 +95,7 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
         encryptedDataKey: new Uint8Array(encryptedArrayBuffer),
       })
 
-      return material.addEncryptedDataKey(
-        edk,
-        KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
-      )
+      return material.addEncryptedDataKey(edk)
     }
 
     /* returns either an array of 1 CryptoKey or an array of both from MixedBackendCryptoKey e.g.
@@ -117,12 +112,6 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
         throw new Error('No privateKey configured, decrypt not supported.')
       const backend = await getWebCryptoBackend()
       const { suite } = material
-
-      const trace: KeyringTrace = {
-        keyName: this.keyName,
-        keyNamespace: this.keyNamespace,
-        flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-      }
 
       const format = 'raw'
       const extractable = false
@@ -145,7 +134,7 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
        */
       if (isFullSupportWebCryptoBackend(backend)) {
         const cryptoKey = await backend.subtle.unwrapKey(...importArgs)
-        return material.setCryptoKey(cryptoKey, trace)
+        return material.setCryptoKey(cryptoKey)
       } else {
         const importZeroBackend = [...importArgs] as Parameters<
           SubtleCrypto['unwrapKey']
@@ -158,7 +147,7 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
           nonZeroByteCryptoKey,
           zeroByteCryptoKey,
         }))
-        return material.setCryptoKey(mixedDataKey, trace)
+        return material.setCryptoKey(mixedDataKey)
       }
     }
 

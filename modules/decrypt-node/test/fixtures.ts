@@ -7,7 +7,6 @@ import {
   NodeDecryptionMaterial,
   NodeEncryptionMaterial,
   KeyringNode,
-  KeyringTraceFlag,
 } from '@aws-crypto/material-management-node'
 
 export function base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384() {
@@ -71,12 +70,8 @@ export function decryptKeyring() {
       const unencryptedDataKey = new Uint8Array(
         material.suite.keyLengthBytes
       ).fill(0)
-      const trace = {
-        keyNamespace: 'k',
-        keyName: 'k',
-        flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-      }
-      return material.setUnencryptedDataKey(unencryptedDataKey, trace)
+
+      return material.setUnencryptedDataKey(unencryptedDataKey)
     }
   }
 

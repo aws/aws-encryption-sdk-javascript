@@ -8,7 +8,6 @@ import {
   NodeDecryptionMaterial,
   NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier,
-  KeyringTraceFlag,
   unwrapDataKey,
   NodeEncryptionMaterial,
   needs,
@@ -36,11 +35,7 @@ describe('nodeKdf v2 commitment', () => {
     const material = new NodeDecryptionMaterial(
       suite,
       {}
-    ).setUnencryptedDataKey(dataKey, {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    })
+    ).setUnencryptedDataKey(dataKey)
 
     const test = unwrapDataKey(
       nodeKdf(material, messageId, commitKey).derivedKey
@@ -68,11 +63,7 @@ describe('curryCryptoStream: Committed Algorithm suite', () => {
     const material = new NodeEncryptionMaterial(
       suite,
       {}
-    ).setUnencryptedDataKey(new Uint8Array(dataKey), {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    })
+    ).setUnencryptedDataKey(new Uint8Array(dataKey))
     const { getCipher, keyCommitment } = curryCryptoStream(
       material,
       createCipheriv
@@ -89,11 +80,7 @@ describe('curryCryptoStream: Committed Algorithm suite', () => {
     const material = new NodeDecryptionMaterial(
       suite,
       {}
-    ).setUnencryptedDataKey(new Uint8Array(dataKey), {
-      keyNamespace: 'k',
-      keyName: 'k',
-      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-    })
+    ).setUnencryptedDataKey(new Uint8Array(dataKey))
 
     const createCryptoStream = curryCryptoStream(material, createDecipheriv)(
       nonce,

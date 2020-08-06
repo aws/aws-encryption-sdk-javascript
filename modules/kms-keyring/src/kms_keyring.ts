@@ -9,8 +9,6 @@ import {
   EncryptionMaterial,
   DecryptionMaterial,
   SupportedAlgorithmSuites,
-  KeyringTrace,
-  KeyringTraceFlag,
   EncryptedDataKey,
   immutableClass,
   readOnlyProperty,
@@ -183,26 +181,12 @@ export function KmsKeyringClass<
         if (!dataKey)
           throw new Error('Generator KMS key did not generate a data key')
 
-        const flags =
-          KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY |
-          KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX |
-          KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
-        const trace: KeyringTrace = {
-          keyNamespace: KMS_PROVIDER_ID,
-          keyName: dataKey.KeyId,
-          flags,
-        }
-
         material
           /* Postcondition: The generated unencryptedDataKey length must match the algorithm specification.
            * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
            */
-          .setUnencryptedDataKey(dataKey.Plaintext, trace)
-          .addEncryptedDataKey(
-            kmsResponseToEncryptedDataKey(dataKey),
-            KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY |
-              KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
-          )
+          .setUnencryptedDataKey(dataKey.Plaintext)
+          .addEncryptedDataKey(kmsResponseToEncryptedDataKey(dataKey))
       } else if (generatorKeyId) {
         keyIds.unshift(generatorKeyId)
       }
@@ -213,9 +197,6 @@ export function KmsKeyringClass<
        */
       const unencryptedDataKey = unwrapDataKey(material.getUnencryptedDataKey())
 
-      const flags =
-        KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY |
-        KeyringTraceFlag.WRAPPING_KEY_SIGNED_ENC_CTX
       for (const kmsKey of keyIds) {
         const kmsEDK = await encrypt(
           clientProvider,
@@ -227,10 +208,7 @@ export function KmsKeyringClass<
 
         /* clientProvider may not return a client, in this case there is not an EDK to add */
         if (kmsEDK)
-          material.addEncryptedDataKey(
-            kmsResponseToEncryptedDataKey(kmsEDK),
-            flags
-          )
+          material.addEncryptedDataKey(kmsResponseToEncryptedDataKey(kmsEDK))
       }
 
       return material
@@ -280,19 +258,10 @@ export function KmsKeyringClass<
           'KMS Decryption key does not match serialized provider.'
         )
 
-        const flags =
-          KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY |
-          KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
-        const trace: KeyringTrace = {
-          keyNamespace: KMS_PROVIDER_ID,
-          keyName: dataKey.KeyId,
-          flags,
-        }
-
         /* Postcondition: The decrypted unencryptedDataKey length must match the algorithm specification.
          * See cryptographic_materials as setUnencryptedDataKey will throw in this case.
          */
-        material.setUnencryptedDataKey(dataKey.Plaintext, trace)
+        material.setUnencryptedDataKey(dataKey.Plaintext)
         return material
       }
 

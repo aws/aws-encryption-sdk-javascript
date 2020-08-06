@@ -21,7 +21,6 @@ import {
   WebCryptoDecryptionMaterial,
   WebCryptoAlgorithmSuite,
   AlgorithmSuiteIdentifier,
-  KeyringTraceFlag,
   isValidCryptoKey,
   needs,
 } from '@aws-crypto/material-management'
@@ -73,11 +72,7 @@ describe('commitKey crypto', () => {
   const material = new WebCryptoDecryptionMaterial(
     suite,
     {}
-  ).setUnencryptedDataKey(dataKey, {
-    keyNamespace: 'k',
-    keyName: 'k',
-    flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-  })
+  ).setUnencryptedDataKey(dataKey)
 
   let cryptoKey: CryptoKey
   let subtle: SubtleCrypto
@@ -136,14 +131,7 @@ describe('currySubtleFunction', () => {
 
   it('can encrypt', async () => {
     const material = await importForWebCryptoEncryptionMaterial(
-      new WebCryptoEncryptionMaterial(suite, {}).setUnencryptedDataKey(
-        dataKey,
-        {
-          keyName: 'keyName',
-          keyNamespace: 'keyNamespace',
-          flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-        }
-      )
+      new WebCryptoEncryptionMaterial(suite, {}).setUnencryptedDataKey(dataKey)
     )
     const backend = await getWebCryptoBackend()
 
@@ -159,14 +147,7 @@ describe('currySubtleFunction', () => {
 
   it('can decrypt what was encrypted', async () => {
     const material = await importForWebCryptoDecryptionMaterial(
-      new WebCryptoDecryptionMaterial(suite, {}).setUnencryptedDataKey(
-        dataKey,
-        {
-          keyName: 'keyName',
-          keyNamespace: 'keyNamespace',
-          flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
-        }
-      )
+      new WebCryptoDecryptionMaterial(suite, {}).setUnencryptedDataKey(dataKey)
     )
     const backend = await getWebCryptoBackend()
 
@@ -190,16 +171,11 @@ describe('currySubtleFunction', () => {
     )
     const material = new WebCryptoEncryptionMaterial(suite, {})
     const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
+    material.setUnencryptedDataKey(udk)
     const backend = await getWebCryptoBackend()
 
     const cryptoKey = await importCryptoKey(backend, material, ['encrypt'])
-    material.setCryptoKey(cryptoKey, trace)
+    material.setCryptoKey(cryptoKey)
 
     const testInfo = currySubtleFunction(material, backend, 'encrypt')
     expect(testInfo).to.be.a('function')
