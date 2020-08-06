@@ -117,11 +117,9 @@ describe('decorateCryptographicMaterial', () => {
     const test = decorateCryptographicMaterial({ suite } as any)
     test.zeroUnencryptedDataKey()
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace =
-      // It is very hard to test this perfectly.  However, this tests the spirit.
-      expect(() =>
-        test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
-      ).to.throw()
+
+    // It is very hard to test this perfectly.  However, this tests the spirit.
+    expect(() => test.setUnencryptedDataKey(new Uint8Array(dataKey))).to.throw()
   })
 
   it('Precondition: dataKey must be Binary Data', () => {
@@ -138,10 +136,10 @@ describe('decorateCryptographicMaterial', () => {
     )
     const test = decorateCryptographicMaterial({ suite } as any)
     const dataKey = new Uint8Array(suite.keyLengthBytes).fill(1)
-    const trace = test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
-    expect(() =>
-      test.setUnencryptedDataKey(new Uint8Array(dataKey), trace)
-    ).to.throw('unencryptedDataKey has already been set')
+    test.setUnencryptedDataKey(new Uint8Array(dataKey))
+    expect(() => test.setUnencryptedDataKey(new Uint8Array(dataKey))).to.throw(
+      'unencryptedDataKey has already been set'
+    )
   })
 
   it('Precondition: dataKey should have an ArrayBuffer that *only* stores the key.', () => {
@@ -154,9 +152,9 @@ describe('decorateCryptographicMaterial', () => {
       5,
       suite.keyLengthBytes
     ).fill(1)
-    const trace = expect(() =>
-      test.setUnencryptedDataKey(dataKey, trace)
-    ).to.throw('Unencrypted Master Key must be an isolated buffer.')
+    expect(() => test.setUnencryptedDataKey(dataKey)).to.throw(
+      'Unencrypted Master Key must be an isolated buffer.'
+    )
   })
 
   it('Precondition: The unencryptedDataKey must not have been modified.', () => {
@@ -374,7 +372,7 @@ describe('decorateWebCryptoMaterial', () => {
       usages: ['deriveKey'],
       extractable: false,
     }
-    const trace = test.setCryptoKey(key, trace)
+    test.setCryptoKey(key)
     expect(test.getCryptoKey() === key).to.equal(true)
     expect(test.hasCryptoKey).to.equal(true)
     expect(test.hasUnencryptedDataKey).to.equal(false)
@@ -395,7 +393,7 @@ describe('decorateWebCryptoMaterial', () => {
       extractable: false,
     }
     const mixedKey: any = { zeroByteCryptoKey: key, nonZeroByteCryptoKey: key }
-    const trace = test.setCryptoKey(mixedKey, trace)
+    test.setCryptoKey(mixedKey)
     expect(test.getCryptoKey() !== mixedKey).to.equal(true)
     expect(test.hasCryptoKey).to.equal(true)
     expect(test.hasUnencryptedDataKey).to.equal(false)
@@ -427,8 +425,8 @@ describe('decorateWebCryptoMaterial', () => {
       usages: ['deriveKey'],
       extractable: false,
     }
-    const trace = test.setCryptoKey(key, trace)
-    expect(() => test.setCryptoKey(key, trace)).to.throw()
+    test.setCryptoKey(key)
+    expect(() => test.setCryptoKey(key)).to.throw()
   })
 
   it('Precondition: The CryptoKey must match the algorithm suite specification.', () => {
@@ -467,15 +465,15 @@ describe('decorateWebCryptoMaterial', () => {
         extractable: true,
       },
     }
-    const trace = expect(() => test.setCryptoKey(key, trace)).to.throw()
-    expect(() => test.setCryptoKey(key1, trace)).to.throw()
-    expect(() => test.setCryptoKey(key2, trace)).to.throw()
+    expect(() => test.setCryptoKey(key)).to.throw()
+    expect(() => test.setCryptoKey(key1)).to.throw()
+    expect(() => test.setCryptoKey(key2)).to.throw()
   })
 
   it('Precondition: dataKey must be a supported type.', () => {
     const test: any = decorateWebCryptoMaterial({} as any)
     const key: any = {}
-    const trace = expect(() => test.setCryptoKey(key, trace)).to.throw()
+    expect(() => test.setCryptoKey(key)).to.throw()
   })
 })
 
