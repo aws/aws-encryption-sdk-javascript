@@ -14,19 +14,29 @@ import {
 } from '../src/parse_header_stream'
 import {
   NodeDefaultCryptographicMaterialsManager,
+  NodeAlgorithmSuite,
   needs,
 } from '@aws-crypto/material-management-node'
+import { deserializeFactory } from '@aws-crypto/serialize'
 import * as fixtures from './fixtures'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
-describe('ParseHeaderStream', () => {
+const toUtf8 = (input: Uint8Array) =>
+  Buffer.from(input.buffer, input.byteOffset, input.byteLength).toString('utf8')
+const { deserializeMessageHeader } = deserializeFactory(toUtf8, NodeAlgorithmSuite)  
+
+describe.only('ParseHeaderStream', () => {
   it('Postcondition: A completed header MUST have been processed.', async () => {
-    const completeHeaderLength = 73
     const data = Buffer.from(
       fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfWith4Frames(),
       'base64'
     )
+
+    const headerInfo = deserializeMessageHeader(data)
+    needs(headerInfo, 'No header, test impossible')
+    const completeHeaderLength = headerInfo.rawHeader.byteLength + headerInfo.algorithmSuite.ivLength + headerInfo.algorithmSuite.tagLength/8
+    
     const cmm = new NodeDefaultCryptographicMaterialsManager(
       fixtures.decryptKeyring()
     )
