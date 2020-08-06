@@ -24,7 +24,9 @@ export function deserializeSignature({
   byteLength,
 }: Uint8Array) {
   /* Precondition: There must be information for a signature. */
-  needs(byteLength && byteLength > 2, 'Invalid Signature')
+  needs(typeof byteLength === 'number', 'Invalid Signature')
+  /* Check for early return (Postcondition): There must be enough bytes for the signatureLength. */
+  if (2 > byteLength) return false
   /* Uint8Array is a view on top of the underlying ArrayBuffer.
    * This means that raw underlying memory stored in the ArrayBuffer
    * may be larger than the Uint8Array.  This is especially true of
@@ -35,6 +37,8 @@ export function deserializeSignature({
   const signatureLength = dataView.getUint16(0, false) // big endian
   /* Precondition: The signature length must be positive. */
   needs(signatureLength > 0, 'Invalid Signature')
+  /* Check for early return (Postcondition): There must be enough bytes for the signature. */
+  if (signatureLength + 2 > byteLength) return false
   /* Precondition: The data must match the serialized length. */
   needs(byteLength === signatureLength + 2, 'Invalid Signature')
   return new Uint8Array(buffer, byteOffset + 2, signatureLength)
