@@ -80,17 +80,6 @@ describe('VerifyStream', () => {
     )
   })
 
-  it('Check for early return (Postcondition): If there is no verify stream do not attempt to verify.', () => {
-    // This works because there is no state, and any state would cause _flush to throw
-    const test = new VerifyStream({})
-    // test.
-    let called = false
-    test._flush(() => {
-      called = true
-    })
-    expect(called).to.equal(true)
-  })
-
   it('Precondition: All ciphertext MUST have been received.', async () => {
     const cmm = new NodeDefaultCryptographicMaterialsManager(
       fixtures.decryptKeyring()
@@ -121,7 +110,7 @@ describe('VerifyStream', () => {
     }
   })
 
-  it('Precondition: The signature must be well formed.', async () => {
+  it('Precondition: A complete signature is required to verify.', async () => {
     const cmm = new NodeDefaultCryptographicMaterialsManager(
       fixtures.decryptKeyring()
     )
@@ -155,15 +144,67 @@ describe('VerifyStream', () => {
     for (let i = lengthToFooter; data.byteLength > i; i++) {
       await expect(testStream(cmm, data.slice(0, i))).rejectedWith(
         Error,
-        'Invalid Signature'
+        'Incomplete signature'
       )
     }
+  })
+
+  it('Precondition: Only buffer data if a signature is expected.', async () => {
+    const cmm = new NodeDefaultCryptographicMaterialsManager(
+      fixtures.decryptKeyring()
+    )
+    const data = Buffer.from(
+      fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfWith4Frames(),
+      'base64'
+    )
+
+    // First we make sure that the test vector is well formed
+    await testStream(cmm, data)
+
+    await expect(testStream(cmm, data, Buffer.alloc(1))).rejectedWith(
+      Error,
+      'To much data'
+    )
+  })
+
+  it('Precondition: Only buffer data if the finalAuthTag has been received.', async () => {
+    const cmm = new NodeDefaultCryptographicMaterialsManager(
+      fixtures.decryptKeyring()
+    )
+    const data = Buffer.from(
+      fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfWith4Frames(),
+      'base64'
+    )
+
+    // First we make sure that the test vector is well formed
+    await testStream(cmm, data)
+
+    const source = new ParseHeaderStream(cmm)
+    const test = new VerifyStream({})
+
+    /* This is a little ridiculous.
+     * The _transform function
+     * will only delicate to _transformSignature
+     * **after** the finalAuthTag has been received.
+     * So this condition is _impossible_.
+     * But if it is a good check,
+     * then there should be a test... sigh.
+     */
+    setImmediate(() => {
+      source.write(data, () => {
+        test._transformSignature(Buffer.alloc(1), 'binary', (e: Error) => {
+          test.emit('error', e)
+        })
+      })
+    })
+
+    await expect(pipeline(source, test)).rejectedWith(Error, 'Malformed state.')
   })
 })
 
 async function testStream(
   cmm: NodeDefaultCryptographicMaterialsManager,
-  data: Buffer
+  ...data: Buffer[]
 ) {
   const source = new ParseHeaderStream(
     CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
@@ -184,7 +225,11 @@ async function testStream(
       AuthTagEmitted = !!a
       next()
     })
-  source.end(data)
+  setImmediate(() => {
+    const tail = data.pop()
+    data.forEach((data) => source.write(data))
+    source.end(tail)
+  })
   return pipeline(source, test).then(() => {
     needs(
       DecipherInfoEmitted && BodyInfoEmitted && AuthTagEmitted,

@@ -109,6 +109,7 @@ export async function _decrypt(
     const signatureInfo = ciphertext.slice(readPos)
 
     const derSignature = deserializeSignature(signatureInfo)
+    needs(derSignature, 'Invalid signature.')
     const rawSignature = der2raw(derSignature, material.suite)
 
     const isValid = await subtleVerify(rawSignature, data)

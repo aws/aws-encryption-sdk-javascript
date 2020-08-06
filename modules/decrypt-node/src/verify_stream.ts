@@ -40,8 +40,9 @@ interface VerifyState {
   authTagBuffer: Buffer
   currentFrame?: BodyHeader
   signatureInfo: Buffer
+  signature: Uint8Array | false
   sequenceNumber: number
-  finalAuthTagReceived: boolean
+  finalAuthTag: Uint8Array | false
 }
 
 export class VerifyStream extends PortableTransformWithType {
@@ -50,8 +51,9 @@ export class VerifyStream extends PortableTransformWithType {
     buffer: Buffer.alloc(0),
     authTagBuffer: Buffer.alloc(0),
     signatureInfo: Buffer.alloc(0),
+    signature: false,
     sequenceNumber: 0,
-    finalAuthTagReceived: false,
+    finalAuthTag: false,
   }
   private _verify?: AWSVerify
   private _maxBodySize?: number
@@ -208,51 +210,76 @@ export class VerifyStream extends PortableTransformWithType {
         state.buffer = Buffer.alloc(0)
         state.currentFrame = undefined
         state.authTagBuffer = Buffer.alloc(0)
+        const tail = chunk.slice(left)
+
         /* After the final frame the file format is _much_ simpler.
          * Making sure the cascading if blocks fall to the signature can be tricky and brittle.
          * After the final frame, just moving on to concatenate the signature is much simpler.
          */
-        if (currentFrame.isFinalFrame) {
+        if (!currentFrame.isFinalFrame) {
+          /* The decipher_stream uses the `AuthTag` event to flush the accumulated frame.
+           * This is because ciphertext should never be returned until it is verified.
+           * i.e. the auth tag checked.
+           * This can create an issue if the chucks and frame size are small.
+           * If the verify stream continues processing
+           * and sends the next auth tag,
+           * before the current auth tag has been completed
+           * the ciphertext will be decrypted
+           * and the plaintext released.
+           * This is basically a back pressure issue.
+           * Since the frame size, and consequently the high water mark,
+           * can not be know when the stream is created,
+           * the internal stream state would need to be modified.
+           * I assert that a simple callback is a simpler way to handle this.
+           */
+          const next = () => this._transform(tail, enc, callback)
+          return this.emit('AuthTag', finalAuthTagBuffer, next)
+        } else {
           /* Signal that the we are at the end of the ciphertext.
            * See decodeBodyHeader, non-framed will set isFinalFrame
            * for the single frame.
            */
-          this._verifyState.finalAuthTagReceived = true
+          state.finalAuthTag = finalAuthTagBuffer
           /* Overwriting the _transform function.
-           * Data flow control is not handled here.
+           * Data flow control is now handled in _transformSignature.
            */
-          this._transform = (
-            chunk: Buffer,
-            _enc: string,
-            callback: (err?: Error | null, data?: Uint8Array) => void
-          ) => {
-            if (chunk.length) {
-              state.signatureInfo = Buffer.concat([state.signatureInfo, chunk])
-            }
-
-            callback()
-          }
+          this._transform = this._transformSignature
+          return this._transform(tail, enc, callback)
         }
-
-        const tail = chunk.slice(left)
-        /* The decipher_stream uses the `AuthTag` event to flush the accumulated frame.
-         * This is because ciphertext should never be returned until it is verified.
-         * i.e. the auth tag checked.
-         * This can create an issue if the chucks and frame size are small.
-         * If the verify stream continues processing and sends the next auth tag,
-         * before the current auth tag has been completed.
-         * This is basically a back pressure issue.
-         * Since the frame size, and consequently the high water mark,
-         * can not be know when the stream is created,
-         * the internal stream state would need to be modified.
-         * I assert that a simple callback is a simpler way to handle this.
-         */
-        const next = () => this._transform(tail, enc, callback)
-        return this.emit('AuthTag', finalAuthTagBuffer, next)
       }
     }
 
     callback()
+  }
+
+  _transformSignature = (chunk: Buffer, _enc: string, callback: Function) => {
+    const state = this._verifyState
+
+    // EOF is an empty buffer, so I need to handle that kind of end.
+    if (chunk.byteLength === 0) return callback()
+
+    try {
+      const { signatureInfo, finalAuthTag } = state
+      /* Precondition: Only buffer data if the finalAuthTag has been received. */
+      needs(finalAuthTag, 'Malformed state.')
+      /* Precondition: Only buffer data if a signature is expected. */
+      needs(signatureInfo && this._verify && !state.signature, 'To much data')
+
+      /* Accumulate the signature here.
+       * It is verified in _flush.
+       * I can **not** verify
+       * and release the authTag here,
+       * because if additional data is sent
+       * then customers would have processed
+       * malformed data without knowing it.
+       */
+      state.signatureInfo = Buffer.concat([signatureInfo, chunk])
+      state.signature = deserializeSignature(state.signatureInfo)
+
+      callback()
+    } catch (err) {
+      callback(err)
+    }
   }
 
   push(chunk: any, encoding?: string | undefined): boolean {
@@ -264,28 +291,36 @@ export class VerifyStream extends PortableTransformWithType {
   }
 
   _flush(callback: (err?: Error) => void) {
-    const { finalAuthTagReceived } = this._verifyState
-    /* Precondition: All ciphertext MUST have been received.
-     * The verify stream has ended,
-     * there will be no more data.
-     * Therefore we MUST have reached the end.
-     */
-    if (!finalAuthTagReceived) return callback(new Error('Incomplete message'))
-    /* Check for early return (Postcondition): If there is no verify stream do not attempt to verify. */
-    if (!this._verify) return callback()
     try {
-      const { signatureInfo } = this._verifyState
-      /* Precondition: The signature must be well formed. */
-      const { buffer, byteOffset, byteLength } = deserializeSignature(
-        signatureInfo
-      )
-      const signature = Buffer.from(buffer, byteOffset, byteLength)
-      const isVerified = this._verify.awsCryptoVerify(signature)
-      /* Postcondition: The signature must be valid. */
-      needs(isVerified, 'Invalid Signature')
-      callback()
-    } catch (e) {
-      callback(e)
+      const { finalAuthTag, signature } = this._verifyState
+      /* Precondition: All ciphertext MUST have been received.
+       * The verify stream has ended,
+       * there will be no more data.
+       * Therefore we MUST have reached the end.
+       */
+      needs(finalAuthTag, 'Incomplete message')
+
+      /* Verifying the signature here
+       * **before** the authTag is released
+       * make the VerifyStream more composable.
+       * If I need to verify something
+       * without decrypting, this is possible.
+       */
+      if (this._verify) {
+        /* Precondition: A complete signature is required to verify. */
+        needs(signature, 'Incomplete signature')
+        const { buffer, byteOffset, byteLength } = signature
+        const isVerified = this._verify.awsCryptoVerify(
+          Buffer.from(buffer, byteOffset, byteLength)
+        )
+        /* Postcondition: The signature must be valid. */
+        needs(isVerified, 'Invalid Signature')
+      }
+
+      return this.emit('AuthTag', finalAuthTag, callback)
+    } catch (err) {
+      callback(err)
+      return
     }
   }
 }
