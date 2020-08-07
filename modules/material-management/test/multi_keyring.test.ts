@@ -176,7 +176,7 @@ describe('MultiKeyring: onEncrypt', () => {
     )
   })
 
-  it('Precondition: A Generator Keyring *must* ensure generated material.', async () => {
+  it('Precondition: A Generator Keyring *must* generated material.', async () => {
     const suite = new NodeAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
@@ -193,11 +193,11 @@ describe('MultiKeyring: onEncrypt', () => {
 
     await expect(mkeyring.onEncrypt(material)).to.rejectedWith(
       Error,
-      'Generator Keyring has not generated material.'
+      'Generator keyring did not generated material.'
     )
   })
 
-  it('Precondition: Only Keyrings explicitly designated as generators can generate material.', async () => {
+  it('Precondition: Keyrings not designated as generators *must not* generate material.', async () => {
     const suite = new NodeAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
@@ -212,11 +212,11 @@ describe('MultiKeyring: onEncrypt', () => {
     const material = new NodeEncryptionMaterial(suite, {})
     return expect(mkeyring.onEncrypt(material)).to.rejectedWith(
       Error,
-      'Only Keyrings explicitly designated as generators can generate material.'
+      'No data key provided and no generator defined.'
     )
   })
 
-  it('Generator Keyrings do not *have* to generate material if material already exists', async () => {
+  it('Precondition: Keyrings designated as generators *must* generate material.', async () => {
     const suite = new NodeAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
     )
@@ -235,7 +235,10 @@ describe('MultiKeyring: onEncrypt', () => {
       {}
     ).setUnencryptedDataKey(new Uint8Array(unencryptedDataKey))
 
-    await mkeyring.onEncrypt(material)
+    return expect(mkeyring.onEncrypt(material)).to.rejectedWith(
+      Error,
+      'Data key already generated.'
+    )
   })
 
   it('If material already exists, you do not need a generator.', async () => {

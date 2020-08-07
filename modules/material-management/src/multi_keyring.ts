@@ -67,27 +67,24 @@ function buildPrivateOnEncrypt<S extends SupportedAlgorithmSuites>() {
     this: MultiKeyring<S>,
     material: EncryptionMaterial<S>
   ): Promise<EncryptionMaterial<S>> {
-    /* Precondition: Only Keyrings explicitly designated as generators can generate material.
-     * Technically, the precondition below will handle this.
-     * Since if I do not have an unencrypted data key,
-     * and I do not have a generator,
-     * then generated.hasUnencryptedDataKey === false will throw.
-     * But this is a much more meaningful error.
-     */
-    needs(
-      !material.hasUnencryptedDataKey ? this.generator : true,
-      'Only Keyrings explicitly designated as generators can generate material.'
-    )
+    if (this.generator) {
+      /* Precondition: Keyrings designated as generators *must* generate material. */
+      needs(!material.hasUnencryptedDataKey, 'Data key already generated.')
 
-    const generated = this.generator
-      ? await this.generator.onEncrypt(material)
-      : material
+      await this.generator.onEncrypt(material)
 
-    /* Precondition: A Generator Keyring *must* ensure generated material. */
-    needs(
-      generated.hasUnencryptedDataKey,
-      'Generator Keyring has not generated material.'
-    )
+      /* Precondition: A Generator Keyring *must* generated material. */
+      needs(
+        material.hasUnencryptedDataKey,
+        'Generator keyring did not generated material.'
+      )
+    } else {
+      /* Precondition: Keyrings not designated as generators *must not* generate material. */
+      needs(
+        material.hasUnencryptedDataKey,
+        'No data key provided and no generator defined.'
+      )
+    }
 
     /* By default this is a serial operation.  A keyring _may_ perform an expensive operation
      * or create resource constraints such that encrypting with multiple keyrings could
@@ -96,13 +93,13 @@ function buildPrivateOnEncrypt<S extends SupportedAlgorithmSuites>() {
      * append based on already appended EDK's.
      */
     for (const keyring of this.children) {
-      await keyring.onEncrypt(generated)
+      await keyring.onEncrypt(material)
     }
 
     // Keyrings are required to not create new EncryptionMaterial instances, but
     // only append EncryptedDataKey.  Therefore the generated material has all
     // the data I want.
-    return generated
+    return material
   }
 }
 
