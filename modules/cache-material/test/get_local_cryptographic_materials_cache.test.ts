@@ -148,6 +148,27 @@ describe('getLocalCryptographicMaterialsCache', () => {
     expect(test.response === response).to.equal(true)
     expect(Object.isFrozen(test.response)).to.equal(true)
   })
+
+  it('Precondition: A capacity of 0 is defined as a null-cache.', () => {
+    const {
+      getEncryptionMaterial,
+      getDecryptionMaterial,
+      putEncryptionMaterial,
+      putDecryptionMaterial,
+    } = getLocalCryptographicMaterialsCache(0)
+
+    const encryptionKey = 'some encryption key'
+    const encryptionResponse: any = encryptionMaterial
+
+    putEncryptionMaterial(encryptionKey, encryptionResponse, 1)
+    expect(getEncryptionMaterial(encryptionKey, 1)).to.equal(false)
+
+    const decryptionKey = 'some decryption key'
+    const decryptionResponse: any = decryptionMaterial
+
+    putDecryptionMaterial(decryptionKey, decryptionResponse)
+    expect(getDecryptionMaterial(decryptionKey)).to.equal(false)
+  })
 })
 
 describe('cache eviction', () => {

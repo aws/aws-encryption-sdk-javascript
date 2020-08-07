@@ -24,12 +24,45 @@ export function getLocalCryptographicMaterialsCache<
   capacity: number,
   proactiveFrequency: number = 1000 * 60
 ): CryptographicMaterialsCache<S> {
+  /* Precondition: A capacity of 0 is defined as a null-cache.
+   * The underlying `lru-cache` treats `max` === 0
+   * as a cache that is unbounded.
+   * While this is a reasonable thing to do
+   * in many cases.
+   * This is not a good idea for cryptographic uses.
+   * Also, this lets customers create
+   * a null cache for testing purposes.
+   *
+   * If capacity is 0
+   * then I use the `length` option
+   * in combination with `max`.
+   *
+   * The `length` option is used
+   * to deal with managing
+   * the size of the LRU
+   * when items may be larger than 1.
+   * Large buffers or strings
+   * are good examples.
+   * If the LRU wants to ensure
+   * less than 1K bytes,
+   * and items are 1-20 bytes in size,
+   * `length` is intended to solve this.
+   *
+   * By forcing the length of every
+   * entry to exceed
+   * the `max` size of the LRU,
+   * no entries will be stored in the LRU.
+   */
+  const max = capacity === 0 ? 1 : capacity
+  const length = capacity === 0 ? () => 2 : undefined
+
   const cache = new LRU<string, Entry<S>>({
-    max: capacity,
+    max,
     dispose(_key, value) {
       /* Zero out the unencrypted dataKey, when the material is removed from the cache. */
       value.response.zeroUnencryptedDataKey()
     },
+    length,
   })
 
   /* It is not a guarantee that the last item in the LRU will be the Oldest Item.
