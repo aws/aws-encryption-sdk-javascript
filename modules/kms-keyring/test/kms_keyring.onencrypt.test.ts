@@ -240,7 +240,7 @@ describe('KmsKeyring: _onEncrypt', () => {
     expect(kmsEDK.providerInfo).to.equal(generatorKeyId)
   })
 
-  it('clientProvider may not return a client, in this case there is not an EDK to add', async () => {
+  it('clientProvider may not return a client, There MUST be a EDK for every KeyId', async () => {
     const generatorKeyId =
       'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const suite = new NodeAlgorithmSuite(
@@ -264,9 +264,8 @@ describe('KmsKeyring: _onEncrypt', () => {
       {}
     ).setUnencryptedDataKey(new Uint8Array(suite.keyLengthBytes))
 
-    const material = await testKeyring.onEncrypt(seedMaterial)
-
-    // only setUnencryptedDataKey on seedMaterial
-    expect(material.encryptedDataKeys).to.have.lengthOf(0)
+    await expect(testKeyring.onEncrypt(seedMaterial)).to.rejectedWith(
+      'No client returned by clientProvider from region:'
+    )
   })
 })
