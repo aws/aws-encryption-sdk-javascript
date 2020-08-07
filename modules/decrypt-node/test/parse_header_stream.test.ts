@@ -60,11 +60,18 @@ describe.only('ParseHeaderStream', () => {
   })
 
   it('Precondition: If maxHeaderSize was set I can not buffer a header larger than maxHeaderSize.', async () => {
-    const completeHeaderLength = 73
     const data = Buffer.from(
       fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfWith4Frames(),
       'base64'
     )
+
+    const headerInfo = deserializeMessageHeader(data)
+    needs(headerInfo, 'No header, test impossible')
+    const completeHeaderLength =
+      headerInfo.rawHeader.byteLength +
+      headerInfo.algorithmSuite.ivLength +
+      headerInfo.algorithmSuite.tagLength / 8
+
     const cmm = new NodeDefaultCryptographicMaterialsManager(
       fixtures.decryptKeyring()
     )
