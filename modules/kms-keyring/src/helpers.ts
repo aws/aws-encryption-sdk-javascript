@@ -51,12 +51,22 @@ export async function encrypt<Client extends AwsEsdkKMSInterface>(
   KeyId: string,
   EncryptionContext: EncryptionContext,
   GrantTokens?: string[]
-): Promise<RequiredEncryptResponse | false> {
+): Promise<RequiredEncryptResponse> {
   const region = regionFromKmsKeyArn(KeyId)
   const client = clientProvider(region)
 
-  /* Check for early return (Postcondition): clientProvider did not return a client for encrypt. */
-  if (!client) return false
+  /* Postcondition: There MUST be a client for every KeyId
+   * When a user configures a KMS keyring with IDs
+   * the intent is to be able to independently decrypt
+   * with ANY of these IDs.
+   * See: https://github.com/awslabs/aws-encryption-sdk-specification/blob/master/framework/kms-keyring.md#onencrypt-goal
+   * Without a client it is
+   * impossible to encrypt under the given CMK.
+   */
+  if (!client)
+    throw new Error(
+      `No client returned by clientProvider from region: ${region} for cmk: ${KeyId}`
+    )
 
   const v2vsV3Response = client.encrypt({
     KeyId,

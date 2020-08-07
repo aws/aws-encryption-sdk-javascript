@@ -3,7 +3,8 @@
 
 /* eslint-env mocha */
 
-import { expect } from 'chai'
+import chai from 'chai'
+import chaiAsPromised from 'chai-as-promised'
 import {
   generateDataKey,
   encrypt,
@@ -11,6 +12,8 @@ import {
   kmsResponseToEncryptedDataKey,
 } from '../src/helpers'
 import { EncryptedDataKey } from '@aws-crypto/material-management'
+chai.use(chaiAsPromised)
+const { expect } = chai
 
 describe('kmsResponseToEncryptedDataKey', () => {
   it('return an EncryptedDataKey', () => {
@@ -149,7 +152,7 @@ describe('encrypt', () => {
     expect(test.CiphertextBlob).to.deep.equal(CiphertextBlob)
   })
 
-  it('Check for early return (Postcondition): clientProvider did not return a client for encrypt.', async () => {
+  it('Postcondition: There MUST be a client for every KeyId', async () => {
     const KeyId = 'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
     const GrantTokens = ['grantToken']
     const Plaintext = new Uint8Array(5)
@@ -159,14 +162,12 @@ describe('encrypt', () => {
       return false
     }
 
-    const test = await encrypt(
-      clientProvider,
-      Plaintext,
-      KeyId,
-      EncryptionContext,
-      GrantTokens
+    await expect(
+      encrypt(clientProvider, Plaintext, KeyId, EncryptionContext, GrantTokens)
+    ).to.rejectedWith(
+      Error,
+      'No client returned by clientProvider from region:'
     )
-    expect(test).to.equal(false)
   })
 
   it('Postcondition: KMS must return serializable encrypted data key.', async () => {
