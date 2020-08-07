@@ -165,9 +165,7 @@ export function KmsKeyringClass<
          * with ANY of these IDs.
          * See: https://github.com/awslabs/aws-encryption-sdk-specification/blob/master/framework/kms-keyring.md#onencrypt-goal
          */
-        material.addEncryptedDataKey(
-          kmsResponseToEncryptedDataKey(kmsEDK)
-        )
+        material.addEncryptedDataKey(kmsResponseToEncryptedDataKey(kmsEDK))
       }
 
       return material
