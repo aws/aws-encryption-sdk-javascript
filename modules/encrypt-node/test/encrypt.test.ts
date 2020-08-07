@@ -192,6 +192,15 @@ describe('encrypt structural testing', () => {
     expect(messageHeader).to.deep.equal(messageInfo.messageHeader)
   })
 
+  it('Precondition: The ESDK reserves an encryption context namespace for node.js CMMs.', () => {
+    const encryptionContext = {
+      'aws-crypto-is-a': 'reserved namespace',
+    }
+    expect(() => encryptStream(keyRing, { encryptionContext })).to.throw(
+      'Encryption context keys that start with'
+    )
+  })
+
   it('Precondition: The frameLength must be less than the maximum frame size Node.js stream.', async () => {
     const frameLength = 0
     await expect(encrypt(keyRing, 'asdf', { frameLength })).to.rejectedWith(

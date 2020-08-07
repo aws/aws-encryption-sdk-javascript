@@ -26,6 +26,7 @@ import {
   FRAME_LENGTH,
   MESSAGE_ID_LENGTH,
   Maximum,
+  RESERVED_ENCRYPTION_CONTEXT_PREFIX,
 } from '@aws-crypto/serialize'
 
 // @ts-ignore
@@ -59,6 +60,14 @@ export function encryptStream(
     frameLength = FRAME_LENGTH,
     plaintextLength,
   } = op
+
+  /* Precondition: The ESDK reserves an encryption context namespace for node.js CMMs. */
+  needs(
+    Object.keys(encryptionContext).every((key) =>
+      key.startsWith(RESERVED_ENCRYPTION_CONTEXT_PREFIX)
+    ),
+    `Encryption context keys that start with ${RESERVED_ENCRYPTION_CONTEXT_PREFIX} are reserved for CMMs`
+  )
 
   /* Precondition: The frameLength must be less than the maximum frame size Node.js stream. */
   needs(

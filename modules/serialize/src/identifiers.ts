@@ -102,3 +102,5 @@ Object.freeze(Maximum)
 export const FRAME_LENGTH = 4096
 // Message ID length as defined in specification
 export const MESSAGE_ID_LENGTH = 16
+
+export const RESERVED_ENCRYPTION_CONTEXT_PREFIX = 'aws-crypto-'

@@ -26,6 +26,7 @@ import {
   MESSAGE_ID_LENGTH,
   raw2der,
   Maximum,
+  RESERVED_ENCRYPTION_CONTEXT_PREFIX,
 } from '@aws-crypto/serialize'
 import { fromUtf8 } from '@aws-sdk/util-utf8-browser'
 import { getWebCryptoBackend } from '@aws-crypto/web-crypto-backend'
@@ -54,6 +55,14 @@ export async function encrypt(
     frameLength = FRAME_LENGTH,
   }: EncryptInput = {}
 ): Promise<EncryptResult> {
+  /* Precondition: The ESDK reserves an encryption context namespace for browser CMMs. */
+  needs(
+    Object.keys(encryptionContext).every((key) =>
+      key.startsWith(RESERVED_ENCRYPTION_CONTEXT_PREFIX)
+    ),
+    `Encryption context keys that start with ${RESERVED_ENCRYPTION_CONTEXT_PREFIX} are reserved for CMMs`
+  )
+
   /* Precondition: The frameLength must be less than the maximum frame size for browser encryption. */
   needs(
     frameLength > 0 && Maximum.FRAME_SIZE >= frameLength,

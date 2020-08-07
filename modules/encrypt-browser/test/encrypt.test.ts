@@ -85,6 +85,15 @@ describe('encrypt structural testing', () => {
     expect(messageHeader).to.deep.equal(messageInfo.messageHeader)
   })
 
+  it('Precondition: The ESDK reserves an encryption context namespace for browser CMMs.', () => {
+    const encryptionContext = {
+      'aws-crypto-is-a': 'reserved namespace',
+    }
+    expect(() =>
+      encrypt(keyRing, fromUtf8('asdf'), { encryptionContext })
+    ).to.throw('Encryption context keys that start with')
+  })
+
   it('Precondition: The frameLength must be less than the maximum frame size for browser encryption.', async () => {
     const frameLength = 0
     await expect(
