@@ -24,7 +24,10 @@ const { expect } = chai
 
 const toUtf8 = (input: Uint8Array) =>
   Buffer.from(input.buffer, input.byteOffset, input.byteLength).toString('utf8')
-const { deserializeMessageHeader } = deserializeFactory(toUtf8, NodeAlgorithmSuite)  
+const { deserializeMessageHeader } = deserializeFactory(
+  toUtf8,
+  NodeAlgorithmSuite
+)
 
 describe.only('ParseHeaderStream', () => {
   it('Postcondition: A completed header MUST have been processed.', async () => {
@@ -35,8 +38,11 @@ describe.only('ParseHeaderStream', () => {
 
     const headerInfo = deserializeMessageHeader(data)
     needs(headerInfo, 'No header, test impossible')
-    const completeHeaderLength = headerInfo.rawHeader.byteLength + headerInfo.algorithmSuite.ivLength + headerInfo.algorithmSuite.tagLength/8
-    
+    const completeHeaderLength =
+      headerInfo.rawHeader.byteLength +
+      headerInfo.algorithmSuite.ivLength +
+      headerInfo.algorithmSuite.tagLength / 8
+
     const cmm = new NodeDefaultCryptographicMaterialsManager(
       fixtures.decryptKeyring()
     )
