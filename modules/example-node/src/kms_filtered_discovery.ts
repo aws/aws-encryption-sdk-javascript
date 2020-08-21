@@ -7,7 +7,19 @@ import {
   buildClient,
   CommitmentPolicy,
 } from '@aws-crypto/client-node'
-const { decrypt } = buildClient(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
+
+/* This builds the client with the REQUIRE_ENCRYPT_REQUIRE_DECRYPT commitment policy,
+ * which enforces that this client only encrypts using committing algorithm suites
+ * and enforces that this client
+ * will only decrypt encrypted messages
+ * that were created with a committing algorithm suite.
+ * This is the default commitment policy
+ * if you build the client with `buildClient()`.
+ */
+const { decrypt } = buildClient(
+  CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
+)
+
 export async function kmsFilteredDiscoveryTest(
   ciphertext: string | Buffer,
   accountID: string,

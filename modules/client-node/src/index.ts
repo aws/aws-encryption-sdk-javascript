@@ -15,7 +15,7 @@ import { buildEncrypt } from '@aws-crypto/encrypt-node'
 import { buildDecrypt } from '@aws-crypto/decrypt-node'
 
 export function buildClient(
-  commitmentPolicy: CommitmentPolicy
+  commitmentPolicy: CommitmentPolicy = CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
 ): ReturnType<typeof buildEncrypt> & ReturnType<typeof buildDecrypt> {
   return {
     ...buildEncrypt(commitmentPolicy),

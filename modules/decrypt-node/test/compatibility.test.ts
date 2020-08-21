@@ -11,13 +11,19 @@ import {
   NodeDecryptionMaterial,
   NodeEncryptionMaterial,
 } from '@aws-crypto/material-management-node'
-import { decrypt } from '../src/index'
+import { buildDecrypt } from '../src/index'
 import * as fixtures from './fixtures'
 chai.use(chaiAsPromised)
 const { expect } = chai
-import { MessageFormat, needs } from '@aws-crypto/material-management'
+import {
+  CommitmentPolicy,
+  MessageFormat,
+  needs,
+} from '@aws-crypto/material-management'
 
 import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
+
+const { decrypt } = buildDecrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
 
 describe('committing algorithm test', () => {
   fixtures.compatibilityVectors().tests.forEach((test) => {

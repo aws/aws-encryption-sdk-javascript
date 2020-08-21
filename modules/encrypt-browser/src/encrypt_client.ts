@@ -15,7 +15,7 @@ type CurryFirst<fn extends (...a: any[]) => any> = fn extends (
   : []
 
 export function buildEncrypt(
-  commitmentPolicy: CommitmentPolicy
+  commitmentPolicy: CommitmentPolicy = CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
 ): {
   encrypt: (...args: CurryFirst<typeof _encrypt>) => ReturnType<typeof _encrypt>
 } {

@@ -10,6 +10,7 @@ import { kmsStreamTest } from '../src/kms_stream'
 import { aesTest } from '../src/aes_simple'
 import { multiKeyringTest } from '../src/multi_keyring'
 import { cachingCMMNodeSimpleTest } from '../src/caching_cmm'
+import { disableCommitmentTest } from '../src/disable_commitment'
 import { readFileSync } from 'fs'
 
 describe('test', () => {
@@ -46,6 +47,12 @@ describe('test', () => {
 
   it('caching CMM node', async () => {
     const { cleartext, plaintext } = await cachingCMMNodeSimpleTest()
+
+    expect(plaintext.toString()).to.equal(cleartext)
+  })
+
+  it('disableCommitmentTest', async () => {
+    const { cleartext, plaintext } = await disableCommitmentTest()
 
     expect(plaintext.toString()).to.equal(cleartext)
   })

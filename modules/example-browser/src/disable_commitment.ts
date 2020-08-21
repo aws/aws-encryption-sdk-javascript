@@ -1,8 +1,7 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-/* This is a simple example of using a multi-keyring KMS keyring
- * to combine a KMS keyring and a raw AES keyring
+/* This is a simple example of using a KMS Keyring
  * to encrypt and decrypt using the AWS Encryption SDK for Javascript in a browser.
  */
 
@@ -10,26 +9,11 @@ import {
   KmsKeyringBrowser,
   KMS,
   getClient,
-  RawAesKeyringWebCrypto,
-  RawAesWrappingSuiteIdentifier,
-  MultiKeyringWebCrypto,
   buildClient,
   CommitmentPolicy,
-  synchronousRandomValues,
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
-/* This builds the client with the REQUIRE_ENCRYPT_REQUIRE_DECRYPT commitment policy,
- * which enforces that this client only encrypts using committing algorithm suites
- * and enforces that this client
- * will only decrypt encrypted messages
- * that were created with a committing algorithm suite.
- * This is the default commitment policy
- * if you build the client with `buildClient()`.
- */
-const { encrypt, decrypt } = buildClient(
-  CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
-)
 /* This is injected by webpack.
  * The webpack.DefinePlugin will replace the values when bundling.
  * The credential values are pulled from @aws-sdk/credential-provider-node
@@ -43,7 +27,20 @@ declare const credentials: {
 }
 
 /* This is done to facilitate testing. */
-export async function testMultiKeyringExample() {
+export async function testDisableCommitmentTestExample() {
+  /* This builds the client with the FORBID_ENCRYPT_ALLOW_DECRYPT commitment policy.
+   * This configuration should only be used
+   * as part of a migration
+   * from version 1.x to 2.x,
+   * or for advanced users
+   * with specialized requirements.
+   * We recommend that AWS Encryption SDK users
+   * enable commitment whenever possible.
+   */
+  const { encrypt, decrypt } = buildClient(
+    CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
+  )
+
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
@@ -62,11 +59,10 @@ export async function testMultiKeyringExample() {
   ]
 
   /* Need a client provider that will inject correct credentials.
-   * The credentials here are injected by webpack
-   * from your environment when the bundle is created.
+   * The credentials here are injected by webpack from your environment bundle is created
    * The credential values are pulled using @aws-sdk/credential-provider-node.
    * See kms.webpack.config
-   * You should inject your credentials into the browser in a secure manner
+   * You should inject your credential into the browser in a secure manner,
    * that works with your application.
    */
   const { accessKeyId, secretAccessKey, sessionToken } = credentials
@@ -74,8 +70,7 @@ export async function testMultiKeyringExample() {
   /* getClient takes a KMS client constructor
    * and optional configuration values.
    * The credentials can be injected here,
-   * because browser does not have a standard credential discover process
-   * the way Node.js does.
+   * because browser do not have a standard credential discover process the way Node.js does.
    */
   const clientProvider = getClient(KMS, {
     credentials: {
@@ -86,45 +81,10 @@ export async function testMultiKeyringExample() {
   })
 
   /* The KMS keyring must be configured with the desired CMKs */
-  const kmsKeyring = new KmsKeyringBrowser({
+  const keyring = new KmsKeyringBrowser({
     clientProvider,
     generatorKeyId,
     keyIds,
-  })
-
-  /* You need to specify a name
-   * and a namespace for raw encryption key providers.
-   * The name and namespace that you use in the decryption keyring *must* be an exact,
-   * *case-sensitive* match for the name and namespace in the encryption keyring.
-   */
-  const keyName = 'aes-name'
-  const keyNamespace = 'aes-namespace'
-
-  /* The wrapping suite defines the AES-GCM algorithm suite to use. */
-  const wrappingSuite =
-    RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
-
-  // Get your plaintext master key from its storage location.
-  const unencryptedMasterKey = synchronousRandomValues(32)
-
-  /* The plaintext master key must be imported into a WebCrypto CryptoKey. */
-  const masterKey = await RawAesKeyringWebCrypto.importCryptoKey(
-    unencryptedMasterKey,
-    wrappingSuite
-  )
-
-  /* Configure the Raw AES keyring. */
-  const aesKeyring = new RawAesKeyringWebCrypto({
-    keyName,
-    keyNamespace,
-    wrappingSuite,
-    masterKey,
-  })
-
-  /* Combine the two keyrings into a multi-keyring. */
-  const keyring = new MultiKeyringWebCrypto({
-    generator: kmsKeyring,
-    children: [aesKeyring],
   })
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
@@ -163,13 +123,6 @@ export async function testMultiKeyringExample() {
   console.log(resultBase64)
   document.write(resultBase64)
 
-  /* Decrypt the data.
-   * This decrypt call could be done with **any** of the 3 keyrings.
-   * Here we use the multi-keyring, but
-   * decrypt(kmsKeyring, result)
-   * decrypt(aesKeyring, result)
-   * would both work as well.
-   */
   const { plaintext, messageHeader } = await decrypt(keyring, result)
 
   /* Grab the encryption context so you can verify it. */

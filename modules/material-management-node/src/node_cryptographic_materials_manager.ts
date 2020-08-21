@@ -18,7 +18,6 @@ import {
   GetEncryptionMaterials,
   GetDecryptMaterials,
   CommitmentPolicySuites,
-  AlgorithmSuiteIdentifier,
 } from '@aws-crypto/material-management'
 
 import { ENCODED_SIGNER_KEY } from '@aws-crypto/serialize'
@@ -54,10 +53,7 @@ export class NodeDefaultCryptographicMaterialsManager
     suite =
       suite ||
       new NodeAlgorithmSuite(
-        commitmentPolicy
-          ? CommitmentPolicySuites[commitmentPolicy].defaultAlgorithmSuite
-          : /** @deprecate remove fallback default. */
-            AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+        CommitmentPolicySuites[commitmentPolicy].defaultAlgorithmSuite
       )
 
     /* Precondition: NodeDefaultCryptographicMaterialsManager must reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.

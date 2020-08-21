@@ -5,7 +5,7 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { decrypt } from '../src/index'
+import { buildDecrypt } from '../src/index'
 import { _decrypt } from '../src/decrypt'
 import {
   AlgorithmSuiteIdentifier,
@@ -16,9 +16,15 @@ import {
   WebCryptoEncryptionMaterial,
 } from '@aws-crypto/material-management-browser'
 import * as fixtures from './fixtures'
-import { MessageFormat } from '@aws-crypto/material-management'
+import {
+  CommitmentPolicy,
+  MessageFormat,
+  WebCryptoAlgorithmSuite,
+} from '@aws-crypto/material-management'
+import { fromBase64 } from '@aws-sdk/util-base64-browser'
 chai.use(chaiAsPromised)
 const { expect } = chai
+const { decrypt } = buildDecrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
 
 describe('decrypt', () => {
   it('buffer', async () => {
@@ -42,41 +48,41 @@ describe('decrypt', () => {
     ).to.rejectedWith(Error, 'Invalid commitment policy.')
   })
 
-  // it('The parsed header algorithmSuite in _decrypt must be supported by the commitmentPolicy.', async () => {
-  //   await expect(
-  //     _decrypt(
-  //       CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
-  //       fixtures.decryptKeyring(),
-  //       fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384With4Frames()
-  //     )
-  //   ).to.rejectedWith(
-  //     Error,
-  //     'Configuration conflict. Cannot process message with ID'
-  //   )
-  // })
+  it('Precondition: The parsed header algorithmSuite in _decrypt must be supported by the commitmentPolicy.', async () => {
+    await expect(
+      _decrypt(
+        CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
+        fixtures.decryptKeyring(),
+        fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384With4Frames()
+      )
+    ).to.rejectedWith(
+      Error,
+      'Configuration conflict. Cannot process message with ID'
+    )
+  })
 
-  // it('The material algorithmSuite returned to _decrypt must be supported by the commitmentPolicy.', async () => {
-  //   const cmm = {
-  //     async decryptMaterials() {
-  //       return new WebCryptoDecryptionMaterial(
-  //         new WebCryptoAlgorithmSuite(
-  //           AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
-  //         ),
-  //         {}
-  //       )
-  //     },
-  //   } as any
-  //   await expect(
-  //     _decrypt(
-  //       CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
-  //       cmm,
-  //       fromBase64(fixtures.compatibilityVectors().tests[0].ciphertext)
-  //     )
-  //   ).to.rejectedWith(
-  //     Error,
-  //     'Configuration conflict. Cannot process message with ID'
-  //   )
-  // })
+  it('Precondition: The material algorithmSuite returned to _decrypt must be supported by the commitmentPolicy.', async () => {
+    const cmm = {
+      async decryptMaterials() {
+        return new WebCryptoDecryptionMaterial(
+          new WebCryptoAlgorithmSuite(
+            AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+          ),
+          {}
+        )
+      },
+    } as any
+    await expect(
+      _decrypt(
+        CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
+        cmm,
+        fromBase64(fixtures.compatibilityVectors().tests[0].ciphertext)
+      )
+    ).to.rejectedWith(
+      Error,
+      'Configuration conflict. Cannot process message with ID'
+    )
+  })
 
   it('Precondition: The sequenceNumber is required to monotonically increase, starting from 1.', async () => {
     return decrypt(

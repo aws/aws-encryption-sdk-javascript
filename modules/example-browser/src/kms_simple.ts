@@ -13,9 +13,19 @@ import {
   CommitmentPolicy,
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
+
+/* This builds the client with the REQUIRE_ENCRYPT_REQUIRE_DECRYPT commitment policy,
+ * which enforces that this client only encrypts using committing algorithm suites
+ * and enforces that this client
+ * will only decrypt encrypted messages
+ * that were created with a committing algorithm suite.
+ * This is the default commitment policy
+ * if you build the client with `buildClient()`.
+ */
 const { encrypt, decrypt } = buildClient(
-  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+  CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
 )
+
 /* This is injected by webpack.
  * The webpack.DefinePlugin will replace the values when bundling.
  * The credential values are pulled from @aws-sdk/credential-provider-node

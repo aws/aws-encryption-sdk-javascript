@@ -16,7 +16,7 @@ import { buildEncrypt } from '@aws-crypto/encrypt-browser'
 import { buildDecrypt } from '@aws-crypto/decrypt-browser'
 
 export function buildClient(
-  commitmentPolicy: CommitmentPolicy
+  commitmentPolicy: CommitmentPolicy = CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
 ): ReturnType<typeof buildEncrypt> & ReturnType<typeof buildDecrypt> {
   return {
     ...buildEncrypt(commitmentPolicy),

@@ -17,6 +17,12 @@ import {
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
+/* This builds the client with the FORBID_ENCRYPT_ALLOW_DECRYPT commitment policy.
+ * This is because the current version of `msrcrypto`
+ * does not support `HKDF`.
+ * The default commitment policy is `REQUIRE_ENCRYPT_REQUIRE_DECRYPT`
+ * if you build the client with `buildClient()`.
+ */
 const { encrypt, decrypt } = buildClient(
   CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
 )

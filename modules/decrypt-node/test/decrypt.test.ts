@@ -5,12 +5,16 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { AlgorithmSuiteIdentifier } from '@aws-crypto/material-management-node'
-import { decrypt } from '../src/index'
+import {
+  AlgorithmSuiteIdentifier,
+  CommitmentPolicy,
+} from '@aws-crypto/material-management-node'
+import { buildDecrypt } from '../src/index'
 import * as fixtures from './fixtures'
 chai.use(chaiAsPromised)
 const { expect } = chai
 import from from 'from2'
+const { decrypt } = buildDecrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
 
 describe('decrypt', () => {
   it('string with encoding', async () => {

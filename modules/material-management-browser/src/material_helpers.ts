@@ -8,7 +8,6 @@ import {
   isCryptoKey,
   isValidCryptoKey,
   keyUsageForMaterial,
-  subtleFunctionForMaterial,
   unwrapDataKey,
   AwsEsdkJsCryptoKey,
   WebCryptoMaterial,
@@ -36,11 +35,6 @@ export interface GetSubtleEncrypt {
   ) => Promise<ArrayBuffer>
 }
 
-/** @deprecated */
-export interface KdfGetSubtleEncrypt {
-  (messageId: Uint8Array): GetSubtleEncrypt
-}
-
 interface EncryptInfo {
   getSubtleEncrypt: GetSubtleEncrypt
   keyCommitment?: Uint8Array
@@ -55,8 +49,6 @@ export interface SubtleSign {
 }
 
 export interface WebCryptoEncryptionMaterialHelper {
-  /** @deprecated */
-  kdfGetSubtleEncrypt: KdfGetSubtleEncrypt
   getEncryptInfo: GetEncryptInfo
   subtleSign?: SubtleSign
   dispose: () => void
@@ -77,16 +69,8 @@ export const getEncryptHelper: GetEncryptHelper = async (
   needs(material.hasValidKey(), 'Material has no CryptoKey.')
 
   const { signatureHash } = material.suite
-  const kdfGetSubtleEncrypt = getSubtleFunction(
-    material,
-    backend,
-    'encrypt'
-  ) as KdfGetSubtleEncrypt
-
   const getEncryptInfo = currySubtleFunction(material, backend, 'encrypt')
   return Object.freeze({
-    /** @deprecated */
-    kdfGetSubtleEncrypt,
     getEncryptInfo,
     subtleSign: signatureHash ? getSubtleSign : undefined,
     dispose,
@@ -110,11 +94,6 @@ export const getEncryptHelper: GetEncryptHelper = async (
 
 export interface GetSubtleDecrypt extends GetSubtleEncrypt {}
 
-/** @deprecated */
-export interface KdfGetSubtleDecrypt {
-  (info: Uint8Array): GetSubtleDecrypt
-}
-
 export interface GetDecryptInfo {
   (messageId: Uint8Array, commitKey?: Uint8Array): Promise<GetSubtleDecrypt>
 }
@@ -124,8 +103,6 @@ interface SubtleVerify {
 }
 
 export interface WebCryptoDecryptionMaterialHelper {
-  /** @deprecated */
-  kdfGetSubtleDecrypt: KdfGetSubtleDecrypt
   getDecryptInfo: GetDecryptInfo
   subtleVerify?: SubtleVerify
   dispose: () => void
@@ -146,17 +123,9 @@ export const getDecryptionHelper: GetDecryptionHelper = async (
   needs(material.hasValidKey(), 'Material has no valid data key.')
 
   const { signatureHash } = material.suite
-
-  const kdfGetSubtleDecrypt = getSubtleFunction(
-    material,
-    backend,
-    'decrypt'
-  ) as KdfGetSubtleDecrypt
   const getDecryptInfo = currySubtleFunction(material, backend, 'decrypt')
 
   return Object.freeze({
-    /** @deprecated */
-    kdfGetSubtleDecrypt,
     getDecryptInfo,
     subtleVerify: signatureHash ? subtleVerify : undefined,
     dispose,
@@ -567,117 +536,4 @@ function portableTimingSafeEqual(a: Uint8Array, b: Uint8Array) {
     diff |= a[i] ^ b[i]
   }
   return diff === 0
-}
-
-/** @deprecated */
-export function getSubtleFunction<T extends WebCryptoMaterial<T>>(
-  material: T,
-  backend: WebCryptoBackend,
-  subtleFunction: SubtleFunctionName = subtleFunctionForMaterial(material)
-): KdfGetSubtleEncrypt | KdfGetSubtleDecrypt {
-  /* : The material must have a CryptoKey. */
-  needs(material.hasCryptoKey, 'Material must have a CryptoKey.')
-
-  const cryptoKey = material.getCryptoKey()
-
-  /* : The cryptoKey and backend must match in terms of Mixed vs Full support. */
-  needs(
-    isCryptoKey(cryptoKey) === isFullSupportWebCryptoBackend(backend),
-    'CryptoKey vs WebCrypto backend mismatch.'
-  )
-  const { suite } = material
-  const { encryption: cipherName, ivLength, tagLength } = suite
-
-  return (info: Uint8Array) => {
-    const derivedKeyPromise = isCryptoKey(cryptoKey)
-      ? WebCryptoKdf(
-          getNonZeroByteBackend(backend),
-          material,
-          cryptoKey,
-          [subtleFunction],
-          /* This function expected to always be passed the info,
-           * not the messageId.
-           * I'm going to deprecate this function soon,
-           * and no one should be using it.
-           */
-          info.slice(2)
-        )
-      : Promise.all([
-          WebCryptoKdf(
-            getNonZeroByteBackend(backend),
-            material,
-            cryptoKey.nonZeroByteCryptoKey,
-            [subtleFunction],
-            /* This function expected to always be passed the info,
-             * not the messageId.
-             * I'm going to deprecate this function soon,
-             * and no one should be using it.
-             */
-            info.slice(2)
-          ),
-          WebCryptoKdf(
-            getZeroByteSubtle(backend),
-            material,
-            cryptoKey.zeroByteCryptoKey,
-            [subtleFunction],
-            /* This function expected to always be passed the info,
-             * not the messageId.
-             * I'm going to deprecate this function soon,
-             * and no one should be using it.
-             */
-            info.slice(2)
-          ),
-        ]).then(([nonZeroByteCryptoKey, zeroByteCryptoKey]) => ({
-          deriveKey: {
-            nonZeroByteCryptoKey: nonZeroByteCryptoKey.deriveKey,
-            zeroByteCryptoKey: zeroByteCryptoKey.deriveKey,
-          },
-        }))
-    return (iv: Uint8Array, additionalData: Uint8Array) => {
-      /* : The length of the IV must match the WebCryptoAlgorithmSuite specification. */
-      needs(
-        iv.byteLength === ivLength,
-        'Iv length does not match algorithm suite specification'
-      )
-      return async (data: Uint8Array) => {
-        const { deriveKey } = await derivedKeyPromise
-        if (isCryptoKey(deriveKey) && isFullSupportWebCryptoBackend(backend)) {
-          const { subtle } = backend
-          const algorithm = { name: cipherName, iv, additionalData, tagLength }
-          return subtle[subtleFunction](algorithm, deriveKey, data)
-        } else if (
-          !isCryptoKey(deriveKey) &&
-          !isFullSupportWebCryptoBackend(backend)
-        ) {
-          const { nonZeroByteSubtle, zeroByteSubtle } = backend
-          const { nonZeroByteCryptoKey, zeroByteCryptoKey } = deriveKey
-          const algorithm = { name: cipherName, iv, additionalData, tagLength }
-          /* : The WebCrypto AES-GCM decrypt API expects the data *and* tag together.
-           * This means that on decrypt any amount of data less than tagLength is invalid.
-           * This also means that zero encrypted data will be equal to tagLength.
-           */
-          const dataByteLength =
-            subtleFunction === 'decrypt'
-              ? data.byteLength - tagLength / 8
-              : data.byteLength
-          needs(dataByteLength >= 0, 'Invalid data length.')
-          if (dataByteLength === 0) {
-            return zeroByteSubtle[subtleFunction](
-              algorithm,
-              zeroByteCryptoKey,
-              data
-            )
-          } else {
-            return nonZeroByteSubtle[subtleFunction](
-              algorithm,
-              nonZeroByteCryptoKey,
-              data
-            )
-          }
-        }
-        // This should be impossible
-        throw new Error('Unknown Error')
-      }
-    }
-  }
 }

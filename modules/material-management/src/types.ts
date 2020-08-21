@@ -51,7 +51,7 @@ export interface EncryptionRequest<
 > {
   readonly suite?: S
   readonly encryptionContext: EncryptionContext
-  readonly commitmentPolicy?: CommitmentPolicy
+  readonly commitmentPolicy: CommitmentPolicy
   readonly plaintextLength?: number
 }
 

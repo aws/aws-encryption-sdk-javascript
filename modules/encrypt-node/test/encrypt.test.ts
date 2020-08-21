@@ -21,12 +21,15 @@ import {
   deserializeSignature,
   MessageHeader,
 } from '@aws-crypto/serialize'
-import { encrypt, encryptStream } from '../src/index'
+import { buildEncrypt } from '../src/index'
 import { _encrypt } from '../src/encrypt'
 import from from 'from2'
 // @ts-ignore
 import { finished } from 'readable-stream'
 import { randomBytes } from 'crypto'
+const { encrypt, encryptStream } = buildEncrypt(
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+)
 
 chai.use(chaiAsPromised)
 const { expect } = chai

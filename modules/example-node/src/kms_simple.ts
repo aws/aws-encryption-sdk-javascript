@@ -6,9 +6,18 @@ import {
   buildClient,
   CommitmentPolicy,
 } from '@aws-crypto/client-node'
+/* This builds the client with the REQUIRE_ENCRYPT_REQUIRE_DECRYPT commitment policy,
+ * which enforces that this client only encrypts using committing algorithm suites
+ * and enforces that this client
+ * will only decrypt encrypted messages
+ * that were created with a committing algorithm suite.
+ * This is the default commitment policy
+ * if you build the client with `buildClient()`.
+ */
 const { encrypt, decrypt } = buildClient(
-  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+  CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
 )
+
 export async function kmsSimpleTest() {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.

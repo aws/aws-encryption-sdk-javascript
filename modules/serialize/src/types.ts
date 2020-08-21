@@ -89,10 +89,6 @@ export type HeaderInfo = {
   headerLength: number
   rawHeader: Uint8Array
   algorithmSuite: AlgorithmSuite
-  /** @deprecated use headerAuth */
-  headerIv: Uint8Array
-  /** @deprecated use headerAuth */
-  headerAuthTag: Uint8Array
   headerAuth: HeaderAuth
 }
 

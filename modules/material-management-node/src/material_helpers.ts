@@ -47,11 +47,6 @@ export interface GetCipher {
   (iv: Uint8Array): AwsEsdkJsCipherGCM
 }
 
-/** @deprecated use GetCipherInfo */
-export interface CurryGetCipher {
-  (info?: Uint8Array): GetCipher
-}
-
 export interface GetCipherInfo {
   (messageId: Uint8Array): {
     getCipher: GetCipher
@@ -64,8 +59,6 @@ export interface GetSigner {
 }
 
 export interface NodeEncryptionMaterialHelper {
-  /** @deprecated use getCipherInfo */
-  kdfGetCipher: CurryGetCipher
   getCipherInfo: GetCipherInfo
   getSigner?: GetSigner
   dispose: () => void
@@ -86,11 +79,8 @@ export const getEncryptHelper: GetEncryptHelper = (
    * Function overloads "works" but then I can not export
    * the function and have eslint be happy (Multiple exports of name)
    */
-  /** @deprecated use getCipherInfo */
-  const kdfGetCipher = getCryptoStream(material) as CurryGetCipher
   const getCipherInfo = curryCryptoStream(material, createCipheriv)
   return Object.freeze({
-    kdfGetCipher,
     getCipherInfo,
     getSigner: signatureHash ? getSigner : undefined,
     dispose,
@@ -133,10 +123,6 @@ export const getEncryptHelper: GetEncryptHelper = (
 export interface GetDecipher {
   (iv: Uint8Array): AwsEsdkJsDecipherGCM
 }
-/** @deprecated use GetDecipherInfo */
-export interface CurryGetDecipher {
-  (info?: Uint8Array): GetDecipher
-}
 export interface GetDecipherInfo {
   (messageId: Uint8Array, commitKey?: Uint8Array): GetDecipher
 }
@@ -146,8 +132,6 @@ export interface GetVerify {
 }
 
 export interface NodeDecryptionMaterialHelper {
-  /** @deprecated use getDecipherInfo */
-  kdfGetDecipher: CurryGetDecipher
   getDecipherInfo: GetDecipherInfo
   getVerify?: GetVerify
   dispose: () => void
@@ -169,11 +153,8 @@ export const getDecryptionHelper: GetDecryptionHelper = (
    * Function overloads "works" but then I can not export
    * the function and have eslint be happy (Multiple exports of name)
    */
-  /** @deprecated use getDecipherInfo */
-  const kdfGetDecipher = getCryptoStream(material) as CurryGetDecipher
   const getDecipherInfo = curryCryptoStream(material, createDecipheriv)
   return Object.freeze({
-    kdfGetDecipher,
     getDecipherInfo,
     getVerify: signatureHash ? getVerify : undefined,
     dispose,
@@ -389,52 +370,4 @@ export function nodeKdf(
   const derivedBytes = expand(keyLengthBytes, keyLabel)
   const derivedKey = wrapWithKeyObjectIfSupported(derivedBytes)
   return { derivedKey, keyCommitment }
-}
-
-/** @deprecated use curryCryptoStream */
-export function getCryptoStream(
-  material: NodeEncryptionMaterial | NodeDecryptionMaterial
-) {
-  const { encryption: cipherName, ivLength } = material.suite
-
-  const createCryptoStream =
-    material instanceof NodeEncryptionMaterial
-      ? createCipheriv
-      : material instanceof NodeDecryptionMaterial
-      ? createDecipheriv
-      : false
-
-  /* : material must be either NodeEncryptionMaterial or NodeDecryptionMaterial. */
-  if (!createCryptoStream)
-    throw new Error('Unsupported cryptographic material.')
-
-  return (info: Uint8Array) => {
-    /* This function expected to always be passed the info,
-     * not the messageId.
-     * I'm going to deprecate this function soon,
-     * and no one should be using it.
-     */
-    const derivedKey = nodeKdf(material, info.slice(2)).derivedKey
-    return (iv: Uint8Array): AwsEsdkJsCipherGCM | AwsEsdkJsDecipherGCM => {
-      /* : The length of the IV must match the NodeAlgorithmSuite specification. */
-      needs(
-        iv.byteLength === ivLength,
-        'Iv length does not match algorithm suite specification'
-      )
-      /* : The material must have not been zeroed.
-       * hasUnencryptedDataKey will check that the unencrypted data key has been set
-       * *and* that it has not been zeroed.  At this point it must have been set
-       * because the KDF function operated on it.  So at this point
-       * we are protecting that someone has zeroed out the material
-       * because the Encrypt process has been complete.
-       */
-      needs(
-        material.hasUnencryptedDataKey,
-        'Unencrypted data key has been zeroed.'
-      )
-
-      // createDecipheriv is incorrectly typed in @types/node. It should take key: CipherKey, not key: BinaryLike
-      return createCryptoStream(cipherName, derivedKey as any, iv)
-    }
-  }
 }

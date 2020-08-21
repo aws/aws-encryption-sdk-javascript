@@ -10,6 +10,9 @@ import * as stream from 'stream'
 const pipeline = util.promisify(stream.pipeline)
 import { ParseHeaderStream } from '../src/parse_header_stream'
 import {
+  NodeAlgorithmSuite,
+  NodeDecryptionMaterial,
+  AlgorithmSuiteIdentifier,
   NodeDefaultCryptographicMaterialsManager,
   needs,
 } from '@aws-crypto/material-management-node'
@@ -37,40 +40,48 @@ describe('ParseHeaderStream', () => {
     )
   })
 
-  // it('The parsed header algorithmSuite from ParseHeaderStream must be supported by the commitmentPolicy.', async () => {
-  //   const cmm = new NodeDefaultCryptographicMaterialsManager(
-  //     fixtures.decryptKeyring()
-  //   )
-  //   const data = Buffer.from(
-  //     fixtures.base64Ciphertext4BytesWith4KFrameLength(),
-  //     'base64'
-  //   )
+  it('Precondition: The parsed header algorithmSuite from ParseHeaderStream must be supported by the commitmentPolicy.', async () => {
+    const cmm = new NodeDefaultCryptographicMaterialsManager(
+      fixtures.decryptKeyring()
+    )
+    const data = Buffer.from(
+      fixtures.base64Ciphertext4BytesWith4KFrameLength(),
+      'base64'
+    )
 
-  //   await expect(
-  //     testStream(CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT, cmm, data)
-  //   ).to.rejectedWith(Error, 'Configuration conflict. Cannot process message with ID')
-  // })
+    await expect(
+      testStream(CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT, cmm, data)
+    ).to.rejectedWith(
+      Error,
+      'Configuration conflict. Cannot process message with ID'
+    )
+  })
 
-  // it('The material algorithmSuite returned to ParseHeaderStream must be supported by the commitmentPolicy.', async () => {
-  //   let called_decryptMaterials = false
-  //   const cmm = {
-  //     async decryptMaterials() {
-  //       called_decryptMaterials = true
-  //       const suite = new NodeAlgorithmSuite(AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384)
-  //       return new NodeDecryptionMaterial(suite, {})
-  //     }
-  //   } as any
-  //   const data = Buffer.from(
-  //     fixtures.compatibilityVectors().tests[0].ciphertext,
-  //     'base64'
-  //   )
+  it('Precondition: The material algorithmSuite returned to ParseHeaderStream must be supported by the commitmentPolicy.', async () => {
+    let called_decryptMaterials = false
+    const cmm = {
+      async decryptMaterials() {
+        called_decryptMaterials = true
+        const suite = new NodeAlgorithmSuite(
+          AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+        )
+        return new NodeDecryptionMaterial(suite, {})
+      },
+    } as any
+    const data = Buffer.from(
+      fixtures.compatibilityVectors().tests[0].ciphertext,
+      'base64'
+    )
 
-  //   await expect(
-  //     testStream(CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT, cmm, data)
-  //   ).to.rejectedWith(Error, 'Configuration conflict. Cannot process message with ID')
+    await expect(
+      testStream(CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT, cmm, data)
+    ).to.rejectedWith(
+      Error,
+      'Configuration conflict. Cannot process message with ID'
+    )
 
-  //   expect(called_decryptMaterials).to.equal(true)
-  // })
+    expect(called_decryptMaterials).to.equal(true)
+  })
 
   it('Postcondition: A completed header MUST have been processed.', async () => {
     const completeHeaderLength = 73

@@ -195,10 +195,6 @@ export function deserializeHeaderV2Factory<Suite extends AlgorithmSuite>({
       headerLength,
       rawHeader,
       algorithmSuite,
-      /** @deprecated use headerAuth */
-      headerIv,
-      /** @deprecated use headerAuth */
-      headerAuthTag,
       headerAuth: {
         headerIv,
         headerAuthTag,
