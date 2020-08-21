@@ -30,7 +30,7 @@ import { needs } from './needs'
  * *It is not required that the providerInfo string "equal" the binary rawInfo*
  *
  */
-export interface IEncryptedDataKey  // eslint-disable-line @typescript-eslint/interface-name-prefix
+export interface IEncryptedDataKey
   extends Readonly<{
     providerInfo: string
     providerId: string

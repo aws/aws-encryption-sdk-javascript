@@ -37,7 +37,7 @@ const privateRsaJwkKey: RsaImportableKey = {
     'NT5lrYlvkOwXIHl8P9AQm1nNL0RkHSrWahYlagRkyU3ELySlWr2laDxXzPnngpuBvyA98iq6Z2JTn8ArtXXvTqQk6BF6np6qqg1QNQxsQeU4Aj3xOMV9EGh57Zpa8Rs0jVydxBdlRW03Fr0UChHKxmT2kS0622gdlGQAs3YxMck',
   e: 'AQAB',
   ext: true,
-  key_ops: ['unwrapKey'], // eslint-disable-line @typescript-eslint/camelcase
+  key_ops: ['unwrapKey'],
   kty: 'RSA',
   n:
     '6k_jrxg7mpz7CzgAr6eRqJr1VlvjJ9uQY71hadkDZkLLZHiMl7hz73lqq3w2MfHCa3Pf3BVo5TCXGYuxKOlPb7bH0WWpMeAzOKR_X27UqfA8MBVGb4YO5HXqw0jup8-I-Zi3CQAmP87uE6GDuh7xzeAcwpGD5xE0N74-uWq3YS92PFHCavtryx-ad9VGTgfAbkV3k1-RSxIiZjzbAt3exBAn5EjMfF6FMI70_HYqO-5xGv_aAPSa1OMc_buK5QACN7gmFwqHBzw98v93iyGUc4_XJNL-jPzKNP4AT1zMc6p6RxF3SYytNq7iXIjUmm-oY8fvCSmT1F13XKdzv7DLOw',
@@ -52,7 +52,7 @@ const publicRsaJwkKey: RsaImportableKey = {
   alg: 'RSA-OAEP-256',
   e: 'AQAB',
   ext: true,
-  key_ops: ['wrapKey'], // eslint-disable-line @typescript-eslint/camelcase
+  key_ops: ['wrapKey'],
   kty: 'RSA',
   n:
     '6k_jrxg7mpz7CzgAr6eRqJr1VlvjJ9uQY71hadkDZkLLZHiMl7hz73lqq3w2MfHCa3Pf3BVo5TCXGYuxKOlPb7bH0WWpMeAzOKR_X27UqfA8MBVGb4YO5HXqw0jup8-I-Zi3CQAmP87uE6GDuh7xzeAcwpGD5xE0N74-uWq3YS92PFHCavtryx-ad9VGTgfAbkV3k1-RSxIiZjzbAt3exBAn5EjMfF6FMI70_HYqO-5xGv_aAPSa1OMc_buK5QACN7gmFwqHBzw98v93iyGUc4_XJNL-jPzKNP4AT1zMc6p6RxF3SYytNq7iXIjUmm-oY8fvCSmT1F13XKdzv7DLOw',

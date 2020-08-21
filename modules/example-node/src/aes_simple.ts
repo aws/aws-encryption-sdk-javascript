@@ -3,11 +3,14 @@
 
 import {
   RawAesKeyringNode,
-  encrypt,
-  decrypt,
+  buildClient,
+  CommitmentPolicy,
   RawAesWrappingSuiteIdentifier,
 } from '@aws-crypto/client-node'
 import { randomBytes } from 'crypto'
+const { encrypt, decrypt } = buildClient(
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+)
 
 /**
  * This function is an example of using the RawAesKeyringNode

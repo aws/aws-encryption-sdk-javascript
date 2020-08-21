@@ -26,6 +26,12 @@ npm install @aws-crypto/client-browser
 
 ## use
 
+For detailed code examples
+that show you how to these modules
+to create keyrings 
+and encrypt and decrypt data,
+install the [example-browser](https://github.com/aws/aws-encryption-sdk-javascript/tree/master/modules/example-browser) module. 
+
 ```javascript
 
 /* Start by constructing a keyring. We'll create a KMS keyring.

@@ -215,6 +215,7 @@ describe('decrypt', () => {
       expect(region).to.equal('us-east-1')
       return { decrypt }
       function decrypt(input: any) {
+        expect(input.KeyId).to.equal(KeyId)
         expect(input.GrantTokens).to.equal(GrantTokens)
         expect(input.CiphertextBlob).lengthOf(5)
         expect(input.EncryptionContext).to.equal(EncryptionContext)

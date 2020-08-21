@@ -9,3 +9,17 @@ export * from '@aws-crypto/kms-keyring-browser'
 export * from '@aws-crypto/raw-aes-keyring-browser'
 export * from '@aws-crypto/raw-rsa-keyring-browser'
 export * from '@aws-crypto/web-crypto-backend'
+
+import { CommitmentPolicy } from '@aws-crypto/material-management-browser'
+
+import { buildEncrypt } from '@aws-crypto/encrypt-browser'
+import { buildDecrypt } from '@aws-crypto/decrypt-browser'
+
+export function buildClient(
+  commitmentPolicy: CommitmentPolicy
+): ReturnType<typeof buildEncrypt> & ReturnType<typeof buildDecrypt> {
+  return {
+    ...buildEncrypt(commitmentPolicy),
+    ...buildDecrypt(commitmentPolicy),
+  }
+}

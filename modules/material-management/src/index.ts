@@ -5,19 +5,24 @@ export {
   AlgorithmSuiteIdentifier,
   AlgorithmSuiteName,
   AlgorithmSuite,
-} from './algorithm_suites'
-export {
   AlgorithmSuiteTypeNode,
   AlgorithmSuiteTypeWebCrypto,
-} from './algorithm_suites'
-export { NodeEncryption, WebCryptoEncryption } from './algorithm_suites'
-export {
+  NodeEncryption,
+  WebCryptoEncryption,
   NodeHash,
   WebCryptoHash,
   NodeECDHCurve,
   WebCryptoECDHCurve,
+  KDF,
+  KeyLength,
+  IvLength,
+  TagLength,
+  CommitmentPolicy,
+  CommitmentPolicySuites,
+  MessageFormat,
+  NonCommittingAlgorithmSuiteIdentifier,
+  CommittingAlgorithmSuiteIdentifier,
 } from './algorithm_suites'
-export { KDF, KeyLength, IvLength, TagLength } from './algorithm_suites'
 
 export { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 export { NodeAlgorithmSuite } from './node_algorithms'

@@ -84,7 +84,9 @@ export async function decrypt<Client extends AwsEsdkKMSInterface>(
   /* Check for early return (Postcondition): clientProvider did not return a client for decrypt. */
   if (!client) return false
 
+  /* The AWS KMS KeyId *must* be set. */
   const v2vsV3Response = client.decrypt({
+    KeyId: providerInfo,
     CiphertextBlob: encryptedDataKey,
     EncryptionContext,
     GrantTokens,

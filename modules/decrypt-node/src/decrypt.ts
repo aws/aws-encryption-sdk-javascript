@@ -4,8 +4,9 @@
 import {
   NodeMaterialsManager,
   KeyringNode,
+  CommitmentPolicy,
 } from '@aws-crypto/material-management-node'
-import { decryptStream } from './decrypt_stream'
+import { _decryptStream } from './decrypt_stream'
 
 // @ts-ignore
 import { finished } from 'readable-stream'
@@ -22,12 +23,13 @@ export interface DecryptOptions {
   maxBodySize?: number
 }
 
-export async function decrypt(
+export async function _decrypt(
+  commitmentPolicy: CommitmentPolicy,
   cmm: NodeMaterialsManager | KeyringNode,
   ciphertext: Buffer | Uint8Array | Readable | string | NodeJS.ReadableStream,
   { encoding, maxBodySize }: DecryptOptions = {}
 ): Promise<DecryptOutput> {
-  const stream = decryptStream(cmm, { maxBodySize })
+  const stream = _decryptStream(commitmentPolicy, cmm, { maxBodySize })
 
   const plaintext: Buffer[] = []
   let messageHeader: MessageHeader | false = false

@@ -11,21 +11,20 @@ import {
   EncryptionContext,
   NodeMaterialsManager,
   needs,
+  CommitmentPolicy,
+  CommitmentPolicySuites,
+  MessageFormat,
 } from '@aws-crypto/material-management-node'
 import { getFramedEncryptStream } from './framed_encrypt_stream'
 import { SignatureStream } from './signature_stream'
 import Duplexify from 'duplexify'
 import { randomBytes } from 'crypto'
 import {
-  MessageHeader,
   serializeFactory,
-  kdfInfo,
-  ContentType,
-  SerializationVersion,
-  ObjectType,
   FRAME_LENGTH,
-  MESSAGE_ID_LENGTH,
   Maximum,
+  MessageIdLength,
+  serializeMessageHeaderAuth,
 } from '@aws-crypto/serialize'
 
 // @ts-ignore
@@ -33,7 +32,11 @@ import { pipeline } from 'readable-stream'
 import { Duplex } from 'stream'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
-const { serializeMessageHeader, headerAuthIv } = serializeFactory(fromUtf8)
+const {
+  serializeMessageHeader,
+  headerAuthIv,
+  buildMessageHeader,
+} = serializeFactory(fromUtf8)
 
 export interface EncryptStreamInput {
   suiteId?: AlgorithmSuiteIdentifier
@@ -49,10 +52,13 @@ export interface EncryptStreamInput {
  * @param cmm NodeMaterialsManager|KeyringNode
  * @param op EncryptStreamInput
  */
-export function encryptStream(
+export function _encryptStream(
+  commitmentPolicy: CommitmentPolicy,
   cmm: KeyringNode | NodeMaterialsManager,
   op: EncryptStreamInput = {}
 ): Duplex {
+  /* Precondition: encryptStream needs a valid commitmentPolicy. */
+  needs(CommitmentPolicy[commitmentPolicy], 'Invalid commitment policy.')
   const {
     suiteId,
     encryptionContext = {},
@@ -74,17 +80,29 @@ export function encryptStream(
 
   const suite = suiteId && new NodeAlgorithmSuite(suiteId)
 
+  /* Precondition: Only request NodeEncryptionMaterial for algorithm suites supported in commitmentPolicy. */
+  CommitmentPolicySuites.isEncryptEnabled(commitmentPolicy, suite)
+
   const wrappingStream = new Duplexify()
 
   cmm
-    .getEncryptionMaterials({ suite, encryptionContext, plaintextLength })
+    .getEncryptionMaterials({
+      suite,
+      encryptionContext,
+      plaintextLength,
+      commitmentPolicy,
+    })
     .then(async (material) => {
-      const { dispose, getSigner } = getEncryptHelper(material)
+      /* Precondition: Only use NodeEncryptionMaterial for algorithm suites supported in commitmentPolicy. */
+      CommitmentPolicySuites.isEncryptEnabled(commitmentPolicy, material.suite)
 
-      const { getCipher, messageHeader, rawHeader } = getEncryptionInfo(
-        material,
-        frameLength
-      )
+      const {
+        getCipher,
+        messageHeader,
+        rawHeader,
+        dispose,
+        getSigner,
+      } = getEncryptionInfo(material, frameLength)
 
       wrappingStream.emit('MessageHeader', messageHeader)
 
@@ -92,7 +110,7 @@ export function encryptStream(
         getCipher,
         messageHeader,
         dispose,
-        plaintextLength
+        { plaintextLength, suite: material.suite }
       )
       const signatureStream = new SignatureStream(getSigner)
 
@@ -114,39 +132,46 @@ export function getEncryptionInfo(
   material: NodeEncryptionMaterial,
   frameLength: number
 ) {
-  const { kdfGetCipher } = getEncryptHelper(material)
-  const { encryptionContext } = material
+  const { getCipherInfo, dispose, getSigner } = getEncryptHelper(material)
+  const { suite, encryptionContext, encryptedDataKeys } = material
+  const { ivLength, messageFormat } = material.suite
 
-  const messageId = randomBytes(MESSAGE_ID_LENGTH)
-  const { id, ivLength } = material.suite
-  const messageHeader: MessageHeader = Object.freeze({
-    version: SerializationVersion.V1,
-    type: ObjectType.CUSTOMER_AE_DATA,
-    suiteId: id,
-    messageId,
+  const versionString = MessageFormat[messageFormat] as any
+  const messageIdLength = parseInt(MessageIdLength[versionString], 10)
+  /* Precondition UNTESTED: Node suites must result is some messageIdLength. */
+  needs(messageIdLength > 0, 'Algorithm suite has unknown message format.')
+  const messageId = randomBytes(messageIdLength)
+
+  const { getCipher, keyCommitment } = getCipherInfo(messageId)
+
+  const messageHeader = buildMessageHeader({
+    suite: suite,
+    encryptedDataKeys,
     encryptionContext,
-    encryptedDataKeys: Object.freeze(material.encryptedDataKeys), // freeze me please
-    contentType: ContentType.FRAMED_DATA,
-    headerIvLength: ivLength,
+    messageId,
     frameLength,
+    suiteData: keyCommitment,
   })
 
   const { buffer, byteOffset, byteLength } = serializeMessageHeader(
     messageHeader
   )
   const headerBuffer = Buffer.from(buffer, byteOffset, byteLength)
-  const info = kdfInfo(messageHeader.suiteId, messageHeader.messageId)
-  const getCipher = kdfGetCipher(info)
   const headerIv = headerAuthIv(ivLength)
   const validateHeader = getCipher(headerIv)
   validateHeader.setAAD(headerBuffer)
   validateHeader.update(Buffer.alloc(0))
   validateHeader.final()
-  const headerAuth = validateHeader.getAuthTag()
+  const headerAuthTag = validateHeader.getAuthTag()
 
   return {
     getCipher,
+    dispose,
+    getSigner,
     messageHeader,
-    rawHeader: [headerBuffer, headerIv, headerAuth],
+    rawHeader: [
+      headerBuffer,
+      serializeMessageHeaderAuth({ headerIv, headerAuthTag, messageHeader }),
+    ],
   }
 }

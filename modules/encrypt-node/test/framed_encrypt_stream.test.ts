@@ -9,6 +9,14 @@ import {
   getFramedEncryptStream,
   getEncryptFrame,
 } from '../src/framed_encrypt_stream'
+import {
+  NodeAlgorithmSuite,
+  AlgorithmSuiteIdentifier,
+} from '@aws-crypto/material-management-node'
+
+const suite = new NodeAlgorithmSuite(
+  AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+)
 
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -16,40 +24,47 @@ const { expect } = chai
 describe('getFramedEncryptStream', () => {
   it('can be created', () => {
     const getCipher: any = () => {}
-    const test = getFramedEncryptStream(getCipher, {} as any, () => {})
+    const test = getFramedEncryptStream(
+      getCipher,
+      {} as any,
+      () => {},
+      {} as any
+    )
     expect(test._transform).is.a('function')
   })
 
   it('Precondition: plaintextLength must be within bounds.', () => {
     const getCipher: any = () => {}
     expect(() =>
-      getFramedEncryptStream(getCipher, {} as any, () => {}, -1)
+      getFramedEncryptStream(getCipher, {} as any, () => {}, {
+        plaintextLength: -1,
+        suite,
+      })
     ).to.throw(Error, 'plaintextLength out of bounds.')
     expect(() =>
-      getFramedEncryptStream(
-        getCipher,
-        {} as any,
-        () => {},
-        Number.MAX_SAFE_INTEGER + 1
-      )
+      getFramedEncryptStream(getCipher, {} as any, () => {}, {
+        plaintextLength: Number.MAX_SAFE_INTEGER + 1,
+        suite,
+      })
     ).to.throw(Error, 'plaintextLength out of bounds.')
 
     /* Math is hard.
      * I want to make sure that I don't have an errant off by 1 error.
      */
     expect(() =>
-      getFramedEncryptStream(
-        getCipher,
-        {} as any,
-        () => {},
-        Number.MAX_SAFE_INTEGER
-      )
+      getFramedEncryptStream(getCipher, {} as any, () => {}, {
+        plaintextLength: Number.MAX_SAFE_INTEGER,
+        suite,
+      })
     ).to.not.throw(Error)
   })
 
   it('Precondition: Must not process more than plaintextLength.', () => {
     const getCipher: any = () => {}
-    const test = getFramedEncryptStream(getCipher, {} as any, () => {}, 8)
+    const test = getFramedEncryptStream(getCipher, {} as any, () => {}, {
+      plaintextLength: 8,
+      suite,
+    })
 
     expect(() =>
       test._transform(Buffer.from(Array(9)), 'binary', () => {})
@@ -62,7 +77,8 @@ describe('getFramedEncryptStream', () => {
     const test = getFramedEncryptStream(
       getCipher,
       { frameLength } as any,
-      () => {}
+      () => {},
+      {} as any
     )
 
     let called = false
@@ -88,13 +104,14 @@ describe('getEncryptFrame', () => {
         frameLength: 5,
         contentType: 2,
         messageId: Buffer.from([]),
-        headerIvLength: 12 as 12,
+        headerIvLength: 12 as const,
         version: 1,
         type: 12,
         suiteId: 1,
         encryptionContext: {},
         encryptedDataKeys: [],
       },
+      suite,
     }
     const test1 = getEncryptFrame(input)
     expect(test1.content).to.equal(input.pendingFrame.content)
@@ -121,13 +138,14 @@ describe('getEncryptFrame', () => {
         frameLength: 5,
         contentType: 2,
         messageId: Buffer.from([]),
-        headerIvLength: 12 as 12,
+        headerIvLength: 12 as const,
         version: 1,
         type: 12,
         suiteId: 1,
         encryptionContext: {},
         encryptedDataKeys: [],
       },
+      suite,
     }
 
     expect(() => getEncryptFrame(inputFinalFrameToLarge)).to.throw(
@@ -146,13 +164,14 @@ describe('getEncryptFrame', () => {
         frameLength: 5,
         contentType: 2,
         messageId: Buffer.from([]),
-        headerIvLength: 12 as 12,
+        headerIvLength: 12 as const,
         version: 1,
         type: 12,
         suiteId: 1,
         encryptionContext: {},
         encryptedDataKeys: [],
       },
+      suite,
     }
 
     // Make sure that it must be equal as long as we are here...

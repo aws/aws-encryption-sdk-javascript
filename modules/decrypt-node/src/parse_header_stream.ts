@@ -8,8 +8,11 @@ import {
   NodeAlgorithmSuite,
   NodeMaterialsManager,
   getDecryptionHelper,
+  CommitmentPolicy,
+  CommitmentPolicySuites,
+  needs,
 } from '@aws-crypto/material-management-node'
-import { deserializeFactory, kdfInfo } from '@aws-crypto/serialize'
+import { deserializeFactory, MessageHeaderV2 } from '@aws-crypto/serialize'
 import { VerifyInfo } from './verify_stream'
 
 const toUtf8 = (input: Uint8Array) =>
@@ -26,11 +29,20 @@ interface HeaderState {
 
 export class ParseHeaderStream extends PortableTransformWithType {
   private materialsManager!: NodeMaterialsManager
+  private commitmentPolicy!: CommitmentPolicy
   private _headerState: HeaderState
-  constructor(cmm: NodeMaterialsManager) {
+  constructor(commitmentPolicy: CommitmentPolicy, cmm: NodeMaterialsManager) {
     super()
+
+    /* Precondition: ParseHeaderStream needs a valid commitmentPolicy. */
+    needs(CommitmentPolicy[commitmentPolicy], 'Invalid commitment policy.')
+
     Object.defineProperty(this, 'materialsManager', {
       value: cmm,
+      enumerable: true,
+    })
+    Object.defineProperty(this, 'commitmentPolicy', {
+      value: commitmentPolicy,
       enumerable: true,
     })
     this._headerState = {
@@ -39,32 +51,62 @@ export class ParseHeaderStream extends PortableTransformWithType {
     }
   }
 
-  _transform(chunk: any, encoding: string, callback: Function) {
-    const { buffer } = this._headerState
+  _transform(
+    chunk: any,
+    encoding: string,
+    callback: (err?: Error | null, data?: Uint8Array) => void
+  ) {
+    const { _headerState, commitmentPolicy, materialsManager } = this
+    const { buffer } = _headerState
     const headerBuffer = Buffer.concat([buffer, chunk])
     const headerInfo = deserialize.deserializeMessageHeader(headerBuffer)
     if (!headerInfo) {
-      this._headerState.buffer = headerBuffer
+      _headerState.buffer = headerBuffer
       return callback()
     }
 
     const { messageHeader, algorithmSuite } = headerInfo
-    const { rawHeader, headerIv, headerAuthTag } = headerInfo
+    const messageIDStr = Buffer.from(messageHeader.messageId).toString('hex')
+    /* The parsed header algorithmSuite from ParseHeaderStream must be supported by the commitmentPolicy. */
+    CommitmentPolicySuites.isDecryptEnabled(
+      commitmentPolicy,
+      algorithmSuite,
+      messageIDStr
+    )
+
+    const { rawHeader, headerAuth } = headerInfo
+    const { headerIv, headerAuthTag, headerAuthLength } = headerAuth
 
     const suite = new NodeAlgorithmSuite(algorithmSuite.id)
-    const { encryptionContext, encryptedDataKeys } = messageHeader
+    const { messageId, encryptionContext, encryptedDataKeys } = messageHeader
 
-    this.materialsManager
+    materialsManager
       .decryptMaterials({ suite, encryptionContext, encryptedDataKeys })
       .then((material) => {
-        this._headerState.buffer = Buffer.alloc(0) // clear the Buffer...
+        /* The material algorithmSuite returned to ParseHeaderStream must be supported by the commitmentPolicy. */
+        CommitmentPolicySuites.isDecryptEnabled(
+          commitmentPolicy,
+          material.suite,
+          messageIDStr
+        )
 
-        const { kdfGetDecipher, getVerify, dispose } = getDecryptionHelper(
+        _headerState.buffer = Buffer.alloc(0) // clear the Buffer...
+
+        const { getDecipherInfo, getVerify, dispose } = getDecryptionHelper(
           material
         )
 
-        const info = kdfInfo(messageHeader.suiteId, messageHeader.messageId)
-        const getDecipher = kdfGetDecipher(info)
+        const getDecipher = getDecipherInfo(
+          messageId,
+          /* This is sub-optimal.
+           * Ideally I could pluck the `suiteData`
+           * right off the header
+           * and in such a way that may be undefined.
+           * But that has other consequences
+           * that are beyond the scope of this course.
+           */
+          (messageHeader as MessageHeaderV2).suiteData
+        )
         const headerAuth = getDecipher(headerIv)
 
         headerAuth.setAAD(
@@ -94,17 +136,20 @@ export class ParseHeaderStream extends PortableTransformWithType {
         this.emit('VerifyInfo', verifyInfo)
         this.emit('MessageHeader', headerInfo.messageHeader)
 
-        this._headerState.headerParsed = true
+        _headerState.headerParsed = true
 
         // The header is parsed, pass control
-        const readPos =
-          rawHeader.byteLength + headerIv.byteLength + headerAuthTag.byteLength
+        const readPos = rawHeader.byteLength + headerAuthLength
         const tail = headerBuffer.slice(readPos)
         /* needs calls in downstream _transform streams will throw.
          * But streams are async.
          * So this error should be turned into an `.emit('error', ex)`.
          */
-        this._transform = (chunk: any, _enc: string, cb: Function) => {
+        this._transform = (
+          chunk: any,
+          _enc: string,
+          cb: (err?: Error | null, data?: Uint8Array) => void
+        ) => {
           try {
             cb(null, chunk)
           } catch (ex) {
@@ -117,7 +162,7 @@ export class ParseHeaderStream extends PortableTransformWithType {
       .catch((err) => callback(err))
   }
 
-  _flush(callback: Function) {
+  _flush(callback: (err?: Error) => void) {
     /* Postcondition: A completed header MUST have been processed.
      * callback is an errBack function,
      * so it expects either an error OR undefined

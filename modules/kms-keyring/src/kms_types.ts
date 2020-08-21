@@ -4,6 +4,7 @@
 import { EncryptionContext } from '@aws-crypto/material-management'
 
 export interface DecryptRequest {
+  KeyId?: string
   CiphertextBlob: Uint8Array
   EncryptionContext?: EncryptionContext
   GrantTokens?: string[]

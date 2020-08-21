@@ -11,7 +11,7 @@ import {
   immutableClass,
   readOnlyProperty,
   WebCryptoAlgorithmSuite,
-  getSubtleFunction,
+  currySubtleFunction,
   _importCryptoKey,
   unwrapDataKey,
   importForWebCryptoEncryptionMaterial,
@@ -189,14 +189,16 @@ async function aesGcmWrapKey(
   const backend = await backendForRawAesMasterKey()
   const iv = await backend.randomValues(material.suite.ivLength)
 
-  const kdfGetSubtleEncrypt = getSubtleFunction(
+  const getSubtleInfo = currySubtleFunction(
     wrappingMaterial,
     backend,
     'encrypt'
   )
   const info = new Uint8Array()
+  const { getSubtleEncrypt } = await getSubtleInfo(info)
+
   const dataKey = unwrapDataKey(material.getUnencryptedDataKey())
-  const buffer = await kdfGetSubtleEncrypt(info)(iv, aad)(dataKey)
+  const buffer = await getSubtleEncrypt(iv, aad)(dataKey)
   const ciphertext = new Uint8Array(
     buffer,
     0,
@@ -241,15 +243,17 @@ async function aesGcmUnwrapKey(
 
   const backend = await backendForRawAesMasterKey()
 
-  const KdfGetSubtleDecrypt = getSubtleFunction(
+  const getSubtleInfo = currySubtleFunction(
     wrappingMaterial,
     backend,
     'decrypt'
   )
   const info = new Uint8Array()
-  const buffer = await KdfGetSubtleDecrypt(info)(iv, aad)(
-    concatBuffers(ciphertext, authTag)
-  )
+  const getSubtleDecrypt = await getSubtleInfo(info)
+  const buffer = await getSubtleDecrypt(
+    iv,
+    aad
+  )(concatBuffers(ciphertext, authTag))
   const trace = { keyNamespace, keyName, flags: decryptFlags }
   material.setUnencryptedDataKey(new Uint8Array(buffer), trace)
   return importForWebCryptoDecryptionMaterial(material)

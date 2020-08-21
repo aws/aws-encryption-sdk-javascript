@@ -10,6 +10,7 @@ import {
   NodeDecryptionMaterial,
   WebCryptoDecryptionMaterial,
 } from './cryptographic_material'
+import { CommitmentPolicy } from './algorithm_suites'
 
 export type EncryptionContext = { [index: string]: string }
 
@@ -50,6 +51,7 @@ export interface EncryptionRequest<
 > {
   readonly suite?: S
   readonly encryptionContext: EncryptionContext
+  readonly commitmentPolicy?: CommitmentPolicy
   readonly plaintextLength?: number
 }
 

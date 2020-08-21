@@ -21,6 +21,7 @@ import {
   EncryptedDataKey,
   NodeEncryptionMaterial,
   NodeDecryptionMaterial,
+  CommitmentPolicy,
 } from '@aws-crypto/material-management'
 
 describe('decorateProperties', () => {
@@ -33,6 +34,7 @@ describe('decorateProperties', () => {
       partition: 'something',
       maxBytesEncrypted: 100,
       maxMessagesEncrypted: 200,
+      commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
     } as any)
 
     expect(test._cache).to.equal('cache')
@@ -121,6 +123,7 @@ describe('cacheEntryHasExceededLimits', () => {
     partition: 'something',
     maxBytesEncrypted,
     maxMessagesEncrypted,
+    commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
   } as any)
 
   test.cacheEntryHasExceededLimits = cacheEntryHasExceededLimits()
@@ -275,6 +278,7 @@ describe('Cryptographic Material Functions', () => {
     _cacheEntryHasExceededLimits: cacheEntryHasExceededLimits(),
     getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
     decryptMaterials: decryptMaterials(cacheKeyHelpers),
+    _commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
   } as any
 
   describe('getEncryptionMaterials', () => {
@@ -310,6 +314,7 @@ describe('Cryptographic Material Functions', () => {
         _cacheEntryHasExceededLimits: cacheEntryHasExceededLimits(),
         getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
         decryptMaterials: decryptMaterials(cacheKeyHelpers),
+        _commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
       } as any
 
       const testSuiteCacheSafe = await testCMM.getEncryptionMaterials({
@@ -356,6 +361,7 @@ describe('Cryptographic Material Functions', () => {
         decryptMaterials: () => {
           throw new Error('this should never happen')
         },
+        _commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
       } as any
 
       await testCMM.getEncryptionMaterials({
@@ -444,6 +450,7 @@ describe('Cryptographic Material Functions', () => {
         decryptMaterials: () => {
           throw new Error('this should never happen')
         },
+        _commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
       } as any
 
       const test = await testCMM.getEncryptionMaterials({
@@ -539,6 +546,7 @@ describe('Cryptographic Material Functions', () => {
         decryptMaterials: () => {
           throw new Error('this should never happen')
         },
+        _commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
       } as any
 
       const test = await testCMM.getEncryptionMaterials({
@@ -582,6 +590,7 @@ describe('Cryptographic Material Functions', () => {
           },
         },
         _backingMaterialsManager,
+        _commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
         _cacheEntryHasExceededLimits: cacheEntryHasExceededLimits(),
         getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
         decryptMaterials: decryptMaterials(cacheKeyHelpers),
@@ -618,6 +627,7 @@ describe('Cryptographic Material Functions', () => {
           assertCount += 1
           return false
         },
+        _commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
         getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
         decryptMaterials: decryptMaterials(cacheKeyHelpers),
       } as any

@@ -18,6 +18,7 @@ import {
   AlgorithmSuiteIdentifier,
   KeyringTraceFlag,
   EncryptedDataKey,
+  CommitmentPolicy,
 } from '@aws-crypto/material-management'
 import { ENCODED_SIGNER_KEY } from '@aws-crypto/serialize'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
@@ -246,6 +247,7 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
     const material = await cmm.getEncryptionMaterials({
       suite,
       encryptionContext,
+      commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
     })
     expect(Object.keys(material.encryptionContext)).lengthOf(2)
     if (!material.signatureKey) throw new Error('I should never see this error')
@@ -293,7 +295,10 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
       some: 'context',
     }
 
-    const material = await cmm.getEncryptionMaterials({ encryptionContext })
+    const material = await cmm.getEncryptionMaterials({
+      encryptionContext,
+      commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+    })
     expect(Object.keys(material.encryptionContext)).lengthOf(2)
     if (!material.signatureKey) throw new Error('I should never see this error')
     expect(material.encryptionContext)
@@ -321,7 +326,10 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
     }
 
     await expect(
-      cmm.getEncryptionMaterials({ encryptionContext })
+      cmm.getEncryptionMaterials({
+        encryptionContext,
+        commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      })
     ).to.rejectedWith(Error, 'Reserved encryptionContext value')
   })
 
@@ -360,7 +368,10 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
     }
 
     await expect(
-      cmm.getEncryptionMaterials({ encryptionContext })
+      cmm.getEncryptionMaterials({
+        encryptionContext,
+        commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      })
     ).to.rejectedWith(Error)
   })
 
@@ -391,7 +402,10 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
     }
 
     await expect(
-      cmm.getEncryptionMaterials({ encryptionContext })
+      cmm.getEncryptionMaterials({
+        encryptionContext,
+        commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      })
     ).to.rejectedWith(Error)
   })
 

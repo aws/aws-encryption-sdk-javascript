@@ -18,11 +18,8 @@
  */
 
 export const ENCODED_SIGNER_KEY = 'aws-crypto-public-key'
-
-export enum SerializationVersion {
-  V1 = 1,
-}
-Object.freeze(SerializationVersion)
+/** @deprecated use import { MessageFormat } from '@aws-crypto/material-management' */
+export { MessageFormat as SerializationVersion } from '@aws-crypto/material-management'
 
 export enum ContentType {
   NO_FRAMING = 1,
@@ -101,4 +98,11 @@ Object.freeze(Maximum)
 // Default frame length when using framing
 export const FRAME_LENGTH = 4096
 // Message ID length as defined in specification
-export const MESSAGE_ID_LENGTH = 16
+export enum MessageIdLength {
+  V1 = 16,
+  V2 = 32,
+}
+Object.freeze(MessageIdLength)
+
+/** @deprecated use MessageIdLength */
+export const MESSAGE_ID_LENGTH = MessageIdLength.V1

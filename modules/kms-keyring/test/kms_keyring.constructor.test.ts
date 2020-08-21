@@ -35,17 +35,23 @@ describe('KmsKeyring: constructor', () => {
   it('set properties for discovery keyring', () => {
     const clientProvider: any = () => {}
     const discovery = true
+    const discoveryFilter = { accountIDs: ['123456789012'], partition: 'aws' }
 
     class TestKmsKeyring extends KmsKeyringClass(
       Keyring as KeyRingConstructible<NodeAlgorithmSuite>
     ) {}
 
-    const test = new TestKmsKeyring({ clientProvider, discovery })
+    const test = new TestKmsKeyring({
+      clientProvider,
+      discovery,
+      discoveryFilter,
+    })
     expect(test.clientProvider).to.equal(clientProvider)
     expect(test.generatorKeyId).to.equal(undefined)
     expect(test.keyIds).to.deep.equal([])
     expect(test.grantTokens).to.equal(undefined)
     expect(test.isDiscovery).to.equal(true)
+    expect(test.discoveryFilter).to.deep.equal(discoveryFilter)
   })
 
   it('Precondition: This is an abstract class. (But TypeScript does not have a clean way to model this)', () => {
@@ -86,6 +92,81 @@ describe('KmsKeyring: constructor', () => {
     ).to.throw()
   })
 
+  it('Precondition: Discovery filter can only be configured in discovery mode.', () => {
+    const generatorKeyId =
+      'arn:aws:kms:us-east-1:123456789012:alias/example-alias'
+    const keyIds = ['arn:aws:kms:us-east-1:123456789012:alias/example-alias']
+
+    testDiscoveryWithCMKs(
+      { partition: 'aws', accountIDs: ['123456789012'] },
+      generatorKeyId,
+      undefined
+    )
+    testDiscoveryWithCMKs({}, generatorKeyId, undefined)
+    testDiscoveryWithCMKs(
+      { partition: 'aws', accountIDs: ['123456789012'] },
+      undefined,
+      keyIds
+    )
+    testDiscoveryWithCMKs({}, undefined, keyIds)
+    testDiscoveryWithCMKs(
+      { partition: 'aws', accountIDs: ['123456789012'] },
+      generatorKeyId,
+      keyIds
+    )
+    testDiscoveryWithCMKs({}, generatorKeyId, keyIds)
+
+    function testDiscoveryWithCMKs(
+      discoveryFilter: any,
+      generatorKeyId: any,
+      keyIds: any
+    ) {
+      const clientProvider: any = () => {}
+
+      class TestKmsKeyring extends KmsKeyringClass(
+        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      ) {}
+      expect(
+        () =>
+          new TestKmsKeyring({
+            clientProvider,
+            generatorKeyId,
+            keyIds,
+            discoveryFilter,
+          })
+      ).to.throw(
+        'Account and partition decrypt filtering are only supported when discovery === true'
+      )
+    }
+  })
+
+  it('Precondition: A Discovery filter *must* be able to match something.', () => {
+    testAccountAndPartition([], undefined)
+    testAccountAndPartition([''], undefined)
+    testAccountAndPartition(undefined, '')
+    testAccountAndPartition(['', '123456789012'], 'aws')
+    testAccountAndPartition(['123456789012'], '')
+    testAccountAndPartition([''], 'aws')
+    testAccountAndPartition([], 'aws')
+
+    function testAccountAndPartition(accountIDs: any, partition: any) {
+      const clientProvider: any = () => {}
+      const discovery = true
+
+      class TestKmsKeyring extends KmsKeyringClass(
+        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      ) {}
+      expect(
+        () =>
+          new TestKmsKeyring({
+            clientProvider,
+            discovery,
+            discoveryFilter: { accountIDs, partition } as any,
+          })
+      ).to.throw('A discovery filter must be able to match something.')
+    }
+  })
+
   it('Precondition: All KMS key identifiers must be valid.', () => {
     const clientProvider: any = () => {}
     class TestKmsKeyring extends KmsKeyringClass(
@@ -116,6 +197,22 @@ describe('KmsKeyring: constructor', () => {
             'arn:aws:kms:us-east-1:123456789012:alias/example-alias',
             'Not arn',
           ],
+        })
+    ).to.throw()
+
+    expect(
+      () =>
+        new TestKmsKeyring({
+          clientProvider,
+          generatorKeyId: '',
+        })
+    ).to.throw()
+
+    expect(
+      () =>
+        new TestKmsKeyring({
+          clientProvider,
+          keyIds: [''],
         })
     ).to.throw()
   })

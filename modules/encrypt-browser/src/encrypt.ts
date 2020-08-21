@@ -11,21 +11,21 @@ import {
   KeyringWebCrypto,
   needs,
   WebCryptoMaterialsManager,
+  CommitmentPolicy,
+  CommitmentPolicySuites,
+  MessageFormat,
 } from '@aws-crypto/material-management-browser'
 import {
   serializeFactory,
   aadFactory,
-  kdfInfo,
   concatBuffers,
   MessageHeader,
-  SerializationVersion,
-  ObjectType,
-  ContentType,
   serializeSignatureInfo,
   FRAME_LENGTH,
-  MESSAGE_ID_LENGTH,
   raw2der,
   Maximum,
+  MessageIdLength,
+  serializeMessageHeaderAuth,
 } from '@aws-crypto/serialize'
 import { fromUtf8 } from '@aws-sdk/util-utf8-browser'
 import { getWebCryptoBackend } from '@aws-crypto/web-crypto-backend'
@@ -45,7 +45,8 @@ export interface EncryptResult {
   result: Uint8Array
 }
 
-export async function encrypt(
+export async function _encrypt(
+  commitmentPolicy: CommitmentPolicy,
   cmm: KeyringWebCrypto | WebCryptoMaterialsManager,
   plaintext: Uint8Array,
   {
@@ -54,6 +55,9 @@ export async function encrypt(
     frameLength = FRAME_LENGTH,
   }: EncryptInput = {}
 ): Promise<EncryptResult> {
+  /* Precondition: _encrypt needs a valid commitmentPolicy. */
+  needs(CommitmentPolicy[commitmentPolicy], 'Invalid commitment policy.')
+
   /* Precondition: The frameLength must be less than the maximum frame size for browser encryption. */
   needs(
     frameLength > 0 && Maximum.FRAME_SIZE >= frameLength,
@@ -71,48 +75,53 @@ export async function encrypt(
 
   // Subtle Crypto functions are all one-shot so all the plaintext needs to be available.
   const plaintextLength = plaintext.byteLength
-  const suite = suiteId
-    ? new WebCryptoAlgorithmSuite(suiteId)
-    : new WebCryptoAlgorithmSuite(
-        AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
-      )
+  const suite = suiteId && new WebCryptoAlgorithmSuite(suiteId)
+
+  /* Precondition: Only request WebCryptoEncryptionMaterial for algorithm suites supported in commitmentPolicy. */
+  CommitmentPolicySuites.isEncryptEnabled(commitmentPolicy, suite)
 
   const encryptionRequest: WebCryptoEncryptionRequest = {
     suite,
     encryptionContext,
     plaintextLength,
+    commitmentPolicy,
   }
 
   const material = await cmm.getEncryptionMaterials(encryptionRequest)
-  const { kdfGetSubtleEncrypt, subtleSign, dispose } = await getEncryptHelper(
+
+  /* Precondition: Only use WebCryptoEncryptionMaterial for algorithm suites supported in commitmentPolicy. */
+  CommitmentPolicySuites.isEncryptEnabled(commitmentPolicy, material.suite)
+
+  const { getEncryptInfo, subtleSign, dispose } = await getEncryptHelper(
     material
   )
 
-  const messageId = await backend.randomValues(MESSAGE_ID_LENGTH)
+  const versionString = MessageFormat[material.suite.messageFormat] as any
+  const messageIdLength = parseInt(MessageIdLength[versionString], 10)
+  /* Precondition UNTESTED: WebCrypto suites must result is some messageIdLength. */
+  needs(messageIdLength > 0, 'Algorithm suite has unknown message format.')
 
-  const { id, ivLength } = material.suite
+  const messageId = await backend.randomValues(messageIdLength)
 
-  const messageHeader: MessageHeader = {
-    version: SerializationVersion.V1,
-    type: ObjectType.CUSTOMER_AE_DATA,
-    suiteId: id,
-    messageId,
-    encryptionContext: material.encryptionContext,
+  const { ivLength } = material.suite
+
+  const { getSubtleEncrypt, keyCommitment } = await getEncryptInfo(messageId)
+
+  const messageHeader = serialize.buildMessageHeader({
+    suite: material.suite,
     encryptedDataKeys: material.encryptedDataKeys,
-    contentType: ContentType.FRAMED_DATA,
-    headerIvLength: ivLength,
+    encryptionContext: material.encryptionContext,
+    messageId,
     frameLength,
-  }
+    suiteData: keyCommitment,
+  })
 
   const header = serialize.serializeMessageHeader(messageHeader)
-  const info = kdfInfo(id, messageId)
-  const getSubtleEncrypt = kdfGetSubtleEncrypt(info)
 
-  const headerAuthIv = serialize.headerAuthIv(ivLength)
-  const headerAuthTag = await getSubtleEncrypt(
-    headerAuthIv,
-    header
-  )(new Uint8Array(0))
+  const headerIv = serialize.headerAuthIv(ivLength)
+  const headerAuthTag = new Uint8Array(
+    await getSubtleEncrypt(headerIv, header)(new Uint8Array(0))
+  )
 
   const numberOfFrames = Math.ceil(plaintextLength / frameLength)
   /* The final frame has a variable length.
@@ -164,8 +173,11 @@ export async function encrypt(
 
   const result = concatBuffers(
     header,
-    headerAuthIv,
-    headerAuthTag,
+    serializeMessageHeaderAuth({
+      headerIv,
+      headerAuthTag,
+      messageHeader,
+    }),
     ...bodyContent
   )
 

@@ -7,6 +7,9 @@ import { expect } from 'chai'
 import {
   AlgorithmSuiteIdentifier,
   AlgorithmSuite,
+  CommittingAlgorithmSuiteIdentifier,
+  CommitmentPolicySuites,
+  CommitmentPolicy,
 } from '../src/algorithm_suites'
 
 describe('AlgorithmSuiteIdentifier', () => {
@@ -17,7 +20,7 @@ describe('AlgorithmSuiteIdentifier', () => {
 
 describe('AlgorithmSuite', () => {
   it('should not allow an instance', () => {
-    // @ts-ignore Trying to test something that Typescript should deny...
+    // @ts-expect-error Trying to test something that Typescript should deny...
     expect(() => new AlgorithmSuite()).to.throw(
       'new AlgorithmSuite is not allowed'
     )
@@ -41,5 +44,71 @@ describe('AlgorithmSuite', () => {
     expect(() => new Test({ id: 'does not exist' } as any)).to.throw(
       'No suite by that identifier exists.'
     )
+  })
+})
+
+describe('CommitmentPolicySuites', () => {
+  class Test extends AlgorithmSuite {}
+  it('isEncryptEnabled allows enabled suite', () => {
+    const test = new Test({
+      id: AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16,
+    } as any)
+
+    expect(() =>
+      CommitmentPolicySuites.isEncryptEnabled(
+        CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+        test
+      )
+    ).to.not.throw()
+  })
+
+  it('isDecryptEnabled allows enabled suite', () => {
+    const test = new Test({
+      id: AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16,
+    } as any)
+
+    expect(() =>
+      CommitmentPolicySuites.isDecryptEnabled(
+        CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+        test,
+        'asdf'
+      )
+    ).to.not.throw()
+  })
+
+  it('Precondition: Only handle EncryptionMaterial for algorithm suites supported in commitmentPolicy.', () => {
+    const testCommitmentPolicySuites = {
+      isEncryptEnabled: CommitmentPolicySuites.isEncryptEnabled,
+      fake_policy: {
+        encryptEnabledSuites: CommittingAlgorithmSuiteIdentifier,
+      },
+    }
+
+    const test = new Test({
+      id: AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16,
+    } as any)
+    expect(() =>
+      testCommitmentPolicySuites.isEncryptEnabled('fake_policy' as any, test)
+    ).to.throw('Configuration conflict. Cannot encrypt due to CommitmentPolicy')
+  })
+
+  it('Precondition: Only handle DecryptionMaterial for algorithm suites supported in commitmentPolicy.', () => {
+    const testCommitmentPolicySuites = {
+      isDecryptEnabled: CommitmentPolicySuites.isDecryptEnabled,
+      fake_policy: {
+        decryptEnabledSuites: CommittingAlgorithmSuiteIdentifier,
+      },
+    }
+
+    const test = new Test({
+      id: AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16,
+    } as any)
+    expect(() =>
+      testCommitmentPolicySuites.isDecryptEnabled(
+        'fake_policy' as any,
+        test,
+        'messageID'
+      )
+    ).to.throw('Configuration conflict. Cannot process message with ID')
   })
 })

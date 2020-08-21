@@ -13,6 +13,8 @@ import {
   KeyringTraceFlag,
   WebCryptoAlgorithmSuite,
   importForWebCryptoEncryptionMaterial,
+  CommitmentPolicy,
+  AlgorithmSuiteIdentifier,
 } from '@aws-crypto/material-management-browser'
 import {
   deserializeFactory,
@@ -20,6 +22,7 @@ import {
   deserializeSignature,
 } from '@aws-crypto/serialize'
 import { encrypt } from '../src/index'
+import { _encrypt } from '../src/encrypt'
 import { toUtf8, fromUtf8 } from '@aws-sdk/util-utf8-browser'
 
 chai.use(chaiAsPromised)
@@ -93,11 +96,60 @@ describe('encrypt structural testing', () => {
     expect(messageHeader).to.deep.equal(messageInfo.messageHeader)
   })
 
+  it('Precondition: _encrypt needs a valid commitmentPolicy.', async () => {
+    await expect(
+      _encrypt('fake_policy' as any, {} as any, {} as any)
+    ).to.rejectedWith(Error, 'Invalid commitment policy.')
+  })
+
   it('Precondition: The frameLength must be less than the maximum frame size for browser encryption.', async () => {
     const frameLength = 0
     await expect(
       encrypt(keyRing, fromUtf8('asdf'), { frameLength })
-    ).to.rejectedWith(Error)
+    ).to.rejectedWith(Error, 'frameLength out of bounds: 0')
+  })
+
+  it('Precondition: Only request WebCryptoEncryptionMaterial for algorithm suites supported in commitmentPolicy.', async () => {
+    await expect(
+      _encrypt(
+        CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+        keyRing,
+        fromUtf8('asdf'),
+        {
+          suiteId:
+            AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY,
+        }
+      )
+    ).to.rejectedWith(
+      Error,
+      'Configuration conflict. Cannot encrypt due to CommitmentPolicy'
+    )
+  })
+
+  it('Precondition: Only use WebCryptoEncryptionMaterial for algorithm suites supported in commitmentPolicy.', async () => {
+    let called_getEncryptionMaterials = false
+    const cmm = {
+      async getEncryptionMaterials() {
+        called_getEncryptionMaterials = true
+        return new WebCryptoEncryptionMaterial(
+          new WebCryptoAlgorithmSuite(
+            AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY
+          ),
+          {}
+        )
+      },
+    } as any
+    await expect(
+      _encrypt(
+        CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+        cmm,
+        fromUtf8('asdf')
+      )
+    ).to.rejectedWith(
+      Error,
+      'Configuration conflict. Cannot encrypt due to CommitmentPolicy'
+    )
+    expect(called_getEncryptionMaterials).to.equal(true)
   })
 
   it('can fully parse a framed message', async () => {

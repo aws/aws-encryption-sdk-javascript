@@ -8,9 +8,9 @@ import { NodeCachingMaterialsManager } from '../src/index'
 import {} from '@aws-crypto/cache-material'
 import {
   KeyringNode,
-  NodeDefaultCryptographicMaterialsManager,
   NodeEncryptionMaterial,
   NodeDecryptionMaterial,
+  NodeDefaultCryptographicMaterialsManager,
 } from '@aws-crypto/material-management-node'
 
 describe('NodeCachingMaterialsManager', () => {

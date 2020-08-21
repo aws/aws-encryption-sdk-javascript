@@ -23,7 +23,10 @@ import {
   decrypt,
   kmsResponseToEncryptedDataKey,
 } from './helpers'
-import { regionFromKmsKeyArn } from './region_from_kms_key_arn'
+import {
+  regionFromKmsKeyArn,
+  decomposeAwsKmsKeyArn,
+} from './region_from_kms_key_arn'
 
 export interface KmsKeyringInput<Client extends AwsEsdkKMSInterface> {
   clientProvider: KmsClientSupplier<Client>
@@ -31,6 +34,10 @@ export interface KmsKeyringInput<Client extends AwsEsdkKMSInterface> {
   generatorKeyId?: string
   grantTokens?: string[]
   discovery?: boolean
+  discoveryFilter?: {
+    accountIDs: string[]
+    partition: string
+  }
 }
 
 export interface KeyRing<
@@ -42,6 +49,10 @@ export interface KeyRing<
   clientProvider: KmsClientSupplier<Client>
   grantTokens?: string[]
   isDiscovery: boolean
+  discoveryFilter?: Readonly<{
+    accountIDs: readonly string[]
+    partition: string
+  }>
   _onEncrypt(material: EncryptionMaterial<S>): Promise<EncryptionMaterial<S>>
   _onDecrypt(
     material: DecryptionMaterial<S>,
@@ -70,6 +81,10 @@ export function KmsKeyringClass<
     public clientProvider!: KmsClientSupplier<Client>
     public grantTokens?: string[]
     public isDiscovery!: boolean
+    public discoveryFilter?: Readonly<{
+      accountIDs: readonly string[]
+      partition: string
+    }>
 
     constructor({
       clientProvider,
@@ -77,6 +92,7 @@ export function KmsKeyringClass<
       keyIds = [],
       grantTokens,
       discovery,
+      discoveryFilter,
     }: KmsKeyringInput<Client>) {
       super()
       /* Precondition: This is an abstract class. (But TypeScript does not have a clean way to model this) */
@@ -91,6 +107,27 @@ export function KmsKeyringClass<
         !(discovery && (generatorKeyId || keyIds.length)),
         'A keyring can be either a Discovery or have keyIds configured.'
       )
+      /* Precondition: Discovery filter can only be configured in discovery mode. */
+      needs(
+        discovery || (!discovery && !discoveryFilter),
+        'Account and partition decrypt filtering are only supported when discovery === true'
+      )
+      /* Precondition: A Discovery filter *must* be able to match something.
+       * I am not going to wait to tell you
+       * that no CMK can match an empty account list.
+       * e.g. [], [''], '' are not valid.
+       */
+      needs(
+        !discoveryFilter ||
+          (discoveryFilter.accountIDs &&
+            discoveryFilter.accountIDs.length &&
+            !!discoveryFilter.partition &&
+            discoveryFilter.accountIDs.every(
+              (a) => typeof a === 'string' && !!a
+            )),
+        'A discovery filter must be able to match something.'
+      )
+
       /* Precondition: All KMS key identifiers must be valid. */
       needs(
         !generatorKeyId ||
@@ -111,6 +148,16 @@ export function KmsKeyringClass<
       readOnlyProperty(this, 'generatorKeyId', generatorKeyId)
       readOnlyProperty(this, 'grantTokens', grantTokens)
       readOnlyProperty(this, 'isDiscovery', !!discovery)
+      readOnlyProperty(
+        this,
+        'discoveryFilter',
+        discoveryFilter
+          ? Object.freeze({
+              ...discoveryFilter,
+              accountIDs: Object.freeze(discoveryFilter.accountIDs),
+            })
+          : discoveryFilter
+      )
     }
 
     /* Keyrings *must* preserve the order of EDK's.  The generatorKeyId is the first on this list. */
@@ -203,15 +250,7 @@ export function KmsKeyringClass<
        * anything other than a CMK ARN format, the Encryption SDK will not attempt to decrypt those data keys, because
        * the EDK data format always specifies the CMK with the full (non-alias) ARN.
        */
-      const decryptableEDKs = encryptedDataKeys.filter(
-        ({ providerId, providerInfo }) => {
-          if (providerId !== KMS_PROVIDER_ID) return false
-          /* Discovery keyrings can not have keyIds configured,
-           * and non-discovery keyrings must have keyIds configured.
-           */
-          return this.isDiscovery || keyIds.includes(providerInfo)
-        }
-      )
+      const decryptableEDKs = encryptedDataKeys.filter(filterEDKs(keyIds, this))
 
       const cmkErrors: Error[] = []
 
@@ -280,4 +319,45 @@ export function KmsKeyringClass<
   }
   immutableClass(KmsKeyring)
   return KmsKeyring
+}
+
+function filterEDKs<
+  S extends SupportedAlgorithmSuites,
+  Client extends AwsEsdkKMSInterface
+>(keyIds: string[], { isDiscovery, discoveryFilter }: KeyRing<S, Client>) {
+  return function filter({ providerId, providerInfo }: EncryptedDataKey) {
+    /* Check for early return (Postcondition): Only AWS KMS EDK should be attempted. */
+    if (providerId !== KMS_PROVIDER_ID) return false
+    /* Discovery keyrings can not have keyIds configured,
+     * and non-discovery keyrings must have keyIds configured.
+     */
+    if (isDiscovery) {
+      /* Check for early return (Postcondition): There is no discoveryFilter to further condition discovery. */
+      if (!discoveryFilter) return true
+
+      /* If the providerInfo is an invalid ARN this will throw.
+       * But, this function is also used to extract regions
+       * from an CMK to generate a regional client.
+       * This means it will NOT throw for something
+       * that looks like a bare alias or key id.
+       * However, these constructions will not have an account or partition.
+       */
+      const { account, partition } = decomposeAwsKmsKeyArn(providerInfo)
+      /* Postcondition: The account and partition *must* match the discovery filter.
+       * Since we are offering a runtime discovery of CMKs
+       * it is best to have some form of filter on this.
+       * The providerInfo is a CMK ARN and will have the account and partition.
+       * By offering these levers customers can easily bound
+       * the CMKs to ones they control without knowing the CMKs
+       * when the AWS KMS Keyring is instantiated.
+       */
+      return (
+        discoveryFilter.partition === partition &&
+        discoveryFilter.accountIDs.some((a) => a === account)
+      )
+    } else {
+      /* Postcondition: The EDK CMK (providerInfo) *must* match a configured CMK. */
+      return keyIds.includes(providerInfo)
+    }
+  }
 }

@@ -9,14 +9,17 @@
 import {
   RawAesWrappingSuiteIdentifier,
   RawAesKeyringWebCrypto,
-  encrypt,
-  decrypt,
+  CommitmentPolicy,
+  buildClient,
   synchronousRandomValues,
   configureFallback,
   AlgorithmSuiteIdentifier,
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
 
+const { encrypt, decrypt } = buildClient(
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+)
 /* In this example we use the JavaScript implementation
  * of WebCrypto from MSRCrypto
  * and configure it as a fallback for the AWS Encryption SDK.

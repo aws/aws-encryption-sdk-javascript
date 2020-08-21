@@ -16,10 +16,17 @@ import {
   EncryptionContext,
   needs,
   EncryptedDataKey,
+  MessageFormat,
+  AlgorithmSuite,
 } from '@aws-crypto/material-management'
-import { SequenceIdentifier } from './identifiers'
+import {
+  ContentType,
+  ObjectType,
+  SequenceIdentifier,
+  SerializationVersion,
+} from './identifiers'
 import { uInt16BE, uInt8, uInt32BE } from './uint_util'
-import { MessageHeader } from './types'
+import { MessageHeader, MessageHeaderV1, MessageHeaderV2 } from './types'
 
 export function serializeFactory(fromUtf8: (input: any) => Uint8Array) {
   return {
@@ -33,6 +40,7 @@ export function serializeFactory(fromUtf8: (input: any) => Uint8Array) {
     serializeEncryptedDataKeys,
     serializeEncryptedDataKey,
     serializeMessageHeader,
+    buildMessageHeader,
   }
 
   function frameIv(ivLength: IvLength, sequenceNumber: number) {
@@ -140,6 +148,16 @@ export function serializeFactory(fromUtf8: (input: any) => Uint8Array) {
   }
 
   function serializeMessageHeader(messageHeader: MessageHeader) {
+    /* Precondition: Must be a version that can be serialized. */
+    needs(SerializationVersion[messageHeader.version], 'Unsupported version.')
+    if (messageHeader.version === 1) {
+      return serializeMessageHeaderV1(messageHeader as MessageHeaderV1)
+    } else {
+      return serializeMessageHeaderV2(messageHeader as MessageHeaderV2)
+    }
+  }
+
+  function serializeMessageHeaderV1(messageHeader: MessageHeaderV1) {
     return concatBuffers(
       uInt8(messageHeader.version),
       uInt8(messageHeader.type),
@@ -153,4 +171,87 @@ export function serializeFactory(fromUtf8: (input: any) => Uint8Array) {
       uInt32BE(messageHeader.frameLength)
     )
   }
+
+  function serializeMessageHeaderV2(messageHeader: MessageHeaderV2) {
+    return concatBuffers(
+      uInt8(messageHeader.version),
+      uInt16BE(messageHeader.suiteId),
+      messageHeader.messageId,
+      serializeEncryptionContext(messageHeader.encryptionContext),
+      serializeEncryptedDataKeys(messageHeader.encryptedDataKeys),
+      new Uint8Array([messageHeader.contentType]),
+      uInt32BE(messageHeader.frameLength),
+      messageHeader.suiteData
+    )
+  }
+
+  /* This _could_ take the material directly.
+   * But I don't do that on purpose.
+   * It may be overly paranoid,
+   * but this way once the material is created,
+   * it has a minimum of egress.
+   */
+  function buildMessageHeader({
+    encryptionContext,
+    encryptedDataKeys,
+    suite,
+    messageId,
+    frameLength,
+    suiteData,
+  }: {
+    encryptionContext: Readonly<EncryptionContext>
+    encryptedDataKeys: ReadonlyArray<EncryptedDataKey>
+    suite: AlgorithmSuite
+    messageId: Uint8Array
+    frameLength: number
+    suiteData?: Uint8Array
+  }): MessageHeader {
+    const { messageFormat: version, id: suiteId } = suite
+    const contentType = ContentType.FRAMED_DATA
+
+    if (version === MessageFormat.V1) {
+      const type = ObjectType.CUSTOMER_AE_DATA
+      const { ivLength: headerIvLength } = suite
+      return {
+        version,
+        type,
+        suiteId,
+        messageId,
+        encryptionContext,
+        encryptedDataKeys,
+        contentType,
+        headerIvLength,
+        frameLength,
+      } as MessageHeaderV1
+    } else if (version === MessageFormat.V2) {
+      return {
+        version,
+        suiteId,
+        messageId,
+        encryptionContext: encryptionContext,
+        encryptedDataKeys: encryptedDataKeys,
+        contentType,
+        frameLength,
+        suiteData,
+      } as MessageHeaderV2
+    }
+
+    needs(false, 'Unsupported message format version.')
+  }
+}
+
+export function serializeMessageHeaderAuth({
+  headerIv,
+  headerAuthTag,
+  messageHeader,
+}: {
+  headerIv: Uint8Array
+  headerAuthTag: Uint8Array
+  messageHeader: MessageHeader
+}) {
+  if (messageHeader.version === MessageFormat.V1) {
+    return concatBuffers(headerIv, headerAuthTag)
+  }
+
+  return headerAuthTag
 }

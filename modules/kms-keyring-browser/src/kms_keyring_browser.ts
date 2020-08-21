@@ -25,7 +25,7 @@ import {
 import { KMS } from 'aws-sdk'
 
 const getKmsClient = getClient(KMS, {
-  customUserAgent: 'AwsEncryptionSdkJavascriptBrowser',
+  customUserAgent: 'AwsEncryptionSdkJavascriptBrowser/1.7.0',
 })
 const cacheKmsClients = cacheClients(getKmsClient)
 

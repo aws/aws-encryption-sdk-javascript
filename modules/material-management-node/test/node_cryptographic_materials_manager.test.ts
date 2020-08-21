@@ -5,7 +5,7 @@
 
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { KeyringNode } from '@aws-crypto/material-management'
+import { KeyringNode, CommitmentPolicy } from '@aws-crypto/material-management'
 import { NodeDefaultCryptographicMaterialsManager } from '../src/node_cryptographic_materials_manager'
 import {
   NodeEncryptionMaterial,
@@ -204,7 +204,10 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     }
 
     await expect(
-      cmm.getEncryptionMaterials({ encryptionContext })
+      cmm.getEncryptionMaterials({
+        encryptionContext,
+        commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      })
     ).to.rejectedWith(Error, 'Reserved encryptionContext value')
   })
 
@@ -227,7 +230,11 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
     await expect(
-      cmm.getEncryptionMaterials({ suite, encryptionContext: {} })
+      cmm.getEncryptionMaterials({
+        suite,
+        encryptionContext: {},
+        commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      })
     ).to.rejectedWith(Error)
   })
 
@@ -256,7 +263,11 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
     await expect(
-      cmm.getEncryptionMaterials({ suite, encryptionContext: {} })
+      cmm.getEncryptionMaterials({
+        suite,
+        encryptionContext: {},
+        commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      })
     ).to.rejectedWith(Error)
   })
 

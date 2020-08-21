@@ -19,6 +19,7 @@ import {
   NodeDefaultCryptographicMaterialsManager,
   needs,
 } from '@aws-crypto/material-management-node'
+import { CommitmentPolicy } from '@aws-crypto/material-management'
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -41,7 +42,10 @@ describe('VerifyStream', () => {
   })
 
   it('Precondition: If maxBodySize was set I can not buffer more data than maxBodySize.', () => {
-    const source = new ParseHeaderStream({} as any)
+    const source = new ParseHeaderStream(
+      CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      {} as any
+    )
     const test = new VerifyStream({ maxBodySize: 1 })
     source.pipe(test)
     // this is _just_ enough data to pass....
@@ -161,7 +165,10 @@ async function testStream(
   cmm: NodeDefaultCryptographicMaterialsManager,
   data: Buffer
 ) {
-  const source = new ParseHeaderStream(cmm)
+  const source = new ParseHeaderStream(
+    CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+    cmm
+  )
   const test = new VerifyStream({})
   let DecipherInfoEmitted = false
   let BodyInfoEmitted = false

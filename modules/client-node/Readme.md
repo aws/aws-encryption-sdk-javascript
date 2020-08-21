@@ -25,9 +25,14 @@ npm install @aws-crypto/client-node
 
 ## use
 
+For detailed code examples
+that show you how to these modules
+to create keyrings 
+and encrypt and decrypt data,
+install the [example-node](https://github.com/aws/aws-encryption-sdk-javascript/tree/master/modules/example-node) module. 
+
 ```javascript
 
-const { KmsKeyringNode, encrypt, decrypt } = require('@aws-crypto/client-node')
 /* Start by constructing a keyring. We'll create a KMS keyring.
  * Specify an AWS Key Management Service (AWS KMS) customer master key (CMK) to be the
  * generator key in the keyring. This CMK generates a data key and encrypts it. 

@@ -3,12 +3,14 @@
 
 import {
   KmsKeyringNode,
-  encrypt,
-  decrypt,
+  buildClient,
+  CommitmentPolicy,
   NodeCachingMaterialsManager,
   getLocalCryptographicMaterialsCache,
 } from '@aws-crypto/client-node'
-
+const { encrypt, decrypt } = buildClient(
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+)
 export async function cachingCMMNodeSimpleTest() {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.

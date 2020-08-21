@@ -9,13 +9,15 @@ import {
   KmsKeyringBrowser,
   KMS,
   getClient,
-  encrypt,
-  decrypt,
+  buildClient,
+  CommitmentPolicy,
   WebCryptoCachingMaterialsManager,
   getLocalCryptographicMaterialsCache,
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
-
+const { encrypt, decrypt } = buildClient(
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+)
 /* This is injected by webpack.
  * The webpack.DefinePlugin or @aws-sdk/karma-credential-loader will replace the values when bundling.
  * The credential values are pulled from @aws-sdk/credential-provider-node

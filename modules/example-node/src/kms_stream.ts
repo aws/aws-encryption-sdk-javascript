@@ -3,10 +3,13 @@
 
 import {
   KmsKeyringNode,
-  decryptStream,
-  encryptStream,
+  buildClient,
+  CommitmentPolicy,
   MessageHeader,
 } from '@aws-crypto/client-node'
+const { encryptStream, decryptStream } = buildClient(
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+)
 
 import { finished } from 'stream'
 import { createReadStream } from 'fs'
