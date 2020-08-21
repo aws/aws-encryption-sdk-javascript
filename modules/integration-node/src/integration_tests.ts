@@ -13,11 +13,13 @@ import {
   decryptMaterialsManagerNode,
   encryptMaterialsManagerNode,
 } from './decrypt_materials_manager_node'
-import { decrypt, encrypt, needs } from '@aws-crypto/client-node'
+import { buildClient, CommitmentPolicy, needs } from '@aws-crypto/client-node'
 import { URL } from 'url'
 import got from 'got'
 import streamToPromise from 'stream-to-promise'
-
+const { encrypt, decrypt } = buildClient(
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+)
 const notSupportedDecryptMessages = ['Not supported at this time.']
 
 const notSupportedEncryptMessages = [

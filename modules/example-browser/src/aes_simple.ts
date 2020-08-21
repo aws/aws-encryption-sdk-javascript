@@ -9,11 +9,15 @@
 import {
   RawAesWrappingSuiteIdentifier,
   RawAesKeyringWebCrypto,
-  encrypt,
-  decrypt,
   synchronousRandomValues,
+  buildClient,
+  CommitmentPolicy,
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
+
+const { encrypt, decrypt } = buildClient(
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+)
 
 /* This is done to facilitate testing. */
 export async function testAES() {

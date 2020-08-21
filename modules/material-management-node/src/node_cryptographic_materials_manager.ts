@@ -12,12 +12,13 @@ import {
   SignatureKey,
   needs,
   VerificationKey,
-  AlgorithmSuiteIdentifier,
   immutableClass,
   readOnlyProperty,
   KeyringNode,
   GetEncryptionMaterials,
   GetDecryptMaterials,
+  CommitmentPolicySuites,
+  AlgorithmSuiteIdentifier,
 } from '@aws-crypto/material-management'
 
 import { ENCODED_SIGNER_KEY } from '@aws-crypto/serialize'
@@ -32,9 +33,9 @@ export type NodeGetEncryptionMaterials = GetEncryptionMaterials<
 export type NodeGetDecryptMaterials = GetDecryptMaterials<NodeAlgorithmSuite>
 
 /**
- * The DefaultCryptographicMaterialsManager is a specific implementation of the CryptographicMaterialsManager.
+ * The NodeDefaultCryptographicMaterialsManager is a specific implementation of the CryptographicMaterialsManager.
  * New cryptography materials managers SHOULD extend from NodeMaterialsManager.
- * Users should never need to create an instance of a DefaultCryptographicMaterialsManager.
+ * Users should never need to create an instance of a NodeDefaultCryptographicMaterialsManager.
  */
 export class NodeDefaultCryptographicMaterialsManager
   implements NodeMaterialsManager {
@@ -48,11 +49,15 @@ export class NodeDefaultCryptographicMaterialsManager
   async getEncryptionMaterials({
     suite,
     encryptionContext,
+    commitmentPolicy,
   }: NodeEncryptionRequest): Promise<NodeEncryptionMaterial> {
     suite =
       suite ||
       new NodeAlgorithmSuite(
-        AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+        commitmentPolicy
+          ? CommitmentPolicySuites[commitmentPolicy].defaultAlgorithmSuite
+          : /** @deprecate remove fallback default. */
+            AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
       )
 
     /* Precondition: NodeDefaultCryptographicMaterialsManager must reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.

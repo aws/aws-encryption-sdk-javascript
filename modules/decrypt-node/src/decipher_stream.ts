@@ -44,8 +44,8 @@ const noop = () => {} // eslint-disable-line @typescript-eslint/no-empty-functio
 export function getDecipherStream() {
   let decipherInfo: DecipherInfo
   let decipherState: DecipherState = {} as any
-  let pathologicalDrain: Function = noop
-  let frameComplete: Function | false = false
+  let pathologicalDrain: () => void = noop
+  let frameComplete: ((err?: Error) => void) | false = false
 
   return new (class DecipherStream extends PortableTransformWithType {
     constructor() {
@@ -58,7 +58,7 @@ export function getDecipherStream() {
             decipherInfo = info
           })
           .on('BodyInfo', this._onBodyHeader)
-          .on('AuthTag', (authTag: Buffer, next: Function) => {
+          .on('AuthTag', (authTag: Buffer, next: (err?: Error) => void) => {
             this._onAuthTag(authTag, next).catch((e) => this.emit('error', e))
           })
       })
@@ -97,7 +97,7 @@ export function getDecipherStream() {
       decipherState = { decipher, content, contentLength }
     }
 
-    _transform(chunk: any, _encoding: string, callback: Function) {
+    _transform(chunk: any, _encoding: string, callback: (err?: Error) => void) {
       /* Precondition: BodyHeader must be parsed before frame data. */
       needs(decipherState.decipher, 'Malformed State.')
 
@@ -138,7 +138,7 @@ export function getDecipherStream() {
       super._read(size)
     }
 
-    _onAuthTag = async (authTag: Buffer, next: Function) => {
+    _onAuthTag = async (authTag: Buffer, next: (err?: Error) => void) => {
       const { decipher, content, contentLength } = decipherState
       /* Precondition: _onAuthTag must be called only after a frame has been accumulated.
        * However there is an edge case.  The final frame _can_ be zero length.

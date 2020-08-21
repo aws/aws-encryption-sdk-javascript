@@ -56,14 +56,19 @@ describe('decrypt', () => {
       'base64'
     )
     const i = ciphertext.values()
-    const ciphertextStream = from((_: number, next: Function) => {
-      /* Pushing 1 byte at time is the most annoying thing.
-       * This is done intentionally to hit _every_ boundary condition.
-       */
-      const { value, done } = i.next()
-      if (done) return next(null, null)
-      next(null, new Uint8Array([value]))
-    })
+    const ciphertextStream = from(
+      (
+        _: number,
+        next: (err: Error | null, chunk: Uint8Array | null) => void
+      ) => {
+        /* Pushing 1 byte at time is the most annoying thing.
+         * This is done intentionally to hit _every_ boundary condition.
+         */
+        const { value, done } = i.next()
+        if (done) return next(null, null)
+        next(null, new Uint8Array([value]))
+      }
+    )
 
     const { plaintext: test, messageHeader } = await decrypt(
       fixtures.decryptKeyring(),

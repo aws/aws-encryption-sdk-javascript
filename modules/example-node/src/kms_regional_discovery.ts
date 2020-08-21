@@ -6,9 +6,10 @@ import {
   limitRegions,
   excludeRegions,
   getKmsClient,
-  decrypt,
+  buildClient,
+  CommitmentPolicy,
 } from '@aws-crypto/client-node'
-
+const { decrypt } = buildClient(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
 export async function kmsRegionalDiscoveryLimitTest(
   ciphertext: string | Buffer
 ) {

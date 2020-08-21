@@ -86,14 +86,23 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
     this: CachingMaterialsManager<S>,
     request: EncryptionRequest<S>
   ): Promise<EncryptionMaterial<S>> {
-    const { suite, encryptionContext, plaintextLength } = request
+    const {
+      suite,
+      encryptionContext,
+      plaintextLength,
+      commitmentPolicy,
+    } = request
+
     /* Check for early return (Postcondition): If I can not cache the EncryptionMaterial, do not even look. */
     if (
       (suite && !suite.cacheSafe) ||
       typeof plaintextLength !== 'number' ||
       plaintextLength < 0
     ) {
-      return this._backingMaterialsManager.getEncryptionMaterials(request)
+      const material = await this._backingMaterialsManager.getEncryptionMaterials(
+        request
+      )
+      return material
     }
 
     const cacheKey = await buildEncryptionMaterialCacheKey(this._partition, {
@@ -112,7 +121,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       /* Strip any information about the plaintext from the backing request,
        * because the resulting response may be used to encrypt multiple plaintexts.
        */
-      .getEncryptionMaterials({ suite, encryptionContext, plaintextLength })
+      .getEncryptionMaterials({ suite, encryptionContext, commitmentPolicy })
 
     /* Check for early return (Postcondition): If I can not cache the EncryptionMaterial, just return it. */
     if (!material.suite.cacheSafe) return material
@@ -157,7 +166,10 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
     const { suite } = request
     /* Check for early return (Postcondition): If I can not cache the DecryptionMaterial, do not even look. */
     if (!suite.cacheSafe) {
-      return this._backingMaterialsManager.decryptMaterials(request)
+      const material = await this._backingMaterialsManager.decryptMaterials(
+        request
+      )
+      return material
     }
 
     const cacheKey = await buildDecryptionMaterialCacheKey(

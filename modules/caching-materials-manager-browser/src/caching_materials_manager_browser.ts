@@ -8,8 +8,8 @@ import {
   decryptMaterials,
   cacheEntryHasExceededLimits,
   buildCryptographicMaterialsCacheKeyHelpers,
-  CachingMaterialsManagerInput,
   CryptographicMaterialsCache,
+  CachingMaterialsManagerInput,
 } from '@aws-crypto/cache-material'
 import {
   WebCryptoMaterialsManager,

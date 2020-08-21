@@ -14,6 +14,7 @@ import {
   decodeBodyHeader,
   BodyHeader,
   HeaderInfo,
+  serializeMessageHeaderAuth,
 } from '@aws-crypto/serialize'
 import { ParseHeaderStream } from './parse_header_stream'
 import { DecipherInfo } from './decipher_stream'
@@ -77,8 +78,16 @@ export class VerifyStream extends PortableTransformWithType {
          * add the element to the object.
          */
         if (verify) {
-          const { rawHeader, headerIv, headerAuthTag } = headerInfo
-          ;[rawHeader, headerIv, headerAuthTag].forEach((e) => verify.update(e))
+          const { rawHeader, headerAuth, messageHeader } = headerInfo
+          const { headerIv, headerAuthTag } = headerAuth
+          verify.update(rawHeader)
+          verify.update(
+            serializeMessageHeaderAuth({
+              headerIv,
+              headerAuthTag,
+              messageHeader,
+            })
+          )
         }
         Object.defineProperty(this, '_headerInfo', {
           value: headerInfo,
@@ -104,7 +113,11 @@ export class VerifyStream extends PortableTransformWithType {
     })
   }
 
-  _transform(chunk: Buffer, enc: string, callback: Function): any {
+  _transform(
+    chunk: Buffer,
+    enc: string,
+    callback: (err?: Error | null, data?: Uint8Array) => void
+  ): any {
     /* Precondition: VerifyInfo must have initialized the stream. */
     needs(
       this._headerInfo,
@@ -211,7 +224,7 @@ export class VerifyStream extends PortableTransformWithType {
           this._transform = (
             chunk: Buffer,
             _enc: string,
-            callback: Function
+            callback: (err?: Error | null, data?: Uint8Array) => void
           ) => {
             if (chunk.length) {
               state.signatureInfo = Buffer.concat([state.signatureInfo, chunk])
@@ -250,7 +263,7 @@ export class VerifyStream extends PortableTransformWithType {
     return super.push(chunk, encoding)
   }
 
-  _flush(callback: Function) {
+  _flush(callback: (err?: Error) => void) {
     const { finalAuthTagReceived } = this._verifyState
     /* Precondition: All ciphertext MUST have been received.
      * The verify stream has ended,

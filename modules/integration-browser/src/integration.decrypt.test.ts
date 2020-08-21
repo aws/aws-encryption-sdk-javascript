@@ -5,8 +5,9 @@
 
 import { decryptMaterialsManagerWebCrypto } from './decrypt_materials_manager_web_crypto'
 import { fromBase64 } from '@aws-sdk/util-base64-browser'
-import { decrypt } from '@aws-crypto/client-browser'
+import { buildClient, CommitmentPolicy } from '@aws-crypto/client-browser'
 
+const { decrypt } = buildClient(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
 declare const expect: any
 declare const __fixtures__: any
 declare const fetch: any

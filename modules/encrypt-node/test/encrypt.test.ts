@@ -13,6 +13,7 @@ import {
   KeyringTraceFlag,
   AlgorithmSuiteIdentifier,
   NodeAlgorithmSuite,
+  CommitmentPolicy,
 } from '@aws-crypto/material-management-node'
 import {
   deserializeFactory,
@@ -21,6 +22,7 @@ import {
   MessageHeader,
 } from '@aws-crypto/serialize'
 import { encrypt, encryptStream } from '../src/index'
+import { _encrypt } from '../src/encrypt'
 import from from 'from2'
 // @ts-ignore
 import { finished } from 'readable-stream'
@@ -121,11 +123,13 @@ describe('encrypt structural testing', () => {
     const encryptionContext = { simple: 'context' }
 
     let pushed = false
-    const plaintext = from((_: number, next: Function) => {
-      if (pushed) return next(null, null)
-      pushed = true
-      next(null, 'asdf')
-    })
+    const plaintext = from(
+      (_: number, next: (err: Error | null, chunk: string | null) => void) => {
+        if (pushed) return next(null, null)
+        pushed = true
+        next(null, 'asdf')
+      }
+    )
 
     const { result, messageHeader } = await encrypt(keyRing, plaintext, {
       encryptionContext,
@@ -156,14 +160,19 @@ describe('encrypt structural testing', () => {
 
     const data = randomBytes(300)
     const i = data.values()
-    const plaintext = from((_: number, next: Function) => {
-      /* Pushing 1 byte at time is the most annoying thing.
-       * This is done intentionally to hit _every_ boundary condition.
-       */
-      const { value, done } = i.next()
-      if (done) return next(null, null)
-      next(null, new Uint8Array([value]))
-    })
+    const plaintext = from(
+      (
+        _: number,
+        next: (err: Error | null, chunk: Uint8Array | null) => void
+      ) => {
+        /* Pushing 1 byte at time is the most annoying thing.
+         * This is done intentionally to hit _every_ boundary condition.
+         */
+        const { value, done } = i.next()
+        if (done) return next(null, null)
+        next(null, new Uint8Array([value]))
+      }
+    )
 
     let messageHeader: any
     const buffer: Buffer[] = []
@@ -200,11 +209,52 @@ describe('encrypt structural testing', () => {
     expect(messageHeader).to.deep.equal(messageInfo.messageHeader)
   })
 
+  it('Precondition: encryptStream needs a valid commitmentPolicy.', async () => {
+    await expect(
+      _encrypt('fake_policy' as any, keyRing, 'asdf')
+    ).to.rejectedWith(Error, 'Invalid commitment policy.')
+  })
+
   it('Precondition: The frameLength must be less than the maximum frame size Node.js stream.', async () => {
     const frameLength = 0
     await expect(encrypt(keyRing, 'asdf', { frameLength })).to.rejectedWith(
-      Error
+      Error,
+      'frameLength out of bounds: 0'
     )
+  })
+
+  it('Precondition: Only request NodeEncryptionMaterial for algorithm suites supported in commitmentPolicy.', async () => {
+    await expect(
+      _encrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT, keyRing, 'asdf', {
+        suiteId:
+          AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY,
+      })
+    ).to.rejectedWith(
+      Error,
+      'Configuration conflict. Cannot encrypt due to CommitmentPolicy'
+    )
+  })
+
+  it('Precondition: Only use NodeEncryptionMaterial for algorithm suites supported in commitmentPolicy.', async () => {
+    let called_getEncryptionMaterials = false
+    const cmm = {
+      async getEncryptionMaterials() {
+        called_getEncryptionMaterials = true
+        return new NodeEncryptionMaterial(
+          new NodeAlgorithmSuite(
+            AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY
+          ),
+          {}
+        )
+      },
+    } as any
+    await expect(
+      _encrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT, cmm, 'asdf')
+    ).to.rejectedWith(
+      Error,
+      'Configuration conflict. Cannot encrypt due to CommitmentPolicy'
+    )
+    expect(called_getEncryptionMaterials).to.equal(true)
   })
 
   it('can fully parse a framed message', async () => {

@@ -9,9 +9,11 @@ import {
   _importCryptoKey,
   importCryptoKey,
   WebCryptoKdf,
-  getSubtleFunction,
+  deriveKeyCommitment,
+  currySubtleFunction,
   getEncryptHelper,
   getDecryptionHelper,
+  buildAlgorithmForKDF,
 } from '../src/index'
 import {
   WebCryptoEncryptionMaterial,
@@ -31,6 +33,8 @@ import {
   getZeroByteSubtle,
   getNonZeroByteBackend,
 } from '@aws-crypto/web-crypto-backend'
+
+import { fromBase64 } from '@aws-sdk/util-base64-browser'
 
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -179,6 +183,253 @@ describe('importCryptoKey', () => {
   })
 })
 
+describe('deriveKeyCommitment', () => {
+  it('can derive commitment', async () => {
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
+    )
+    const material = new WebCryptoEncryptionMaterial(suite, {})
+    const udk = new Uint8Array(suite.keyLengthBytes).fill(1)
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
+    material.setUnencryptedDataKey(udk, trace)
+    const backend = await getWebCryptoBackend()
+    const subtle = getZeroByteSubtle(backend)
+
+    const cryptoKey = await _importCryptoKey(subtle, material, ['deriveKey'])
+    const keyCommitment = await deriveKeyCommitment(
+      subtle,
+      material,
+      cryptoKey,
+      new Uint8Array(32)
+    )
+
+    expect(keyCommitment).to.deep.equal(
+      fromBase64('Ctu53IjHBCn5rUr4sfaOC8wqzDwxrKoMOJItVBX9+Xk=')
+    )
+  })
+
+  it('can assert commitment', async () => {
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
+    )
+    const material = new WebCryptoDecryptionMaterial(suite, {})
+    const udk = new Uint8Array(suite.keyLengthBytes).fill(1)
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+    }
+    material.setUnencryptedDataKey(udk, trace)
+    const backend = await getWebCryptoBackend()
+    const subtle = getZeroByteSubtle(backend)
+
+    const cryptoKey = await _importCryptoKey(subtle, material, ['deriveKey'])
+    const commitKey = fromBase64('Ctu53IjHBCn5rUr4sfaOC8wqzDwxrKoMOJItVBX9+Xk=')
+    const keyCommitment = await deriveKeyCommitment(
+      subtle,
+      material,
+      cryptoKey,
+      new Uint8Array(32),
+      commitKey
+    )
+
+    expect(keyCommitment).to.deep.equal(commitKey)
+  })
+
+  it('Check for early return (Postcondition): Algorithm suites without commitment do not have a commitment.', async () => {
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+    )
+    const material = new WebCryptoDecryptionMaterial(suite, {})
+    const udk = new Uint8Array(suite.keyLengthBytes).fill(1)
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+    }
+    material.setUnencryptedDataKey(udk, trace)
+    const backend = await getWebCryptoBackend()
+    const subtle = getZeroByteSubtle(backend)
+
+    const cryptoKey = await _importCryptoKey(subtle, material, ['deriveKey'])
+    const keyCommitment = await deriveKeyCommitment(
+      subtle,
+      material,
+      cryptoKey,
+      new Uint8Array(32)
+    )
+
+    expect(keyCommitment).to.deep.equal(undefined)
+  })
+
+  it('Postcondition: Non-committing WebCrypto algorithm suites *must* not have a commitment.', async () => {
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+    )
+    const material = new WebCryptoDecryptionMaterial(suite, {})
+    const udk = new Uint8Array(suite.keyLengthBytes).fill(1)
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+    }
+    material.setUnencryptedDataKey(udk, trace)
+    const backend = await getWebCryptoBackend()
+    const subtle = getZeroByteSubtle(backend)
+
+    const cryptoKey = await _importCryptoKey(subtle, material, ['deriveKey'])
+    const commitKey = fromBase64('Ctu53IjHBCn5rUr4sfaOC8wqzDwxrKoMOJItVBX9+Xk=')
+    await expect(
+      deriveKeyCommitment(
+        subtle,
+        material,
+        cryptoKey,
+        new Uint8Array(32),
+        commitKey
+      )
+    ).to.rejectedWith(Error, 'Commitment not supported.')
+  })
+
+  it('Precondition: Commit key requires 256 bits of entropy.', async () => {
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
+    )
+    const material = new WebCryptoEncryptionMaterial(suite, {})
+    const udk = new Uint8Array(suite.keyLengthBytes).fill(1)
+    const trace = {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    }
+    material.setUnencryptedDataKey(udk, trace)
+    const backend = await getWebCryptoBackend()
+    const subtle = getZeroByteSubtle(backend)
+
+    const cryptoKey = await _importCryptoKey(subtle, material, ['deriveKey'])
+    await expect(
+      deriveKeyCommitment(subtle, material, cryptoKey, new Uint8Array(31))
+    ).to.rejectedWith(
+      Error,
+      'Nonce is not the correct length for committed algorithm suite.'
+    )
+  })
+
+  it('Precondition: If material is WebCryptoDecryptionMaterial the key commitments *must* match.', async () => {
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
+    )
+    const udk = new Uint8Array(suite.keyLengthBytes).fill(1)
+    const backend = await getWebCryptoBackend()
+    const subtle = getZeroByteSubtle(backend)
+    const commitKey = fromBase64('Ctu53IjHBCn5rUr4sfaOC8wqzDwxrKoMOJItVBX9+Xk=')
+
+    const encryptionMaterial = new WebCryptoEncryptionMaterial(
+      suite,
+      {}
+    ).setUnencryptedDataKey(udk, {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
+    })
+
+    const decryptionMaterial = new WebCryptoDecryptionMaterial(
+      suite,
+      {}
+    ).setUnencryptedDataKey(udk, {
+      keyName: 'keyName',
+      keyNamespace: 'keyNamespace',
+      flags: KeyringTraceFlag.WRAPPING_KEY_DECRYPTED_DATA_KEY,
+    })
+
+    const decryptCryptoKey = await _importCryptoKey(
+      subtle,
+      decryptionMaterial,
+      ['deriveKey']
+    )
+
+    const encryptCryptoKey = await _importCryptoKey(
+      subtle,
+      encryptionMaterial,
+      ['deriveKey']
+    )
+    await expect(
+      deriveKeyCommitment(
+        subtle,
+        encryptionMaterial,
+        encryptCryptoKey,
+        new Uint8Array(32),
+        commitKey
+      )
+    ).to.rejectedWith(Error, 'Invalid arguments.')
+
+    await expect(
+      deriveKeyCommitment(
+        subtle,
+        decryptionMaterial,
+        decryptCryptoKey,
+        new Uint8Array(32),
+        new Uint8Array(32)
+      )
+    ).to.rejectedWith(Error, 'Commitment does not match.')
+  })
+})
+
+describe('buildAlgorithmForKDF', () => {
+  it('basic non-committing suite', () => {
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+    )
+    buildAlgorithmForKDF(suite, new Uint8Array(16))
+  })
+
+  it('basic committing suite', () => {
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY
+    )
+    buildAlgorithmForKDF(suite, new Uint8Array(32))
+  })
+
+  it('Precondition: Valid HKDF values must exist for browsers.', async () => {
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+    )
+    const nonKdfSuite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
+
+    expect(() => buildAlgorithmForKDF(suite, undefined as any)).to.throw(
+      'Invalid HKDF values.'
+    )
+    expect(() =>
+      buildAlgorithmForKDF(nonKdfSuite, new Uint8Array(16))
+    ).to.throw('Invalid HKDF values.')
+  })
+
+  it('Precondition: The message ID length must match the specification.', () => {
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+    )
+
+    expect(() => buildAlgorithmForKDF(suite, new Uint8Array(15))).to.throw(
+      'Message id length does not match specification.'
+    )
+  })
+
+  it('Precondition: The message id length must match the algorithm suite.', () => {
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY
+    )
+
+    expect(() => buildAlgorithmForKDF(suite, new Uint8Array(16))).to.throw(
+      'Message id length does not match specification.'
+    )
+  })
+})
+
 describe('WebCryptoKdf', () => {
   it('returns a valid kdf key', async () => {
     const suite = new WebCryptoAlgorithmSuite(
@@ -196,17 +447,17 @@ describe('WebCryptoKdf', () => {
     const subtle = getZeroByteSubtle(backend)
 
     const cryptoKey = await _importCryptoKey(subtle, material, ['deriveKey'])
-    const kdfKey = await WebCryptoKdf(
+    const { deriveKey } = await WebCryptoKdf(
       subtle,
       material,
       cryptoKey,
       ['encrypt'],
-      new Uint8Array(5)
+      new Uint8Array(16)
     )
-    expect(kdfKey).to.be.instanceOf(CryptoKey)
-    expect(isValidCryptoKey(kdfKey, material)).to.equal(true)
+    expect(deriveKey).to.be.instanceOf(CryptoKey)
+    expect(isValidCryptoKey(deriveKey, material)).to.equal(true)
     // for kdf...
-    expect(kdfKey !== cryptoKey).to.equal(true)
+    expect(deriveKey !== cryptoKey).to.equal(true)
   })
 
   it('Check for early return (Postcondition): No WebCrypto KDF, just return the unencrypted data key.', async () => {
@@ -225,38 +476,17 @@ describe('WebCryptoKdf', () => {
     const subtle = getZeroByteSubtle(backend)
 
     const cryptoKey = await _importCryptoKey(subtle, material, ['encrypt'])
-    const kdfKey = await WebCryptoKdf(
+    const { deriveKey } = await WebCryptoKdf(
       subtle,
       material,
       cryptoKey,
       ['encrypt'],
-      new Uint8Array(5)
+      new Uint8Array(16)
     )
-    expect(kdfKey).to.be.instanceOf(CryptoKey)
-    expect(isValidCryptoKey(kdfKey, material)).to.equal(true)
+    expect(deriveKey).to.be.instanceOf(CryptoKey)
+    expect(isValidCryptoKey(deriveKey, material)).to.equal(true)
     // for non-kdf...
-    expect(kdfKey === cryptoKey).to.equal(true)
-  })
-
-  it('Precondition: Valid HKDF values must exist for browsers.', async () => {
-    const suite = new WebCryptoAlgorithmSuite(
-      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
-    )
-    const material = new WebCryptoEncryptionMaterial(suite, {})
-    const udk = synchronousRandomValues(suite.keyLengthBytes)
-    const trace = {
-      keyName: 'keyName',
-      keyNamespace: 'keyNamespace',
-      flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
-    }
-    material.setUnencryptedDataKey(udk, trace)
-    const backend = await getWebCryptoBackend()
-    const subtle = getZeroByteSubtle(backend)
-
-    const cryptoKey = await _importCryptoKey(subtle, material, ['deriveKey'])
-    await expect(
-      WebCryptoKdf(subtle, material, cryptoKey, ['encrypt'], new Uint8Array(0))
-    ).to.rejectedWith(Error)
+    expect(deriveKey === cryptoKey).to.equal(true)
   })
 
   it('Postcondition: The derived key must conform to the algorith suite specification.', async () => {
@@ -287,13 +517,13 @@ describe('WebCryptoKdf', () => {
         material,
         cryptoKey,
         ['encrypt'],
-        new Uint8Array(5)
+        new Uint8Array(16)
       )
     ).to.rejectedWith(Error)
   })
 })
 
-describe('getSubtleFunction', () => {
+describe('currySubtleFunction', () => {
   it('can get encrypt', async () => {
     const suite = new WebCryptoAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
@@ -311,15 +541,15 @@ describe('getSubtleFunction', () => {
     const cryptoKey = await importCryptoKey(backend, material, ['encrypt'])
     material.setCryptoKey(cryptoKey, trace)
 
-    const testInfo = getSubtleFunction(material, backend, 'encrypt')
+    const testInfo = currySubtleFunction(material, backend, 'encrypt')
     expect(testInfo).to.be.a('function')
-    const testIvAad = testInfo(new Uint8Array(1))
+    const { getSubtleEncrypt: testIvAad } = await testInfo(new Uint8Array(16))
     expect(testIvAad).to.be.a('function')
     const iv = new Uint8Array(suite.ivLength)
     const aad = new Uint8Array(1)
     const testFunction = testIvAad(iv, aad)
     expect(testFunction).to.be.a('function')
-    const test = await testFunction(new Uint8Array(5))
+    const test = await testFunction(new Uint8Array(16))
     expect(test).to.be.instanceOf(ArrayBuffer)
   })
 
@@ -337,7 +567,8 @@ describe('getSubtleFunction', () => {
     material.setUnencryptedDataKey(udk, trace)
     const backend = await getWebCryptoBackend()
 
-    expect(() => getSubtleFunction(material, backend, 'encrypt')).to.throw()
+    // 'Material must have a CryptoKey.'
+    expect(() => currySubtleFunction(material, backend, 'encrypt')).to.throw()
   })
 
   it('Precondition: The cryptoKey and backend must match in terms of Mixed vs Full support.', async () => {
@@ -366,8 +597,9 @@ describe('getSubtleFunction', () => {
     const cryptoKey = await _importCryptoKey(subtle, material, ['encrypt'])
     material.setCryptoKey(cryptoKey, trace)
 
+    // 'CryptoKey vs WebCrypto backend mismatch.'
     expect(() =>
-      getSubtleFunction(mixedSupportBackend, backend, 'encrypt')
+      currySubtleFunction(mixedSupportBackend, backend, 'encrypt')
     ).to.throw()
   })
 
@@ -388,9 +620,9 @@ describe('getSubtleFunction', () => {
     const cryptoKey = await importCryptoKey(backend, material, ['encrypt'])
     material.setCryptoKey(cryptoKey, trace)
 
-    const testInfo = getSubtleFunction(material, backend, 'encrypt')
+    const testInfo = currySubtleFunction(material, backend, 'encrypt')
     expect(testInfo).to.be.a('function')
-    const testIvAad = testInfo(new Uint8Array(1))
+    const { getSubtleEncrypt: testIvAad } = await testInfo(new Uint8Array(16))
     expect(testIvAad).to.be.a('function')
     const iv = new Uint8Array(suite.ivLength - 1)
     const aad = new Uint8Array(1)
@@ -431,16 +663,26 @@ describe('getSubtleFunction', () => {
     const tagLengthBytes = suite.tagLength / 8
 
     // Encrypt
-    const testEncryptInfo = getSubtleFunction(material, mixedBackend, 'encrypt')
-    const testEncryptIvAad = testEncryptInfo(new Uint8Array(1))
+    const testEncryptInfo = currySubtleFunction(
+      material,
+      mixedBackend,
+      'encrypt'
+    )
+    const { getSubtleEncrypt: testEncryptIvAad } = await testEncryptInfo(
+      new Uint8Array(1)
+    )
     const testEncryptFunction = testEncryptIvAad(iv, aad)
     const testEncryptedData = await testEncryptFunction(new Uint8Array(0))
     // Because I encrypted 0 bytes, the data should _only_ be tagLength
     expect(testEncryptedData.byteLength).to.equal(tagLengthBytes)
 
     // Decrypt
-    const testDecryptInfo = getSubtleFunction(material, mixedBackend, 'decrypt')
-    const testDecryptIvAad = testDecryptInfo(new Uint8Array(1))
+    const testDecryptInfo = currySubtleFunction(
+      material,
+      mixedBackend,
+      'decrypt'
+    )
+    const testDecryptIvAad = await testDecryptInfo(new Uint8Array(1))
     const testDecryptFunction = testDecryptIvAad(iv, aad)
     const testDecryptedData = await testDecryptFunction(
       new Uint8Array(testEncryptedData)
@@ -484,8 +726,14 @@ describe('getSubtleFunction', () => {
     const tagLengthBytes = suite.tagLength / 8
 
     // Encrypt
-    const testEncryptInfo = getSubtleFunction(material, mixedBackend, 'encrypt')
-    const testEncryptIvAad = testEncryptInfo(new Uint8Array(1))
+    const testEncryptInfo = currySubtleFunction(
+      material,
+      mixedBackend,
+      'encrypt'
+    )
+    const { getSubtleEncrypt: testEncryptIvAad } = await testEncryptInfo(
+      new Uint8Array(1)
+    )
     const testEncryptFunction = testEncryptIvAad(iv, aad)
     const testEncryptedData = await testEncryptFunction(new Uint8Array(0))
 
@@ -493,8 +741,12 @@ describe('getSubtleFunction', () => {
     expect(testEncryptedData.byteLength).to.equal(tagLengthBytes)
 
     // Decrypt
-    const testDecryptInfo = getSubtleFunction(material, mixedBackend, 'decrypt')
-    const testDecryptIvAad = testDecryptInfo(new Uint8Array(1))
+    const testDecryptInfo = currySubtleFunction(
+      material,
+      mixedBackend,
+      'decrypt'
+    )
+    const testDecryptIvAad = await testDecryptInfo(new Uint8Array(1))
     const testDecryptFunction = testDecryptIvAad(iv, aad)
 
     for (let i = 0; tagLengthBytes > i; i++) {
@@ -533,24 +785,21 @@ describe('getSubtleFunction', () => {
     encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
     decryptionMaterial.setCryptoKey(cryptoKey, decryptTrace)
 
-    const info = synchronousRandomValues(5)
+    const info = synchronousRandomValues(16)
     const iv = synchronousRandomValues(suite.ivLength)
     const aad = synchronousRandomValues(5)
     const data = new Uint8Array([1, 2, 3, 4, 5])
 
-    const ciphertext = await getSubtleFunction(
+    const { getSubtleEncrypt } = await currySubtleFunction(
       encryptionMaterial,
       backend,
       'encrypt'
-    )(info)(
-      iv,
-      aad
-    )(data)
-    const plaintext = await getSubtleFunction(
-      decryptionMaterial,
-      backend,
-      'decrypt'
-    )(info)(
+    )(info)
+    const ciphertext = await getSubtleEncrypt(iv, aad)(data)
+
+    const plaintext = await (
+      await currySubtleFunction(decryptionMaterial, backend, 'decrypt')(info)
+    )(
       iv,
       aad
     )(new Uint8Array(ciphertext))
@@ -586,24 +835,20 @@ describe('getSubtleFunction', () => {
     encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
     decryptionMaterial.setCryptoKey(cryptoKey, decryptTrace)
 
-    const info = synchronousRandomValues(5)
+    const info = synchronousRandomValues(16)
     const iv = synchronousRandomValues(suite.ivLength)
     const aad = synchronousRandomValues(5)
     const data = new Uint8Array([1, 2, 3, 4, 5])
 
-    const ciphertext = await getSubtleFunction(
-      encryptionMaterial,
-      backend,
-      'encrypt'
-    )(info)(
+    const ciphertext = await (
+      await currySubtleFunction(encryptionMaterial, backend, 'encrypt')(info)
+    ).getSubtleEncrypt(
       iv,
       aad
     )(data)
-    const plaintext = await getSubtleFunction(
-      decryptionMaterial,
-      backend,
-      'decrypt'
-    )(info)(
+    const plaintext = await (
+      await currySubtleFunction(decryptionMaterial, backend, 'decrypt')(info)
+    )(
       iv,
       aad
     )(new Uint8Array(ciphertext))
@@ -650,43 +895,51 @@ describe('getSubtleFunction', () => {
     encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
     decryptionMaterial.setCryptoKey(cryptoKey, decryptTrace)
 
-    const info = synchronousRandomValues(5)
+    const messageId = synchronousRandomValues(16)
     const iv = synchronousRandomValues(suite.ivLength)
     const aad = synchronousRandomValues(5)
     const data = new Uint8Array([1, 2, 3, 4, 5])
 
-    const ciphertext = await getSubtleFunction(
-      encryptionMaterial,
-      mixedSupportBackend,
-      'encrypt'
-    )(info)(
+    const ciphertext = await (
+      await currySubtleFunction(
+        encryptionMaterial,
+        mixedSupportBackend,
+        'encrypt'
+      )(messageId)
+    ).getSubtleEncrypt(
       iv,
       aad
     )(data)
-    const plaintext = await getSubtleFunction(
-      decryptionMaterial,
-      mixedSupportBackend,
-      'decrypt'
-    )(info)(
+    const plaintext = await (
+      await currySubtleFunction(
+        decryptionMaterial,
+        mixedSupportBackend,
+        'decrypt'
+      )(messageId)
+    )(
       iv,
       aad
     )(new Uint8Array(ciphertext))
 
     expect(new Uint8Array(plaintext)).to.deep.equal(data)
 
-    const ciphertextZeroByteData = await getSubtleFunction(
-      encryptionMaterial,
-      mixedSupportBackend,
-      'encrypt'
-    )(info)(
+    const ciphertextZeroByteData = await (
+      await currySubtleFunction(
+        encryptionMaterial,
+        mixedSupportBackend,
+        'encrypt'
+      )(messageId)
+    ).getSubtleEncrypt(
       iv,
       aad
     )(new Uint8Array(0))
-    const plaintextZeroByteData = await getSubtleFunction(
-      decryptionMaterial,
-      mixedSupportBackend,
-      'decrypt'
-    )(info)(
+    const plaintextZeroByteData = await (
+      await currySubtleFunction(
+        decryptionMaterial,
+        mixedSupportBackend,
+        'decrypt'
+      )(messageId)
+    )(
       iv,
       aad
     )(new Uint8Array(ciphertextZeroByteData))
@@ -735,43 +988,51 @@ describe('getSubtleFunction', () => {
     encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
     decryptionMaterial.setCryptoKey(cryptoKey, decryptTrace)
 
-    const info = synchronousRandomValues(5)
+    const info = synchronousRandomValues(16)
     const iv = synchronousRandomValues(suite.ivLength)
     const aad = synchronousRandomValues(5)
     const data = new Uint8Array([1, 2, 3, 4, 5])
 
-    const ciphertext = await getSubtleFunction(
-      encryptionMaterial,
-      mixedSupportBackend,
-      'encrypt'
-    )(info)(
+    const ciphertext = await (
+      await currySubtleFunction(
+        encryptionMaterial,
+        mixedSupportBackend,
+        'encrypt'
+      )(info)
+    ).getSubtleEncrypt(
       iv,
       aad
     )(data)
-    const plaintext = await getSubtleFunction(
-      decryptionMaterial,
-      mixedSupportBackend,
-      'decrypt'
-    )(info)(
+    const plaintext = await (
+      await currySubtleFunction(
+        decryptionMaterial,
+        mixedSupportBackend,
+        'decrypt'
+      )(info)
+    )(
       iv,
       aad
     )(new Uint8Array(ciphertext))
 
     expect(new Uint8Array(plaintext)).to.deep.equal(data)
 
-    const ciphertextZeroByteData = await getSubtleFunction(
-      encryptionMaterial,
-      mixedSupportBackend,
-      'encrypt'
-    )(info)(
+    const ciphertextZeroByteData = await (
+      await currySubtleFunction(
+        encryptionMaterial,
+        mixedSupportBackend,
+        'encrypt'
+      )(info)
+    ).getSubtleEncrypt(
       iv,
       aad
     )(new Uint8Array(0))
-    const plaintextZeroByteData = await getSubtleFunction(
-      decryptionMaterial,
-      mixedSupportBackend,
-      'decrypt'
-    )(info)(
+    const plaintextZeroByteData = await (
+      await currySubtleFunction(
+        decryptionMaterial,
+        mixedSupportBackend,
+        'decrypt'
+      )(info)
+    )(
       iv,
       aad
     )(new Uint8Array(ciphertextZeroByteData))
@@ -807,7 +1068,7 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
     encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
 
     const test = await getEncryptHelper(encryptionMaterial)
-    expect(test.kdfGetSubtleEncrypt).to.be.a('function')
+    expect(test.getEncryptInfo).to.be.a('function')
     expect(test.subtleSign).to.equal(undefined)
     expect(test.dispose).to.be.a('function')
   })
@@ -833,7 +1094,7 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
     decryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
 
     const test = await getDecryptionHelper(decryptionMaterial)
-    expect(test.kdfGetSubtleDecrypt).to.be.a('function')
+    expect(test.getDecryptInfo).to.be.a('function')
     expect(test.subtleVerify).to.equal(undefined)
     expect(test.dispose).to.be.a('function')
   })
@@ -862,7 +1123,7 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
     encryptionMaterial.setCryptoKey(cryptoKey, encryptTrace)
 
     const test = await getEncryptHelper(encryptionMaterial)
-    expect(test.kdfGetSubtleEncrypt).to.be.a('function')
+    expect(test.getEncryptInfo).to.be.a('function')
     expect(test.subtleSign).to.be.a('function')
     expect(test.dispose).to.be.a('function')
   })
@@ -891,7 +1152,7 @@ describe('getEncryptHelper/getDecryptionHelper', () => {
     decryptionMaterial.setCryptoKey(cryptoKey, decryptionTrace)
 
     const test = await getDecryptionHelper(decryptionMaterial)
-    expect(test.kdfGetSubtleDecrypt).to.be.a('function')
+    expect(test.getDecryptInfo).to.be.a('function')
     expect(test.subtleVerify).to.be.a('function')
     expect(test.dispose).to.be.a('function')
   })

@@ -11,11 +11,13 @@ import {
   KmsKeyringNode,
   RawAesKeyringNode,
   RawAesWrappingSuiteIdentifier,
-  encrypt,
-  decrypt,
+  buildClient,
+  CommitmentPolicy,
 } from '@aws-crypto/client-node'
 import { randomBytes } from 'crypto'
-
+const { encrypt, decrypt } = buildClient(
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+)
 export async function multiKeyringTest() {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.

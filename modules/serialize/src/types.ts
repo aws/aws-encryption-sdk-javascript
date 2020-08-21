@@ -1,7 +1,12 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { ContentType, SerializationVersion, ObjectType } from './identifiers'
+import {
+  MessageFormat,
+  NonCommittingAlgorithmSuiteIdentifier,
+  CommittingAlgorithmSuiteIdentifier,
+} from '@aws-crypto/material-management'
+import { ContentType, ObjectType } from './identifiers'
 import {
   IvLength,
   AlgorithmSuiteIdentifier,
@@ -23,17 +28,31 @@ export type BinaryData =
   | DataView
   | ArrayBuffer
 
-export interface MessageHeader
+export type MessageHeader = MessageHeaderV1 | MessageHeaderV2
+
+export interface MessageHeaderV1
   extends Readonly<{
-    version: SerializationVersion
+    version: MessageFormat.V1
     type: ObjectType
-    suiteId: AlgorithmSuiteIdentifier
-    messageId: BinaryData
+    suiteId: NonCommittingAlgorithmSuiteIdentifier
+    messageId: Uint8Array
     encryptionContext: Readonly<EncryptionContext>
     encryptedDataKeys: ReadonlyArray<EncryptedDataKey>
     contentType: ContentType
     headerIvLength: IvLength
     frameLength: number
+  }> {}
+
+export interface MessageHeaderV2
+  extends Readonly<{
+    version: MessageFormat.V2
+    suiteId: CommittingAlgorithmSuiteIdentifier
+    messageId: Uint8Array
+    encryptionContext: Readonly<EncryptionContext>
+    encryptedDataKeys: ReadonlyArray<EncryptedDataKey>
+    contentType: ContentType
+    frameLength: number
+    suiteData: Uint8Array
   }> {}
 
 export interface BodyHeader {
@@ -70,8 +89,17 @@ export type HeaderInfo = {
   headerLength: number
   rawHeader: Uint8Array
   algorithmSuite: AlgorithmSuite
+  /** @deprecated use headerAuth */
+  headerIv: Uint8Array
+  /** @deprecated use headerAuth */
+  headerAuthTag: Uint8Array
+  headerAuth: HeaderAuth
+}
+
+export interface HeaderAuth {
   headerIv: Uint8Array
   headerAuthTag: Uint8Array
+  headerAuthLength: number
 }
 
 export interface AlgorithmSuiteConstructor<Suite extends AlgorithmSuite> {

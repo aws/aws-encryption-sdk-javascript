@@ -1,8 +1,14 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { KmsKeyringNode, encrypt, decrypt } from '@aws-crypto/client-node'
-
+import {
+  KmsKeyringNode,
+  buildClient,
+  CommitmentPolicy,
+} from '@aws-crypto/client-node'
+const { encrypt, decrypt } = buildClient(
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+)
 export async function kmsSimpleTest() {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.

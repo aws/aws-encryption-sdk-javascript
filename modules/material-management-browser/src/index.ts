@@ -28,4 +28,7 @@ export {
   WebCryptoMaterialsManager,
   unwrapDataKey,
   AwsEsdkJsCryptoKey,
+  CommitmentPolicy,
+  CommitmentPolicySuites,
+  MessageFormat,
 } from '@aws-crypto/material-management'

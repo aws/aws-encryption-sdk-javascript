@@ -33,7 +33,7 @@ type AwsEsdkCrypto = {
 }
 export const supportsKeyObject = (function () {
   try {
-    const { KeyObject, createSecretKey } = require('crypto') as AwsEsdkCrypto
+    const { KeyObject, createSecretKey } = require('crypto') as AwsEsdkCrypto // eslint-disable-line @typescript-eslint/no-var-requires
     if (!KeyObject || !createSecretKey) return false
 
     return { KeyObject, createSecretKey }

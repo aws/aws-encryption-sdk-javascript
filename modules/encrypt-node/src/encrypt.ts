@@ -4,15 +4,16 @@
 import {
   KeyringNode,
   NodeMaterialsManager,
+  CommitmentPolicy,
 } from '@aws-crypto/material-management-node'
-import { encryptStream, EncryptStreamInput } from './encrypt_stream'
+import { _encryptStream, EncryptStreamInput } from './encrypt_stream'
 
 // @ts-ignore
 import { finished } from 'readable-stream'
 import { Readable, Duplex } from 'stream'
 import { MessageHeader } from '@aws-crypto/serialize'
 
-interface EncryptInput extends EncryptStreamInput {
+export interface EncryptInput extends EncryptStreamInput {
   encoding?: BufferEncoding
 }
 
@@ -21,7 +22,8 @@ export interface EncryptOutput {
   messageHeader: MessageHeader
 }
 
-export async function encrypt(
+export async function _encrypt(
+  commitmentPolicy: CommitmentPolicy,
   cmm: KeyringNode | NodeMaterialsManager,
   plaintext: Buffer | Uint8Array | Readable | string | NodeJS.ReadableStream,
   op: EncryptInput = {}
@@ -34,7 +36,7 @@ export async function encrypt(
     op.plaintextLength = plaintext.byteLength
   }
 
-  const stream = encryptStream(cmm, op)
+  const stream = _encryptStream(commitmentPolicy, cmm, op)
   const result: Buffer[] = []
   let messageHeader: MessageHeader | false = false
   stream

@@ -42,7 +42,10 @@ module.exports = {
     // it is good for understanding
     // for the source files to get more detailed
     // as you read down from the top.
-    'no-use-before-define': ['error', { functions: false }],
+    // Note: eslint has gotten better
+    // at parsing typescript
+    // and now errors for interfaces as well.
+    'no-use-before-define': 'off',
     '@typescript-eslint/no-use-before-define': ['error', { functions: false }],
     // This is used in a few specific ways.
     // It may be that adding this to overrides for the tests
@@ -74,7 +77,9 @@ module.exports = {
     '@typescript-eslint/no-empty-interface': 'off',
     // To minimize the source change,
     // this is turned of.
-    '@typescript-eslint/ban-ts-ignore': 'off',
+    '@typescript-eslint/ban-ts-comment': ['error', { 'ts-ignore': false }],
+    // This rule fights with Prettier and no-semi
+    '@typescript-eslint/no-extra-semi': 'off',
   },
   // This is a good rule,
   // but in many tests,

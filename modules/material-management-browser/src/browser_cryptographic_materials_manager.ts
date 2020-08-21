@@ -13,13 +13,14 @@ import {
   needs,
   readOnlyProperty,
   VerificationKey,
-  AlgorithmSuiteIdentifier,
   immutableBaseClass,
   KeyringWebCrypto,
   GetEncryptionMaterials,
   GetDecryptMaterials,
   AwsEsdkJsKeyUsage,
   AwsEsdkJsCryptoKeyPair,
+  CommitmentPolicySuites,
+  AlgorithmSuiteIdentifier,
 } from '@aws-crypto/material-management'
 
 import { ENCODED_SIGNER_KEY } from '@aws-crypto/serialize'
@@ -43,9 +44,9 @@ export type WebCryptoGetDecryptMaterials = GetDecryptMaterials<
 >
 
 /**
- * The DefaultCryptographicMaterialsManager is a specific implementation of the CryptographicMaterialsManager.
+ * The WebCryptoDefaultCryptographicMaterialsManager is a specific implementation of the CryptographicMaterialsManager.
  * New cryptography materials managers SHOULD extend from WebCryptoMaterialsManager.
- * Users should never need to create an instance of a DefaultCryptographicMaterialsManager.
+ * Users should never need to create an instance of a WebCryptoDefaultCryptographicMaterialsManager.
  */
 export class WebCryptoDefaultCryptographicMaterialsManager
   implements WebCryptoMaterialsManager {
@@ -58,11 +59,15 @@ export class WebCryptoDefaultCryptographicMaterialsManager
   async getEncryptionMaterials({
     suite,
     encryptionContext,
+    commitmentPolicy,
   }: WebCryptoEncryptionRequest): Promise<WebCryptoEncryptionMaterial> {
     suite =
       suite ||
       new WebCryptoAlgorithmSuite(
-        AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+        commitmentPolicy
+          ? CommitmentPolicySuites[commitmentPolicy].defaultAlgorithmSuite
+          : /** @deprecate remove fallback default. */
+            AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
       )
 
     /* Precondition: WebCryptoDefaultCryptographicMaterialsManager must reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.

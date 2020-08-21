@@ -31,4 +31,7 @@ export {
   NodeMaterialsManager,
   unwrapDataKey,
   AwsEsdkKeyObject,
+  CommitmentPolicy,
+  CommitmentPolicySuites,
+  MessageFormat,
 } from '@aws-crypto/material-management'

@@ -14,6 +14,7 @@ import {
   GetCipher,
   AwsEsdkJsCipherGCM,
   needs,
+  NodeAlgorithmSuite,
 } from '@aws-crypto/material-management-node'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
@@ -45,15 +46,18 @@ type ErrBack = (err?: Error) => void
 export function getFramedEncryptStream(
   getCipher: GetCipher,
   messageHeader: MessageHeader,
-  dispose: Function,
-  plaintextLength?: number
+  dispose: () => void,
+  {
+    plaintextLength,
+    suite,
+  }: { plaintextLength?: number; suite: NodeAlgorithmSuite }
 ) {
   let accumulatingFrame: AccumulatingFrame = {
     contentLength: 0,
     content: [],
     sequenceNumber: 1,
   }
-  let pathologicalDrain: Function = noop
+  let pathologicalDrain: () => void = noop
   const { frameLength } = messageHeader
 
   /* Precondition: plaintextLength must be within bounds.
@@ -102,6 +106,7 @@ export function getFramedEncryptStream(
         messageHeader,
         getCipher,
         isFinalFrame: false,
+        suite,
       })
 
       // Reset frame state for next frame
@@ -123,6 +128,7 @@ export function getFramedEncryptStream(
         messageHeader,
         getCipher,
         isFinalFrame: true,
+        suite,
       })
 
       this._flushEncryptFrame(encryptFrame)
@@ -198,12 +204,13 @@ type EncryptFrameInput = {
   messageHeader: MessageHeader
   getCipher: GetCipher
   isFinalFrame: boolean
+  suite: NodeAlgorithmSuite
 }
 
 export function getEncryptFrame(input: EncryptFrameInput): EncryptFrame {
-  const { pendingFrame, messageHeader, getCipher, isFinalFrame } = input
+  const { pendingFrame, messageHeader, getCipher, isFinalFrame, suite } = input
   const { sequenceNumber, contentLength, content } = pendingFrame
-  const { frameLength, contentType, messageId, headerIvLength } = messageHeader
+  const { frameLength, contentType, messageId } = messageHeader
   /* Precondition: The content length MUST correlate with the frameLength.
    * In the case of a regular frame,
    * the content length MUST strictly equal the frame length.
@@ -219,7 +226,7 @@ export function getEncryptFrame(input: EncryptFrameInput): EncryptFrame {
       isFinalFrame,
     })}`
   )
-  const frameIv = serialize.frameIv(headerIvLength, sequenceNumber)
+  const frameIv = serialize.frameIv(suite.ivLength, sequenceNumber)
   const bodyHeader = Buffer.from(
     isFinalFrame
       ? finalFrameHeader(sequenceNumber, frameIv, contentLength)

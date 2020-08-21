@@ -17,8 +17,10 @@ import {
   createDecipheriv,
   createSign,
   createVerify,
+  timingSafeEqual,
 } from 'crypto'
 import { HKDF } from '@aws-crypto/hkdf-node'
+import { kdfInfo, kdfCommitKeyInfo } from '@aws-crypto/serialize'
 
 export interface AwsEsdkJsCipherGCM {
   update(data: Buffer): Buffer
@@ -38,14 +40,23 @@ type KDFIndex = Readonly<{ [K in NodeHash]: ReturnType<typeof HKDF> }>
 const kdfIndex: KDFIndex = Object.freeze({
   sha256: HKDF('sha256' as NodeHash),
   sha384: HKDF('sha384' as NodeHash),
+  sha512: HKDF('sha512' as NodeHash),
 })
 
 export interface GetCipher {
   (iv: Uint8Array): AwsEsdkJsCipherGCM
 }
 
+/** @deprecated use GetCipherInfo */
 export interface CurryGetCipher {
   (info?: Uint8Array): GetCipher
+}
+
+export interface GetCipherInfo {
+  (messageId: Uint8Array): {
+    getCipher: GetCipher
+    keyCommitment?: Uint8Array
+  }
 }
 
 export interface GetSigner {
@@ -53,7 +64,9 @@ export interface GetSigner {
 }
 
 export interface NodeEncryptionMaterialHelper {
+  /** @deprecated use getCipherInfo */
   kdfGetCipher: CurryGetCipher
+  getCipherInfo: GetCipherInfo
   getSigner?: GetSigner
   dispose: () => void
 }
@@ -73,9 +86,12 @@ export const getEncryptHelper: GetEncryptHelper = (
    * Function overloads "works" but then I can not export
    * the function and have eslint be happy (Multiple exports of name)
    */
+  /** @deprecated use getCipherInfo */
   const kdfGetCipher = getCryptoStream(material) as CurryGetCipher
+  const getCipherInfo = curryCryptoStream(material, createCipheriv)
   return Object.freeze({
     kdfGetCipher,
+    getCipherInfo,
     getSigner: signatureHash ? getSigner : undefined,
     dispose,
   })
@@ -117,15 +133,22 @@ export const getEncryptHelper: GetEncryptHelper = (
 export interface GetDecipher {
   (iv: Uint8Array): AwsEsdkJsDecipherGCM
 }
+/** @deprecated use GetDecipherInfo */
 export interface CurryGetDecipher {
   (info?: Uint8Array): GetDecipher
 }
+export interface GetDecipherInfo {
+  (messageId: Uint8Array, commitKey?: Uint8Array): GetDecipher
+}
+
 export interface GetVerify {
   (): Verify & { awsCryptoVerify: (signature: Buffer) => boolean }
 }
 
 export interface NodeDecryptionMaterialHelper {
+  /** @deprecated use getDecipherInfo */
   kdfGetDecipher: CurryGetDecipher
+  getDecipherInfo: GetDecipherInfo
   getVerify?: GetVerify
   dispose: () => void
 }
@@ -146,9 +169,12 @@ export const getDecryptionHelper: GetDecryptionHelper = (
    * Function overloads "works" but then I can not export
    * the function and have eslint be happy (Multiple exports of name)
    */
+  /** @deprecated use getDecipherInfo */
   const kdfGetDecipher = getCryptoStream(material) as CurryGetDecipher
+  const getDecipherInfo = curryCryptoStream(material, createDecipheriv)
   return Object.freeze({
     kdfGetDecipher,
+    getDecipherInfo,
     getVerify: signatureHash ? getVerify : undefined,
     dispose,
   })
@@ -176,25 +202,63 @@ export const getDecryptionHelper: GetDecryptionHelper = (
   }
 }
 
-export function getCryptoStream(
-  material: NodeEncryptionMaterial | NodeDecryptionMaterial
-) {
+type CreateCryptoIvStream<
+  Material extends NodeEncryptionMaterial | NodeDecryptionMaterial
+> = Material extends NodeEncryptionMaterial
+  ? typeof createCipheriv
+  : typeof createDecipheriv
+
+type CryptoStream<
+  Material extends NodeEncryptionMaterial | NodeDecryptionMaterial
+> = Material extends NodeEncryptionMaterial
+  ? AwsEsdkJsCipherGCM
+  : AwsEsdkJsDecipherGCM
+
+type CreateCryptoStream<
+  Material extends NodeEncryptionMaterial | NodeDecryptionMaterial
+> = (iv: Uint8Array) => CryptoStream<Material>
+
+type CurryHelper<
+  Material extends NodeEncryptionMaterial | NodeDecryptionMaterial
+> = Material extends NodeEncryptionMaterial
+  ? {
+      getCipher: CreateCryptoStream<Material>
+      keyCommitment: Uint8Array
+    }
+  : Material extends NodeDecryptionMaterial
+  ? CreateCryptoStream<Material>
+  : never
+
+export function curryCryptoStream<
+  Material extends NodeEncryptionMaterial | NodeDecryptionMaterial
+>(material: Material, createCryptoIvStream: CreateCryptoIvStream<Material>) {
   const { encryption: cipherName, ivLength } = material.suite
 
-  const createCryptoStream =
-    material instanceof NodeEncryptionMaterial
-      ? createCipheriv
+  const isEncrypt = material instanceof NodeEncryptionMaterial
+  /* Precondition: material must be either NodeEncryptionMaterial or NodeDecryptionMaterial.
+   *
+   */
+  needs(
+    isEncrypt
+      ? createCipheriv === createCryptoIvStream
       : material instanceof NodeDecryptionMaterial
-      ? createDecipheriv
-      : false
+      ? createDecipheriv === createCryptoIvStream
+      : false,
+    'Unsupported cryptographic material.'
+  )
 
-  /* Precondition: material must be either NodeEncryptionMaterial or NodeDecryptionMaterial. */
-  if (!createCryptoStream)
-    throw new Error('Unsupported cryptographic material.')
+  return (messageId: Uint8Array, commitKey?: Uint8Array) => {
+    const { derivedKey, keyCommitment } = nodeKdf(
+      material,
+      messageId,
+      commitKey
+    )
 
-  return (info?: Uint8Array) => {
-    const derivedKey = nodeKdf(material, info)
-    return (iv: Uint8Array): AwsEsdkJsCipherGCM | AwsEsdkJsDecipherGCM => {
+    return (isEncrypt
+      ? { getCipher: createCryptoStream, keyCommitment }
+      : createCryptoStream) as CurryHelper<Material>
+
+    function createCryptoStream(iv: Uint8Array): CryptoStream<Material> {
       /* Precondition: The length of the IV must match the NodeAlgorithmSuite specification. */
       needs(
         iv.byteLength === ivLength,
@@ -212,29 +276,57 @@ export function getCryptoStream(
         'Unencrypted data key has been zeroed.'
       )
 
-      // createDecipheriv is incorrectly typed in @types/node. It should take key: CipherKey, not key: BinaryLike
-      return createCryptoStream(cipherName, derivedKey as any, iv)
+      /* createDecipheriv is incorrectly typed in @types/node. It should take key: CipherKey, not key: BinaryLike.
+       * Also, the check above ensures
+       * that _createCryptoStream is not false.
+       * But TypeScript does not believe me.
+       * For any complicated code,
+       * you should defer to the checker,
+       * but here I'm going to assert
+       * it is simple enough.
+       */
+      return (createCryptoIvStream(
+        cipherName,
+        derivedKey as any,
+        iv
+      ) as unknown) as CryptoStream<Material>
     }
   }
 }
 
 export function nodeKdf(
   material: NodeEncryptionMaterial | NodeDecryptionMaterial,
-  info?: Uint8Array
-): Uint8Array | AwsEsdkKeyObject {
+  nonce: Uint8Array,
+  commitKey?: Uint8Array
+): {
+  derivedKey: Uint8Array | AwsEsdkKeyObject
+  keyCommitment?: Uint8Array
+} {
   const dataKey = material.getUnencryptedDataKey()
 
-  const { kdf, kdfHash, keyLengthBytes } = material.suite
+  const {
+    kdf,
+    kdfHash,
+    keyLengthBytes,
+    commitmentLength,
+    saltLengthBytes,
+    commitment,
+    id: suiteId,
+  } = material.suite
 
   /* Check for early return (Postcondition): No Node.js KDF, just return the unencrypted data key. */
-  if (!kdf && !kdfHash) return dataKey
+  if (!kdf && !kdfHash) {
+    /* Postcondition: Non-KDF algorithm suites *must* not have a commitment. */
+    needs(!commitKey, 'Commitment not supported.')
+    return { derivedKey: dataKey }
+  }
 
   /* Precondition: Valid HKDF values must exist for Node.js. */
   needs(
     kdf === 'HKDF' &&
       kdfHash &&
       kdfIndex[kdfHash] &&
-      info instanceof Uint8Array,
+      nonce instanceof Uint8Array,
     'Invalid HKDF values.'
   )
   /* The unwrap is done once we *know* that a KDF is required.
@@ -246,15 +338,103 @@ export function nodeKdf(
     byteOffset: dkByteOffset,
     byteLength: dkByteLength,
   } = unwrapDataKey(dataKey)
-  // info and kdfHash are now defined
-  const toExtract = Buffer.from(dkBuffer, dkByteOffset, dkByteLength)
-  const { buffer, byteOffset, byteLength } = info as Uint8Array
-  const infoBuff = Buffer.from(buffer, byteOffset, byteLength)
 
-  const derivedBytes = kdfIndex[kdfHash as NodeHash](toExtract)(
-    keyLengthBytes,
-    infoBuff
+  if (commitment === 'NONE') {
+    /* Postcondition: Non-committing Node algorithm suites *must* not have a commitment. */
+    needs(!commitKey, 'Commitment not supported.')
+
+    const toExtract = Buffer.from(dkBuffer, dkByteOffset, dkByteLength)
+    const { buffer, byteOffset, byteLength } = kdfInfo(suiteId, nonce)
+    const infoBuff = Buffer.from(buffer, byteOffset, byteLength)
+
+    const derivedBytes = kdfIndex[kdfHash as NodeHash](toExtract)(
+      keyLengthBytes,
+      infoBuff
+    )
+    const derivedKey = wrapWithKeyObjectIfSupported(derivedBytes)
+
+    return { derivedKey }
+  }
+
+  /* Precondition UNTESTED: Committing suites must define expected values. */
+  needs(
+    commitment === 'KEY' && commitmentLength && saltLengthBytes,
+    'Malformed suite data.'
+  )
+  /* Precondition: For committing algorithms, the nonce *must* be 256 bit.
+   * i.e. It must target a V2 message format.
+   */
+  needs(
+    nonce.byteLength === saltLengthBytes,
+    'Nonce is not the correct length for committed algorithm suite.'
   )
 
-  return wrapWithKeyObjectIfSupported(derivedBytes)
+  const toExtract = Buffer.from(dkBuffer, dkByteOffset, dkByteLength)
+  const expand = kdfIndex[kdfHash as NodeHash](toExtract, nonce)
+
+  const { keyLabel, commitLabel } = kdfCommitKeyInfo(material.suite)
+  const keyCommitment = expand(commitmentLength / 8, commitLabel)
+
+  const isDecrypt = material instanceof NodeDecryptionMaterial
+  /* Precondition: If material is NodeDecryptionMaterial the key commitments *must* match.
+   * This is also the preferred location to check,
+   * because then the decryption key is never even derived.
+   */
+  needs(
+    (isDecrypt && commitKey && timingSafeEqual(keyCommitment, commitKey)) ||
+      (!isDecrypt && !commitKey),
+    isDecrypt ? 'Commitment does not match.' : 'Invalid arguments.'
+  )
+
+  const derivedBytes = expand(keyLengthBytes, keyLabel)
+  const derivedKey = wrapWithKeyObjectIfSupported(derivedBytes)
+  return { derivedKey, keyCommitment }
+}
+
+/** @deprecated use curryCryptoStream */
+export function getCryptoStream(
+  material: NodeEncryptionMaterial | NodeDecryptionMaterial
+) {
+  const { encryption: cipherName, ivLength } = material.suite
+
+  const createCryptoStream =
+    material instanceof NodeEncryptionMaterial
+      ? createCipheriv
+      : material instanceof NodeDecryptionMaterial
+      ? createDecipheriv
+      : false
+
+  /* : material must be either NodeEncryptionMaterial or NodeDecryptionMaterial. */
+  if (!createCryptoStream)
+    throw new Error('Unsupported cryptographic material.')
+
+  return (info: Uint8Array) => {
+    /* This function expected to always be passed the info,
+     * not the messageId.
+     * I'm going to deprecate this function soon,
+     * and no one should be using it.
+     */
+    const derivedKey = nodeKdf(material, info.slice(2)).derivedKey
+    return (iv: Uint8Array): AwsEsdkJsCipherGCM | AwsEsdkJsDecipherGCM => {
+      /* : The length of the IV must match the NodeAlgorithmSuite specification. */
+      needs(
+        iv.byteLength === ivLength,
+        'Iv length does not match algorithm suite specification'
+      )
+      /* : The material must have not been zeroed.
+       * hasUnencryptedDataKey will check that the unencrypted data key has been set
+       * *and* that it has not been zeroed.  At this point it must have been set
+       * because the KDF function operated on it.  So at this point
+       * we are protecting that someone has zeroed out the material
+       * because the Encrypt process has been complete.
+       */
+      needs(
+        material.hasUnencryptedDataKey,
+        'Unencrypted data key has been zeroed.'
+      )
+
+      // createDecipheriv is incorrectly typed in @types/node. It should take key: CipherKey, not key: BinaryLike
+      return createCryptoStream(cipherName, derivedKey as any, iv)
+    }
+  }
 }

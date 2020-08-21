@@ -92,7 +92,7 @@ export interface CryptographicMaterialsCacheKeyHelpersInterface<
 > {
   buildEncryptionMaterialCacheKey(
     partition: string,
-    { suite, encryptionContext }: EncryptionRequest<S>
+    { suite, encryptionContext }: Omit<EncryptionRequest<S>, 'commitmentPolicy'>
   ): Promise<string>
   buildDecryptionMaterialCacheKey(
     partition: string,

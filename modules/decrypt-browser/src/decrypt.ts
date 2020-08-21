@@ -9,17 +9,19 @@ import {
   GetSubtleDecrypt,
   needs,
   WebCryptoMaterialsManager,
+  CommitmentPolicy,
+  CommitmentPolicySuites,
 } from '@aws-crypto/material-management-browser'
 import {
   deserializeSignature,
   MessageHeader,
   deserializeFactory,
-  kdfInfo,
   decodeBodyHeader,
   aadFactory,
   concatBuffers,
   der2raw,
   HeaderInfo,
+  MessageHeaderV2,
 } from '@aws-crypto/serialize'
 import { fromUtf8, toUtf8 } from '@aws-sdk/util-utf8-browser'
 
@@ -31,10 +33,14 @@ export interface DecryptResult {
   plaintext: Uint8Array
 }
 
-export async function decrypt(
+export async function _decrypt(
+  commitmentPolicy: CommitmentPolicy,
   cmm: KeyringWebCrypto | WebCryptoMaterialsManager,
   ciphertext: Uint8Array
 ): Promise<DecryptResult> {
+  /* Precondition: _decrypt needs a valid commitmentPolicy. */
+  needs(CommitmentPolicy[commitmentPolicy], 'Invalid commitment policy.')
+
   /* If the cmm is a Keyring, wrap it with WebCryptoDefaultCryptographicMaterialsManager. */
   cmm =
     cmm instanceof KeyringWebCrypto
@@ -43,14 +49,28 @@ export async function decrypt(
 
   const headerInfo = deserialize.deserializeMessageHeader(ciphertext)
   if (headerInfo === false) throw new Error('Unable to parse Header')
-  const { messageHeader } = headerInfo
-  const { rawHeader, headerIv, headerAuthTag } = headerInfo
+  const { messageHeader, algorithmSuite } = headerInfo
+  const { rawHeader, headerAuth } = headerInfo
+  const { headerIv, headerAuthTag } = headerAuth
   const {
     encryptionContext,
     encryptedDataKeys,
     suiteId,
     messageId,
   } = messageHeader
+
+  // Very quick hex string
+  const messageIdStr = [...messageId]
+    .map((i) => (i > 15 ? i.toString(16) : '0' + i.toString(16)))
+    .join('')
+
+  /* The parsed header algorithmSuite in _decrypt must be supported by the commitmentPolicy. */
+  CommitmentPolicySuites.isDecryptEnabled(
+    commitmentPolicy,
+    algorithmSuite,
+    messageIdStr
+  )
+
   const suite = new WebCryptoAlgorithmSuite(suiteId)
 
   const material = await cmm.decryptMaterials({
@@ -58,13 +78,20 @@ export async function decrypt(
     encryptionContext,
     encryptedDataKeys,
   })
-  const {
-    kdfGetSubtleDecrypt,
-    subtleVerify,
-    dispose,
-  } = await getDecryptionHelper(material)
-  const info = kdfInfo(suiteId, messageId)
-  const getSubtleDecrypt = kdfGetSubtleDecrypt(info)
+
+  /* The material algorithmSuite returned to _decrypt must be supported by the commitmentPolicy. */
+  CommitmentPolicySuites.isDecryptEnabled(
+    commitmentPolicy,
+    material.suite,
+    messageIdStr
+  )
+  const { getDecryptInfo, subtleVerify, dispose } = await getDecryptionHelper(
+    material
+  )
+  const getSubtleDecrypt = await getDecryptInfo(
+    messageId,
+    (messageHeader as MessageHeaderV2).suiteData
+  )
 
   // The tag is appended to the Data
   await getSubtleDecrypt(headerIv, rawHeader)(headerAuthTag) // will throw if invalid
@@ -109,9 +136,7 @@ async function bodyDecrypt({
   headerInfo,
 }: BodyDecryptOptions) {
   let readPos =
-    headerInfo.headerIv.byteLength +
-    headerInfo.rawHeader.byteLength +
-    headerInfo.headerAuthTag.byteLength
+    headerInfo.rawHeader.byteLength + headerInfo.headerAuth.headerAuthLength
   const clearBuffers: ArrayBuffer[] = []
   let sequenceNumber = 0
   // This is unfortunate, ideally the eslint no-constant-condition could be resolve

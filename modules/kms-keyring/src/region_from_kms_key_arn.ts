@@ -12,7 +12,15 @@ import { needs } from '@aws-crypto/material-management'
  */
 const aliasOrKeyResourceType = /^(alias|key)(\/.*)*$/
 
+/* Maintaining function for backwards compatibility. */
 export function regionFromKmsKeyArn(kmsKeyArn: string): string {
+  const { region } = decomposeAwsKmsKeyArn(kmsKeyArn)
+  return region
+}
+
+export function decomposeAwsKmsKeyArn(
+  kmsKeyArn: string
+): { region: string; account: string; partition: string } {
   /* Precondition: A KMS key arn must be a string. */
   needs(typeof kmsKeyArn === 'string', 'KMS key arn must be a string.')
 
@@ -20,7 +28,13 @@ export function regionFromKmsKeyArn(kmsKeyArn: string): string {
    * arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012
    * arn:aws:kms:us-east-1:123456789012:alias/example-alias
    */
-  const [arnLiteral, partition, service, region = ''] = kmsKeyArn.split(':')
+  const [
+    arnLiteral,
+    partition,
+    service,
+    region = '',
+    account = '',
+  ] = kmsKeyArn.split(':')
 
   /* Postcondition: The ARN must be well formed.
    * The arn and kms section have defined values,
@@ -42,5 +56,5 @@ export function regionFromKmsKeyArn(kmsKeyArn: string): string {
     'Malformed arn.'
   )
 
-  return region
+  return { region, account, partition }
 }

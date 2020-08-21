@@ -4,13 +4,17 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import { serializeFactory } from '../src/serialize_factory'
+import {
+  serializeFactory,
+  serializeMessageHeaderAuth,
+} from '../src/serialize_factory'
 import {
   SerializationVersion,
   ContentType,
   ObjectType,
 } from '../src/identifiers'
 import * as fixtures from './fixtures'
+import { MessageHeaderV1, MessageHeaderV2 } from '../src'
 
 describe('serializeFactory:frameIv', () => {
   it('should return a rational IV', () => {
@@ -358,5 +362,93 @@ describe('serializeFactory:serializeMessageHeader', () => {
     expect(test).to.deep.equal(
       fixtures.zeroByteEncryptionContextMessageHeader()
     )
+  })
+
+  it('Precondition: Must be a version that can be serialized.', () => {
+    const fromUtf8 = (input: string) => Buffer.from(input)
+    const { serializeMessageHeader } = serializeFactory(fromUtf8)
+    expect(() => serializeMessageHeader({ version: -1 } as any)).to.throw(
+      'Unsupported version.'
+    )
+  })
+})
+
+describe('serializeMessageHeaderAuth', () => {
+  const headerIv = new Uint8Array(12)
+  const headerAuthTag = new Uint8Array(16)
+
+  it('can serialize the v1 header auth', () => {
+    const messageHeader: MessageHeaderV1 = {
+      version: SerializationVersion.V1,
+      type: ObjectType.CUSTOMER_AE_DATA,
+      suiteId: 0x0014,
+      // prettier-ignore
+      messageId: new Uint8Array([
+        3,  3,  3,  3,  3,  3,  3,  3,  3,
+        3, 3, 3, 3, 3, 3, 3,
+      ]),
+      encryptionContext: {
+        some: 'public',
+        information: '\u00bd + \u00bc = \u00be',
+      },
+      encryptedDataKeys: [
+        {
+          providerInfo: 'firstKey',
+          providerId: '\u00bd + \u00bc = \u00be',
+          encryptedDataKey: new Uint8Array([1, 2, 3, 4, 5]),
+        },
+        {
+          providerInfo: 'secondKey',
+          providerId: '\u00bd + \u00bc = \u00be',
+          encryptedDataKey: new Uint8Array([6, 7, 8, 9, 0]),
+        },
+      ],
+      contentType: ContentType.FRAMED_DATA,
+      headerIvLength: 12,
+      frameLength: 4096,
+    }
+    const test = serializeMessageHeaderAuth({
+      headerIv,
+      headerAuthTag,
+      messageHeader,
+    })
+    expect(test).to.deep.equal(new Uint8Array(12 + 16))
+  })
+
+  it('can serialize the v2 header auth', () => {
+    const messageHeader: MessageHeaderV2 = {
+      version: SerializationVersion.V2,
+      suiteId: 0x0014,
+      // prettier-ignore
+      messageId: new Uint8Array([
+        3,  3,  3,  3,  3,  3,  3,  3,  3,
+        3, 3, 3, 3, 3, 3, 3,
+      ]),
+      encryptionContext: {
+        some: 'public',
+        information: '\u00bd + \u00bc = \u00be',
+      },
+      encryptedDataKeys: [
+        {
+          providerInfo: 'firstKey',
+          providerId: '\u00bd + \u00bc = \u00be',
+          encryptedDataKey: new Uint8Array([1, 2, 3, 4, 5]),
+        },
+        {
+          providerInfo: 'secondKey',
+          providerId: '\u00bd + \u00bc = \u00be',
+          encryptedDataKey: new Uint8Array([6, 7, 8, 9, 0]),
+        },
+      ],
+      contentType: ContentType.FRAMED_DATA,
+      frameLength: 4096,
+      suiteData: new Uint8Array(32),
+    }
+    const test = serializeMessageHeaderAuth({
+      headerIv,
+      headerAuthTag,
+      messageHeader,
+    })
+    expect(test).to.deep.equal(new Uint8Array(16))
   })
 })

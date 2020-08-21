@@ -13,12 +13,14 @@ import {
   RawAesKeyringWebCrypto,
   RawAesWrappingSuiteIdentifier,
   MultiKeyringWebCrypto,
-  encrypt,
-  decrypt,
+  buildClient,
+  CommitmentPolicy,
   synchronousRandomValues,
 } from '@aws-crypto/client-browser'
 import { toBase64 } from '@aws-sdk/util-base64-browser'
-
+const { encrypt, decrypt } = buildClient(
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+)
 /* This is injected by webpack.
  * The webpack.DefinePlugin will replace the values when bundling.
  * The credential values are pulled from @aws-sdk/credential-provider-node
