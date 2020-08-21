@@ -21,9 +21,10 @@ import {
   decodeBodyHeader,
   deserializeSignature,
 } from '@aws-crypto/serialize'
-import { encrypt } from '../src/index'
+import { buildEncrypt } from '../src/index'
 import { _encrypt } from '../src/encrypt'
 import { toUtf8, fromUtf8 } from '@aws-sdk/util-utf8-browser'
+const { encrypt } = buildEncrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
 
 chai.use(chaiAsPromised)
 const { expect } = chai

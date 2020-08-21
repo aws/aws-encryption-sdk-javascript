@@ -13,7 +13,7 @@ type CurryFirst<fn extends (...a: any[]) => any> = fn extends (
   : never
 
 export function buildDecrypt(
-  commitmentPolicy: CommitmentPolicy
+  commitmentPolicy: CommitmentPolicy = CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
 ): {
   decryptStream: (
     ...args: CurryFirst<typeof _decryptStream>

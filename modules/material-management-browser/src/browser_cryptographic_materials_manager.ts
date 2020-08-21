@@ -20,7 +20,6 @@ import {
   AwsEsdkJsKeyUsage,
   AwsEsdkJsCryptoKeyPair,
   CommitmentPolicySuites,
-  AlgorithmSuiteIdentifier,
 } from '@aws-crypto/material-management'
 
 import { ENCODED_SIGNER_KEY } from '@aws-crypto/serialize'
@@ -64,10 +63,7 @@ export class WebCryptoDefaultCryptographicMaterialsManager
     suite =
       suite ||
       new WebCryptoAlgorithmSuite(
-        commitmentPolicy
-          ? CommitmentPolicySuites[commitmentPolicy].defaultAlgorithmSuite
-          : /** @deprecate remove fallback default. */
-            AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+        CommitmentPolicySuites[commitmentPolicy].defaultAlgorithmSuite
       )
 
     /* Precondition: WebCryptoDefaultCryptographicMaterialsManager must reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.

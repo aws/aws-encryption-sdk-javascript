@@ -67,7 +67,7 @@ export class ParseHeaderStream extends PortableTransformWithType {
 
     const { messageHeader, algorithmSuite } = headerInfo
     const messageIDStr = Buffer.from(messageHeader.messageId).toString('hex')
-    /* The parsed header algorithmSuite from ParseHeaderStream must be supported by the commitmentPolicy. */
+    /* Precondition: The parsed header algorithmSuite from ParseHeaderStream must be supported by the commitmentPolicy. */
     CommitmentPolicySuites.isDecryptEnabled(
       commitmentPolicy,
       algorithmSuite,
@@ -83,7 +83,7 @@ export class ParseHeaderStream extends PortableTransformWithType {
     materialsManager
       .decryptMaterials({ suite, encryptionContext, encryptedDataKeys })
       .then((material) => {
-        /* The material algorithmSuite returned to ParseHeaderStream must be supported by the commitmentPolicy. */
+        /* Precondition: The material algorithmSuite returned to ParseHeaderStream must be supported by the commitmentPolicy. */
         CommitmentPolicySuites.isDecryptEnabled(
           commitmentPolicy,
           material.suite,

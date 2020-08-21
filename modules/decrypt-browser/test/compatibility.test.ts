@@ -5,7 +5,7 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { decrypt } from '../src/index'
+import { buildDecrypt } from '../src/index'
 import {
   needs,
   importForWebCryptoDecryptionMaterial,
@@ -15,7 +15,10 @@ import {
   WebCryptoEncryptionMaterial,
 } from '@aws-crypto/material-management-browser'
 import * as fixtures from './fixtures'
-import { MessageFormat } from '@aws-crypto/material-management'
+import {
+  CommitmentPolicy,
+  MessageFormat,
+} from '@aws-crypto/material-management'
 import {
   KmsKeyringBrowser,
   KMS,
@@ -25,6 +28,8 @@ import { fromBase64, toBase64 } from '@aws-sdk/util-base64-browser'
 import { toUtf8 } from '@aws-sdk/util-utf8-browser'
 chai.use(chaiAsPromised)
 const { expect } = chai
+
+const { decrypt } = buildDecrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
 
 declare const credentials: {
   accessKeyId: string

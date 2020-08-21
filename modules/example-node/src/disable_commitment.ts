@@ -1,33 +1,25 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-/* This is a simple example of using a multi-keyring KMS keyring
- * to combine a KMS keyring and a raw AES keyring
- * to encrypt and decrypt using the AWS Encryption SDK for Javascript in Node.js.
- */
-
 import {
-  MultiKeyringNode,
   KmsKeyringNode,
-  RawAesKeyringNode,
-  RawAesWrappingSuiteIdentifier,
   buildClient,
   CommitmentPolicy,
 } from '@aws-crypto/client-node'
-import { randomBytes } from 'crypto'
-
-/* This builds the client with the REQUIRE_ENCRYPT_REQUIRE_DECRYPT commitment policy,
- * which enforces that this client only encrypts using committing algorithm suites
- * and enforces that this client
- * will only decrypt encrypted messages
- * that were created with a committing algorithm suite.
- * This is the default commitment policy
- * if you build the client with `buildClient()`.
+/* This builds the client with the FORBID_ENCRYPT_ALLOW_DECRYPT commitment policy.
+ * This configuration should only be used
+ * as part of a migration
+ * from version 1.x to 2.x,
+ * or for advanced users
+ * with specialized requirements.
+ * We recommend that AWS Encryption SDK users
+ * enable commitment whenever possible.
  */
 const { encrypt, decrypt } = buildClient(
-  CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
 )
-export async function multiKeyringTest() {
+
+export async function disableCommitmentTest() {
   /* A KMS CMK is required to generate the data key.
    * You need kms:GenerateDataKey permission on the CMK in generatorKeyId.
    */
@@ -46,34 +38,7 @@ export async function multiKeyringTest() {
   ]
 
   /* The KMS keyring must be configured with the desired CMKs */
-  const kmsKeyring = new KmsKeyringNode({ generatorKeyId, keyIds })
-
-  /* You need to specify a name
-   * and a namespace for raw encryption key providers.
-   * The name and namespace that you use in the decryption keyring *must* be an exact,
-   * *case-sensitive* match for the name and namespace in the encryption keyring.
-   */
-  const keyName = 'aes-name'
-  const keyNamespace = 'aes-namespace'
-  /* The wrapping suite defines the AES-GCM algorithm suite to use. */
-  const wrappingSuite =
-    RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING
-  // Get your plaintext master key from wherever you store it.
-  const unencryptedMasterKey = randomBytes(32)
-
-  /* Configure the Raw AES Keyring. */
-  const aesKeyring = new RawAesKeyringNode({
-    keyName,
-    keyNamespace,
-    unencryptedMasterKey,
-    wrappingSuite,
-  })
-
-  /* Combine the two keyrings with a MultiKeyring. */
-  const keyring = new MultiKeyringNode({
-    generator: kmsKeyring,
-    children: [aesKeyring],
-  })
+  const keyring = new KmsKeyringNode({ generatorKeyId, keyIds })
 
   /* Encryption context is a *very* powerful tool for controlling and managing access.
    * It is ***not*** secret!
@@ -94,17 +59,12 @@ export async function multiKeyringTest() {
   const cleartext = 'asdf'
 
   /* Encrypt the data. */
+
   const { result } = await encrypt(keyring, cleartext, {
     encryptionContext: context,
   })
 
-  /* Decrypt the data.
-   * This decrypt call could be done with **any** of the 3 keyrings.
-   * Here we use the multi-keyring, but
-   * decrypt(kmsKeyring, result)
-   * decrypt(aesKeyring, result)
-   * would both work as well.
-   */
+  /* Decrypt the data. */
   const { plaintext, messageHeader } = await decrypt(keyring, result)
 
   /* Grab the encryption context so you can verify it. */

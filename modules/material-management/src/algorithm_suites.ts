@@ -38,8 +38,8 @@ Object.freeze(AlgorithmSuiteIdentifier)
 
 export enum CommitmentPolicy {
   'FORBID_ENCRYPT_ALLOW_DECRYPT' = 'FORBID_ENCRYPT_ALLOW_DECRYPT',
-  // 'REQUIRE_ENCRYPT_ALLOW_DECRYPT' = 'REQUIRE_ENCRYPT_ALLOW_DECRYPT',
-  // 'REQUIRE_ENCRYPT_REQUIRE_DECRYPT' = 'REQUIRE_ENCRYPT_REQUIRE_DECRYPT',
+  'REQUIRE_ENCRYPT_ALLOW_DECRYPT' = 'REQUIRE_ENCRYPT_ALLOW_DECRYPT',
+  'REQUIRE_ENCRYPT_REQUIRE_DECRYPT' = 'REQUIRE_ENCRYPT_REQUIRE_DECRYPT',
 }
 Object.freeze(CommitmentPolicy)
 
@@ -168,18 +168,18 @@ export const CommitmentPolicySuites = Object.freeze({
     defaultAlgorithmSuite:
       NonCommittingAlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384,
   }),
-  // [CommitmentPolicy.REQUIRE_ENCRYPT_ALLOW_DECRYPT]: Object.freeze({
-  //   encryptEnabledSuites: CommittingAlgorithmSuiteIdentifier,
-  //   decryptEnabledSuites: AlgorithmSuiteIdentifier,
-  //   defaultAlgorithmSuite:
-  //     CommittingAlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384,
-  // }),
-  // [CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT]: Object.freeze({
-  //   encryptEnabledSuites: CommittingAlgorithmSuiteIdentifier,
-  //   decryptEnabledSuites: CommittingAlgorithmSuiteIdentifier,
-  //   defaultAlgorithmSuite:
-  //     CommittingAlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384,
-  // }),
+  [CommitmentPolicy.REQUIRE_ENCRYPT_ALLOW_DECRYPT]: Object.freeze({
+    encryptEnabledSuites: CommittingAlgorithmSuiteIdentifier,
+    decryptEnabledSuites: AlgorithmSuiteIdentifier,
+    defaultAlgorithmSuite:
+      CommittingAlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384,
+  }),
+  [CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT]: Object.freeze({
+    encryptEnabledSuites: CommittingAlgorithmSuiteIdentifier,
+    decryptEnabledSuites: CommittingAlgorithmSuiteIdentifier,
+    defaultAlgorithmSuite:
+      CommittingAlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384,
+  }),
 })
 
 export type AlgorithmSuiteName = keyof typeof AlgorithmSuiteIdentifier

@@ -64,7 +64,7 @@ export async function _decrypt(
     .map((i) => (i > 15 ? i.toString(16) : '0' + i.toString(16)))
     .join('')
 
-  /* The parsed header algorithmSuite in _decrypt must be supported by the commitmentPolicy. */
+  /* Precondition: The parsed header algorithmSuite in _decrypt must be supported by the commitmentPolicy. */
   CommitmentPolicySuites.isDecryptEnabled(
     commitmentPolicy,
     algorithmSuite,
@@ -79,7 +79,7 @@ export async function _decrypt(
     encryptedDataKeys,
   })
 
-  /* The material algorithmSuite returned to _decrypt must be supported by the commitmentPolicy. */
+  /* Precondition: The material algorithmSuite returned to _decrypt must be supported by the commitmentPolicy. */
   CommitmentPolicySuites.isDecryptEnabled(
     commitmentPolicy,
     material.suite,
