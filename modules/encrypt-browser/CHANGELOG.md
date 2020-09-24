@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.7.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/encrypt-browser@1.1.2...@aws-crypto/encrypt-browser@1.7.0) (2020-09-24)
+
+
+### Features
+
+* Updates to the AWS Encryption SDK. ([748be9e](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/commit/748be9e1799d999a350e9cafbf902d43aeab0aa5))
+
+
+
+
+
 ## [1.1.2](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/encrypt-browser@1.1.1...@aws-crypto/encrypt-browser@1.1.2) (2020-05-26)
 
 **Note:** Version bump only for package @aws-crypto/encrypt-browser

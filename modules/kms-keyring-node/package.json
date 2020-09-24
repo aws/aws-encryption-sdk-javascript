@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/kms-keyring-node",
-  "version": "1.0.5",
+  "version": "1.7.0",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
