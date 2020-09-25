@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/kms-keyring-node@1.7.0...@aws-crypto/kms-keyring-node@2.0.0) (2020-09-25)
+
+
+* feat!: Updates to the AWS Encryption SDK. ([0a8a581](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/commit/0a8a581ab7c058735310016b819caaec6868c0a7))
+
+
+### BREAKING CHANGES
+
+* AWS KMS KeyIDs must be specified explicitly or Discovery mode explicitly chosen.
+Key committing suites are now default. CommitmentPolicy requires commitment by default.
+
+See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/migration.html
+
+
+
+
+
 # [1.7.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/kms-keyring-node@1.0.5...@aws-crypto/kms-keyring-node@1.7.0) (2020-09-24)
 
 
