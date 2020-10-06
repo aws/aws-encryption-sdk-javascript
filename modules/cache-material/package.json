@@ -21,7 +21,7 @@
     "@aws-crypto/material-management": "file:../material-management",
     "@aws-crypto/serialize": "file:../serialize",
     "@types/lru-cache": "^5.1.0",
-    "lru-cache": "^5.1.1",
+    "lru-cache": "^6.0.0",
     "tslib": "^1.11.1"
   },
   "sideEffects": false,
