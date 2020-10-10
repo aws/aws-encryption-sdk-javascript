@@ -255,7 +255,7 @@ export class VerifyStream extends PortableTransformWithType {
     callback()
   }
 
-  push(chunk: any, encoding?: string | undefined): boolean {
+  push(chunk: any, encoding?: BufferEncoding): boolean {
     // Typescript???? this._verify instanceof Verify is better....
     if (this._verify && chunk) {
       this._verify.update(chunk)
