@@ -4,7 +4,6 @@
 const credentialsPromise = require('@aws-sdk/credential-provider-node').defaultProvider()()
 
 module.exports = async function (source, map) {
-  console.log('fuck you')
   this.cacheable()
   var callback = this.async()
   const credentials = await credentialsPromise
