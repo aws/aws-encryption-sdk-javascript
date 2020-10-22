@@ -267,7 +267,7 @@ export class VerifyStream extends PortableTransformWithType {
       /* Precondition: Only buffer data if the finalAuthTag has been received. */
       needs(finalAuthTag, 'Malformed state.')
       /* Precondition: Only buffer data if a signature is expected. */
-      needs(signatureInfo && this._verify && !state.signature, 'To much data')
+      needs(signatureInfo && this._verify && !state.signature, 'Too much data')
 
       /* Accumulate the signature here.
        * It is verified in _flush.
@@ -318,7 +318,7 @@ export class VerifyStream extends PortableTransformWithType {
           Buffer.from(buffer, byteOffset, byteLength)
         )
         /* Postcondition: The signature must be valid. */
-        needs(isVerified, 'Invalid Signature')
+        needs(isVerified, 'Invalid signature')
       }
 
       return this.emit('AuthTag', finalAuthTag, callback)
