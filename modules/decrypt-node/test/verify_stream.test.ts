@@ -179,7 +179,10 @@ describe('VerifyStream', () => {
     // First we make sure that the test vector is well formed
     await testStream(cmm, data)
 
-    const source = new ParseHeaderStream(cmm)
+    const source = new ParseHeaderStream(
+      CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      cmm
+    )
     const test = new VerifyStream({})
 
     /* This is a little ridiculous.
@@ -192,7 +195,7 @@ describe('VerifyStream', () => {
      */
     setImmediate(() => {
       source.write(data, () => {
-        test._transformSignature(Buffer.alloc(1), 'binary', (e: Error) => {
+        test._transformSignature(Buffer.alloc(1), 'binary', (e?: Error) => {
           test.emit('error', e)
         })
       })
