@@ -103,7 +103,7 @@ describe('decrypt', () => {
         fixtures.invalidSignatureCiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(),
         { encoding: 'base64' }
       )
-    ).to.rejectedWith(Error, 'Invalid Signature')
+    ).to.rejectedWith(Error, 'Invalid signature')
   })
 
   it('can decrypt maxBodySize message with a single final frame.', async () => {

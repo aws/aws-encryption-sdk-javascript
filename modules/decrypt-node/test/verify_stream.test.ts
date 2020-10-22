@@ -163,7 +163,7 @@ describe('VerifyStream', () => {
 
     await expect(testStream(cmm, data, Buffer.alloc(1))).rejectedWith(
       Error,
-      'To much data'
+      'Too much data'
     )
   })
 
