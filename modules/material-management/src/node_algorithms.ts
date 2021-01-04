@@ -266,7 +266,8 @@ const nodeAlgorithms: NodeAlgorithms = Object.freeze({
   ),
 })
 
-export class NodeAlgorithmSuite extends AlgorithmSuite
+export class NodeAlgorithmSuite
+  extends AlgorithmSuite
   implements NodeAlgorithmSuiteValues {
   messageFormat!: MessageFormat
   encryption!: NodeEncryption

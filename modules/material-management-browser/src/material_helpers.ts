@@ -55,9 +55,9 @@ export interface WebCryptoEncryptionMaterialHelper {
 }
 
 export interface GetEncryptHelper {
-  (material: WebCryptoEncryptionMaterial): Promise<
-    WebCryptoEncryptionMaterialHelper
-  >
+  (
+    material: WebCryptoEncryptionMaterial
+  ): Promise<WebCryptoEncryptionMaterialHelper>
 }
 
 export const getEncryptHelper: GetEncryptHelper = async (
@@ -109,9 +109,9 @@ export interface WebCryptoDecryptionMaterialHelper {
 }
 
 export interface GetDecryptionHelper {
-  (material: WebCryptoDecryptionMaterial): Promise<
-    WebCryptoDecryptionMaterialHelper
-  >
+  (
+    material: WebCryptoDecryptionMaterial
+  ): Promise<WebCryptoDecryptionMaterialHelper>
 }
 
 export const getDecryptionHelper: GetDecryptionHelper = async (
