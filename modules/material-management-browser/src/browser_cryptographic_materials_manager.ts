@@ -29,18 +29,10 @@ import {
 } from '@aws-crypto/web-crypto-backend'
 import { fromBase64, toBase64 } from '@aws-sdk/util-base64-browser'
 
-export type WebCryptoEncryptionRequest = EncryptionRequest<
-  WebCryptoAlgorithmSuite
->
-export type WebCryptoDecryptionRequest = DecryptionRequest<
-  WebCryptoAlgorithmSuite
->
-export type WebCryptoGetEncryptionMaterials = GetEncryptionMaterials<
-  WebCryptoAlgorithmSuite
->
-export type WebCryptoGetDecryptMaterials = GetDecryptMaterials<
-  WebCryptoAlgorithmSuite
->
+export type WebCryptoEncryptionRequest = EncryptionRequest<WebCryptoAlgorithmSuite>
+export type WebCryptoDecryptionRequest = DecryptionRequest<WebCryptoAlgorithmSuite>
+export type WebCryptoGetEncryptionMaterials = GetEncryptionMaterials<WebCryptoAlgorithmSuite>
+export type WebCryptoGetDecryptMaterials = GetDecryptMaterials<WebCryptoAlgorithmSuite>
 
 /**
  * The WebCryptoDefaultCryptographicMaterialsManager is a specific implementation of the CryptographicMaterialsManager.

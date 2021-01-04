@@ -122,7 +122,5 @@ immutableBaseClass(Keyring)
 
 export abstract class KeyringNode extends Keyring<NodeAlgorithmSuite> {}
 immutableClass(KeyringNode)
-export abstract class KeyringWebCrypto extends Keyring<
-  WebCryptoAlgorithmSuite
-> {}
+export abstract class KeyringWebCrypto extends Keyring<WebCryptoAlgorithmSuite> {}
 immutableClass(KeyringWebCrypto)

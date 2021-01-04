@@ -59,13 +59,11 @@ export class NodeCachingMaterialsManager
     })
   }
 
-  getEncryptionMaterials: NodeGetEncryptionMaterials = getEncryptionMaterials<
-    NodeAlgorithmSuite
-  >(cacheKeyHelpers)
-  decryptMaterials: NodeGetDecryptMaterials = decryptMaterials<
-    NodeAlgorithmSuite
-  >(cacheKeyHelpers)
-  _cacheEntryHasExceededLimits = cacheEntryHasExceededLimits<
-    NodeAlgorithmSuite
-  >()
+  getEncryptionMaterials: NodeGetEncryptionMaterials = getEncryptionMaterials<NodeAlgorithmSuite>(
+    cacheKeyHelpers
+  )
+  decryptMaterials: NodeGetDecryptMaterials = decryptMaterials<NodeAlgorithmSuite>(
+    cacheKeyHelpers
+  )
+  _cacheEntryHasExceededLimits = cacheEntryHasExceededLimits<NodeAlgorithmSuite>()
 }
