@@ -60,7 +60,7 @@ export async function _decrypt(
 }
 
 async function finishedAsync(stream: Duplex) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     finished(stream, (err: Error) => (err ? reject(err) : resolve()))
   })
 }
