@@ -44,7 +44,7 @@ const noop = () => {} // eslint-disable-line @typescript-eslint/no-empty-functio
 export function getDecipherStream() {
   let decipherInfo: DecipherInfo
   let decipherState: DecipherState = {} as any
-  let pathologicalDrain: () => void = noop
+  let pathologicalDrain: (reason?: any) => void = noop
   let frameComplete: ((err?: Error) => void) | false = false
 
   return new (class DecipherStream extends PortableTransformWithType {

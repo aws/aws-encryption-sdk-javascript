@@ -289,7 +289,7 @@ describe('encrypt structural testing', () => {
 })
 
 async function finishedAsync(stream: any) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     finished(stream, (err: Error) => (err ? reject(err) : resolve()))
   })
 }
