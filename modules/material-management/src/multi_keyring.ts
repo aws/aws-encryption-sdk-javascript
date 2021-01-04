@@ -13,7 +13,8 @@ import { EncryptedDataKey } from './encrypted_data_key'
 import { NodeAlgorithmSuite } from './node_algorithms'
 import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 
-export class MultiKeyringNode extends KeyringNode
+export class MultiKeyringNode
+  extends KeyringNode
   implements MultiKeyring<NodeAlgorithmSuite> {
   public readonly generator?: KeyringNode
   public readonly children!: ReadonlyArray<KeyringNode>
@@ -26,7 +27,8 @@ export class MultiKeyringNode extends KeyringNode
 }
 immutableClass(MultiKeyringNode)
 
-export class MultiKeyringWebCrypto extends KeyringWebCrypto
+export class MultiKeyringWebCrypto
+  extends KeyringWebCrypto
   implements MultiKeyring<WebCryptoAlgorithmSuite> {
   public readonly generator?: KeyringWebCrypto
   public readonly children!: ReadonlyArray<KeyringWebCrypto>

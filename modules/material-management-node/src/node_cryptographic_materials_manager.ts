@@ -27,9 +27,7 @@ import { createECDH } from 'crypto'
 
 export type NodeEncryptionRequest = EncryptionRequest<NodeAlgorithmSuite>
 export type NodeDecryptionRequest = DecryptionRequest<NodeAlgorithmSuite>
-export type NodeGetEncryptionMaterials = GetEncryptionMaterials<
-  NodeAlgorithmSuite
->
+export type NodeGetEncryptionMaterials = GetEncryptionMaterials<NodeAlgorithmSuite>
 export type NodeGetDecryptMaterials = GetDecryptMaterials<NodeAlgorithmSuite>
 
 /**
