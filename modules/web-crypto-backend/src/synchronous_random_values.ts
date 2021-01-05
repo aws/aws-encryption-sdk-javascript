@@ -9,17 +9,22 @@ import { locateWindow } from '@aws-sdk/util-locate-window'
  * For example constructors need to be synchronous.
  * The AWS JS SDK uses IRandomValues to have a consistent interface.
  */
-export function synchronousRandomValues(byteLength: number): Uint8Array {
-  // Find the global scope for this runtime
-  const globalScope = locateWindow()
+export const synchronousRandomValues = generateSynchronousRandomValues(
+  locateWindow()
+)
 
-  if (supportsSecureRandom(globalScope)) {
-    return globalScope.crypto.getRandomValues(new Uint8Array(byteLength))
-  } else if (isMsWindow(globalScope)) {
-    const values = new Uint8Array(byteLength)
-    globalScope.msCrypto.getRandomValues(values)
-    return values
+export function generateSynchronousRandomValues(
+  globalScope: Window
+): (byteLength: number) => Uint8Array {
+  return function synchronousRandomValues(byteLength: number): Uint8Array {
+    if (supportsSecureRandom(globalScope)) {
+      return globalScope.crypto.getRandomValues(new Uint8Array(byteLength))
+    } else if (isMsWindow(globalScope)) {
+      const values = new Uint8Array(byteLength)
+      globalScope.msCrypto.getRandomValues(values)
+      return values
+    }
+
+    throw new Error(`Unable to locate a secure random source.`)
   }
-
-  throw new Error(`Unable to locate a secure random source.`)
 }
