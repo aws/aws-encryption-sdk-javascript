@@ -70,7 +70,7 @@ describe('decrypt', () => {
      * but it will never span any boundary conditions.
      * The prime example of this is
      * the `VerifyStream`.
-     * It has 4 boundary in the `_transform` function.
+     * It has 4 byte boundary in the `_transform` function.
      * The body header, the body, the auth tag, and signature.
      * By sending 1 byte
      * as the code transitions from the body header
