@@ -92,7 +92,7 @@
   ],
   "devDependencies": {
     "@aws-sdk/credential-provider-node": "^1.0.0-gamma.4",
-    "@aws-sdk/karma-credential-loader": "^1.0.0-gamma.3",
+    "@aws-sdk/karma-credential-loader": "^3.4.1",
     "@aws-sdk/util-base64-browser": "^1.0.0-gamma.6",
     "@types/bn.js": "^4.11.0",
     "@types/chai": "^4.2.12",
