@@ -15,6 +15,9 @@ package.json.decrypt
 .vscode
 .history
 
+# JetBrains
+.idea
+
 # nyc/code coverage
 .nyc_output
 .karma_output
