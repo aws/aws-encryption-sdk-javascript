@@ -20,7 +20,7 @@
   "dependencies": {
     "@aws-crypto/material-management": "file:../material-management",
     "@aws-crypto/serialize": "file:../serialize",
-    "tslib": "^1.11.1"
+    "tslib": "^2.1.0"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",

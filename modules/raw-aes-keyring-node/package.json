@@ -21,7 +21,7 @@
     "@aws-crypto/material-management-node": "file:../material-management-node",
     "@aws-crypto/raw-keyring": "file:../raw-keyring",
     "@aws-crypto/serialize": "file:../serialize",
-    "tslib": "^1.11.1"
+    "tslib": "^2.1.0"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",

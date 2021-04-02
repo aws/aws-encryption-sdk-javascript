@@ -23,7 +23,7 @@
     "@types/duplexify": "^3.6.0",
     "duplexify": "^4.1.1",
     "readable-stream": "^3.6.0",
-    "tslib": "^1.11.1"
+    "tslib": "^2.1.0"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",

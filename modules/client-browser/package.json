@@ -31,7 +31,7 @@
     "@aws-crypto/raw-aes-keyring-browser": "file:../raw-aes-keyring-browser",
     "@aws-crypto/raw-rsa-keyring-browser": "file:../raw-rsa-keyring-browser",
     "@aws-crypto/web-crypto-backend": "file:../web-crypto-backend",
-    "tslib": "^1.11.1"
+    "tslib": "^2.1.0"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",

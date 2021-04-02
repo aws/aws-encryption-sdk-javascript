@@ -19,7 +19,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/client-node": "file:../client-node",
-    "tslib": "^1.11.1"
+    "tslib": "^2.1.0"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",

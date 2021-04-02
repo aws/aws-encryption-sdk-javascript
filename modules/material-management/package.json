@@ -20,7 +20,7 @@
   "dependencies": {
     "asn1.js": "^5.3.0",
     "bn.js": "^5.1.1",
-    "tslib": "^1.11.1"
+    "tslib": "^2.1.0"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",
