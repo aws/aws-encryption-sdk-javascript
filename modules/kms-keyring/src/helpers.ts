@@ -11,7 +11,7 @@ import {
   DecryptResponse,
   RequiredDecryptResponse,
 } from './kms_types'
-import { regionFromKmsKeyArn } from './region_from_kms_key_arn'
+import { getRegionFromIdentifier } from './arn_parsing'
 import {
   EncryptionContext,
   EncryptedDataKey,
@@ -21,14 +21,16 @@ import {
 export const KMS_PROVIDER_ID = 'aws-kms'
 
 export async function generateDataKey<Client extends AwsEsdkKMSInterface>(
-  clientProvider: KmsClientSupplier<Client>,
+  clientProvider: KmsClientSupplier<Client> | Client,
   NumberOfBytes: number,
   KeyId: string,
   EncryptionContext: EncryptionContext,
   GrantTokens?: string[]
 ): Promise<RequiredGenerateDataKeyResponse | false> {
-  const region = regionFromKmsKeyArn(KeyId)
-  const client = clientProvider(region)
+  const client =
+    typeof clientProvider === 'function'
+      ? clientProvider(getRegionFromIdentifier(KeyId))
+      : clientProvider
 
   /* Check for early return (Postcondition): clientProvider did not return a client for generateDataKey. */
   if (!client) return false
@@ -46,14 +48,16 @@ export async function generateDataKey<Client extends AwsEsdkKMSInterface>(
 }
 
 export async function encrypt<Client extends AwsEsdkKMSInterface>(
-  clientProvider: KmsClientSupplier<Client>,
+  clientProvider: KmsClientSupplier<Client> | Client,
   Plaintext: Uint8Array,
   KeyId: string,
   EncryptionContext: EncryptionContext,
   GrantTokens?: string[]
 ): Promise<RequiredEncryptResponse | false> {
-  const region = regionFromKmsKeyArn(KeyId)
-  const client = clientProvider(region)
+  const client =
+    typeof clientProvider === 'function'
+      ? clientProvider(getRegionFromIdentifier(KeyId))
+      : clientProvider
 
   /* Check for early return (Postcondition): clientProvider did not return a client for encrypt. */
   if (!client) return false
@@ -72,15 +76,18 @@ export async function encrypt<Client extends AwsEsdkKMSInterface>(
 }
 
 export async function decrypt<Client extends AwsEsdkKMSInterface>(
-  clientProvider: KmsClientSupplier<Client>,
+  clientProvider: KmsClientSupplier<Client> | Client,
   { providerId, providerInfo, encryptedDataKey }: EncryptedDataKey,
   EncryptionContext: EncryptionContext,
   GrantTokens?: string[]
 ): Promise<RequiredDecryptResponse | false> {
   /* Precondition:  The EDK must be a KMS edk. */
   needs(providerId === KMS_PROVIDER_ID, 'Unsupported providerId')
-  const region = regionFromKmsKeyArn(providerInfo)
-  const client = clientProvider(region)
+  const client =
+    typeof clientProvider === 'function'
+      ? clientProvider(getRegionFromIdentifier(providerInfo))
+      : clientProvider
+
   /* Check for early return (Postcondition): clientProvider did not return a client for decrypt. */
   if (!client) return false
 

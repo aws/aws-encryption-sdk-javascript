@@ -40,6 +40,7 @@ package.json.decrypt
 
 # local npx cache
 /verdaccio/.npx
+/specification_compliance_report.html
 
 # These version files are build by genversion
 # they track the package.json version

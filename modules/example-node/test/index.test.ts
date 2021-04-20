@@ -15,6 +15,8 @@ import {
   kmsEncryptWithMaxEncryptedDataKeysTest,
   kmsDecryptWithMaxEncryptedDataKeysTest,
 } from '../src/kms_max_encrypted_data_keys'
+import { kmsMultiRegionSimpleTest } from '../src/kms_multi_region_simple'
+import { kmsMultiRegionDiscoveryTest } from '../src/kms_multi_region_discovery'
 import { readFileSync } from 'fs'
 
 describe('test', () => {
@@ -24,13 +26,13 @@ describe('test', () => {
     expect(plaintext.toString()).to.equal(cleartext)
   })
 
-  it('kms', async () => {
+  it('kms simple', async () => {
     const { cleartext, plaintext } = await kmsSimpleTest()
 
     expect(plaintext.toString()).to.equal(cleartext)
   })
 
-  it('kms', async () => {
+  it('kms stream', async () => {
     const test = await kmsStreamTest(__filename)
     const clearFile = readFileSync(__filename)
 
@@ -105,5 +107,19 @@ describe('test', () => {
       Error,
       'maxEncryptedDataKeys exceeded.'
     )
+  })
+
+  it('kms multi-Region simple', async () => {
+    const { cleartext, plaintext } = await kmsMultiRegionSimpleTest()
+
+    expect(plaintext.toString()).to.equal(cleartext)
+  })
+
+  it('kms multi-Region discovery', async function () {
+    this.timeout(3000)
+    const { result, cleartext } = await kmsMultiRegionSimpleTest()
+
+    const { plaintext } = await kmsMultiRegionDiscoveryTest(result)
+    expect(plaintext.toString()).to.equal(cleartext)
   })
 })

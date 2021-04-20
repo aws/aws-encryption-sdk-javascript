@@ -5,7 +5,7 @@
 
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { KmsKeyringClass, KeyRingConstructible } from '../src/kms_keyring'
+import { KmsKeyringClass } from '../src/kms_keyring'
 import {
   NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier,
@@ -13,6 +13,7 @@ import {
   EncryptedDataKey,
   Keyring,
   needs,
+  Newable,
 } from '@aws-crypto/material-management'
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -29,7 +30,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
       const edks = [...Array(5)].map(() => edk)
       const state = buildProviderState(edks, suite)
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
 
       const testKeyring = new TestKmsKeyring({
@@ -57,7 +58,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
       const state = buildProviderState(edks, suite, { failureCount: 1 })
 
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
 
       const testKeyring = new TestKmsKeyring({
@@ -83,7 +84,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
       const edks = [...Array(5)].map(edkHelper).map(({ edk }) => edk)
       const state = buildProviderState(edks, suite, { edkSuccessIndex: 4 })
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
 
       const testKeyring = new TestKmsKeyring({
@@ -119,7 +120,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
         calls += 1
       }
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
 
       const testKeyring = new TestKmsKeyring({
@@ -145,7 +146,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
       const edks = [...Array(5)].map(edkHelper).map(({ edk }) => edk)
       const state = buildProviderState(edks, suite)
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
 
       const testKeyring = new TestKmsKeyring({
@@ -172,7 +173,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
       const state = buildProviderState(edks, suite, { failureCount: 1 })
 
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
 
       const testKeyring = new TestKmsKeyring({
@@ -204,7 +205,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
 
       const state = buildProviderState(edks, suite, { edkSuccessIndex: 4 })
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
 
       const testKeyring = new TestKmsKeyring({
@@ -243,7 +244,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
       }
 
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
 
       const testKeyring = new TestKmsKeyring({
@@ -279,7 +280,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
       }
 
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
 
       const testKeyring = new TestKmsKeyring({
@@ -316,7 +317,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
       }
 
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
 
       const testKeyring = new TestKmsKeyring({
@@ -359,7 +360,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
       }
 
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
 
       const testKeyring = new TestKmsKeyring({
@@ -400,7 +401,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
       }
 
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
 
       const testKeyring = new TestKmsKeyring({
@@ -441,7 +442,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
       }
 
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
 
       const testKeyring = new TestKmsKeyring({
@@ -489,7 +490,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
           failureCount: matchInfo.length,
         })
         class TestKmsKeyring extends KmsKeyringClass(
-          Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+          Keyring as Newable<Keyring<NodeAlgorithmSuite>>
         ) {}
 
         const testKeyring = new TestKmsKeyring({
@@ -516,7 +517,7 @@ describe('KmsKeyring: decrypt EDK order', () => {
           edkSuccessIndex: 4,
         })
         class TestKmsKeyring extends KmsKeyringClass(
-          Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+          Keyring as Newable<Keyring<NodeAlgorithmSuite>>
         ) {}
 
         const testKeyring = new TestKmsKeyring({

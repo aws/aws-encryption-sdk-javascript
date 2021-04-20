@@ -57,6 +57,13 @@ const keyList: KeyList = {
       encrypt: true,
       decrypt: false,
     },
+    'arn:aws:kms-not:us-west-2:658956600833:key/mrk-80bd8ecdcd4342aebd84b7dc9da498a7': {
+      encrypt: false,
+      decrypt: false,
+      type: 'aws-kms',
+      'key-id':
+        'arn:aws:kms-not:us-west-2:658956600833:key/mrk-80bd8ecdcd4342aebd84b7dc9da498a7',
+    },
   },
 }
 
@@ -284,5 +291,44 @@ describe('_getDecryptTestVectorIterator yields Decrypt Tests', () => {
       true,
       '_getDecryptTestVectorIterator should have thrown an error'
     )
+  })
+
+  it('can read an mrk-aware vector', async () => {
+    const testManifest: DecryptManifestList = {
+      manifest: decryptManifest,
+      client: client,
+      keys: 'file://keys.json',
+      tests: {
+        'e6c7ad4c-5b24-44ce-a65e-62d402239b01': {
+          ciphertext: ciphertext_path,
+          'master-keys': [
+            {
+              type: 'aws-kms-mrk-aware',
+              key:
+                'arn:aws:kms-not:us-west-2:658956600833:key/mrk-80bd8ecdcd4342aebd84b7dc9da498a7',
+            },
+          ],
+          result: {
+            error: {
+              'error-description':
+                'Incorrect encrypted data key provider info: aws:kms:us-west-2:658956600833:key:mrk-80bd8ecdcd4342aebd84b7dc9da498a7',
+            },
+          },
+        },
+      },
+    }
+    const testIterator = await _getDecryptTestVectorIterator(
+      mockReadManifest(
+        testManifest,
+        ciphertext_path,
+        cipherStream,
+        keyList,
+        plaintext_path,
+        plainTextStream
+      )
+    )
+
+    const { value } = testIterator.next()
+    expect(value.keysInfo[0][0].type, 'aws-kms-mrk-aware')
   })
 })

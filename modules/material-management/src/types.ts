@@ -111,3 +111,5 @@ export interface ClientOptions {
   commitmentPolicy: CommitmentPolicy
   maxEncryptedDataKeys: number | false
 }
+
+export type Newable<T> = { new (...args: any[]): T }

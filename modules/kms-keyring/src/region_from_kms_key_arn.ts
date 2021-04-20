@@ -13,14 +13,22 @@ import { needs } from '@aws-crypto/material-management'
 const aliasOrKeyResourceType = /^(alias|key)(\/.*)*$/
 
 /* Maintaining function for backwards compatibility. */
+/**
+ * @deprecated Because decomposeAwsKmsKeyArn is incorrect,
+ * use parseAwsKmsIdentifier or parseAwsKmsKeyArn.
+ */
 export function regionFromKmsKeyArn(kmsKeyArn: string): string {
   const { region } = decomposeAwsKmsKeyArn(kmsKeyArn)
   return region
 }
 
+/**
+ * @deprecated This function incorrectly requires `key/12345678-1234-1234-1234-123456789012`
+ * AWS KMS requires that a raw key id be `12345678-1234-1234-1234-123456789012`
+ */
 export function decomposeAwsKmsKeyArn(
   kmsKeyArn: string
-): { region: string; account: string; partition: string } {
+): { partition: string; region: string; account: string } {
   /* Precondition: A KMS key arn must be a string. */
   needs(typeof kmsKeyArn === 'string', 'KMS key arn must be a string.')
 
@@ -39,7 +47,7 @@ export function decomposeAwsKmsKeyArn(
   /* Postcondition: The ARN must be well formed.
    * The arn and kms section have defined values,
    * but the aws section does not.
-   * It is also possible to have a a key or alias.
+   * It is also possible to have a key or alias.
    * In this case the partition, service, region
    * will be empty.
    * In this case the arnLiteral should look like an alias.
@@ -56,5 +64,5 @@ export function decomposeAwsKmsKeyArn(
     'Malformed arn.'
   )
 
-  return { region, account, partition }
+  return { partition, region, account }
 }
