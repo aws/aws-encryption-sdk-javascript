@@ -20,7 +20,7 @@
     "@aws-crypto/client-browser": "file:../client-browser",
     "@aws-sdk/karma-credential-loader": "3.1.0",
     "@aws-sdk/util-base64-browser": "3.1.0",
-    "@aws-sdk/util-utf8-browser": "3.1.0",
+    "@aws-sdk/util-utf8-browser": "3.13.1",
     "@trust/keyto": "^1.0.1",
     "@types/got": "^9.6.9",
     "@types/stream-to-promise": "^2.2.0",
