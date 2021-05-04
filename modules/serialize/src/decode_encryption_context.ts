@@ -23,11 +23,13 @@ export function decodeEncryptionContextFactory(
    * Exported for testing.  Used by deserializeMessageHeader to compose a complete solution.
    * @param encodedEncryptionContext Uint8Array
    */
-  function decodeEncryptionContext(encodedEncryptionContext: Uint8Array) {
+  function decodeEncryptionContext(
+    encodedEncryptionContext: Uint8Array
+  ): Readonly<EncryptionContext> {
     const encryptionContext: EncryptionContext = Object.create(null)
     /* Check for early return (Postcondition): The case of 0 length is defined as an empty object. */
     if (!encodedEncryptionContext.byteLength) {
-      return encryptionContext
+      return Object.freeze(encryptionContext)
     }
     /* Uint8Array is a view on top of the underlying ArrayBuffer.
      * This means that raw underlying memory stored in the ArrayBuffer
