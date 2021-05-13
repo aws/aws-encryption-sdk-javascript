@@ -59,33 +59,86 @@ describe('decrypt', () => {
       fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(),
       'base64'
     )
-    const i = ciphertext.values()
-    const ciphertextStream = from(
-      (
-        _: number,
-        next: (err: Error | null, chunk: Uint8Array | null) => void
-      ) => {
-        /* Pushing 1 byte at time is the most annoying thing.
-         * This is done intentionally to hit _every_ boundary condition.
-         */
-        const { value, done } = i.next()
-        if (done) return next(null, null)
-        next(null, new Uint8Array([value]))
-      }
+
+    /* Pushing 1 byte at time is annoying.
+     * But there can be state that can get reset
+     * from a 1 byte push when the buffering
+     * is internal to the stream.
+     * So while 1 byte will hit the beginning
+     * boundary conditions,
+     * and the exiting boundary conditions,
+     * but it will never span any boundary conditions.
+     * The prime example of this is
+     * the `VerifyStream`.
+     * It has 4 byte boundary in the `_transform` function.
+     * The body header, the body, the auth tag, and signature.
+     * By sending 1 byte
+     * as the code transitions from the body header
+     * to the body
+     * the code handling the exiting
+     * of the body header has no way to interact
+     * with the body,
+     * because the 1 byte of data
+     * completely isolates these code branches.
+     * So I push at different sizes to hit
+     * as many boundary conditions as possible.
+     * Why 20 as a max?
+     * Permuting every possible combination
+     * would take too long
+     * and so anything short of _everything_
+     * is a compromise.
+     * 20 seems large enough.
+     * I did not do an initial offset
+     * because that just moves me closer
+     * to permuting every option.
+     * An alternative would be a variable chunk size.
+     * Doing this randomly is a bad idea.
+     * Tests that only fail _sometimes_
+     * are bad tests.
+     * It is too easy to try again,
+     * and when everything passes just move on.
+     * And again, doing every permutation
+     * is too expensive at this time.
+     */
+    const results = await Promise.all(
+      [
+        { size: 1 },
+        { size: 2 },
+        { size: 3 },
+        { size: 4 },
+        { size: 5 },
+        { size: 6 },
+        { size: 7 },
+        { size: 8 },
+        { size: 9 },
+        { size: 10 },
+        { size: 11 },
+        { size: 12 },
+        { size: 13 },
+        { size: 14 },
+        { size: 15 },
+        { size: 16 },
+        { size: 17 },
+        { size: 18 },
+        { size: 19 },
+        { size: 20 },
+      ].map(async (op) =>
+        decrypt(
+          fixtures.decryptKeyring(),
+          chunkCipherTextStream(ciphertext, op)
+        )
+      )
     )
 
-    const { plaintext: test, messageHeader } = await decrypt(
-      fixtures.decryptKeyring(),
-      ciphertextStream
-    )
-
-    expect(messageHeader.suiteId).to.equal(
-      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
-    )
-    expect(messageHeader.encryptionContext).to.deep.equal(
-      fixtures.encryptionContext()
-    )
-    expect(test.toString('base64')).to.equal(fixtures.base64Plaintext())
+    results.map(({ plaintext: test, messageHeader }) => {
+      expect(messageHeader.suiteId).to.equal(
+        AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+      )
+      expect(messageHeader.encryptionContext).to.deep.equal(
+        fixtures.encryptionContext()
+      )
+      expect(test.toString('base64')).to.equal(fixtures.base64Plaintext())
+    })
   })
 
   it('Precondition: The sequence number is required to monotonically increase, starting from 1.', async () => {
@@ -125,3 +178,32 @@ describe('decrypt', () => {
     ).to.rejectedWith(Error, 'maxBodySize exceeded.')
   })
 })
+
+function chunkCipherTextStream(ciphertext: Buffer, { size }: { size: number }) {
+  const i = ciphertext.values()
+
+  return from(
+    (
+      _: number,
+      next: (err: Error | null, chunk: Uint8Array | null) => void
+    ) => {
+      const { value, done } = eat(i, size)
+      if (done) return next(null, null)
+      next(null, new Uint8Array(value))
+    }
+  )
+
+  function eat(i: IterableIterator<number>, size: number) {
+    return Array(size)
+      .fill(1)
+      .reduce<IteratorResult<number[], any>>(
+        ({ value }) => {
+          const { value: item, done } = i.next()
+          if (done && value.length) return { value, done: false }
+          if (!done) value.push(item)
+          return { value, done }
+        },
+        { value: <number[]>[], done: false }
+      )
+  }
+}

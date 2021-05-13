@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/cache-material",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -21,8 +21,8 @@
     "@aws-crypto/material-management": "file:../material-management",
     "@aws-crypto/serialize": "file:../serialize",
     "@types/lru-cache": "^5.1.0",
-    "lru-cache": "^5.1.1",
-    "tslib": "^1.11.1"
+    "lru-cache": "^6.0.0",
+    "tslib": "^2.2.0"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",

@@ -79,9 +79,7 @@ export function decorateProperties<S extends SupportedAlgorithmSuites>(
 
 export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
   buildEncryptionMaterialCacheKey,
-}: CryptographicMaterialsCacheKeyHelpersInterface<S>): GetEncryptionMaterials<
-  S
-> {
+}: CryptographicMaterialsCacheKeyHelpersInterface<S>): GetEncryptionMaterials<S> {
   return async function getEncryptionMaterials(
     this: CachingMaterialsManager<S>,
     request: EncryptionRequest<S>
@@ -226,8 +224,7 @@ function cloneResponse<
 
 export interface CachingMaterialsManagerInput<
   S extends SupportedAlgorithmSuites
->
-  extends Readonly<{
+> extends Readonly<{
     cache: CryptographicMaterialsCache<S>
     backingMaterials: MaterialsManager<S> | Keyring<S>
     partition?: string

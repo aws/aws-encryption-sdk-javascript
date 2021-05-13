@@ -1,18 +1,9 @@
 version: 0.2
 
-env:
-    variables:
-        NODE_OPTIONS: "--max-old-space-size=4096"
-
-phases:
-    install:
-        runtime-versions:
-            nodejs: 10
-        commands:
-            - npm ci --unsafe-perm
-            - npm run build
-    build:
-        commands:
-            - npm test
-            - npm run test_conditions
-            - npm run verdaccio
+batch:
+  fast-fail: false
+  build-list:
+    - identifier: nodejs10
+      buildspec: codebuild/nodejs10.yml
+    - identifier: nodejs12
+      buildspec: codebuild/nodejs12.yml

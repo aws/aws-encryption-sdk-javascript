@@ -163,7 +163,7 @@ export class VerifyStream extends PortableTransformWithType {
       if (this._verify) {
         this._verify.update(frameBuffer.slice(0, frameHeader.readPos))
       }
-      const tail = chunk.slice(frameHeader.readPos)
+      const tail = frameBuffer.slice(frameHeader.readPos)
       this.emit('BodyInfo', frameHeader)
       state.currentFrame = frameHeader
       return setImmediate(() => this._transform(tail, enc, callback))
@@ -219,7 +219,7 @@ export class VerifyStream extends PortableTransformWithType {
            */
           this._verifyState.finalAuthTagReceived = true
           /* Overwriting the _transform function.
-           * Data flow control is not handled here.
+           * Data flow control is now handled here.
            */
           this._transform = (
             chunk: Buffer,
@@ -255,7 +255,7 @@ export class VerifyStream extends PortableTransformWithType {
     callback()
   }
 
-  push(chunk: any, encoding?: string | undefined): boolean {
+  push(chunk: any, encoding?: BufferEncoding): boolean {
     // Typescript???? this._verify instanceof Verify is better....
     if (this._verify && chunk) {
       this._verify.update(chunk)

@@ -7,7 +7,7 @@ import {
   supportsSubtleCrypto,
   supportsZeroByteGCM,
 } from '@aws-crypto/supports-web-crypto'
-import { synchronousRandomValues as randomValues } from './synchronous_random_values'
+import { generateSynchronousRandomValues } from './synchronous_random_values'
 import promisifyMsSubtleCrypto from './promisify-ms-crypto'
 
 type MaybeSubtleCrypto = SubtleCrypto | false
@@ -26,6 +26,7 @@ export type MixedSupportWebCryptoBackend = {
 
 export function webCryptoBackendFactory(window: Window) {
   const fallbackRequiredPromise = windowRequiresFallback(window)
+  const randomValues = generateSynchronousRandomValues(window)
   let webCryptoFallbackPromise: Promise<SubtleCrypto> | false = false
 
   return { getWebCryptoBackend, configureFallback }

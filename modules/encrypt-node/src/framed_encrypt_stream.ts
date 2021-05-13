@@ -57,7 +57,7 @@ export function getFramedEncryptStream(
     content: [],
     sequenceNumber: 1,
   }
-  let pathologicalDrain: () => void = noop
+  let pathologicalDrain: (reason?: any) => void = noop
   const { frameLength } = messageHeader
 
   /* Precondition: plaintextLength must be within bounds.

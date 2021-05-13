@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/integration-node",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "run-s lint-*",
@@ -21,9 +21,9 @@
     "@types/stream-to-promise": "^2.2.0",
     "@types/yargs": "^15.0.3",
     "@types/yauzl": "^2.9.1",
-    "got": "^10.6.0",
-    "stream-to-promise": "^2.2.0",
-    "tslib": "^1.11.1",
+    "got": "^11.8.0",
+    "stream-to-promise": "^3.0.0",
+    "tslib": "^2.2.0",
     "yargs": "^15.3.1",
     "yauzl": "^2.10.0"
   },

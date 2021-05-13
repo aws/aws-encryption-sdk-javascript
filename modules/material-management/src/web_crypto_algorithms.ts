@@ -319,7 +319,8 @@ const supportedWebCryptoAlgorithms: SupportedWebCryptoAlgorithms = Object.freeze
   }
 )
 
-export class WebCryptoAlgorithmSuite extends AlgorithmSuite
+export class WebCryptoAlgorithmSuite
+  extends AlgorithmSuite
   implements WebCryptoAlgorithmSuiteValues {
   messageFormat!: MessageFormat
   encryption!: WebCryptoEncryption
