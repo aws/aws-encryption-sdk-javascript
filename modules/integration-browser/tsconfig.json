@@ -7,6 +7,7 @@
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules/**"],
   "references": [
-    { "path": "../client-browser" }
+    { "path": "../client-browser" },
+    { "path": "../integration-vectors" }
   ]
 }

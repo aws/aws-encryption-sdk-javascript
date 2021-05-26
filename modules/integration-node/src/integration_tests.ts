@@ -3,8 +3,10 @@
 
 import {
   TestVectorInfo,
-  getDecryptTestVectorIterator,
-} from './get_decrypt_test_iterator'
+  TestVectorResult,
+  parseIntegrationTestVectorsToTestVectorIterator,
+  PositiveTestVectorInfo,
+} from '@aws-crypto/integration-vectors'
 import {
   EncryptTestVectorInfo,
   getEncryptTestVectorIterator,
@@ -13,35 +15,99 @@ import {
   decryptMaterialsManagerNode,
   encryptMaterialsManagerNode,
 } from './decrypt_materials_manager_node'
-import { buildClient, CommitmentPolicy, needs } from '@aws-crypto/client-node'
+import {
+  buildClient,
+  CommitmentPolicy,
+  MessageHeader,
+  needs,
+  DecryptOutput,
+} from '@aws-crypto/client-node'
 import { URL } from 'url'
 import got from 'got'
 import streamToPromise from 'stream-to-promise'
-const { encrypt, decrypt } = buildClient(
+const { encrypt, decrypt, decryptUnsignedMessageStream } = buildClient(
   CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
 )
-const notSupportedDecryptMessages = ['Not supported at this time.']
+import * as stream from 'stream'
+import * as util from 'util'
+const pipeline = util.promisify(stream.pipeline)
 
 const notSupportedEncryptMessages = [
   'frameLength out of bounds: 0 > frameLength >= 4294967295',
   'Not supported at this time.',
+  'Negative Integration Tests are not supported for EncryptTests',
 ]
 
-// This is only viable for small streams, if we start get get larger streams, an stream equality should get written
-export async function testDecryptVector({
-  name,
-  keysInfo,
-  plainTextStream,
-  cipherStream,
-}: TestVectorInfo): Promise<TestVectorResults> {
+const notSupportedDecryptMessages = ['Not supported at this time.']
+
+async function runDecryption(
+  testVectorInfo: TestVectorInfo
+): Promise<DecryptOutput> {
+  const cmm = decryptMaterialsManagerNode(testVectorInfo.keysInfo)
+  if (testVectorInfo.decryptionMethod == 'streaming-unsigned-only') {
+    const plaintext: Buffer[] = []
+    let messageHeader: MessageHeader | false = false
+    // This ignores the return value, but we will either fail and throw an error
+    // or retrieve the header/plaintext as a side-effect.
+    await pipeline(
+      await testVectorInfo.cipherStream(),
+      decryptUnsignedMessageStream(cmm)
+        .once('MessageHeader', (header: MessageHeader) => {
+          messageHeader = header
+        })
+        .on('data', (chunk: Buffer) => plaintext.push(chunk)),
+      // This is necessary to actually make the data flow and populate the plaintext
+      new stream.PassThrough()
+    )
+
+    needs(messageHeader, 'Unknown format')
+
+    return {
+      plaintext: Buffer.concat(plaintext),
+      messageHeader,
+    }
+  } else {
+    return await decrypt(cmm, await testVectorInfo.cipherStream(), {})
+  }
+}
+
+// This is only viable for small streams, if we start get get larger streams, a stream equality should get written
+export async function testDecryptVector(
+  testVectorInfo: TestVectorInfo
+): Promise<TestVectorResult> {
+  if ('plainTextStream' in testVectorInfo) {
+    return testPositiveDecryptVector(testVectorInfo)
+  }
+  // Negative Decryption Tests
   try {
-    const cmm = decryptMaterialsManagerNode(keysInfo)
-    const knowGood = await streamToPromise(await plainTextStream())
-    const { plaintext } = await decrypt(cmm, await cipherStream())
-    const result = knowGood.equals(plaintext)
-    return { result, name }
+    await runDecryption(testVectorInfo)
   } catch (err) {
-    return { result: false, name, err }
+    return { result: true, name: testVectorInfo.name }
+  }
+  return {
+    result: false,
+    name: testVectorInfo.name,
+    err: new Error(
+      `Should have failed with ${testVectorInfo.errorDescription} but decryption succeeded`
+    ),
+  }
+}
+
+async function testPositiveDecryptVector(
+  testVectorInfo: PositiveTestVectorInfo
+): Promise<TestVectorResult> {
+  const knownGood = await streamToPromise(
+    await testVectorInfo.plainTextStream()
+  )
+  try {
+    const { plaintext } = await runDecryption(testVectorInfo)
+    if (knownGood.equals(plaintext)) {
+      return { result: true, name: testVectorInfo.name }
+    }
+    // noinspection ExceptionCaughtLocallyJS
+    throw new Error('Decrypted Plaintext did not match expected plaintext')
+  } catch (err) {
+    return { result: false, name: testVectorInfo.name, err }
   }
 }
 
@@ -49,7 +115,7 @@ export async function testDecryptVector({
 export async function testEncryptVector(
   { name, keysInfo, encryptOp, plainTextData }: EncryptTestVectorInfo,
   decryptOracle: string
-): Promise<TestVectorResults> {
+): Promise<TestVectorResult> {
   try {
     const cmm = encryptMaterialsManagerNode(keysInfo)
     const { result: encryptResult } = await encrypt(
@@ -75,13 +141,32 @@ export async function testEncryptVector(
   }
 }
 
+function handleTestResults(
+  { name, result, err }: TestVectorResult,
+  notSupportedMessages: string[]
+) {
+  if (result) {
+    console.log({ name, result })
+    return true
+  } else {
+    if (err && notSupportedMessages.includes(err.message)) {
+      console.log({ name, result: `Not supported: ${err.message}` })
+      return true
+    }
+    console.log({ name, result, err })
+    return false
+  }
+}
+
 export async function integrationDecryptTestVectors(
   vectorFile: string,
   tolerateFailures = 0,
   testName?: string,
   concurrency = 1
-) {
-  const tests = await getDecryptTestVectorIterator(vectorFile)
+): Promise<number> {
+  const tests = await parseIntegrationTestVectorsToTestVectorIterator(
+    vectorFile
+  )
 
   return parallelTests(concurrency, tolerateFailures, runTest, tests)
 
@@ -89,18 +174,10 @@ export async function integrationDecryptTestVectors(
     if (testName) {
       if (test.name !== testName) return true
     }
-    const { result, name, err } = await testDecryptVector(test)
-    if (result) {
-      console.log({ name, result })
-      return true
-    } else {
-      if (err && notSupportedDecryptMessages.includes(err.message)) {
-        console.log({ name, result: `Not supported: ${err.message}` })
-        return true
-      }
-      console.log({ name, result, err })
-      return false
-    }
+    return handleTestResults(
+      await testDecryptVector(test),
+      notSupportedDecryptMessages
+    )
   }
 }
 
@@ -111,7 +188,7 @@ export async function integrationEncryptTestVectors(
   tolerateFailures = 0,
   testName?: string,
   concurrency = 1
-) {
+): Promise<number> {
   const decryptOracleUrl = new URL(decryptOracle).toString()
   const tests = await getEncryptTestVectorIterator(manifestFile, keyFile)
 
@@ -121,21 +198,10 @@ export async function integrationEncryptTestVectors(
     if (testName) {
       if (test.name !== testName) return true
     }
-    const { result, name, err } = await testEncryptVector(
-      test,
-      decryptOracleUrl
+    return handleTestResults(
+      await testEncryptVector(test, decryptOracleUrl),
+      notSupportedEncryptMessages
     )
-    if (result) {
-      console.log({ name, result })
-      return true
-    } else {
-      if (err && notSupportedEncryptMessages.includes(err.message)) {
-        console.log({ name, result: `Not supported: ${err.message}` })
-        return true
-      }
-      console.log({ name, result, err })
-      return false
-    }
   }
 }
 
@@ -213,10 +279,4 @@ async function parallelTests<
      */
     enqueue()
   }
-}
-
-interface TestVectorResults {
-  name: string
-  result: boolean
-  err?: Error
 }

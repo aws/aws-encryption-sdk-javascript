@@ -104,7 +104,7 @@ export function getDecipherStream() {
       decipherState.contentLength -= chunk.length
       /* Precondition: Only content should be transformed, so the lengths must always match.
        * The BodyHeader and AuthTag are striped in the VerifyStream and passed in
-       * through events.  This means that if I receive a chunk without havening reset
+       * through events.  This means that if I receive a chunk without having reset
        * the content accumulation events are out of order.  Panic.
        */
       needs(decipherState.contentLength >= 0, 'Lengths do not match')
