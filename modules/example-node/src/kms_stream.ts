@@ -7,7 +7,8 @@ import {
   CommitmentPolicy,
   MessageHeader,
 } from '@aws-crypto/client-node'
-const { encryptStream, decryptStream } = buildClient(
+import { AlgorithmSuiteIdentifier } from '@aws-crypto/material-management'
+const { encryptStream, decryptUnsignedMessageStream } = buildClient(
   CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
 )
 
@@ -43,8 +44,22 @@ export async function kmsStreamTest(filename: string) {
 
   /* Create a simple pipeline to encrypt the package.json for this project. */
   const stream = createReadStream(filename)
-    .pipe(encryptStream(keyring, { encryptionContext: context }))
-    .pipe(decryptStream(new KmsKeyringNode({ discovery: true })))
+    .pipe(
+      encryptStream(keyring, {
+        /*
+         * Since we are streaming, and assuming that the encryption and decryption contexts
+         * are equally trusted, using an unsigned algorithm suite is faster and avoids
+         * the possibility of processing plaintext before the signature is verified.
+         */
+        suiteId: AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16,
+        encryptionContext: context,
+      })
+    )
+    /*
+     * decryptUnsignedMessageStream is recommended when streaming if you don't need
+     * digital signatures.
+     */
+    .pipe(decryptUnsignedMessageStream(new KmsKeyringNode({ discovery: true })))
     .on('MessageHeader', ({ encryptionContext }: MessageHeader) => {
       /* Verify the encryption context.
        * Depending on the Algorithm Suite, the `encryptionContext` _may_ contain additional values.

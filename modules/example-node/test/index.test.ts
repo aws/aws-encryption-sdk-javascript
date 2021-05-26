@@ -11,6 +11,10 @@ import { aesTest } from '../src/aes_simple'
 import { multiKeyringTest } from '../src/multi_keyring'
 import { cachingCMMNodeSimpleTest } from '../src/caching_cmm'
 import { readFileSync } from 'fs'
+import {
+  kmsEncryptWithMaxEncryptedDataKeysTest,
+  kmsDecryptWithMaxEncryptedDataKeysTest,
+} from '../src/kms_max_encrypted_data_keys'
 
 describe('test', () => {
   it('rsa', async () => {
@@ -48,5 +52,51 @@ describe('test', () => {
     const { cleartext, plaintext } = await cachingCMMNodeSimpleTest()
 
     expect(plaintext.toString()).to.equal(cleartext)
+  })
+
+  it('kmsEncryptWithMaxEncryptedDataKeysTest, less than max', async () => {
+    const {
+      cleartext,
+      plaintext,
+    } = await kmsEncryptWithMaxEncryptedDataKeysTest(2)
+    expect(plaintext.toString()).to.equal(cleartext)
+  })
+
+  it('kmsEncryptWithMaxEncryptedDataKeysTest, equal to max', async () => {
+    const {
+      cleartext,
+      plaintext,
+    } = await kmsEncryptWithMaxEncryptedDataKeysTest(3)
+    expect(plaintext.toString()).to.equal(cleartext)
+  })
+
+  it('kmsEncryptWithMaxEncryptedDataKeysTest, more than max', async () => {
+    await expect(kmsEncryptWithMaxEncryptedDataKeysTest(4)).to.rejectedWith(
+      Error,
+      'maxEncryptedDataKeys exceeded.'
+    )
+  })
+
+  it('kmsDecryptWithMaxEncryptedDataKeysTest, less than max', async () => {
+    const {
+      cleartext,
+      plaintext,
+    } = await kmsDecryptWithMaxEncryptedDataKeysTest(2)
+    expect(plaintext.toString()).to.equal(cleartext)
+  })
+
+  it('kmsDecryptWithMaxEncryptedDataKeysTest, equal to max', async () => {
+    const {
+      cleartext,
+      plaintext,
+    } = await kmsDecryptWithMaxEncryptedDataKeysTest(3)
+    expect(plaintext.toString()).to.equal(cleartext)
+  })
+
+  it('kmsDecryptWithMaxEncryptedDataKeysTest, more than max', async () => {
+    await expect(kmsDecryptWithMaxEncryptedDataKeysTest(4)).to.rejectedWith(
+      Error,
+      'maxEncryptedDataKeys exceeded.'
+    )
   })
 })

@@ -1,7 +1,11 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { EncryptManifestList, KeyList, KeyInfoTuple } from './types'
+import {
+  EncryptManifestList,
+  KeyList,
+  KeyInfoTuple,
+} from '@aws-crypto/integration-vectors'
 import { randomBytes } from 'crypto'
 import {
   AlgorithmSuiteIdentifier,
@@ -24,7 +28,7 @@ export async function buildEncryptFixtures(
   keyFile: string,
   testName?: string,
   slice?: string
-) {
+): Promise<void> {
   const [start = 0, end = 9999] = (slice || '')
     .split(':')
     .map((n) => parseInt(n, 10))
