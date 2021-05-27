@@ -14,6 +14,7 @@ import {
   CommitmentPolicy,
   CommitmentPolicySuites,
   MessageFormat,
+  ClientOptions,
 } from '@aws-crypto/material-management-node'
 import { getFramedEncryptStream } from './framed_encrypt_stream'
 import { SignatureStream } from './signature_stream'
@@ -49,16 +50,26 @@ export interface EncryptStreamInput {
  * Takes a NodeDefaultCryptographicMaterialsManager or a KeyringNode that will
  * be wrapped in a NodeDefaultCryptographicMaterialsManager and returns a stream.
  *
+ * @param commitmentPolicy
+ * @param maxEncryptedDataKeys
  * @param cmm NodeMaterialsManager|KeyringNode
  * @param op EncryptStreamInput
  */
 export function _encryptStream(
-  commitmentPolicy: CommitmentPolicy,
+  { commitmentPolicy, maxEncryptedDataKeys }: ClientOptions,
   cmm: KeyringNode | NodeMaterialsManager,
   op: EncryptStreamInput = {}
 ): Duplex {
   /* Precondition: encryptStream needs a valid commitmentPolicy. */
   needs(CommitmentPolicy[commitmentPolicy], 'Invalid commitment policy.')
+
+  // buildEncrypt defaults this to false for backwards compatibility, so this is satisfied
+  /* Precondition: encryptStream needs a valid maxEncryptedDataKeys. */
+  needs(
+    maxEncryptedDataKeys === false || maxEncryptedDataKeys >= 1,
+    'Invalid maxEncryptedDataKeys value.'
+  )
+
   const {
     suiteId,
     encryptionContext = {},
@@ -95,6 +106,13 @@ export function _encryptStream(
     .then(async (material) => {
       /* Precondition: Only use NodeEncryptionMaterial for algorithm suites supported in commitmentPolicy. */
       CommitmentPolicySuites.isEncryptEnabled(commitmentPolicy, material.suite)
+
+      /* Precondition: _encryptStream encryption materials must not exceed maxEncryptedDataKeys */
+      needs(
+        maxEncryptedDataKeys === false ||
+          material.encryptedDataKeys.length <= maxEncryptedDataKeys,
+        'maxEncryptedDataKeys exceeded.'
+      )
 
       const {
         getCipher,

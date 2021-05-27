@@ -3,7 +3,7 @@
 
 /* Before Node.js v11 the crypto module did not support
  * a method to PEM format a ECDH key.  It has always supported
- * producing such keys: `crypto.createECDH`.  But formating
+ * producing such keys: `crypto.createECDH`.  But formatting
  * these keys as a PEM for use in `crypto.Sign` and
  * `crypto.Verify` has not been possible in native `crypto`.
  * As Node.js v6, v8, and v10 reach end of life, this code

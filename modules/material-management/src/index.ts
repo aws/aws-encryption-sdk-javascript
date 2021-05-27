@@ -19,6 +19,8 @@ export {
   TagLength,
   CommitmentPolicy,
   CommitmentPolicySuites,
+  SignaturePolicy,
+  SignaturePolicySuites,
   MessageFormat,
   NonCommittingAlgorithmSuiteIdentifier,
   CommittingAlgorithmSuiteIdentifier,

@@ -156,8 +156,18 @@ export class WebCryptoDefaultCryptographicMaterialsManager
     const { signatureCurve: namedCurve } = suite
 
     /* Check for early return (Postcondition): The WebCryptoAlgorithmSuite specification must support a signatureCurve to extract a verification key. */
-    if (!namedCurve)
+    if (!namedCurve) {
+      /* Precondition: The context must not contain a public key for a non-signing algorithm suite. */
+      needs(
+        !Object.prototype.hasOwnProperty.call(
+          encryptionContext,
+          ENCODED_SIGNER_KEY
+        ),
+        'Encryption context contains public verification key for unsigned algorithm suite.'
+      )
+
       return new WebCryptoDecryptionMaterial(suite, encryptionContext)
+    }
 
     /* Precondition: WebCryptoDefaultCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist. */
     if (!encryptionContext)

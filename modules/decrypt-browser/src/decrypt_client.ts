@@ -4,6 +4,7 @@
 import { _decrypt } from './decrypt'
 import {
   CommitmentPolicy,
+  ClientOptions,
   needs,
 } from '@aws-crypto/material-management-browser'
 
@@ -15,13 +16,28 @@ type CurryFirst<fn extends (...a: any[]) => any> = fn extends (
   : []
 
 export function buildDecrypt(
-  commitmentPolicy: CommitmentPolicy = CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
+  options: CommitmentPolicy | Partial<ClientOptions> = {}
 ): {
   decrypt: (...args: CurryFirst<typeof _decrypt>) => ReturnType<typeof _decrypt>
 } {
+  const {
+    commitmentPolicy = CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
+    maxEncryptedDataKeys = false,
+  } = typeof options === 'string' ? { commitmentPolicy: options } : options
+
   /* Precondition: browser buildDecrypt needs a valid commitmentPolicy. */
   needs(CommitmentPolicy[commitmentPolicy], 'Invalid commitment policy.')
+  /* Precondition: browser buildDecrypt needs a valid maxEncryptedDataKeys. */
+  needs(
+    maxEncryptedDataKeys === false || maxEncryptedDataKeys >= 1,
+    'Invalid maxEncryptedDataKeys value.'
+  )
+
+  const clientOptions: ClientOptions = {
+    commitmentPolicy,
+    maxEncryptedDataKeys,
+  }
   return {
-    decrypt: _decrypt.bind({}, commitmentPolicy),
+    decrypt: _decrypt.bind({}, clientOptions),
   }
 }

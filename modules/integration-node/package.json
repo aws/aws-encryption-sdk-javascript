@@ -4,8 +4,8 @@
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "run-s lint-*",
-    "lint-eslint": "eslint src/*.ts test/**/*.ts",
-    "lint-prettier": "prettier -c src/*.ts test/**/*.ts",
+    "lint-eslint": "eslint src/*.ts test/*.ts",
+    "lint-prettier": "prettier -c src/*.ts test/*.ts",
     "test": "npm run lint && npm run build && node ./build/main/index.js",
     "integration_node": "npx ."
   },
@@ -17,6 +17,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/client-node": "file:../client-node",
+    "@aws-crypto/integration-vectors": "file:../integration-vectors",
     "@types/got": "^9.6.9",
     "@types/stream-to-promise": "^2.2.0",
     "@types/yargs": "^15.0.3",

@@ -4,22 +4,27 @@
 /* eslint-env mocha */
 
 import * as chai from 'chai'
+// @ts-ignore
 import chaiAsPromised from 'chai-as-promised'
 import * as util from 'util'
 import * as stream from 'stream'
-const pipeline = util.promisify(stream.pipeline)
 import { VerifyStream } from '../src/verify_stream'
 import { ParseHeaderStream } from '../src/parse_header_stream'
 import * as fixtures from './fixtures'
+// @ts-ignore
 import from from 'from2'
 import { ContentType } from '@aws-crypto/serialize'
 import {
-  NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier,
-  NodeDefaultCryptographicMaterialsManager,
   needs,
+  NodeAlgorithmSuite,
+  NodeDefaultCryptographicMaterialsManager,
+  SignaturePolicy,
+  CommitmentPolicy,
+  ClientOptions,
 } from '@aws-crypto/material-management-node'
-import { CommitmentPolicy } from '@aws-crypto/material-management'
+
+const pipeline = util.promisify(stream.pipeline)
 chai.use(chaiAsPromised)
 const { expect } = chai
 
@@ -43,7 +48,11 @@ describe('VerifyStream', () => {
 
   it('Precondition: If maxBodySize was set I can not buffer more data than maxBodySize.', () => {
     const source = new ParseHeaderStream(
-      CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      SignaturePolicy.ALLOW_ENCRYPT_ALLOW_DECRYPT,
+      {
+        commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+        maxEncryptedDataKeys: false,
+      } as ClientOptions,
       {} as any
     )
     const test = new VerifyStream({ maxBodySize: 1 })
@@ -166,7 +175,11 @@ async function testStream(
   data: Buffer
 ) {
   const source = new ParseHeaderStream(
-    CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+    SignaturePolicy.ALLOW_ENCRYPT_ALLOW_DECRYPT,
+    {
+      commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      maxEncryptedDataKeys: false,
+    } as ClientOptions,
     cmm
   )
   const test = new VerifyStream({})
