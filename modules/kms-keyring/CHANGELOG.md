@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.9.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/kms-keyring@1.7.0...@aws-crypto/kms-keyring@1.9.0) (2021-05-27)
+
+**Note:** Version bump only for package @aws-crypto/kms-keyring
+
+
+
+
+
 # [1.7.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/kms-keyring@1.1.1...@aws-crypto/kms-keyring@1.7.0) (2020-09-24)
 
 

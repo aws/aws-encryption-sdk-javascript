@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.9.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/web-crypto-backend@1.1.2...@aws-crypto/web-crypto-backend@1.9.0) (2021-05-27)
+
+
+### Bug Fixes
+
+* better dependency injection ([#496](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/issues/496)) ([8ee09f5](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/commit/8ee09f5c04f4550ec9c95712d3dda9943af34d86))
+
+
+
+
+
 ## [1.1.2](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/web-crypto-backend@1.1.1...@aws-crypto/web-crypto-backend@1.1.2) (2020-05-26)
 
 **Note:** Version bump only for package @aws-crypto/web-crypto-backend

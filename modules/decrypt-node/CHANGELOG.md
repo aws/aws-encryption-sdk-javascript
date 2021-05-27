@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.9.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/decrypt-node@1.7.0...@aws-crypto/decrypt-node@1.9.0) (2021-05-27)
+
+
+### Bug Fixes
+
+* better typing from typescript ([7a32a7e](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/commit/7a32a7e793fb4c334a8b1bf5f0747ac8498681b0))
+* Boundary condition error in VerifyStream ([#509](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/issues/509)) ([3070b71](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/commit/3070b71f1d1b5f5fd999b5dc8a8e33692cce59f3)), closes [#507](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/issues/507)
+
+
+### Features
+
+* Improvements to the message decryption process ([#612](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/issues/612)) ([1f09117](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/commit/1f09117a0c08bd42cd1260e1b010d313ee6f5371))
+
+
+
+
+
 # [1.7.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/decrypt-node@1.0.5...@aws-crypto/decrypt-node@1.7.0) (2020-09-24)
 
 

@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.9.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/raw-aes-keyring-node@1.7.0...@aws-crypto/raw-aes-keyring-node@1.9.0) (2021-05-27)
+
+**Note:** Version bump only for package @aws-crypto/raw-aes-keyring-node
+
+
+
+
+
 # [1.7.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/raw-aes-keyring-node@1.0.5...@aws-crypto/raw-aes-keyring-node@1.7.0) (2020-09-24)
 
 **Note:** Version bump only for package @aws-crypto/raw-aes-keyring-node
