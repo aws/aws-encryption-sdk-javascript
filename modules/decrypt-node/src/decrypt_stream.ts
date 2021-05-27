@@ -5,23 +5,19 @@ import {
   NodeDefaultCryptographicMaterialsManager,
   KeyringNode,
   NodeMaterialsManager,
-  CommitmentPolicy,
 } from '@aws-crypto/material-management-node'
 import { ParseHeaderStream } from './parse_header_stream'
 import { VerifyStream } from './verify_stream'
 import { getDecipherStream } from './decipher_stream'
+import { DecryptParameters, DecryptStreamOptions } from './types'
 import Duplexify from 'duplexify'
 import { Duplex } from 'stream'
 
 // @ts-ignore
 import { pipeline, PassThrough } from 'readable-stream'
 
-export interface DecryptStreamOptions {
-  maxBodySize?: number
-}
-
 export function _decryptStream(
-  commitmentPolicy: CommitmentPolicy,
+  decryptParameters: DecryptParameters,
   cmm: KeyringNode | NodeMaterialsManager,
   { maxBodySize }: DecryptStreamOptions = {}
 ): Duplex {
@@ -31,7 +27,11 @@ export function _decryptStream(
       ? new NodeDefaultCryptographicMaterialsManager(cmm)
       : cmm
 
-  const parseHeaderStream = new ParseHeaderStream(commitmentPolicy, cmm)
+  const parseHeaderStream = new ParseHeaderStream(
+    decryptParameters.signaturePolicy,
+    decryptParameters.clientOptions,
+    cmm
+  )
   const verifyStream = new VerifyStream({ maxBodySize })
   const decipherStream = getDecipherStream()
   const stream = new Duplexify(parseHeaderStream, decipherStream)

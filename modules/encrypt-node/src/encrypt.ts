@@ -4,7 +4,7 @@
 import {
   KeyringNode,
   NodeMaterialsManager,
-  CommitmentPolicy,
+  ClientOptions,
 } from '@aws-crypto/material-management-node'
 import { _encryptStream, EncryptStreamInput } from './encrypt_stream'
 
@@ -23,7 +23,7 @@ export interface EncryptOutput {
 }
 
 export async function _encrypt(
-  commitmentPolicy: CommitmentPolicy,
+  clientOptions: ClientOptions,
   cmm: KeyringNode | NodeMaterialsManager,
   plaintext: Buffer | Uint8Array | Readable | string | NodeJS.ReadableStream,
   op: EncryptInput = {}
@@ -36,7 +36,7 @@ export async function _encrypt(
     op.plaintextLength = plaintext.byteLength
   }
 
-  const stream = _encryptStream(commitmentPolicy, cmm, op)
+  const stream = _encryptStream(clientOptions, cmm, op)
   const result: Buffer[] = []
   let messageHeader: MessageHeader | false = false
   stream

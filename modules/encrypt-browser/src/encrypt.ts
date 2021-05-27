@@ -14,6 +14,7 @@ import {
   CommitmentPolicy,
   CommitmentPolicySuites,
   MessageFormat,
+  ClientOptions,
 } from '@aws-crypto/material-management-browser'
 import {
   serializeFactory,
@@ -46,7 +47,7 @@ export interface EncryptResult {
 }
 
 export async function _encrypt(
-  commitmentPolicy: CommitmentPolicy,
+  { commitmentPolicy, maxEncryptedDataKeys }: ClientOptions,
   cmm: KeyringWebCrypto | WebCryptoMaterialsManager,
   plaintext: Uint8Array,
   {
@@ -57,6 +58,13 @@ export async function _encrypt(
 ): Promise<EncryptResult> {
   /* Precondition: _encrypt needs a valid commitmentPolicy. */
   needs(CommitmentPolicy[commitmentPolicy], 'Invalid commitment policy.')
+
+  // buildEncrypt defaults this to false for backwards compatibility, so this is satisfied
+  /* Precondition: _encrypt needs a valid maxEncryptedDataKeys. */
+  needs(
+    maxEncryptedDataKeys === false || maxEncryptedDataKeys >= 1,
+    'Invalid maxEncryptedDataKeys value.'
+  )
 
   /* Precondition: The frameLength must be less than the maximum frame size for browser encryption. */
   needs(
@@ -91,6 +99,13 @@ export async function _encrypt(
 
   /* Precondition: Only use WebCryptoEncryptionMaterial for algorithm suites supported in commitmentPolicy. */
   CommitmentPolicySuites.isEncryptEnabled(commitmentPolicy, material.suite)
+
+  /* Precondition: _encrypt encryption materials must not exceed maxEncryptedDataKeys */
+  needs(
+    maxEncryptedDataKeys === false ||
+      material.encryptedDataKeys.length <= maxEncryptedDataKeys,
+    'maxEncryptedDataKeys exceeded.'
+  )
 
   const { getEncryptInfo, subtleSign, dispose } = await getEncryptHelper(
     material

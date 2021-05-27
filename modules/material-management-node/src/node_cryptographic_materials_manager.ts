@@ -145,8 +145,19 @@ export class NodeDefaultCryptographicMaterialsManager
   ) {
     const { signatureCurve: namedCurve } = suite
 
-    /* Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve to load a signature key. */
-    if (!namedCurve) return new NodeDecryptionMaterial(suite, encryptionContext)
+    if (!namedCurve) {
+      /* Precondition: NodeDefaultCryptographicMaterialsManager The context must not contain a public key for a non-signing algorithm suite. */
+      needs(
+        !Object.prototype.hasOwnProperty.call(
+          encryptionContext,
+          ENCODED_SIGNER_KEY
+        ),
+        'Encryption context contains public verification key for unsigned algorithm suite.'
+      )
+
+      /* Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve to load a signature key. */
+      return new NodeDecryptionMaterial(suite, encryptionContext)
+    }
 
     /* Precondition: NodeDefaultCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist. */
     if (!encryptionContext)

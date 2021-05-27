@@ -19,7 +19,7 @@ import {
   AESKey,
   KMSKey,
   KeyInfoTuple,
-} from './types'
+} from '@aws-crypto/integration-vectors'
 import { constants } from 'crypto'
 
 const Bits2RawAesWrappingSuiteIdentifier: {
@@ -30,17 +30,24 @@ const Bits2RawAesWrappingSuiteIdentifier: {
   256: RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING,
 }
 
-export function encryptMaterialsManagerNode(keyInfos: KeyInfoTuple[]) {
+export function encryptMaterialsManagerNode(
+  keyInfos: KeyInfoTuple[]
+): MultiKeyringNode {
   const [generator, ...children] = keyInfos.map(keyringNode)
   return new MultiKeyringNode({ generator, children })
 }
 
-export function decryptMaterialsManagerNode(keyInfos: KeyInfoTuple[]) {
+export function decryptMaterialsManagerNode(
+  keyInfos: KeyInfoTuple[]
+): MultiKeyringNode {
   const children = keyInfos.map(keyringNode)
   return new MultiKeyringNode({ children })
 }
 
-export function keyringNode([info, key]: KeyInfoTuple) {
+export function keyringNode([info, key]: KeyInfoTuple):
+  | KmsKeyringNode
+  | RawAesKeyringNode
+  | RawRsaKeyringNode {
   if (info.type === 'aws-kms' && key.type === 'aws-kms') {
     return kmsKeyring(info, key)
   }
@@ -61,12 +68,15 @@ export function keyringNode([info, key]: KeyInfoTuple) {
   throw new Error('Unsupported keyring type')
 }
 
-export function kmsKeyring(_keyInfo: KmsKeyInfo, key: KMSKey) {
+export function kmsKeyring(_keyInfo: KmsKeyInfo, key: KMSKey): KmsKeyringNode {
   const generatorKeyId = key['key-id']
   return new KmsKeyringNode({ generatorKeyId })
 }
 
-export function aesKeyring(keyInfo: AesKeyInfo, key: AESKey) {
+export function aesKeyring(
+  keyInfo: AesKeyInfo,
+  key: AESKey
+): RawAesKeyringNode {
   const keyName = key['key-id']
   const keyNamespace = keyInfo['provider-id']
   const { encoding, material } = key
@@ -80,7 +90,10 @@ export function aesKeyring(keyInfo: AesKeyInfo, key: AESKey) {
   })
 }
 
-export function rsaKeyring(keyInfo: RsaKeyInfo, key: RSAKey) {
+export function rsaKeyring(
+  keyInfo: RsaKeyInfo,
+  key: RSAKey
+): RawRsaKeyringNode {
   const keyName = key['key-id']
   const keyNamespace = keyInfo['provider-id']
   const rsaKey =
@@ -97,7 +110,12 @@ export function rsaKeyring(keyInfo: RsaKeyInfo, key: RSAKey) {
   })
 }
 
-export function rsaPadding(keyInfo: RsaKeyInfo) {
+interface PaddingTuple {
+  padding: number
+  oaepHash?: 'sha1' | 'sha256' | 'sha384' | 'sha512'
+}
+
+export function rsaPadding(keyInfo: RsaKeyInfo): PaddingTuple {
   if (keyInfo['padding-algorithm'] === 'pkcs1')
     return { padding: constants.RSA_PKCS1_PADDING }
   const padding = constants.RSA_PKCS1_OAEP_PADDING

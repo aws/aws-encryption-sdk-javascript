@@ -20,11 +20,12 @@ import {
   AESKey,
   KMSKey,
   KeyInfoTuple,
-} from './types'
+} from '@aws-crypto/integration-vectors'
 
 import { fromBase64 } from '@aws-sdk/util-base64-browser'
 // @ts-ignore
 import keyto from '@trust/keyto'
+// credentials is from '@aws-sdk/karma-credential-loader'
 declare const credentials: any
 
 const Bits2RawAesWrappingSuiteIdentifier: {
@@ -40,7 +41,7 @@ const Bits2RawAesWrappingSuiteIdentifier: {
 
 export async function encryptMaterialsManagerWebCrypto(
   keyInfos: KeyInfoTuple[]
-) {
+): Promise<MultiKeyringWebCrypto> {
   const [generator, ...children] = await Promise.all(
     keyInfos.map(keyringWebCrypto)
   )
@@ -49,7 +50,7 @@ export async function encryptMaterialsManagerWebCrypto(
 
 export async function decryptMaterialsManagerWebCrypto(
   keyInfos: KeyInfoTuple[]
-) {
+): Promise<MultiKeyringWebCrypto> {
   const children = await Promise.all(keyInfos.map(keyringWebCrypto))
   return new MultiKeyringWebCrypto({ children })
 }

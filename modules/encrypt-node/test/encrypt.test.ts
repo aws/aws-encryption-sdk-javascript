@@ -211,8 +211,28 @@ describe('encrypt structural testing', () => {
 
   it('Precondition: encryptStream needs a valid commitmentPolicy.', async () => {
     await expect(
-      _encrypt('fake_policy' as any, keyRing, 'asdf')
+      _encrypt(
+        {
+          commitmentPolicy: 'fake_policy' as any,
+          maxEncryptedDataKeys: false,
+        },
+        keyRing,
+        'asdf'
+      )
     ).to.rejectedWith(Error, 'Invalid commitment policy.')
+  })
+
+  it('Precondition: encryptStream needs a valid maxEncryptedDataKeys.', async () => {
+    await expect(
+      _encrypt(
+        {
+          commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+          maxEncryptedDataKeys: 0,
+        },
+        keyRing,
+        'asdf'
+      )
+    ).to.rejectedWith(Error, 'Invalid maxEncryptedDataKeys value.')
   })
 
   it('Precondition: The frameLength must be less than the maximum frame size Node.js stream.', async () => {
@@ -225,10 +245,18 @@ describe('encrypt structural testing', () => {
 
   it('Precondition: Only request NodeEncryptionMaterial for algorithm suites supported in commitmentPolicy.', async () => {
     await expect(
-      _encrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT, keyRing, 'asdf', {
-        suiteId:
-          AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY,
-      })
+      _encrypt(
+        {
+          commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+          maxEncryptedDataKeys: false,
+        },
+        keyRing,
+        'asdf',
+        {
+          suiteId:
+            AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY,
+        }
+      )
     ).to.rejectedWith(
       Error,
       'Configuration conflict. Cannot encrypt due to CommitmentPolicy'
@@ -249,12 +277,65 @@ describe('encrypt structural testing', () => {
       },
     } as any
     await expect(
-      _encrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT, cmm, 'asdf')
+      _encrypt(
+        {
+          commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+          maxEncryptedDataKeys: false,
+        },
+        cmm,
+        'asdf'
+      )
     ).to.rejectedWith(
       Error,
       'Configuration conflict. Cannot encrypt due to CommitmentPolicy'
     )
     expect(called_getEncryptionMaterials).to.equal(true)
+  })
+
+  it('Precondition: _encryptStream encryption materials must not exceed maxEncryptedDataKeys', async () => {
+    for (const numKeys of [2, 3, 4]) {
+      let called_getEncryptionMaterials = false
+      const cmm = {
+        async getEncryptionMaterials() {
+          called_getEncryptionMaterials = true
+          const material = await keyRing.onEncrypt(
+            new NodeEncryptionMaterial(
+              new NodeAlgorithmSuite(
+                AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+              ),
+              {}
+            )
+          )
+          for (let i = 1; i < numKeys; i++) {
+            material.addEncryptedDataKey(
+              edk,
+              KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
+            )
+          }
+          return material
+        },
+      } as any
+
+      const encryptPromise = _encrypt(
+        {
+          commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+          maxEncryptedDataKeys: 3,
+        },
+        cmm,
+        'asdf'
+      )
+
+      if (numKeys > 3) {
+        await expect(encryptPromise).to.rejectedWith(
+          Error,
+          'maxEncryptedDataKeys exceeded.'
+        )
+      } else {
+        await encryptPromise
+      }
+
+      expect(called_getEncryptionMaterials).to.equal(true)
+    }
   })
 
   it('can fully parse a framed message', async () => {

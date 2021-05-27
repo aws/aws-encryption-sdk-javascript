@@ -12,13 +12,41 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 
 describe('buildEncrypt', () => {
-  it('can build a client', () => {
+  it('can build a client with a commitment policy', () => {
     const test = buildEncrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
     expect(test).to.have.property('encrypt').and.to.be.a('function')
     expect(test).to.have.property('encryptStream').and.to.be.a('function')
   })
 
+  it('can build a client with max encrypted data keys', () => {
+    for (const numKeys of [1, 10, Math.pow(2, 16) - 1, Math.pow(2, 16)]) {
+      const test = buildEncrypt({
+        commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+        maxEncryptedDataKeys: numKeys,
+      })
+      expect(test).to.have.property('encrypt').and.to.be.a('function')
+      expect(test).to.have.property('encryptStream').and.to.be.a('function')
+    }
+  })
+
   it('Precondition: node buildEncrypt needs a valid commitmentPolicy.', () => {
-    expect(() => buildEncrypt({} as any)).to.throw('Invalid commitment policy.')
+    expect(() => buildEncrypt('BAD_POLICY' as any)).to.throw(
+      'Invalid commitment policy.'
+    )
+  })
+
+  it('Precondition: node buildEncrypt needs a valid maxEncryptedDataKeys.', () => {
+    expect(() =>
+      buildEncrypt({
+        commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+        maxEncryptedDataKeys: 0,
+      })
+    ).to.throw('Invalid maxEncryptedDataKeys value.')
+    expect(() =>
+      buildEncrypt({
+        commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+        maxEncryptedDataKeys: -1,
+      })
+    ).to.throw('Invalid maxEncryptedDataKeys value.')
   })
 })

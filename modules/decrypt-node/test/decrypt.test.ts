@@ -4,12 +4,17 @@
 /* eslint-env mocha */
 
 import * as chai from 'chai'
+// @ts-ignore
 import chaiAsPromised from 'chai-as-promised'
-import { AlgorithmSuiteIdentifier } from '@aws-crypto/material-management-node'
-import { decrypt } from '../src/index'
+import {
+  AlgorithmSuiteIdentifier,
+  CommitmentPolicy,
+} from '@aws-crypto/material-management-node'
+import { decrypt, buildDecrypt } from '../src/index'
 import * as fixtures from './fixtures'
 chai.use(chaiAsPromised)
 const { expect } = chai
+// @ts-ignore
 import from from 'from2'
 
 describe('decrypt', () => {
@@ -172,6 +177,44 @@ describe('decrypt', () => {
         { encoding: 'base64', maxBodySize: 3 }
       )
     ).to.rejectedWith(Error, 'maxBodySize exceeded.')
+  })
+
+  it('can decrypt data with less than maxEncryptedDataKeys', async () => {
+    const { decrypt } = buildDecrypt({
+      commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      maxEncryptedDataKeys: 3,
+    })
+    const { plaintext } = await decrypt(
+      fixtures.decryptKeyring(),
+      fixtures.twoEdksMessage(),
+      { encoding: 'base64' }
+    )
+    expect(plaintext).to.deep.equal(Buffer.from('asdf'))
+  })
+
+  it('can decrypt data with exactly maxEncryptedDataKeys', async () => {
+    const { decrypt } = buildDecrypt({
+      commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      maxEncryptedDataKeys: 3,
+    })
+    const { plaintext } = await decrypt(
+      fixtures.decryptKeyring(),
+      fixtures.threeEdksMessage(),
+      { encoding: 'base64' }
+    )
+    expect(plaintext).to.deep.equal(Buffer.from('asdf'))
+  })
+
+  it('will not decrypt data with more than maxEncryptedDataKeys', async () => {
+    const { decrypt } = buildDecrypt({
+      commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      maxEncryptedDataKeys: 3,
+    })
+    await expect(
+      decrypt(fixtures.decryptKeyring(), fixtures.fourEdksMessage(), {
+        encoding: 'base64',
+      })
+    ).to.rejectedWith(Error, 'maxEncryptedDataKeys exceeded.')
   })
 })
 

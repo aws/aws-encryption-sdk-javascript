@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig",
+  "compilerOptions": {
+    "target": "esnext",
+    "outDir": "build/module",
+    "module": "esnext",
+    "allowSyntheticDefaultImports": true
+  },
+  "exclude": [
+    "node_modules/**"
+  ]
+}

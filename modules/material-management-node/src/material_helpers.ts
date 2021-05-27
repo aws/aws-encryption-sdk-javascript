@@ -191,7 +191,7 @@ export const getDecryptionHelper: GetDecryptionHelper = (
       {
         awsCryptoVerify: (signature: Buffer) =>
           // As typescript gets better typing
-          // We should consider either generics
+          // We should consider either generics or
           // 2 different verificationKeys for Node and WebCrypto
           verify.verify(verificationKey.publicKey as string, signature),
       }
