@@ -76,6 +76,35 @@ describe('deserializeEncryptedDataKeysFactory:deserializeEncryptedDataKeys', () 
     expect(() => deserializeEncryptedDataKeys(buffer, 0)).to.throw()
   })
 
+  it('Precondition: encryptedDataKeysCount must not exceed maxEncryptedDataKeys.', () => {
+    const { deserializeEncryptedDataKeys } = deserializeFactory(
+      toUtf8,
+      WebCryptoAlgorithmSuite
+    )
+    const maxEncryptedDataKeys = 3
+    for (const numKeys of [2, 3, 4]) {
+      const buffer = new Uint8Array([0, numKeys])
+      const test = () =>
+        deserializeEncryptedDataKeys(buffer, 0, { maxEncryptedDataKeys })
+      if (numKeys <= maxEncryptedDataKeys) {
+        test()
+      } else {
+        expect(test).to.throw('maxEncryptedDataKeys exceeded.')
+      }
+    }
+  })
+
+  it('Precondition: deserializeEncryptedDataKeys needs a valid maxEncryptedDataKeys.', () => {
+    const { deserializeEncryptedDataKeys } = deserializeFactory(
+      toUtf8,
+      WebCryptoAlgorithmSuite
+    )
+    const buffer = fixtures.encryptedDataKey()
+    expect(() =>
+      deserializeEncryptedDataKeys(buffer, 0, { maxEncryptedDataKeys: 0 })
+    ).to.throw('Invalid maxEncryptedDataKeys value.')
+  })
+
   it('Precondition: startPos must be within the byte length of the buffer given.', () => {
     const { deserializeEncryptedDataKeys } = deserializeFactory(
       toUtf8,

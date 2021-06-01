@@ -30,5 +30,8 @@ export {
   AwsEsdkJsCryptoKey,
   CommitmentPolicy,
   CommitmentPolicySuites,
+  SignaturePolicySuites,
+  SignaturePolicy,
   MessageFormat,
+  ClientOptions,
 } from '@aws-crypto/material-management'

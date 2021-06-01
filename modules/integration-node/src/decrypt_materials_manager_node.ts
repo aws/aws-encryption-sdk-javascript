@@ -19,7 +19,7 @@ import {
   AESKey,
   KMSKey,
   KeyInfoTuple,
-} from './types'
+} from '@aws-crypto/integration-vectors'
 import { constants } from 'crypto'
 
 const Bits2RawAesWrappingSuiteIdentifier: {

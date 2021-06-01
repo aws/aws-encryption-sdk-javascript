@@ -6,8 +6,11 @@
     "module": "esnext",
     "allowSyntheticDefaultImports": true
   },
-  "exclude": [ "node_modules/**" ],
+  "exclude": ["node_modules/**"],
   "references": [
-    { "path": "../client-browser/tsconfig.module.json" }
+    {
+      "path": "../client-browser/tsconfig.module.json"
+    },
+    { "path": "../integration-vectors/tsconfig.module.json" }
   ]
 }

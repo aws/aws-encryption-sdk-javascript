@@ -352,4 +352,18 @@ describe('deserializeFactory:deserializeMessageHeader', () => {
     )
     expect(() => deserializeMessageHeader(buffer)).to.throw('Malformed Header')
   })
+
+  it('plumbs maxEncryptedDataKeys through', () => {
+    const deserializeMessageHeader = deserializeHeaderV1Factory({
+      decodeEncryptionContext,
+      deserializeEncryptedDataKeys,
+      SdkSuite: WebCryptoAlgorithmSuite,
+    })
+
+    expect(() =>
+      deserializeMessageHeader(fixtures.threeEdksMessagePartialHeaderV1(), {
+        maxEncryptedDataKeys: 1,
+      })
+    ).to.throw('maxEncryptedDataKeys exceeded.')
+  })
 })

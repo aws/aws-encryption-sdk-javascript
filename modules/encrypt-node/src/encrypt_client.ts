@@ -3,7 +3,11 @@
 
 import { _encryptStream } from './encrypt_stream'
 import { _encrypt } from './encrypt'
-import { CommitmentPolicy, needs } from '@aws-crypto/material-management-node'
+import {
+  CommitmentPolicy,
+  ClientOptions,
+  needs,
+} from '@aws-crypto/material-management-node'
 
 type CurryFirst<fn extends (...a: any[]) => any> = fn extends (
   _: any,
@@ -13,17 +17,32 @@ type CurryFirst<fn extends (...a: any[]) => any> = fn extends (
   : []
 
 export function buildEncrypt(
-  commitmentPolicy: CommitmentPolicy = CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
+  options: CommitmentPolicy | Partial<ClientOptions> = {}
 ): {
   encryptStream: (
     ...args: CurryFirst<typeof _encryptStream>
   ) => ReturnType<typeof _encryptStream>
   encrypt: (...args: CurryFirst<typeof _encrypt>) => ReturnType<typeof _encrypt>
 } {
+  const {
+    commitmentPolicy = CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
+    maxEncryptedDataKeys = false,
+  } = typeof options === 'string' ? { commitmentPolicy: options } : options
+
   /* Precondition: node buildEncrypt needs a valid commitmentPolicy. */
   needs(CommitmentPolicy[commitmentPolicy], 'Invalid commitment policy.')
+  /* Precondition: node buildEncrypt needs a valid maxEncryptedDataKeys. */
+  needs(
+    maxEncryptedDataKeys === false || maxEncryptedDataKeys >= 1,
+    'Invalid maxEncryptedDataKeys value.'
+  )
+
+  const clientOptions: ClientOptions = {
+    commitmentPolicy,
+    maxEncryptedDataKeys,
+  }
   return {
-    encryptStream: _encryptStream.bind({}, commitmentPolicy),
-    encrypt: _encrypt.bind({}, commitmentPolicy),
+    encryptStream: _encryptStream.bind({}, clientOptions),
+    encrypt: _encrypt.bind({}, clientOptions),
   }
 }

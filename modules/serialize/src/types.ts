@@ -101,3 +101,7 @@ export interface HeaderAuth {
 export interface AlgorithmSuiteConstructor<Suite extends AlgorithmSuite> {
   new (id: AlgorithmSuiteIdentifier): Suite
 }
+
+export interface DeserializeOptions {
+  maxEncryptedDataKeys: number | false
+}

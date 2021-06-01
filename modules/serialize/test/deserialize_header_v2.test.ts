@@ -117,10 +117,24 @@ describe('deserializeMessageHeaderV2', () => {
       expect(valueCiphertext).to.not.equal(false)
     })
   })
+
+  it('plumbs maxEncryptedDataKeys through', () => {
+    const deserializeMessageHeader = deserializeHeaderV2Factory({
+      decodeEncryptionContext,
+      deserializeEncryptedDataKeys,
+      SdkSuite: WebCryptoAlgorithmSuite,
+    })
+
+    expect(() =>
+      deserializeMessageHeader(fixtures.threeEdksMessagePartialHeaderV2(), {
+        maxEncryptedDataKeys: 1,
+      })
+    ).to.throw('maxEncryptedDataKeys exceeded.')
+  })
 })
 
 describe('serializeMessageHeaderV2', () => {
-  const fn = deserializeHeaderV2Factory({
+  const deserializeHeaderV2Test = deserializeHeaderV2Factory({
     decodeEncryptionContext,
     deserializeEncryptedDataKeys,
     SdkSuite: WebCryptoAlgorithmSuite,
@@ -147,7 +161,7 @@ describe('serializeMessageHeaderV2', () => {
        */
       it(comment, () => {
         const rawMessage = Buffer.from(ciphertext, 'base64')
-        const baseHeader = fn(rawMessage)
+        const baseHeader = deserializeHeaderV2Test(rawMessage)
         needs(
           baseHeader && baseHeader.messageHeader.version === MessageFormat.V2,
           'failed to parse'

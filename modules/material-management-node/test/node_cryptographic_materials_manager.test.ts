@@ -3,7 +3,8 @@
 
 /* eslint-env mocha */
 
-import chai from 'chai'
+import * as chai from 'chai'
+// @ts-ignore
 import chaiAsPromised from 'chai-as-promised'
 import { KeyringNode, CommitmentPolicy } from '@aws-crypto/material-management'
 import { NodeDefaultCryptographicMaterialsManager } from '../src/node_cryptographic_materials_manager'
@@ -20,15 +21,16 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 
 describe('NodeDefaultCryptographicMaterialsManager', () => {
-  it('constructor sets keyring', () => {
-    class TestKeyring extends KeyringNode {
-      async _onEncrypt(): Promise<NodeEncryptionMaterial> {
-        throw new Error('never')
-      }
-      async _onDecrypt(): Promise<NodeDecryptionMaterial> {
-        throw new Error('never')
-      }
+  class TestKeyring extends KeyringNode {
+    async _onEncrypt(): Promise<NodeEncryptionMaterial> {
+      throw new Error('I should never see this error')
     }
+    async _onDecrypt(): Promise<NodeDecryptionMaterial> {
+      throw new Error('I should never see this error')
+    }
+  }
+
+  it('constructor sets keyring', () => {
     const keyring = new TestKeyring()
     const test = new NodeDefaultCryptographicMaterialsManager(keyring)
     expect(test).to.be.instanceOf(NodeDefaultCryptographicMaterialsManager)
@@ -47,14 +49,6 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
   })
 
   it('should create signature key and append the verification key to context and return NodeEncryptionMaterial', async () => {
-    class TestKeyring extends KeyringNode {
-      async _onEncrypt(): Promise<NodeEncryptionMaterial> {
-        throw new Error('never')
-      }
-      async _onDecrypt(): Promise<NodeDecryptionMaterial> {
-        throw new Error('never')
-      }
-    }
     const keyring = new TestKeyring()
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
@@ -75,14 +69,6 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
   })
 
   it('Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve to generate a ECDH key.', async () => {
-    class TestKeyring extends KeyringNode {
-      async _onEncrypt(): Promise<NodeEncryptionMaterial> {
-        throw new Error('never')
-      }
-      async _onDecrypt(): Promise<NodeDecryptionMaterial> {
-        throw new Error('never')
-      }
-    }
     const keyring = new TestKeyring()
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
@@ -102,14 +88,6 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
   })
 
   it('Set the verification key.', async () => {
-    class TestKeyring extends KeyringNode {
-      async _onEncrypt(): Promise<NodeEncryptionMaterial> {
-        throw new Error('never')
-      }
-      async _onDecrypt(): Promise<NodeDecryptionMaterial> {
-        throw new Error('never')
-      }
-    }
     const keyring = new TestKeyring()
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
@@ -126,14 +104,6 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
   })
 
   it('Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve to load a signature key.', async () => {
-    class TestKeyring extends KeyringNode {
-      async _onEncrypt(): Promise<NodeEncryptionMaterial> {
-        throw new Error('never')
-      }
-      async _onDecrypt(): Promise<NodeDecryptionMaterial> {
-        throw new Error('never')
-      }
-    }
     const keyring = new TestKeyring()
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
 
@@ -149,14 +119,6 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
   })
 
   it('Precondition: NodeDefaultCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist.', async () => {
-    class TestKeyring extends KeyringNode {
-      async _onEncrypt(): Promise<NodeEncryptionMaterial> {
-        throw new Error('never')
-      }
-      async _onDecrypt(): Promise<NodeDecryptionMaterial> {
-        throw new Error('never')
-      }
-    }
     const keyring = new TestKeyring()
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
     const suite = new NodeAlgorithmSuite(
@@ -169,14 +131,6 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
   })
 
   it('Precondition: NodeDefaultCryptographicMaterialsManager The context must contain the public key.', async () => {
-    class TestKeyring extends KeyringNode {
-      async _onEncrypt(): Promise<NodeEncryptionMaterial> {
-        throw new Error('never')
-      }
-      async _onDecrypt(): Promise<NodeDecryptionMaterial> {
-        throw new Error('never')
-      }
-    }
     const keyring = new TestKeyring()
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
     const suite = new NodeAlgorithmSuite(
@@ -188,15 +142,21 @@ describe('NodeDefaultCryptographicMaterialsManager', () => {
     ).to.throw()
   })
 
+  it('Precondition: NodeDefaultCryptographicMaterialsManager The context must not contain a public key for a non-signing algorithm suite.', async () => {
+    const keyring = new TestKeyring()
+    const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
+    const suite = new NodeAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
+    )
+
+    expect(() =>
+      cmm._initializeDecryptionMaterial(suite, {
+        [ENCODED_SIGNER_KEY]: 'public key',
+      })
+    ).to.throw()
+  })
+
   it('Precondition: NodeDefaultCryptographicMaterialsManager must reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.', async () => {
-    class TestKeyring extends KeyringNode {
-      async _onEncrypt(): Promise<NodeEncryptionMaterial> {
-        throw new Error('this should never happen')
-      }
-      async _onDecrypt(): Promise<NodeDecryptionMaterial> {
-        throw new Error('this should never happen')
-      }
-    }
     const keyring = new TestKeyring()
     const cmm = new NodeDefaultCryptographicMaterialsManager(keyring)
     const encryptionContext = {
