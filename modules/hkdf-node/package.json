@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/hkdf-node",
-  "version": "1.0.3",
+  "version": "2.2.0",
   "description": "nodejs hkdf crypto primitive",
   "scripts": {
     "prepublishOnly": "npm run build",
@@ -20,7 +20,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "tslib": "^1.11.1"
+    "tslib": "^2.2.0"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",

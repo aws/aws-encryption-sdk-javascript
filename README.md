@@ -63,7 +63,7 @@ A multi keyring can be used to compose keyrings together.
 ### Wrapping Keys
 
 Wrapping keys are used to protect data keys.
-An example of a wrapping key is a `KMS customer master key (CMK)`_.
+An example of a wrapping key is a `KMS customer master key (CMK)`.
 
 ### Data Keys
 

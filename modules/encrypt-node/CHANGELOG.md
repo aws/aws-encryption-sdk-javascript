@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.2.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/encrypt-node@2.1.0...@aws-crypto/encrypt-node@2.2.0) (2021-05-27)
+
+**Note:** Version bump only for package @aws-crypto/encrypt-node
+
+
+
+
+
+# [2.1.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/encrypt-node@2.0.0...@aws-crypto/encrypt-node@2.1.0) (2021-02-04)
+
+
+### Bug Fixes
+
+* better typing from typescript ([9b53325](https://github.com/aws/aws-encryption-sdk-javascript/commit/9b5332542c1293b66d3f35587851802864e531b4))
+
+
+
+
+
 # [2.0.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/encrypt-node@1.7.0...@aws-crypto/encrypt-node@2.0.0) (2020-09-25)
 
 

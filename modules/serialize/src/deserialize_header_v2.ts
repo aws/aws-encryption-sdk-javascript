@@ -19,7 +19,12 @@ import {
   MessageFormat,
 } from '@aws-crypto/material-management'
 import { MessageIdLength } from './identifiers'
-import { HeaderInfo, AlgorithmSuiteConstructor, MessageHeaderV2 } from './types'
+import {
+  HeaderInfo,
+  AlgorithmSuiteConstructor,
+  MessageHeaderV2,
+  DeserializeOptions,
+} from './types'
 
 // To deal with Browser and Node.js I inject a function to handle utf8 encoding.
 export function deserializeHeaderV2Factory<Suite extends AlgorithmSuite>({
@@ -32,7 +37,8 @@ export function deserializeHeaderV2Factory<Suite extends AlgorithmSuite>({
   ) => EncryptionContext
   deserializeEncryptedDataKeys: (
     buffer: Uint8Array,
-    startPos: number
+    startPos: number,
+    deserializeOptions?: DeserializeOptions
   ) =>
     | false
     | {
@@ -52,10 +58,12 @@ export function deserializeHeaderV2Factory<Suite extends AlgorithmSuite>({
    * returns a HeaderInfo.
    *
    * @param messageBuffer
+   * @param deserializeOptions
    * @returns HeaderInfo|undefined
    */
   function deserializeMessageHeaderV2(
-    messageBuffer: Uint8Array
+    messageBuffer: Uint8Array,
+    deserializeOptions: DeserializeOptions = { maxEncryptedDataKeys: false }
   ): HeaderInfo | false {
     /* Uint8Array is a view on top of the underlying ArrayBuffer.
      * This means that raw underlying memory stored in the ArrayBuffer
@@ -123,7 +131,8 @@ export function deserializeHeaderV2Factory<Suite extends AlgorithmSuite>({
     )
     const dataKeyInfo = deserializeEncryptedDataKeys(
       messageBuffer,
-      fixedLengthHeaderPrefix + contextLength
+      fixedLengthHeaderPrefix + contextLength,
+      deserializeOptions
     )
 
     /* Check for early return (Postcondition): Not Enough Data. Caller must buffer all of the encrypted data keys before we can parse the next section.

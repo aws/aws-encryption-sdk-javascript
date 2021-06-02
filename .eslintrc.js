@@ -36,7 +36,7 @@ module.exports = {
     '@typescript-eslint/no-misused-promises': 'error',
     // I disagree with these rules.
     // Humans read from less specific to more specific.
-    // No on puts the outline at the end of the book.
+    // No one puts the outline at the end of the book.
     // Since the exported functions should be composed
     // of lower level functions,
     // it is good for understanding

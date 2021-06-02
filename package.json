@@ -24,11 +24,11 @@
     "build-node": "tsc -b tsconfig.json",
     "build-browser": "tsc -b tsconfig.module.json",
     "build": "run-s build-*",
-    "mocha": "mocha --require source-map-support/register --require ts-node/register --exclude 'modules/*-+(browser|backend)/test/*test.ts'  modules/**/test/*test.ts",
+    "mocha": "mocha --require source-map-support/register --require ts-node/register --exclude 'modules/*-+(browser|backend)/test/*test.ts' modules/**/test/*test.ts",
     "karma": "karma start karma.conf.js",
     "coverage-browser": "npm run karma && nyc report -t .karma_output --check-coverage --extension .ts",
     "coverage-node": "nyc --require ts-node/register --instrument --extension .ts --all --check-coverage -n 'modules/**/src/*.ts' -x 'modules/**/test/*.ts' -x 'modules/*-+(browser|backend)/**/*.ts' npm run mocha",
-    "coverage": "run-s coverage-* && nyc merge .karma_output .nyc_output/browser.json && nyc report --extension .ts --check-coverage",
+    "coverage": "run-s coverage-* && nyc merge .karma_output .nyc_output/browser.json && nyc report --extension .ts --check-coverage ",
     "report-coverage": "nyc report --extension .ts --check-coverage -r html",
     "test": "npm run lint && npm run build && npm run coverage",
     "integration-browser-decrypt": "npm run build; integration-browser decrypt -v $npm_package_config_localTestVectors --karma -c cpu",
@@ -47,7 +47,7 @@
     "test_conditions": "./util/test_conditions"
   },
   "config": {
-    "localTestVectors": "aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-1.3.8.zip",
+    "localTestVectors": "aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-2.2.0.zip",
     "encryptManifestList": "https://raw.githubusercontent.com/awslabs/aws-crypto-tools-test-vector-framework/master/features/CANONICAL-GENERATED-MANIFESTS/0003-awses-message-encryption.v1.json",
     "encryptKeyManifest": "https://raw.githubusercontent.com/awslabs/aws-crypto-tools-test-vector-framework/master/features/CANONICAL-GENERATED-MANIFESTS/0002-keys.v1.json",
     "decryptOracle": "https://xi1mwx3ttb.execute-api.us-west-2.amazonaws.com/api/v0/decrypt"
@@ -73,6 +73,7 @@
     "@aws-crypto/hkdf-node": "file:modules/hkdf-node",
     "@aws-crypto/integration-browser": "file:modules/integration-browser",
     "@aws-crypto/integration-node": "file:modules/integration-node",
+    "@aws-crypto/integration-vectors": "file:modules/integration-vectors",
     "@aws-crypto/kms-keyring": "file:modules/kms-keyring",
     "@aws-crypto/kms-keyring-browser": "file:modules/kms-keyring-browser",
     "@aws-crypto/kms-keyring-node": "file:modules/kms-keyring-node",
@@ -91,9 +92,9 @@
     "modules/*"
   ],
   "devDependencies": {
-    "@aws-sdk/credential-provider-node": "^1.0.0-gamma.4",
-    "@aws-sdk/karma-credential-loader": "^1.0.0-gamma.3",
-    "@aws-sdk/util-base64-browser": "^1.0.0-gamma.6",
+    "@aws-sdk/credential-provider-node": "^3.11.0",
+    "@aws-sdk/karma-credential-loader": "^3.11.0",
+    "@aws-sdk/util-base64-browser": "^3.10.0",
     "@types/bn.js": "^4.11.0",
     "@types/chai": "^4.2.12",
     "@types/chai-as-promised": "^7.1.3",
@@ -106,11 +107,11 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "eslint": "^7.8.1",
-    "eslint-config-prettier": "^6.10.1",
+    "eslint-config-prettier": "^8.3.0",
     "from2": "^2.3.0",
     "husky": "^4.2.5",
     "istanbul-instrumenter-loader": "^3.0.1",
-    "karma": "^5.1.1",
+    "karma": "^6.3.2",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^3.1.0",
     "karma-coverage-istanbul-reporter": "^3.0.3",
@@ -118,7 +119,7 @@
     "karma-mocha": "^2.0.1",
     "karma-parallel": "^0.3.1",
     "karma-webpack": "^4.0.2",
-    "lerna": "^3.22.1",
+    "lerna": "^4.0.0",
     "lint-staged": "^10.2.11",
     "mocha": "^8.1.3",
     "npm-run-all": "^4.1.5",
@@ -127,11 +128,11 @@
     "rimraf": "^3.0.2",
     "source-map-support": "^0.5.19",
     "ts-loader": "^8.0.6",
-    "ts-node": "^8.10.2",
-    "tslib": "^1.13.0",
+    "ts-node": "^9.1.1",
+    "tslib": "^2.2.0",
     "typescript": "^4.0.2",
     "verdaccio": "^4.10.0",
     "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12"
+    "webpack-cli": "^4.6.0"
   }
 }

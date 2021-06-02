@@ -1,7 +1,11 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { EncryptManifestList, KeyList, KeyInfoTuple } from './types'
+import {
+  EncryptManifestList,
+  KeyList,
+  KeyInfoTuple,
+} from '@aws-crypto/integration-vectors'
 import { randomBytes } from 'crypto'
 import {
   AlgorithmSuiteIdentifier,

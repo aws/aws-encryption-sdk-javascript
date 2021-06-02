@@ -5,13 +5,23 @@
 
 import { expect } from 'chai'
 import { _getEncryptTestVectorIterator } from '../src/index'
-import { EncryptManifestList, KeyList } from '../src/types'
+import {
+  Client,
+  EncryptManifestList,
+  KeyList,
+} from '@aws-crypto/integration-vectors'
 
-const manifiest: EncryptManifestList = {
+const client: Client = {
+  name: 'aws/aws-encryption-sdk-python',
+  version: '1.3.8',
+}
+
+const manifest: EncryptManifestList = {
   manifest: {
     type: 'awses-encrypt',
     version: 1,
   },
+  client: client,
   keys: 'file://0002-keys.v1.json',
   plaintexts: {
     small: 10240,
@@ -49,7 +59,7 @@ const keyList: KeyList = {
 
 describe('_getEncryptTestVectorIterator', () => {
   it('returns a iterator that has a test', () => {
-    const testIterator = _getEncryptTestVectorIterator(manifiest, keyList)
+    const testIterator = _getEncryptTestVectorIterator(manifest, keyList)
     const test = testIterator.next()
     expect(test.done).to.equal(false)
     expect(test.value.name).to.equal('0c9c3222-b8f6-4b5f-97bc-c2a97f5255b1')

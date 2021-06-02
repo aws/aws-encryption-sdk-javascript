@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.2.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/serialize@2.1.0...@aws-crypto/serialize@2.2.0) (2021-05-27)
+
+
+### Bug Fixes
+
+* decoded encryption context is frozen ([#598](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/issues/598)) ([b6d1fe7](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/commit/b6d1fe759668073ae5c59f190ddae6befec4f77f))
+
+
+
+
+
+# [2.1.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/serialize@2.0.0...@aws-crypto/serialize@2.1.0) (2021-02-04)
+
+**Note:** Version bump only for package @aws-crypto/serialize
+
+
+
+
+
 # [2.0.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/serialize@1.7.0...@aws-crypto/serialize@2.0.0) (2020-09-25)
 
 

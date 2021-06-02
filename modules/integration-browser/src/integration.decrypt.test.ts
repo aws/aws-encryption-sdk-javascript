@@ -3,49 +3,44 @@
 
 /* eslint-env jasmine */
 
-import { decryptMaterialsManagerWebCrypto } from './decrypt_materials_manager_web_crypto'
-import { fromBase64 } from '@aws-sdk/util-base64-browser'
+import { DecryptionFixture } from '@aws-crypto/integration-vectors'
 import { buildClient, CommitmentPolicy } from '@aws-crypto/client-browser'
+import { decryptionIntegrationBrowserTest } from './testDecryptFixture'
 
 const { decrypt } = buildClient(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
-declare const expect: any
+
+// expect is from karma-jasmine
+declare const expect: any //https://jasmine.github.io/api/edge/global.html#expect
+//The following 2 are from karma
 declare const __fixtures__: any
 declare const fetch: any
-
-const notSupportedMessages = [
-  '192-bit AES keys are not supported',
-  'Unsupported right now',
-]
 
 const tests: string[] = __fixtures__['fixtures/decrypt_tests']
 const chunk = __fixtures__['fixtures/concurrency'] || 1
 
 for (let i = 0, j = tests.length; i < j; i += chunk) {
-  aGroup(chunk, tests.slice(i, i + chunk))
+  decryptionIntegrationBrowserGroup(chunk, tests.slice(i, i + chunk))
 }
 
-function aGroup(groupNumber: number, tests: string[]) {
+async function loadATest(testName: string): Promise<DecryptionFixture> {
+  const response = await fetch(`base/fixtures/${testName}.json`)
+  const decryptionFixture: DecryptionFixture = await response.json()
+  return decryptionFixture
+}
+
+function decryptionIntegrationBrowserGroup(
+  groupNumber: number,
+  tests: string[]
+) {
   describe(`browser decryption vectors: ${groupNumber}`, () => {
     for (const testName of tests) {
-      aTest(testName)
+      itDecryptionIntegrationBrowserTest(testName)
     }
   })
 }
 
-function aTest(testName: string) {
-  it(testName, async () => {
-    console.log(`start: ${testName}`)
-    const response = await fetch(`base/fixtures/${testName}.json`)
-    const { keysInfo, cipherText, plainText } = await response.json()
-
-    const cipher = fromBase64(cipherText)
-    const good = fromBase64(plainText)
-    try {
-      const cmm = await decryptMaterialsManagerWebCrypto(keysInfo)
-      const { plaintext } = await decrypt(cmm, cipher)
-      expect(good).toEqual(plaintext)
-    } catch (e) {
-      if (!notSupportedMessages.includes(e.message)) throw e
-    }
-  })
+function itDecryptionIntegrationBrowserTest(testName: string): void {
+  it(testName, async () =>
+    decryptionIntegrationBrowserTest(await loadATest(testName), decrypt, expect)
+  )
 }

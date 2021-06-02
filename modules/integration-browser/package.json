@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/integration-browser",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "run-s lint-*",
@@ -18,8 +18,10 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/client-browser": "file:../client-browser",
-    "@aws-sdk/karma-credential-loader": "3.1.0",
-    "@aws-sdk/util-base64-browser": "3.1.0",
+    "@aws-crypto/integration-vectors": "file:../integration-vectors",
+    "@aws-sdk/credential-provider-node": "^3.11.0",
+    "@aws-sdk/karma-credential-loader": "^3.11.0",
+    "@aws-sdk/util-base64-browser": "^3.10.0",
     "@aws-sdk/util-utf8-browser": "3.1.0",
     "@trust/keyto": "^1.0.1",
     "@types/got": "^9.6.9",
@@ -28,14 +30,14 @@
     "@types/yauzl": "^2.9.1",
     "got": "^11.8.0",
     "jasmine-core": "^3.5.0",
-    "karma": "5.2.3",
+    "karma": "6.3.2",
     "karma-chrome-launcher": "^3.1.0",
     "karma-jasmine": "^4.0.1",
     "karma-json-fixtures-preprocessor": "0.0.6",
     "karma-parallel": "^0.3.1",
     "karma-webpack": "^4.0.2",
     "stream-to-promise": "^3.0.0",
-    "tslib": "^1.11.1",
+    "tslib": "^2.2.0",
     "webpack": "^4.42.1",
     "yargs": "^15.3.1",
     "yauzl": "^2.10.0"

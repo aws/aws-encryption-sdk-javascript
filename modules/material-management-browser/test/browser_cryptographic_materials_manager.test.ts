@@ -4,6 +4,7 @@
 /* eslint-env mocha */
 
 import * as chai from 'chai'
+// @ts-ignore
 import chaiAsPromised from 'chai-as-promised'
 import {
   WebCryptoEncryptionMaterial,
@@ -28,16 +29,16 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 
 describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
-  it('constructor sets keyring', () => {
-    class TestKeyring extends KeyringWebCrypto {
-      async _onEncrypt(): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-      async _onDecrypt(): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
+  class TestKeyring extends KeyringWebCrypto {
+    async _onEncrypt(): Promise<WebCryptoEncryptionMaterial> {
+      throw new Error('I should never see this error')
     }
+    async _onDecrypt(): Promise<WebCryptoDecryptionMaterial> {
+      throw new Error('I should never see this error')
+    }
+  }
 
+  it('constructor sets keyring', () => {
     const keyring = new TestKeyring()
     const test = new WebCryptoDefaultCryptographicMaterialsManager(keyring)
     expect(test).to.be.instanceOf(WebCryptoDefaultCryptographicMaterialsManager)
@@ -56,15 +57,6 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   })
 
   it('set a signatureKey and the compress point on the encryption context', async () => {
-    class TestKeyring extends KeyringWebCrypto {
-      async _onEncrypt(): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-      async _onDecrypt(): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-    }
-
     const suite = new WebCryptoAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
     )
@@ -89,15 +81,6 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   })
 
   it('Check for early return (Postcondition): The WebCryptoAlgorithmSuite specification must support a signatureCurve to generate a signing key.', async () => {
-    class TestKeyring extends KeyringWebCrypto {
-      async _onEncrypt(): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-      async _onDecrypt(): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-    }
-
     const suite = new WebCryptoAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
     )
@@ -115,15 +98,6 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   })
 
   it('set a verificationKey from encryption context', async () => {
-    class TestKeyring extends KeyringWebCrypto {
-      async _onEncrypt(): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-      async _onDecrypt(): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-    }
-
     const suite = new WebCryptoAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
     )
@@ -142,15 +116,6 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   })
 
   it('Check for early return (Postcondition): The WebCryptoAlgorithmSuite specification must support a signatureCurve to extract a verification key.', async () => {
-    class TestKeyring extends KeyringWebCrypto {
-      async _onEncrypt(): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-      async _onDecrypt(): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-    }
-
     const suite = new WebCryptoAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
     )
@@ -163,15 +128,6 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   })
 
   it('Precondition: WebCryptoDefaultCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist.', async () => {
-    class TestKeyring extends KeyringWebCrypto {
-      async _onEncrypt(): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-      async _onDecrypt(): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-    }
-
     const suite = new WebCryptoAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
     )
@@ -183,16 +139,25 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
     )
   })
 
-  it('Precondition: WebCryptoDefaultCryptographicMaterialsManager The context must contain the public key.', async () => {
-    class TestKeyring extends KeyringWebCrypto {
-      async _onEncrypt(): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-      async _onDecrypt(): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
+  it('Precondition: The context must not contain a public key for a non-signing algorithm suite.', async () => {
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256
+    )
+    const keyring = new TestKeyring()
+    const cmm = new WebCryptoDefaultCryptographicMaterialsManager(keyring)
+    const context = {
+      some: 'context',
+      [ENCODED_SIGNER_KEY]: 'A29gmBT/NscB90u6npOulZQwAAiKVtoShudOm2J2sCgC',
     }
+    await expect(
+      cmm._initializeDecryptionMaterial(suite, context)
+    ).to.be.rejectedWith(
+      Error,
+      'Encryption context contains public verification key for unsigned algorithm suite.'
+    )
+  })
 
+  it('Precondition: WebCryptoDefaultCryptographicMaterialsManager The context must contain the public key.', async () => {
     const suite = new WebCryptoAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
     )
@@ -310,15 +275,6 @@ describe('WebCryptoDefaultCryptographicMaterialsManager', () => {
   })
 
   it('Precondition: WebCryptoDefaultCryptographicMaterialsManager must reserve the ENCODED_SIGNER_KEY constant from @aws-crypto/serialize.', async () => {
-    class TestKeyring extends KeyringWebCrypto {
-      async _onEncrypt(): Promise<WebCryptoEncryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-      async _onDecrypt(): Promise<WebCryptoDecryptionMaterial> {
-        throw new Error('I should never see this error')
-      }
-    }
-
     const keyring = new TestKeyring()
     const cmm = new WebCryptoDefaultCryptographicMaterialsManager(keyring)
     const encryptionContext = {
