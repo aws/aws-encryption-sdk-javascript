@@ -4,6 +4,10 @@ env:
   variables:
     NODE_OPTIONS: "--max-old-space-size=4096"
     BRANCH: "master" # TODO: maybe pass from CB invocation instead
+  secrets-manager:
+     OTP_SECRET_KEY: npm/aws-crypto-tools-ci-bot/2FA:OTP_SECRET_KEY
+     NPM_TOKEN: npm/aws-crypto-tools-ci-bot/2FA:NPM_TOKEN
+  git-credential-helper: yes
 
 phases:
   install:
@@ -27,7 +31,7 @@ phases:
       - npm run verdaccio
       # Generate new version and CHANGELOG entry. Because we specify `--no-push` this
       # does not yet push any changes to the remote
-      #- npx lerna version --conventional-commits --git-remote origin --yes --no-push
+      - npx lerna version --conventional-commits --git-remote origin --yes --no-push
       # Log the commit for posterity
       - git log -n 1
       # Publish to the local verdaccio server and run all tests
