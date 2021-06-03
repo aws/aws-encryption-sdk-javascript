@@ -31,14 +31,14 @@ phases:
       # Log the commit for posterity
       - git log -n 1
       # Publish to the local verdaccio server and run all tests
-      #- npm run verdaccio-publish
+      - npm run verdaccio-publish
       # TODO: actual publishing happens here
       # Clear out the verdaccio cache so that we get the latest version
       # of everything from public npm
-      #- rm -rf verdaccio/storage/
+      - rm -rf verdaccio/storage/
       # Since the cache is empty, and we don't call `verdaccio-publish`
       # this will run the integrations from the public code in npm
-      #- npx run-s verdaccio-publish-*
+      - npx run-s verdaccio-publish-*
 
 
 batch:
