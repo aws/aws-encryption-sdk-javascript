@@ -1,0 +1,47 @@
+version: 0.2
+
+env:
+  variables:
+    NODE_OPTIONS: "--max-old-space-size=4096"
+    BRANCH: "master" # TODO: maybe pass from CB invocation instead
+
+phases:
+  install:
+    commands:
+      - npm ci --unsafe-perm
+      # Install `otplib` to extract the OTP from the npm 2FA secret
+      - npm install otplib --no-save
+      - npm run build
+    runtime-versions:
+      nodejs: 10
+  pre_build:
+    commands:
+      - git config --global user.name "aws-crypto-tools-ci-bot"
+      - git config --global user.email "no-reply@noemail.local"
+      - git checkout $BRANCH
+  build:
+    commands:
+      # Pre-check, make sure everything is happy
+      - npm test
+      - npm run test_conditions
+      - npm run verdaccio
+      # Generate new version and CHANGELOG entry. Because we specify `--no-push` this
+      # does not yet push any changes to the remote
+      #- npx lerna version --conventional-commits --git-remote origin --yes --no-push
+      # Log the commit for posterity
+      - git log -n 1
+      # Publish to the local verdaccio server and run all tests
+      #- npm run verdaccio-publish
+      # TODO: actual publishing happens here
+      # Clear out the verdaccio cache so that we get the latest version
+      # of everything from public npm
+      #- rm -rf verdaccio/storage/
+      # Since the cache is empty, and we don't call `verdaccio-publish`
+      # this will run the integrations from the public code in npm
+      #- npx run-s verdaccio-publish-*
+
+
+batch:
+  fast-fail: true 
+  build-graph:
+    - identifier: release_to_prod
