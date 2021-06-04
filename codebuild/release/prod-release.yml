@@ -17,7 +17,7 @@ phases:
       - npm install otplib --no-save
       - npm run build
     runtime-versions:
-      nodejs: 10
+      nodejs: 14
   pre_build:
     commands:
       - git config --global user.name "aws-crypto-tools-ci-bot"
@@ -28,14 +28,12 @@ phases:
       # Pre-check, make sure everything is happy
       - npm test
       - npm run test_conditions
+      # Publish to a local verdaccio server and run all tests against it
       - npm run verdaccio
-      # Generate new version and CHANGELOG entry. Because we specify `--no-push` this
-      # does not yet push any changes to the remote
-      - npx lerna version --conventional-commits --git-remote origin --yes --no-push
+      # Generate new version and CHANGELOG entry and push it
+      - npx lerna version --conventional-commits --git-remote origin --yes
       # Log the commit for posterity
       - git log -n 1
-      # Publish to the local verdaccio server and run all tests
-      - npm run verdaccio-publish
       # Extract the otp using the secrets environment variables from above.
       # This will wait for the next token. This is because npm uses
       # TOTP and the tokens time out after 30 seconds. If the process just
