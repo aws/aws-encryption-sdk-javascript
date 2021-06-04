@@ -17,7 +17,7 @@ phases:
       - npm install otplib --no-save
       - npm run build
     runtime-versions:
-      nodejs: 14
+      nodejs: 12
   pre_build:
     commands:
       - git config --global user.name "aws-crypto-tools-ci-bot"
