@@ -49,7 +49,11 @@ phases:
             console.log(auth.generate(process.env.OTP_SECRET_KEY)),
             auth.timeRemaining() * 1000);
           "`
-      # TODO: Actual publishing
+      # Now we publish to npm.
+      # This is going to use the OTP generated above and the NPM_TOKEN
+      # environment variable. This will only publish things that are
+      # missing from npm. It is therefore safe to run repeatedly.
+      - npx lerna publish from-package --yes --otp $OTP
       # Clear out the verdaccio cache so that we get the latest version
       # of everything from public npm
       - rm -rf verdaccio/storage/
@@ -58,6 +62,8 @@ phases:
       - npx run-s verdaccio-publish-*
 
 
+# Batching is technically unnecessary for now since we have just the one
+# buildspec, but leaving it in place makes it easier to extend later on
 batch:
   fast-fail: true 
   build-graph:
