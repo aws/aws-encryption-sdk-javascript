@@ -18,8 +18,9 @@ import {
   KeyringNode,
 } from '@aws-crypto/material-management-node'
 import { KMS } from 'aws-sdk'
+import { version } from './version'
 const getKmsClient = getClient(KMS, {
-  customUserAgent: 'AwsEncryptionSdkJavascriptNodejs/2.2.0',
+  customUserAgent: `AwsEncryptionSdkJavascriptNodejs/${version}`,
 })
 const cacheKmsClients = cacheClients(getKmsClient)
 
