@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     NODE_OPTIONS: "--max-old-space-size=4096"
-    BRANCH: "master" # TODO: maybe pass from CB invocation instead
+    BRANCH: "master"
   secrets-manager:
      OTP_SECRET_KEY: npm/aws-crypto-tools-ci-bot/2FA:OTP_SECRET_KEY
      NPM_TOKEN: npm/aws-crypto-tools-ci-bot/2FA:NPM_TOKEN
@@ -36,7 +36,20 @@ phases:
       - git log -n 1
       # Publish to the local verdaccio server and run all tests
       - npm run verdaccio-publish
-      # TODO: actual publishing happens here
+      # Extract the otp using the secrets environment variables from above.
+      # This will wait for the next token. This is because npm uses
+      # TOTP and the tokens time out after 30 seconds. If the process just
+      # extracted the token then the lifetime for this token
+      # would be very random. This will maximize the amount of time
+      # available on the OTP to publish.
+      - >-
+        OTP=`node -e "
+          auth=require('otplib').authenticator;
+          setTimeout(() =>
+            console.log(auth.generate(process.env.OTP_SECRET_KEY)),
+            auth.timeRemaining() * 1000);
+          "`
+      # TODO: Actual publishing
       # Clear out the verdaccio cache so that we get the latest version
       # of everything from public npm
       - rm -rf verdaccio/storage/
