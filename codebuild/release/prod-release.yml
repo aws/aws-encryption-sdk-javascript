@@ -47,11 +47,16 @@ phases:
             console.log(auth.generate(process.env.OTP_SECRET_KEY)),
             auth.timeRemaining() * 1000);
           "`
+      # npm will only expand env vars inside .npmrc
+      # NOTE the ' this is to keep the env var NPM_TOKEN from expanding!
+      - echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc
       # Now we publish to npm.
       # This is going to use the OTP generated above and the NPM_TOKEN
       # environment variable. This will only publish things that are
       # missing from npm. It is therefore safe to run repeatedly.
       - npx lerna publish from-package --yes --otp $OTP
+      # remove after publishing
+      - rm .npmrc
       # Clear out the verdaccio cache so that we get the latest version
       # of everything from public npm
       - rm -rf verdaccio/storage/
