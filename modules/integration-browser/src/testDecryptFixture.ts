@@ -26,22 +26,23 @@ export const notSupportedDecryptMessages = [
 // overly permissive DER decoding in asn1.js.
 // See https://github.com/indutny/asn1.js/pull/128
 export const bitFlippedDerTagsVectors = [
-  'c415e987-48ff-4da3-a70a-2fe67c25b700', // Bit 2944 flipped
-  '470419df-6280-4813-8f53-ab9f2c979dee', // Bit 2945 flipped
-  '3bf06756-45b2-4fa7-85d2-e636e221da07', // Bit 2946 flipped
-  'd4e4cf08-1a0c-48ca-83ae-7f63bd8e8ba4', // Bit 2960 flipped
-  '114d533b-7ead-4601-b87b-42d25c28c2ef', // Bit 2961 flipped
-  '8f38fb88-539a-4a53-b9d2-031fc6bfadf7', // Bit 2962 flipped
-  '32640303-2f79-44a2-83cd-476e22360491', // Bit 3368 flipped
-  '4e6151b0-8799-4c69-9b1a-6223cfce795d', // Bit 3369 flipped
-  'c33a0daa-806e-428c-8558-def65f41817b', // Bit 3370 flipped
+  '82f59ef1-7002-486d-9679-f4b358e6f05e', // Bit 2944 flipped
+  '516abc51-d740-4715-8888-73ebf1c3b674', // Bit 2945 flipped
+  '6911b1b6-238c-4c82-a27c-31a21a770380', // Bit 2946 flipped
+  '9e5dd64e-fa70-42cf-9f32-7168710ca193', // Bit 2960 flipped
+  '233e79f7-aab8-4381-9fdc-2b2b4d0efd91', // Bit 2961 flipped
+  '9905767c-a214-4483-8e69-425a8b1ec833', // Bit 2962 flipped
+  'b40cecee-bff8-45c0-9679-a7533ce8ad75', // Bit 3368 flipped
+  '1f665dd8-08f3-43b0-96ab-deca39634bea', // Bit 3369 flipped
+  'f673bdf3-40a8-4551-bc7f-866b289e4d03', // Bit 3370 flipped
 ]
 
 // The signatures on these messages fail to verify due to
 // a known but yet to be fully diagnosed browser-specific issue.
+// The error message is `Error: Invalid Signature`
 export const unverifiableSignatureVectors = [
-  '55c1a27a-70ec-4d3a-8dda-d718eef0a532',
-  'c0a92e53-f75b-4168-81ae-3cdd69f8dd0c',
+  '2ad4430c-1b2e-46b3-a71d-a8e458f28a69',
+  'e3b4ce89-a5f4-4194-9bc5-2984cf1d2a88',
 ]
 
 /*The contract for the two test*DecryptFixture methods:

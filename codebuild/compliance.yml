@@ -1,0 +1,16 @@
+version: 0.2
+
+env:
+  variables:
+    NODE_OPTIONS: "--max-old-space-size=4096"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: latest
+    commands:
+      - npm ci --unsafe-perm
+  build:
+    commands:
+      - npm run lint
+      - npm run test_conditions

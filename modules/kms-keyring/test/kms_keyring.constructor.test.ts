@@ -4,8 +4,12 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import { KmsKeyringClass, KeyRingConstructible } from '../src/kms_keyring'
-import { NodeAlgorithmSuite, Keyring } from '@aws-crypto/material-management'
+import { KmsKeyringClass } from '../src/kms_keyring'
+import {
+  NodeAlgorithmSuite,
+  Keyring,
+  Newable,
+} from '@aws-crypto/material-management'
 
 describe('KmsKeyring: constructor', () => {
   it('set properties', () => {
@@ -16,7 +20,7 @@ describe('KmsKeyring: constructor', () => {
     const grantTokens = ['grant']
 
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const test = new TestKmsKeyring({
@@ -38,7 +42,7 @@ describe('KmsKeyring: constructor', () => {
     const discoveryFilter = { accountIDs: ['123456789012'], partition: 'aws' }
 
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const test = new TestKmsKeyring({
@@ -57,7 +61,7 @@ describe('KmsKeyring: constructor', () => {
   it('Precondition: This is an abstract class. (But TypeScript does not have a clean way to model this)', () => {
     const clientProvider: any = () => {}
     const KmsKeyring = KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     )
     expect(() => new KmsKeyring({ clientProvider })).to.throw(
       'new KmsKeyring is not allowed'
@@ -66,7 +70,7 @@ describe('KmsKeyring: constructor', () => {
 
   it('Precondition: A noop KmsKeyring is not allowed.', () => {
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
     const clientProvider: any = () => {}
     expect(() => new TestKmsKeyring({ clientProvider })).to.throw()
@@ -74,7 +78,7 @@ describe('KmsKeyring: constructor', () => {
 
   it('Precondition: A keyring can be either a Discovery or have keyIds configured.', () => {
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
     const clientProvider: any = () => {}
     const generatorKeyId =
@@ -124,7 +128,7 @@ describe('KmsKeyring: constructor', () => {
       const clientProvider: any = () => {}
 
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
       expect(
         () =>
@@ -154,7 +158,7 @@ describe('KmsKeyring: constructor', () => {
       const discovery = true
 
       class TestKmsKeyring extends KmsKeyringClass(
-        Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+        Keyring as Newable<Keyring<NodeAlgorithmSuite>>
       ) {}
       expect(
         () =>
@@ -170,14 +174,14 @@ describe('KmsKeyring: constructor', () => {
   it('Precondition: All KMS key identifiers must be valid.', () => {
     const clientProvider: any = () => {}
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     expect(
       () =>
         new TestKmsKeyring({
           clientProvider,
-          generatorKeyId: 'Not arn',
+          generatorKeyId: 'Not:an/arn',
         })
     ).to.throw()
 
@@ -185,7 +189,7 @@ describe('KmsKeyring: constructor', () => {
       () =>
         new TestKmsKeyring({
           clientProvider,
-          keyIds: ['Not arn'],
+          keyIds: ['Not:an/arn'],
         })
     ).to.throw()
 
@@ -195,7 +199,7 @@ describe('KmsKeyring: constructor', () => {
           clientProvider,
           keyIds: [
             'arn:aws:kms:us-east-1:123456789012:alias/example-alias',
-            'Not arn',
+            'Not:an/arn',
           ],
         })
     ).to.throw()
@@ -220,20 +224,20 @@ describe('KmsKeyring: constructor', () => {
   it('An KMS CMK alias is a valid CMK identifier', () => {
     const clientProvider: any = () => {}
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const test = new TestKmsKeyring({
       clientProvider,
       generatorKeyId: 'alias/example-alias',
-      keyIds: ['alias:example-alias'],
+      keyIds: ['alias/example-alias'],
     })
     expect(test).to.be.instanceOf(TestKmsKeyring)
   })
 
   it('Precondition: clientProvider needs to be a callable function.', () => {
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
     const clientProvider: any = 'not function'
     const discovery = true

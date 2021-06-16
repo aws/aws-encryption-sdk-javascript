@@ -19,6 +19,8 @@ import {
   kmsEncryptWithMaxEncryptedDataKeysTest,
   kmsDecryptWithMaxEncryptedDataKeysTest,
 } from '../src/kms_max_encrypted_data_keys'
+import { kmsMultiRegionSimpleTest } from '../src/kms_multi_region_simple'
+import { kmsMultiRegionDiscoveryTest } from '../src/kms_multi_region_discovery'
 
 describe('test', () => {
   it('testAES', async () => {
@@ -100,5 +102,17 @@ describe('test', () => {
       Error,
       'maxEncryptedDataKeys exceeded.'
     )
+  })
+
+  it('kmsMultiRegionSimpleTest', async () => {
+    const { plaintext, cleartext } = await kmsMultiRegionSimpleTest()
+    expect(plaintext).to.deep.equal(cleartext)
+  })
+
+  it('kmsMultiRegionDiscoveryTest', async () => {
+    const { cleartext, result } = await kmsMultiRegionSimpleTest()
+
+    const { plaintext } = await kmsMultiRegionDiscoveryTest(result)
+    expect(plaintext).to.deep.equal(cleartext)
   })
 })

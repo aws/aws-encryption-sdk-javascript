@@ -3,3 +3,4 @@
 
 export * from './types'
 export * from './get_decrypt_test_iterator'
+export * from './build_get_keyring'

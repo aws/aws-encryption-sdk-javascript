@@ -87,7 +87,10 @@ export async function buildDecryptFixtures(
     if (!cipherInfo) throw new Error(`no file for ${name}: ${ciphertext}`)
     const cipherText = await streamToPromise(await cipherInfo.stream())
 
-    const keysInfo = masterKeys.map((keyInfo: { key: string | number }) => {
+    const keysInfo = masterKeys.map((keyInfo) => {
+      if (keyInfo.type === 'aws-kms-mrk-aware-discovery') {
+        return [keyInfo] as KeyInfoTuple
+      }
       const key = keys[keyInfo.key]
       if (!key) throw new Error(`no key for ${name}`)
       return [keyInfo, key] as KeyInfoTuple

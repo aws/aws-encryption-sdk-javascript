@@ -34,4 +34,5 @@ export {
   SignaturePolicy,
   MessageFormat,
   ClientOptions,
+  Newable,
 } from '@aws-crypto/material-management'

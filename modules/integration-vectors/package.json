@@ -10,7 +10,7 @@
     "test": "npm run lint && npm run build && node ./build/main/index.js && npm run mocha"
   },
   "dependencies": {
-    "@aws-crypto/client-node": "file:../client-node",
+    "@aws-crypto/material-management": "file:../material-management",
     "@types/got": "^9.6.9",
     "@types/stream-to-promise": "^2.2.0",
     "@types/yauzl": "^2.9.1",

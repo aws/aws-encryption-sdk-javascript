@@ -161,7 +161,8 @@ interface MultiKeyringInput<S extends SupportedAlgorithmSuites> {
   children?: Keyring<S>[]
 }
 
-interface MultiKeyring<S extends SupportedAlgorithmSuites> extends Keyring<S> {
+export interface MultiKeyring<S extends SupportedAlgorithmSuites>
+  extends Keyring<S> {
   generator?: Keyring<S>
   children: ReadonlyArray<Keyring<S>>
 }

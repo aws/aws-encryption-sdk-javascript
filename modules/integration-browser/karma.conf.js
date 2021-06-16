@@ -18,7 +18,13 @@ module.exports = function (config) {
       'fixtures/encrypt_tests.json',
       'fixtures/decrypt_oracle.json',
       '/fixtures/concurrency.json',
-      { pattern: 'fixtures/*.json', included: false, served: true, watched: false, nocache: true },
+      {
+        pattern: 'fixtures/*.json',
+        included: false,
+        served: true,
+        watched: false,
+        nocache: true,
+      },
       'build/module/integration.decrypt.test.js',
       'build/module/integration.encrypt.test.js',
     ],
@@ -36,9 +42,12 @@ module.exports = function (config) {
         colors: true,
         modules: true,
         reasons: true,
-        errorDetails: true
+        errorDetails: true,
       },
-      devtool: 'inline-source-map'
+      devtool: 'inline-source-map',
+      node: {
+        fs: 'empty',
+      },
     },
     plugins: [
       'karma-parallel',
@@ -46,7 +55,7 @@ module.exports = function (config) {
       'karma-webpack',
       'karma-json-fixtures-preprocessor',
       'karma-chrome-launcher',
-      'karma-jasmine'
+      'karma-jasmine',
     ],
     reporters: ['progress'],
     port: 9876,
@@ -63,14 +72,14 @@ module.exports = function (config) {
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--enable-logging',
-        ]
-      }
+        ],
+      },
     },
     singleRun: true,
     concurrency: Infinity,
     exclude: ['**/*.d.ts'],
     parallelOptions: {
-      executors: concurrency
-    }
+      executors: concurrency,
+    },
   })
 }

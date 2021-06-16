@@ -1,4 +1,6 @@
 [submodule "aws-encryption-sdk-test-vectors"]
 	path = aws-encryption-sdk-test-vectors
 	url = https://github.com/awslabs/private-aws-encryption-sdk-test-vectors-staging.git
-	branch = known-invalid-test-vectors
+[submodule "aws-encryption-sdk-specification"]
+	path = aws-encryption-sdk-specification
+	url = https://github.com/awslabs/private-aws-encryption-sdk-specification-staging.git

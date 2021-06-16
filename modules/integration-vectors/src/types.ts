@@ -1,7 +1,7 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { EncryptionContext } from '@aws-crypto/client-node'
+import { EncryptionContext } from '@aws-crypto/material-management'
 import { Readable } from 'stream'
 import { Entry } from 'yauzl'
 
@@ -9,7 +9,13 @@ import { Entry } from 'yauzl'
 interface BaseDecryptTest {
   description?: string
   ciphertext: string
-  'master-keys': (RsaKeyInfo | AesKeyInfo | KmsKeyInfo)[]
+  'master-keys': (
+    | RsaKeyInfo
+    | AesKeyInfo
+    | KmsKeyInfo
+    | KmsMrkAwareKeyInfo
+    | KmsMrkAwareDiscoveryKeyInfo
+  )[]
   'decryption-method'?: string
 }
 
@@ -96,7 +102,7 @@ export interface Client {
 }
 
 interface KeyInfo {
-  type: 'aws-kms' | 'raw'
+  type: 'aws-kms' | 'raw' | 'aws-kms-mrk-aware' | 'aws-kms-mrk-aware-discovery'
   key: string
 }
 
@@ -121,6 +127,20 @@ export interface AesKeyInfo extends RawKeyInfo {
 export interface KmsKeyInfo extends KeyInfo {
   type: 'aws-kms'
   key: string
+}
+
+export interface KmsMrkAwareKeyInfo extends KeyInfo {
+  type: 'aws-kms-mrk-aware'
+  key: string
+}
+
+export interface KmsMrkAwareDiscoveryKeyInfo {
+  type: 'aws-kms-mrk-aware-discovery'
+  'default-mrk-region': string
+  'aws-kms-discovery-filter'?: {
+    partition: string
+    'account-ids': string[]
+  }
 }
 
 interface EncryptTest {
@@ -175,3 +195,5 @@ export type KeyInfoTuple =
   | [RsaKeyInfo, RSAKey]
   | [AesKeyInfo, AESKey]
   | [KmsKeyInfo, KMSKey]
+  | [KmsMrkAwareKeyInfo, KMSKey]
+  | [KmsMrkAwareDiscoveryKeyInfo]

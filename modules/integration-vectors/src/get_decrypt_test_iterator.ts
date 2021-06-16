@@ -72,6 +72,9 @@ export async function _getDecryptTestVectorIterator(
       const cipherStream = cipherInfo.stream
 
       const keysInfo = masterKeys.map((keyInfo) => {
+        if (keyInfo.type === 'aws-kms-mrk-aware-discovery') {
+          return [keyInfo] as KeyInfoTuple
+        }
         const key = keys[keyInfo.key]
         if (!key) throw new Error(`no key for ${name}`)
         return [keyInfo, key] as KeyInfoTuple
