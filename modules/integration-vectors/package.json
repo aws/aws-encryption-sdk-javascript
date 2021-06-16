@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/integration-vectors",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "run-s lint-*",
