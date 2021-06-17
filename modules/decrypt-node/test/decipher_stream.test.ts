@@ -3,11 +3,14 @@
 
 /* eslint-env mocha */
 
-import { expect } from 'chai'
+import * as chai from 'chai'
+import chaiAsPromised from 'chai-as-promised'
 import { getDecipherStream } from '../src//decipher_stream'
 import { VerifyStream } from '../src/verify_stream'
 import { ContentType } from '@aws-crypto/serialize'
 import from from 'from2'
+chai.use(chaiAsPromised)
+const { expect } = chai
 
 describe('getDecipherStream', () => {
   it('Precondition: The source must be a VerifyStream to emit the required events.', () => {
