@@ -408,16 +408,21 @@ describe('der2raw', () => {
     })
 
     it('New vector S only padded', () => {
-      expect(der2raw(derSigOnlySPadded, commitSuite)).to.deep.equal(rawSigOnlySPadded)
+      expect(der2raw(derSigOnlySPadded, commitSuite)).to.deep.equal(
+        rawSigOnlySPadded
+      )
     })
 
     it('New vector S only padded (with no padding in DER)', () => {
-
-      expect(der2raw(derSigOnlySPadded2, commitSuite)).to.deep.equal(rawSigOnlySPadded2)
+      expect(der2raw(derSigOnlySPadded2, commitSuite)).to.deep.equal(
+        rawSigOnlySPadded2
+      )
     })
 
     it('New Vector R only padded', () => {
-      expect(der2raw(derSigOnlyRPadded, commitSuite)).to.deep.equal(rawSigOnlyRPadded)
+      expect(der2raw(derSigOnlyRPadded, commitSuite)).to.deep.equal(
+        rawSigOnlyRPadded
+      )
     })
 
     it('transform to der signature with with r padded, but r is on the padding boundary', () => {
@@ -453,7 +458,6 @@ describe('raw2der', () => {
     )
   })
 
-
   describe('padding', () => {
     const suite = new WebCryptoAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
@@ -482,16 +486,21 @@ describe('raw2der', () => {
     })
 
     it('New vector S only padded', () => {
-      expect(raw2der(rawSigOnlySPadded, commitSuite)).to.deep.equal(derSigOnlySPadded)
+      expect(raw2der(rawSigOnlySPadded, commitSuite)).to.deep.equal(
+        derSigOnlySPadded
+      )
     })
 
     it('New vector S only padded (with no padding in DER)', () => {
-
-      expect(raw2der(rawSigOnlySPadded2, commitSuite)).to.deep.equal(derSigOnlySPadded2)
+      expect(raw2der(rawSigOnlySPadded2, commitSuite)).to.deep.equal(
+        derSigOnlySPadded2
+      )
     })
 
     it('New Vector R only padded', () => {
-      expect(raw2der(rawSigOnlyRPadded, commitSuite)).to.deep.equal(derSigOnlyRPadded)
+      expect(raw2der(rawSigOnlyRPadded, commitSuite)).to.deep.equal(
+        derSigOnlyRPadded
+      )
     })
 
     it('transform to der signature with with r padded, but r is on the padding boundary', () => {
@@ -502,5 +511,4 @@ describe('raw2der', () => {
       expect(raw2der(rawSigSonBoundary, suite)).to.deep.equal(derSigSonBoundary)
     })
   })
-
 })
