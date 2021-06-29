@@ -408,21 +408,15 @@ describe('der2raw', () => {
     })
 
     it('S padded', () => {
-      expect(der2raw(derSigSPadded2, commitSuite)).to.deep.equal(
-        rawSigSPadded2
-      )
+      expect(der2raw(derSigSPadded2, commitSuite)).to.deep.equal(rawSigSPadded2)
     })
 
     it('S padded (with no padding in DER)', () => {
-      expect(der2raw(derSigSPadded3, commitSuite)).to.deep.equal(
-        rawSigSPadded3
-      )
+      expect(der2raw(derSigSPadded3, commitSuite)).to.deep.equal(rawSigSPadded3)
     })
 
     it('R padded', () => {
-      expect(der2raw(derSigRPadded2, commitSuite)).to.deep.equal(
-        rawSigRPadded2
-      )
+      expect(der2raw(derSigRPadded2, commitSuite)).to.deep.equal(rawSigRPadded2)
     })
 
     it('transform to der signature with with r padded, but r is on the padding boundary', () => {
@@ -486,21 +480,15 @@ describe('raw2der', () => {
     })
 
     it('S padded', () => {
-      expect(raw2der(rawSigSPadded2, commitSuite)).to.deep.equal(
-        derSigSPadded2
-      )
+      expect(raw2der(rawSigSPadded2, commitSuite)).to.deep.equal(derSigSPadded2)
     })
 
     it('S padded (with no padding in DER)', () => {
-      expect(raw2der(rawSigSPadded3, commitSuite)).to.deep.equal(
-        derSigSPadded3
-      )
+      expect(raw2der(rawSigSPadded3, commitSuite)).to.deep.equal(derSigSPadded3)
     })
 
     it('R padded', () => {
-      expect(raw2der(rawSigRPadded2, commitSuite)).to.deep.equal(
-        derSigRPadded2
-      )
+      expect(raw2der(rawSigRPadded2, commitSuite)).to.deep.equal(derSigRPadded2)
     })
 
     it('transform to der signature with with r padded, but r is on the padding boundary', () => {
