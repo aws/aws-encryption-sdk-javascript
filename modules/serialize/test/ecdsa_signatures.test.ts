@@ -188,7 +188,7 @@ const rawSigNoPadding = new Uint8Array([
 
 // length == 103, r is padded
 // prettier-ignore
-const derSigRPadded = new Uint8Array([
+const derSigRPadded1 = new Uint8Array([
   48, 101, 2, 49, 0, 163, 81, 253, 131, 61, 166, 239, 242, 68, 133,
   70, 219, 243, 67, 220, 94, 57, 115, 92, 119, 17, 93, 152, 78, 78,
   177, 110, 48, 164, 12, 53, 146, 223, 8, 57, 108, 177, 237, 187,
@@ -199,7 +199,7 @@ const derSigRPadded = new Uint8Array([
 ])
 
 // prettier-ignore
-const rawSigRPadded = new Uint8Array([
+const rawSigRPadded1 = new Uint8Array([
   163, 81, 253, 131, 61, 166, 239, 242, 68, 133, 70, 219, 243, 67, 220, 94,
   57, 115, 92, 119, 17, 93, 152, 78, 78, 177, 110, 48, 164, 12, 53,
   146, 223, 8, 57, 108, 177, 237, 187, 165, 39, 162, 214, 193, 112, 220,
@@ -211,7 +211,7 @@ const rawSigRPadded = new Uint8Array([
 
 // length == 103, s is padded
 // prettier-ignore
-const derSigSPadded = new Uint8Array([
+const derSigSPadded1 = new Uint8Array([
   48, 101, 2, 48, 13, 237, 65, 195, 0, 118, 121, 114, 12, 187, 102, 24,
   62, 8, 42, 43, 27, 18, 27, 123, 222, 46, 84, 53, 255, 198, 169,
   180, 206, 77, 60, 3, 171, 209, 129, 25, 245, 157, 197, 128, 191, 153,
@@ -221,7 +221,7 @@ const derSigSPadded = new Uint8Array([
   184, 238, 159, 214, 213, 92, 114, 94, 61, 82,
 ])
 // prettier-ignore
-const rawSigSPadded = new Uint8Array([
+const rawSigSPadded1 = new Uint8Array([
   13, 237, 65, 195, 0, 118, 121, 114, 12, 187, 102, 24, 62, 8, 42, 43,
   27, 18, 27, 123, 222, 46, 84, 53, 255, 198, 169, 180, 206, 77, 60,
   3, 171, 209, 129, 25, 245, 157, 197, 128, 191, 153, 226, 52, 170, 3,
@@ -255,7 +255,7 @@ const rawSigBothSandRPadded = new Uint8Array([
 
 // Suite AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
 // prettier-ignore
-const derSigOnlySPadded = new Uint8Array([
+const derSigSPadded2 = new Uint8Array([
    48, 101,   2,  49,   0, 206, 207, 127,  87, 135,  99, 138,
   178, 184, 182,  16,  31,  28, 196, 105, 124,  25,  66, 150,
    72,  89,   3, 170,  18, 226, 212, 211, 102,  87,  24, 100,
@@ -267,7 +267,7 @@ const derSigOnlySPadded = new Uint8Array([
    79,  83,  52, 249, 106, 46, 185,
 ])
 // prettier-ignore
-const rawSigOnlySPadded = new Uint8Array([
+const rawSigSPadded2 = new Uint8Array([
   206, 207, 127, 87, 135, 99, 138, 178, 184, 182, 16, 31, 28, 196,
   105, 124, 25, 66, 150, 72, 89, 3, 170, 18, 226, 212, 211, 102,
   87, 24, 100, 142, 19, 231, 192, 75, 170, 233, 113, 106, 52, 106,
@@ -279,7 +279,7 @@ const rawSigOnlySPadded = new Uint8Array([
 
 // Suite AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
 // prettier-ignore
-const derSigOnlySPadded2 = new Uint8Array([
+const derSigSPadded3 = new Uint8Array([
   48,100,2,48,3,174,112,110,38,199,245,110,255,244,216,238,8,146,
   175,220,53,45,2,91,102,60,134,249,53,226,56,240,122,166,67,33,
   106,207,9,53,2,92,141,76,160,118,192,12,170,162,98,175,2,48,0,
@@ -288,7 +288,7 @@ const derSigOnlySPadded2 = new Uint8Array([
   129,215,103,252,66,61,47,179,31,191
 ])
 // prettier-ignore
-const rawSigOnlySPadded2 = new Uint8Array([
+const rawSigSPadded3 = new Uint8Array([
   3,174,112,110,38,199,245,110,255,244,216,238,8,146,175,220,53,45,
   2,91,102,60,134,249,53,226,56,240,122,166,67,33,106,207,9,53,2,
   92,141,76,160,118,192,12,170,162,98,175,0,229,249,27,0,39,69,9,
@@ -299,7 +299,7 @@ const rawSigOnlySPadded2 = new Uint8Array([
 
 // Suite AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
 // prettier-ignore
-const derSigOnlyRPadded = new Uint8Array([
+const derSigRPadded2 = new Uint8Array([
   48,99,2,47,26,164,142,247,57,120,102,219,166,194,246,139,155,151,
   31,222,39,27,176,125,4,225,191,115,206,227,133,126,132,71,27,95,
   99,34,68,77,155,175,77,111,199,68,75,181,35,103,80,2,48,124,106,
@@ -308,7 +308,7 @@ const derSigOnlyRPadded = new Uint8Array([
   118,213,36,195,16,187,114,85,182
 ])
 // prettier-ignore
-const rawSigOnlyRPadded = new Uint8Array([
+const rawSigRPadded2 = new Uint8Array([
   0,26,164,142,247,57,120,102,219,166,194,246,139,155,151,31,222,39,
   27,176,125,4,225,191,115,206,227,133,126,132,71,27,95,99,34,68,77,
   155,175,77,111,199,68,75,181,35,103,80,124,106,76,171,45,237,33,38,
@@ -393,35 +393,35 @@ describe('der2raw', () => {
       expect(der2raw(derSigNoPadding, suite)).to.deep.equal(rawSigNoPadding)
     })
 
-    it('Original vector R padded', () => {
-      expect(der2raw(derSigRPadded, suite)).to.deep.equal(rawSigRPadded)
+    it('R padded', () => {
+      expect(der2raw(derSigRPadded1, suite)).to.deep.equal(rawSigRPadded1)
     })
 
-    it('Original vector S padded', () => {
-      expect(der2raw(derSigSPadded, suite)).to.deep.equal(rawSigSPadded)
+    it('S padded', () => {
+      expect(der2raw(derSigSPadded1, suite)).to.deep.equal(rawSigSPadded1)
     })
 
-    it('Original vector R and S padded', () => {
+    it('R and S padded', () => {
       expect(der2raw(derSigBothSandRPadded, suite)).to.deep.equal(
         rawSigBothSandRPadded
       )
     })
 
-    it('New vector S only padded', () => {
-      expect(der2raw(derSigOnlySPadded, commitSuite)).to.deep.equal(
-        rawSigOnlySPadded
+    it('S padded', () => {
+      expect(der2raw(derSigSPadded2, commitSuite)).to.deep.equal(
+        rawSigSPadded2
       )
     })
 
-    it('New vector S only padded (with no padding in DER)', () => {
-      expect(der2raw(derSigOnlySPadded2, commitSuite)).to.deep.equal(
-        rawSigOnlySPadded2
+    it('S padded (with no padding in DER)', () => {
+      expect(der2raw(derSigSPadded3, commitSuite)).to.deep.equal(
+        rawSigSPadded3
       )
     })
 
-    it('New Vector R only padded', () => {
-      expect(der2raw(derSigOnlyRPadded, commitSuite)).to.deep.equal(
-        rawSigOnlyRPadded
+    it('R padded', () => {
+      expect(der2raw(derSigRPadded2, commitSuite)).to.deep.equal(
+        rawSigRPadded2
       )
     })
 
@@ -471,35 +471,35 @@ describe('raw2der', () => {
       expect(raw2der(rawSigNoPadding, suite)).to.deep.equal(derSigNoPadding)
     })
 
-    it('Original vector R padded', () => {
-      expect(raw2der(rawSigRPadded, suite)).to.deep.equal(derSigRPadded)
+    it('R padded', () => {
+      expect(raw2der(rawSigRPadded1, suite)).to.deep.equal(derSigRPadded1)
     })
 
-    it('Original vector S padded', () => {
-      expect(raw2der(rawSigSPadded, suite)).to.deep.equal(derSigSPadded)
+    it('S padded', () => {
+      expect(raw2der(rawSigSPadded1, suite)).to.deep.equal(derSigSPadded1)
     })
 
-    it('Original vector R and S padded', () => {
+    it('R and S padded', () => {
       expect(raw2der(rawSigBothSandRPadded, suite)).to.deep.equal(
         derSigBothSandRPadded
       )
     })
 
-    it('New vector S only padded', () => {
-      expect(raw2der(rawSigOnlySPadded, commitSuite)).to.deep.equal(
-        derSigOnlySPadded
+    it('S padded', () => {
+      expect(raw2der(rawSigSPadded2, commitSuite)).to.deep.equal(
+        derSigSPadded2
       )
     })
 
-    it('New vector S only padded (with no padding in DER)', () => {
-      expect(raw2der(rawSigOnlySPadded2, commitSuite)).to.deep.equal(
-        derSigOnlySPadded2
+    it('S padded (with no padding in DER)', () => {
+      expect(raw2der(rawSigSPadded3, commitSuite)).to.deep.equal(
+        derSigSPadded3
       )
     })
 
-    it('New Vector R only padded', () => {
-      expect(raw2der(rawSigOnlyRPadded, commitSuite)).to.deep.equal(
-        derSigOnlyRPadded
+    it('R padded', () => {
+      expect(raw2der(rawSigRPadded2, commitSuite)).to.deep.equal(
+        derSigRPadded2
       )
     })
 
