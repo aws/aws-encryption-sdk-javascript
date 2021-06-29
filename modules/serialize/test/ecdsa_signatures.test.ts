@@ -277,6 +277,46 @@ const rawSigOnlySPadded = new Uint8Array([
   249, 54, 248, 1, 74, 205, 79, 83, 52, 249, 106, 46, 185,
 ])
 
+// Suite AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
+// prettier-ignore
+const derSigOnlySPadded2 = new Uint8Array([
+  48,100,2,48,3,174,112,110,38,199,245,110,255,244,216,238,8,146,
+  175,220,53,45,2,91,102,60,134,249,53,226,56,240,122,166,67,33,
+  106,207,9,53,2,92,141,76,160,118,192,12,170,162,98,175,2,48,0,
+  229,249,27,0,39,69,9,104,23,106,211,90,91,144,34,124,56,104,187,
+  224,172,166,3,130,202,230,120,84,197,8,175,200,37,52,206,23,210,
+  129,215,103,252,66,61,47,179,31,191
+])
+// prettier-ignore
+const rawSigOnlySPadded2 = new Uint8Array([
+  3,174,112,110,38,199,245,110,255,244,216,238,8,146,175,220,53,45,
+  2,91,102,60,134,249,53,226,56,240,122,166,67,33,106,207,9,53,2,
+  92,141,76,160,118,192,12,170,162,98,175,0,229,249,27,0,39,69,9,
+  104,23,106,211,90,91,144,34,124,56,104,187,224,172,166,3,130,202,
+  230,120,84,197,8,175,200,37,52,206,23,210,129,215,103,252,66,61,
+  47,179,31,191
+])
+
+// Suite AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
+// prettier-ignore
+const derSigOnlyRPadded = new Uint8Array([
+  48,99,2,47,26,164,142,247,57,120,102,219,166,194,246,139,155,151,
+  31,222,39,27,176,125,4,225,191,115,206,227,133,126,132,71,27,95,
+  99,34,68,77,155,175,77,111,199,68,75,181,35,103,80,2,48,124,106,
+  76,171,45,237,33,38,6,243,85,223,236,216,120,53,193,229,52,139,
+  42,178,10,217,25,236,232,148,53,85,68,73,105,97,134,176,51,81,52,
+  118,213,36,195,16,187,114,85,182
+])
+// prettier-ignore
+const rawSigOnlyRPadded = new Uint8Array([
+  0,26,164,142,247,57,120,102,219,166,194,246,139,155,151,31,222,39,
+  27,176,125,4,225,191,115,206,227,133,126,132,71,27,95,99,34,68,77,
+  155,175,77,111,199,68,75,181,35,103,80,124,106,76,171,45,237,33,38,
+  6,243,85,223,236,216,120,53,193,229,52,139,42,178,10,217,25,236,
+  232,148,53,85,68,73,105,97,134,176,51,81,52,118,213,36,195,16,187,
+  114,85,182
+])
+
 /* This vector has the "first byte" of r === 128.
  * This means that the "first bit" of r === 1.
  * This means the DER signature is padded.
@@ -339,20 +379,54 @@ describe('der2raw', () => {
     )
     expect(() => der2raw(derSignature, suite)).to.throw()
   })
-  it('transform to raw signature with both r and s padded', () => {
+
+  describe('padding', () => {
     const suite = new WebCryptoAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
     )
-    expect(der2raw(derSigBothSandRPadded, suite)).to.deep.equal(
-      rawSigBothSandRPadded
-    )
-  })
-  it('transform to raw signature with s padded', () => {
-    const suite = new WebCryptoAlgorithmSuite(
+
+    const commitSuite = new WebCryptoAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
     )
 
-    expect(der2raw(derSigOnlySPadded, suite)).to.deep.equal(rawSigOnlySPadded)
+    it('No Padding', () => {
+      expect(der2raw(derSigNoPadding, suite)).to.deep.equal(rawSigNoPadding)
+    })
+
+    it('Original vector R padded', () => {
+      expect(der2raw(derSigRPadded, suite)).to.deep.equal(rawSigRPadded)
+    })
+
+    it('Original vector S padded', () => {
+      expect(der2raw(derSigSPadded, suite)).to.deep.equal(rawSigSPadded)
+    })
+
+    it('Original vector R and S padded', () => {
+      expect(der2raw(derSigBothSandRPadded, suite)).to.deep.equal(
+        rawSigBothSandRPadded
+      )
+    })
+
+    it('New vector S only padded', () => {
+      expect(der2raw(derSigOnlySPadded, commitSuite)).to.deep.equal(rawSigOnlySPadded)
+    })
+
+    it('New vector S only padded (with no padding in DER)', () => {
+
+      expect(der2raw(derSigOnlySPadded2, commitSuite)).to.deep.equal(rawSigOnlySPadded2)
+    })
+
+    it('New Vector R only padded', () => {
+      expect(der2raw(derSigOnlyRPadded, commitSuite)).to.deep.equal(rawSigOnlyRPadded)
+    })
+
+    it('transform to der signature with with r padded, but r is on the padding boundary', () => {
+      expect(der2raw(derSigRonBoundary, suite)).to.deep.equal(rawSigRonBoundary)
+    })
+
+    it('transform to der signature with s padded, but s is on the padding boundary', () => {
+      expect(der2raw(derSigSonBoundary, suite)).to.deep.equal(rawSigSonBoundary)
+    })
   })
 })
 
@@ -379,31 +453,54 @@ describe('raw2der', () => {
     )
   })
 
-  it('transform to der signature with no padding', () => {
-    expect(raw2der(rawSigNoPadding, suite)).to.deep.equal(derSigNoPadding)
-  })
-  it('transform to der signature with r padded', () => {
-    expect(raw2der(rawSigRPadded, suite)).to.deep.equal(derSigRPadded)
-  })
-  it('transform to der signature with s padded', () => {
-    expect(raw2der(rawSigSPadded, suite)).to.deep.equal(derSigSPadded)
-  })
-  it('transform to der signature with both r and s padded', () => {
-    expect(raw2der(rawSigBothSandRPadded, suite)).to.deep.equal(
-      derSigBothSandRPadded
-    )
-  })
-  it('transform to der signature with s padded', () => {
+
+  describe('padding', () => {
     const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+    )
+
+    const commitSuite = new WebCryptoAlgorithmSuite(
       AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
     )
 
-    expect(raw2der(rawSigOnlySPadded, suite)).to.deep.equal(derSigOnlySPadded)
+    it('No Padding', () => {
+      expect(raw2der(rawSigNoPadding, suite)).to.deep.equal(derSigNoPadding)
+    })
+
+    it('Original vector R padded', () => {
+      expect(raw2der(rawSigRPadded, suite)).to.deep.equal(derSigRPadded)
+    })
+
+    it('Original vector S padded', () => {
+      expect(raw2der(rawSigSPadded, suite)).to.deep.equal(derSigSPadded)
+    })
+
+    it('Original vector R and S padded', () => {
+      expect(raw2der(rawSigBothSandRPadded, suite)).to.deep.equal(
+        derSigBothSandRPadded
+      )
+    })
+
+    it('New vector S only padded', () => {
+      expect(raw2der(rawSigOnlySPadded, commitSuite)).to.deep.equal(derSigOnlySPadded)
+    })
+
+    it('New vector S only padded (with no padding in DER)', () => {
+
+      expect(raw2der(rawSigOnlySPadded2, commitSuite)).to.deep.equal(derSigOnlySPadded2)
+    })
+
+    it('New Vector R only padded', () => {
+      expect(raw2der(rawSigOnlyRPadded, commitSuite)).to.deep.equal(derSigOnlyRPadded)
+    })
+
+    it('transform to der signature with with r padded, but r is on the padding boundary', () => {
+      expect(raw2der(rawSigRonBoundary, suite)).to.deep.equal(derSigRonBoundary)
+    })
+
+    it('transform to der signature with s padded, but s is on the padding boundary', () => {
+      expect(raw2der(rawSigSonBoundary, suite)).to.deep.equal(derSigSonBoundary)
+    })
   })
-  it('transform to der signature with with r padded, but r is on the padding boundary', () => {
-    expect(raw2der(rawSigRonBoundary, suite)).to.deep.equal(derSigRonBoundary)
-  })
-  it('transform to der signature with s padded, but s is on the padding boundary', () => {
-    expect(raw2der(rawSigSonBoundary, suite)).to.deep.equal(derSigSonBoundary)
-  })
+
 })
