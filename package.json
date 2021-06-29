@@ -49,7 +49,7 @@
     "duvet-report": "aws-encryption-sdk-specification/util/report.js modules/**/src/**/*.ts modules/**/test/**/*.ts compliance_exceptions/*.ts"
   },
   "config": {
-    "localTestVectors": "aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-2.3.0-mrks.zip",
+    "localTestVectors": "aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-2.3.0.zip",
     "encryptManifestList": "https://raw.githubusercontent.com/awslabs/aws-crypto-tools-test-vector-framework/master/features/CANONICAL-GENERATED-MANIFESTS/0003-awses-message-encryption.v1.json",
     "encryptKeyManifest": "https://raw.githubusercontent.com/awslabs/aws-crypto-tools-test-vector-framework/master/features/CANONICAL-GENERATED-MANIFESTS/0002-keys.v1.json",
     "decryptOracle": "https://xi1mwx3ttb.execute-api.us-west-2.amazonaws.com/api/v0/decrypt"
