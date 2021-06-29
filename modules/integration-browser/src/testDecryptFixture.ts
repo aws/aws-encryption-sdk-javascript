@@ -37,14 +37,6 @@ export const bitFlippedDerTagsVectors = [
   'f673bdf3-40a8-4551-bc7f-866b289e4d03', // Bit 3370 flipped
 ]
 
-// The signatures on these messages fail to verify due to
-// a known but yet to be fully diagnosed browser-specific issue.
-// The error message is `Error: Invalid Signature`
-export const unverifiableSignatureVectors = [
-  '2ad4430c-1b2e-46b3-a71d-a8e458f28a69',
-  'e3b4ce89-a5f4-4194-9bc5-2984cf1d2a88',
-]
-
 /*The contract for the two test*DecryptFixture methods:
  * If the decryption is NOT supported,
  *  FAILED with err.message in notSupportedDecryptMessages
@@ -164,10 +156,7 @@ export function evaluateTestResultIgnoreUnsupported(
   { err, name, result }: TestVectorResult,
   _expect: (x: any) => any
 ): void {
-  if (
-    bitFlippedDerTagsVectors.includes(name) ||
-    unverifiableSignatureVectors.includes(name)
-  ) {
+  if (bitFlippedDerTagsVectors.includes(name)) {
     return _expect(result).toEqual(false)
   }
   if (err && err['message']) {

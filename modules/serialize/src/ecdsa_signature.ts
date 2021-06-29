@@ -52,7 +52,7 @@ export function der2raw(
   )
 
   const rLength = r.byteLength()
-  const sLength = r.byteLength()
+  const sLength = s.byteLength()
 
   return concatBuffers(
     new Uint8Array(_keyLengthBytes - rLength),
