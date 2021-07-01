@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/integration-node",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "run-s lint-*",

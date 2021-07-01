@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.3.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/v2.3.0...v2.3.1) (2021-07-01)
+
+
+### Bug Fixes
+
+* der2raw sLength is s byte length ([#634](https://github.com/aws/aws-encryption-sdk-javascript/issues/634)) ([46cd178](https://github.com/aws/aws-encryption-sdk-javascript/commit/46cd1789744064679a294f49c21ec05f95057b82))
+
+
+
+
+
 # [2.3.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v2.2.1...v2.3.0) (2021-06-16)
 
 
