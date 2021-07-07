@@ -3,8 +3,10 @@ version: 0.2
 batch:
   fast-fail: false
   build-list:
-    - identifier: testNodejs10
-      buildspec: codebuild/nodejs10.yml
+    - identifier: testNodejsLatest
+      buildspec: codebuild/nodejs_latest.yml
+      env:
+        image: aws/codebuild/standard:5.0
     - identifier: testNodejs12
       buildspec: codebuild/nodejs12.yml
     - identifier: testNodejs14
@@ -15,8 +17,10 @@ batch:
       buildspec: codebuild/browser.yml
     - identifier: compliance
       buildspec: codebuild/compliance.yml
-    - identifier: testVectorsNodejs10
-      buildspec: codebuild/test_vectors/nodejs10.yml
+    - identifier: testVectorsNodejsLatest
+      buildspec: codebuild/test_vectors/nodejs_latest.yml
+      env:
+        image: aws/codebuild/standard:5.0
     - identifier: testVectorsNodejs12
       buildspec: codebuild/test_vectors/nodejs12.yml
     - identifier: testVectorsNodejs14
