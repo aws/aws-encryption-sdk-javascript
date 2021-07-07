@@ -3,7 +3,9 @@
 
 // Karma configuration
 
-const credentialsPromise = require('@aws-sdk/credential-provider-node').defaultProvider()()
+const credentialsPromise =
+  require('@aws-sdk/credential-provider-node').defaultProvider()()
+const webpack = require('webpack')
 
 module.exports = function (config) {
   process.on('infrastructure_error', (error) => {
@@ -20,62 +22,72 @@ module.exports = function (config) {
 
   config.set({
     basePath: '',
-    frameworks: ['mocha', 'chai'],
+    frameworks: [ 'mocha', 'chai', 'webpack'],
     files: [
-      'modules/*-browser/test/**/*.ts',
-      'modules/web-crypto-backend/test/**/*.ts',
+      'modules/*-browser/build/module/test/*.js',
+      'modules/material-management/build/module/test/*.js',
+      'modules/raw-keyring/build/module/test/*.js',
+      'modules/kms-keyring/build/module/test/*.js',
+      // 'modules/cache-material/build/module/test/*.js',
+      'modules/serialize/build/module/test/*.js',
+      'modules/web-crypto-backend/build/module/test/*.js',
     ],
     preprocessors: {
-      'modules/*-browser/test/**/*.ts': ['webpack', 'credentials'],
-      'modules/web-crypto-backend/test/**/*.ts': ['webpack', 'credentials'],
+      'modules/**/build/module/test/*.js': ['webpack', 'credentials'],
     },
     webpack: {
       resolve: {
-        extensions: ['.ts', '.js'],
+        extensions: ['.js'],
       },
       mode: 'development',
       module: {
         rules: [
           {
-            test: /\.tsx?$/,
-            use: [
-              {
-                loader: 'ts-loader',
-                options: {
-                  logInfoToStdOut: true,
-                  projectReferences: true,
-                  configFile: `${__dirname}/tsconfig.module.json`,
-                },
-              },
-            ],
-            exclude: /node_modules/,
+            // yauzl is only used in the node cli for browser integration
+            test: /yauzl/,
+            use: 'null-loader',
           },
           {
-            test: /\.ts$/,
-            exclude: [/\/test\//],
-            enforce: 'post',
+            test: /\.js/,
+            // msrcrypto.js is are outside dependances
+            // and should not be intremented or impact code coverage.
+            // fixtures.js is a test file, not an entry point
+            exclude: /(node_modules)|(msrcrypto.js)|(fixtures.js)/,
             use: {
-              loader: 'istanbul-instrumenter-loader',
-              options: { esModules: true },
-            },
-          },
+              loader: "@jsdevtools/coverage-istanbul-loader",
+              options: {
+                // produceSourceMap: true
+              }
+            }
+          }
         ],
       },
+      plugins: [
+        new webpack.ProvidePlugin({
+          Buffer: ['buffer', 'Buffer'],
+        }),
+      ],
       stats: {
         colors: true,
         modules: true,
         reasons: true,
         errorDetails: true,
       },
-      devtool: 'inline-source-map',
-      node: {
-        fs: 'empty',
+      devtool: 'source-map',
+      resolve: {
+        fallback: {
+          fs: false,
+          crypto: false,
+        },
       },
     },
     coverageIstanbulReporter: {
       reports: ['json'],
-      dir: '.karma_output',
+      combineBrowserReports: true,
       fixWebpackSourcePaths: true,
+      dir: '.karma_output',
+      skipFilesWithNoCoverage: true,
+      // verbose: true,
     },
     plugins: [
       {
