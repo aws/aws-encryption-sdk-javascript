@@ -78,7 +78,8 @@ const cli = yargs
     },
   })
   .demandCommand()
-const fixtures = join(__dirname, '../../fixtures')
+// This path needs to agree with the path in `karma.conf.js`
+const fixtures = join(__dirname, '../../../fixtures')
 /* Sad side effect. */
 if (!existsSync(fixtures)) {
   mkdirSync(fixtures)

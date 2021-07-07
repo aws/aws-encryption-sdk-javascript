@@ -2,12 +2,13 @@
   "extends": "../tsconfig.settings.json",
   "compilerOptions": {
     "outDir": "build/main",
-    "rootDir": "./src"
+    "rootDir": "./"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": ["node_modules/**"],
   "references": [
     { "path": "../material-management-browser" },
-    { "path": "../serialize" }
+    { "path": "../serialize" },
+    { "path": "../kms-keyring-browser" }
   ]
 }

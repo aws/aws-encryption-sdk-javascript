@@ -22,6 +22,8 @@
 
     "lib": ["es2017", "dom"],
 
+    "useDefineForClassFields": true,
+
     "composite": true
   }
 }
