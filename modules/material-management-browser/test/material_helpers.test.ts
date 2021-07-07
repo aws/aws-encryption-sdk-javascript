@@ -172,10 +172,8 @@ describe('importCryptoKey', () => {
       ['encrypt']
     )
     expect(mixedBackendCryptoKey).to.not.be.instanceOf(CryptoKey)
-    const {
-      nonZeroByteCryptoKey,
-      zeroByteCryptoKey,
-    } = mixedBackendCryptoKey as any
+    const { nonZeroByteCryptoKey, zeroByteCryptoKey } =
+      mixedBackendCryptoKey as any
     expect(nonZeroByteCryptoKey).to.be.instanceOf(CryptoKey)
     expect(zeroByteCryptoKey).to.be.instanceOf(CryptoKey)
     expect(isValidCryptoKey(nonZeroByteCryptoKey, material)).to.equal(true)

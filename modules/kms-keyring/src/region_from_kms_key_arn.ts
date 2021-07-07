@@ -26,9 +26,11 @@ export function regionFromKmsKeyArn(kmsKeyArn: string): string {
  * @deprecated This function incorrectly requires `key/12345678-1234-1234-1234-123456789012`
  * AWS KMS requires that a raw key id be `12345678-1234-1234-1234-123456789012`
  */
-export function decomposeAwsKmsKeyArn(
-  kmsKeyArn: string
-): { partition: string; region: string; account: string } {
+export function decomposeAwsKmsKeyArn(kmsKeyArn: string): {
+  partition: string
+  region: string
+  account: string
+} {
   /* Precondition: A KMS key arn must be a string. */
   needs(typeof kmsKeyArn === 'string', 'KMS key arn must be a string.')
 
@@ -36,13 +38,8 @@ export function decomposeAwsKmsKeyArn(
    * arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012
    * arn:aws:kms:us-east-1:123456789012:alias/example-alias
    */
-  const [
-    arnLiteral,
-    partition,
-    service,
-    region = '',
-    account = '',
-  ] = kmsKeyArn.split(':')
+  const [arnLiteral, partition, service, region = '', account = ''] =
+    kmsKeyArn.split(':')
 
   /* Postcondition: The ARN must be well formed.
    * The arn and kms section have defined values,

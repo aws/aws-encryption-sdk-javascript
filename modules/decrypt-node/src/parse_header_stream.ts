@@ -141,9 +141,8 @@ export class ParseHeaderStream extends PortableTransformWithType {
 
           _headerState.buffer = Buffer.alloc(0) // clear the Buffer...
 
-          const { getDecipherInfo, getVerify, dispose } = getDecryptionHelper(
-            material
-          )
+          const { getDecipherInfo, getVerify, dispose } =
+            getDecryptionHelper(material)
 
           const getDecipher = getDecipherInfo(
             messageId,

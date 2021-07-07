@@ -33,9 +33,9 @@ export function getClient<Client extends AwsEsdkKMSInterface, Config>(
      * in this case, the Encryption SDK should find the default region
      * or the default region needs to be supplied to this function
      */
-    const config = (region
-      ? { ...defaultConfig, region }
-      : { ...defaultConfig }) as Config
+    const config = (
+      region ? { ...defaultConfig, region } : { ...defaultConfig }
+    ) as Config
     const client = new KMSClient(config)
 
     /* Postcondition: A region must be configured.
@@ -113,11 +113,9 @@ export function deferCache<Client extends AwsEsdkKMSInterface>(
   }
   const { encrypt, decrypt, generateDataKey } = client
 
-  return ([
-    'encrypt',
-    'decrypt',
-    'generateDataKey',
-  ] as (keyof AwsEsdkKMSInterface)[]).reduce(wrapOperation, client)
+  return (
+    ['encrypt', 'decrypt', 'generateDataKey'] as (keyof AwsEsdkKMSInterface)[]
+  ).reduce(wrapOperation, client)
 
   /* Wrap each of the operations to cache the client on response */
   function wrapOperation(

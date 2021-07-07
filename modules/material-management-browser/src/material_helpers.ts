@@ -227,9 +227,11 @@ export function currySubtleFunction<
           keyCommitment: nonZeroByteCryptoKey.keyCommitment,
         }))
 
-    return (subtleFunctionName === 'encrypt'
-      ? { getSubtleEncrypt: getSubtleFunction, keyCommitment }
-      : getSubtleFunction) as PickSubtleReturn<Name>
+    return (
+      subtleFunctionName === 'encrypt'
+        ? { getSubtleEncrypt: getSubtleFunction, keyCommitment }
+        : getSubtleFunction
+    ) as PickSubtleReturn<Name>
 
     function getSubtleFunction(iv: Uint8Array, additionalData: Uint8Array) {
       /* Precondition: The length of the IV must match the WebCryptoAlgorithmSuite specification. */

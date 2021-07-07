@@ -32,7 +32,8 @@ import {
 } from './raw_aes_algorithm_suite'
 
 export class NodeRawAesMaterial
-  implements Readonly<CryptographicMaterial<NodeRawAesMaterial>> {
+  implements Readonly<CryptographicMaterial<NodeRawAesMaterial>>
+{
   suite: NodeAlgorithmSuite
   setUnencryptedDataKey!: (
     dataKey: Uint8Array | AwsEsdkKeyObject,
@@ -65,7 +66,8 @@ frozenClass(NodeRawAesMaterial)
 export class WebCryptoRawAesMaterial
   implements
     Readonly<CryptographicMaterial<WebCryptoRawAesMaterial>>,
-    Readonly<WebCryptoMaterial<WebCryptoRawAesMaterial>> {
+    Readonly<WebCryptoMaterial<WebCryptoRawAesMaterial>>
+{
   suite: WebCryptoAlgorithmSuite
   setUnencryptedDataKey!: (
     dataKey: Uint8Array | AwsEsdkKeyObject,

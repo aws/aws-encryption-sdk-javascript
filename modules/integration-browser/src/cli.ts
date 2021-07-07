@@ -100,13 +100,13 @@ if (!existsSync(fixtures)) {
 
   if (command === 'decrypt') {
     // It is not clear how to get yargs/typescript to play nicely with sub commands
-    const { vectorFile } = (argv as unknown) as { vectorFile: string }
+    const { vectorFile } = argv as unknown as { vectorFile: string }
     if (!existsSync(vectorFile))
       throw new Error(`No file found at ${vectorFile}`)
     await buildDecryptFixtures(fixtures, vectorFile as string, testName, slice)
   } else if (command === 'encrypt') {
     // It is not clear how to get yargs/typescript to play nicely with sub commands
-    const { manifestFile, keyFile, decryptOracle } = (argv as unknown) as {
+    const { manifestFile, keyFile, decryptOracle } = argv as unknown as {
       manifestFile: string
       keyFile: string
       decryptOracle: string

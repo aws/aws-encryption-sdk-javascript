@@ -121,8 +121,7 @@ describe('SignaturePolicySuites', () => {
   const messageId = 'messageId'
   describe('handles signing suites correctly', () => {
     const test = new Test({
-      id:
-        AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256,
+      id: AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256,
     } as any)
     it('isDecryptEnabled allows Signing suites for decrypting with policy ALLOW_DECRYPT', () => {
       expect(() =>
@@ -180,8 +179,7 @@ describe('SignaturePolicySuites', () => {
     }
 
     const test = new Test({
-      id:
-        AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256,
+      id: AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256,
     } as any)
     expect(() =>
       testCommitmentPolicySuites.isDecryptEnabled(

@@ -31,7 +31,8 @@ const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(
 )
 
 export class WebCryptoCachingMaterialsManager
-  implements CachingMaterialsManager<WebCryptoAlgorithmSuite> {
+  implements CachingMaterialsManager<WebCryptoAlgorithmSuite>
+{
   declare readonly _cache: CryptographicMaterialsCache<WebCryptoAlgorithmSuite>
   declare readonly _backingMaterialsManager: WebCryptoMaterialsManager
   declare readonly _partition: string
@@ -60,11 +61,10 @@ export class WebCryptoCachingMaterialsManager
     })
   }
 
-  getEncryptionMaterials: WebCryptoGetEncryptionMaterials = getEncryptionMaterials<WebCryptoAlgorithmSuite>(
-    cacheKeyHelpers
-  )
-  decryptMaterials: WebCryptoGetDecryptMaterials = decryptMaterials<WebCryptoAlgorithmSuite>(
-    cacheKeyHelpers
-  )
-  _cacheEntryHasExceededLimits = cacheEntryHasExceededLimits<WebCryptoAlgorithmSuite>()
+  getEncryptionMaterials: WebCryptoGetEncryptionMaterials =
+    getEncryptionMaterials<WebCryptoAlgorithmSuite>(cacheKeyHelpers)
+  decryptMaterials: WebCryptoGetDecryptMaterials =
+    decryptMaterials<WebCryptoAlgorithmSuite>(cacheKeyHelpers)
+  _cacheEntryHasExceededLimits =
+    cacheEntryHasExceededLimits<WebCryptoAlgorithmSuite>()
 }

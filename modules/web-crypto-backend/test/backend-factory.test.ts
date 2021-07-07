@@ -143,10 +143,8 @@ describe('webCryptoBackendFactory', () => {
     })
 
     it('getWebCryptoBackend returns configured fallback subtle and randomValues', async () => {
-      const {
-        getWebCryptoBackend,
-        configureFallback,
-      } = webCryptoBackendFactory(fixtures.fakeWindowWebCryptoOnlyRandomSource)
+      const { getWebCryptoBackend, configureFallback } =
+        webCryptoBackendFactory(fixtures.fakeWindowWebCryptoOnlyRandomSource)
       // This is intentionally frustrating.
       // By not waiting for the config,
       // I _also_ test its ability to await the configuration.
@@ -160,12 +158,8 @@ describe('webCryptoBackendFactory', () => {
     })
 
     it('getWebCryptoBackend returns MixedSupportWebCryptoBackend', async () => {
-      const {
-        getWebCryptoBackend,
-        configureFallback,
-      } = webCryptoBackendFactory(
-        fixtures.fakeWindowWebCryptoZeroByteEncryptFail
-      )
+      const { getWebCryptoBackend, configureFallback } =
+        webCryptoBackendFactory(fixtures.fakeWindowWebCryptoZeroByteEncryptFail)
       // This is intentionally frustrating.
       // By not waiting for the config,
       // I _also_ test its ability to await the configuration.

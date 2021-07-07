@@ -30,9 +30,8 @@ export const validKeyInfoArray: KeyInfoTuple[] = [
   [validKMSKeyInfo, validKMSKey],
 ]
 export const validPlaintext = Buffer.from('valid plaintext').toString('base64')
-export const validCiphertext = Buffer.from('valid ciphertext').toString(
-  'base64'
-)
+export const validCiphertext =
+  Buffer.from('valid ciphertext').toString('base64')
 export const failMeText = Buffer.from('fail me text').toString('base64')
 export const validErrorDescription = 'valid error description'
 

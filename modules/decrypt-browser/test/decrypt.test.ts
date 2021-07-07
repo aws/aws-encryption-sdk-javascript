@@ -153,7 +153,8 @@ describe('decrypt', () => {
   })
 
   it('verify incomplete chipertext will fail for a signed algorithm suite', async () => {
-    const data = fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384With4Frames()
+    const data =
+      fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384With4Frames()
     const keyring = fixtures.decryptKeyring()
 
     // First we make sure that the test vector is well formed

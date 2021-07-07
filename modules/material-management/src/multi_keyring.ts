@@ -15,7 +15,8 @@ import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 
 export class MultiKeyringNode
   extends KeyringNode
-  implements MultiKeyring<NodeAlgorithmSuite> {
+  implements MultiKeyring<NodeAlgorithmSuite>
+{
   public readonly generator?: KeyringNode
   public readonly children!: ReadonlyArray<KeyringNode>
   constructor(input: MultiKeyringInput<NodeAlgorithmSuite>) {
@@ -29,7 +30,8 @@ immutableClass(MultiKeyringNode)
 
 export class MultiKeyringWebCrypto
   extends KeyringWebCrypto
-  implements MultiKeyring<WebCryptoAlgorithmSuite> {
+  implements MultiKeyring<WebCryptoAlgorithmSuite>
+{
   public declare readonly generator?: KeyringWebCrypto
   public declare readonly children: ReadonlyArray<KeyringWebCrypto>
 

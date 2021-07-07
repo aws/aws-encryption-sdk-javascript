@@ -20,10 +20,7 @@ const { decrypt } = buildDecrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
 
 describe('decrypt', () => {
   it('string with encoding', async () => {
-    const {
-      plaintext: test,
-      messageHeader,
-    } = await decrypt(
+    const { plaintext: test, messageHeader } = await decrypt(
       fixtures.decryptKeyring(),
       fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384(),
       { encoding: 'base64' }

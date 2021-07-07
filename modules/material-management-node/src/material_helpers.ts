@@ -238,9 +238,11 @@ export function curryCryptoStream<
       commitKey
     )
 
-    return (isEncrypt
-      ? { getCipher: createCryptoStream, keyCommitment }
-      : createCryptoStream) as CurryHelper<Material>
+    return (
+      isEncrypt
+        ? { getCipher: createCryptoStream, keyCommitment }
+        : createCryptoStream
+    ) as CurryHelper<Material>
 
     function createCryptoStream(iv: Uint8Array): CryptoStream<Material> {
       /* Precondition: The length of the IV must match the NodeAlgorithmSuite specification. */
@@ -269,11 +271,11 @@ export function curryCryptoStream<
        * but here I'm going to assert
        * it is simple enough.
        */
-      return (createCryptoIvStream(
+      return createCryptoIvStream(
         cipherName,
         derivedKey as any,
         iv
-      ) as unknown) as CryptoStream<Material>
+      ) as unknown as CryptoStream<Material>
     }
   }
 }
