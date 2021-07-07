@@ -33,9 +33,9 @@
     "tslib": "^2.2.0"
   },
   "sideEffects": false,
-  "main": "./build/main/index.js",
-  "types": "./build/main/index.d.ts",
+  "main": "./build/main/src/index.js",
+  "types": "./build/main/src/index.d.ts",
   "files": [
-    "build/**/*"
+    "build/**/src/*"
   ]
 }

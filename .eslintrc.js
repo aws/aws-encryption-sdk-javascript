@@ -25,7 +25,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'prettier',
   ],
-  ignorePatterns: ['node_modules/'],
+  ignorePatterns: ['node_modules/', '*.d.ts'],
   rules: {
     // These are the most useful linting rules.
     // They rely on types so they are the slowest rules,

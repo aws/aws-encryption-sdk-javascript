@@ -27,10 +27,10 @@
     "yargs": "^15.3.1"
   },
   "sideEffects": false,
-  "main": "./build/main/index.js",
-  "types": "./build/main/index.d.ts",
-  "bin": "./build/main/cli.js",
+  "main": "./build/main/src/index.js",
+  "types": "./build/main/src/index.d.ts",
+  "bin": "./build/main/src/cli.js",
   "files": [
-    "build/**/*"
+    "build/**/src/*"
   ]
 }
