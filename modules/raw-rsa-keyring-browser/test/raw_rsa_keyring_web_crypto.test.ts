@@ -5,10 +5,7 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import {
-  RsaImportableKey,
-  RawRsaKeyringWebCrypto,
-} from '@aws-crypto/raw-rsa-keyring-browser'
+import { RsaImportableKey, RawRsaKeyringWebCrypto } from '../src/index'
 import {
   KeyringWebCrypto,
   WebCryptoEncryptionMaterial,

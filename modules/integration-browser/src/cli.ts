@@ -92,7 +92,7 @@ if (!existsSync(fixtures)) {
     slice,
     karma,
     concurrency,
-  } = argv
+  } = await argv
 
   writeFileSync(`${fixtures}/decrypt_tests.json`, JSON.stringify([]))
   writeFileSync(`${fixtures}/encrypt_tests.json`, JSON.stringify([]))
