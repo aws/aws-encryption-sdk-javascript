@@ -30,8 +30,8 @@ immutableClass(MultiKeyringNode)
 export class MultiKeyringWebCrypto
   extends KeyringWebCrypto
   implements MultiKeyring<WebCryptoAlgorithmSuite> {
-  public readonly generator?: KeyringWebCrypto
-  public readonly children!: ReadonlyArray<KeyringWebCrypto>
+  public declare readonly generator?: KeyringWebCrypto
+  public declare readonly children: ReadonlyArray<KeyringWebCrypto>
 
   constructor(input: MultiKeyringInput<WebCryptoAlgorithmSuite>) {
     super()

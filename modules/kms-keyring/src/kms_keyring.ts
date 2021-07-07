@@ -70,12 +70,12 @@ export function KmsKeyringClass<
   Client extends AwsEsdkKMSInterface
 >(BaseKeyring: Newable<Keyring<S>>): KmsKeyRingConstructible<S, Client> {
   class KmsKeyring extends BaseKeyring implements KmsKeyRing<S, Client> {
-    public keyIds!: ReadonlyArray<string>
-    public generatorKeyId?: string
-    public clientProvider!: KmsClientSupplier<Client>
-    public grantTokens?: string[]
-    public isDiscovery!: boolean
-    public discoveryFilter?: Readonly<{
+    public declare keyIds: ReadonlyArray<string>
+    public declare generatorKeyId?: string
+    public declare clientProvider: KmsClientSupplier<Client>
+    public declare grantTokens?: string[]
+    public declare isDiscovery: boolean
+    public declare discoveryFilter?: Readonly<{
       accountIDs: readonly string[]
       partition: string
     }>

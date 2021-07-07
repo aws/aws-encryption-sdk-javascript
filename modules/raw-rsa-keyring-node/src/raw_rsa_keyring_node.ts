@@ -67,10 +67,10 @@ export type RawRsaKeyringNodeInput = {
 }
 
 export class RawRsaKeyringNode extends KeyringNode {
-  public keyNamespace!: string
-  public keyName!: string
-  _wrapKey!: WrapKey<NodeAlgorithmSuite>
-  _unwrapKey!: UnwrapKey<NodeAlgorithmSuite>
+  public declare keyNamespace: string
+  public declare keyName: string
+  declare _wrapKey: WrapKey<NodeAlgorithmSuite>
+  declare _unwrapKey: UnwrapKey<NodeAlgorithmSuite>
 
   constructor(input: RawRsaKeyringNodeInput) {
     super()

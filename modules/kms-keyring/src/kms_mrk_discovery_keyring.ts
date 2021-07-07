@@ -71,11 +71,12 @@ export function AwsKmsMrkAwareSymmetricDiscoveryKeyringClass<
     //# MUST implement that AWS Encryption SDK Keyring interface (../keyring-
     //# interface.md#interface)
     extends BaseKeyring
-    implements IAwsKmsMrkAwareSymmetricDiscoveryKeyring<S, Client> {
-    public client!: Client
-    public clientRegion!: string
-    public grantTokens?: string[]
-    public discoveryFilter?: Readonly<{
+    implements IAwsKmsMrkAwareSymmetricDiscoveryKeyring<S, Client>
+  {
+    public declare client: Client
+    public declare clientRegion: string
+    public declare grantTokens?: string[]
+    public declare discoveryFilter?: Readonly<{
       accountIDs: readonly string[]
       partition: string
     }>

@@ -43,11 +43,36 @@ describe('WebCryptoCachingMaterialsManager', () => {
     expect(test._backingMaterialsManager).to.be.instanceOf(
       WebCryptoDefaultCryptographicMaterialsManager
     )
-    expect(test._cache).to.equal(cache)
-    expect(test._partition).to.equal(partition)
-    expect(test._maxAge).to.equal(maxAge)
-    expect(test._maxBytesEncrypted).to.equal(maxBytesEncrypted)
-    expect(test._maxMessagesEncrypted).to.equal(maxMessagesEncrypted)
+    expect(test).to.haveOwnPropertyDescriptor('_cache', {
+      value: cache,
+      writable: false,
+      enumerable: true,
+      configurable: false,
+    })
+    expect(test).to.haveOwnPropertyDescriptor('_partition', {
+      value: partition,
+      writable: false,
+      enumerable: true,
+      configurable: false,
+    })
+    expect(test).to.haveOwnPropertyDescriptor('_maxAge', {
+      value: maxAge,
+      writable: false,
+      enumerable: true,
+      configurable: false,
+    })
+    expect(test).to.haveOwnPropertyDescriptor('_maxBytesEncrypted', {
+      value: maxBytesEncrypted,
+      writable: false,
+      enumerable: true,
+      configurable: false,
+    })
+    expect(test).to.haveOwnPropertyDescriptor('_maxMessagesEncrypted', {
+      value: maxMessagesEncrypted,
+      writable: false,
+      enumerable: true,
+      configurable: false,
+    })
   })
 
   it('Precondition: A partition value must exist for WebCryptoCachingMaterialsManager.', () => {

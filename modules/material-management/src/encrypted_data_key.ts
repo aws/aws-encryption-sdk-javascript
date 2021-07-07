@@ -39,10 +39,10 @@ export interface IEncryptedDataKey
   }> {}
 
 export class EncryptedDataKey {
-  readonly providerInfo!: string
-  readonly providerId!: string
-  readonly encryptedDataKey!: Uint8Array
-  readonly rawInfo?: Uint8Array
+  declare readonly providerInfo: string
+  declare readonly providerId: string
+  declare readonly encryptedDataKey: Uint8Array
+  declare readonly rawInfo?: Uint8Array
 
   constructor(edkInput: IEncryptedDataKey) {
     const { providerInfo, providerId, encryptedDataKey, rawInfo } = edkInput

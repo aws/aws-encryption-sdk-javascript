@@ -41,7 +41,7 @@ export type WebCryptoGetDecryptMaterials = GetDecryptMaterials<WebCryptoAlgorith
  */
 export class WebCryptoDefaultCryptographicMaterialsManager
   implements WebCryptoMaterialsManager {
-  readonly keyring!: KeyringWebCrypto
+  declare readonly keyring: KeyringWebCrypto
   constructor(keyring: KeyringWebCrypto) {
     /* Precondition: keyrings must be a KeyringWebCrypto. */
     needs(keyring instanceof KeyringWebCrypto, 'Unsupported type.')

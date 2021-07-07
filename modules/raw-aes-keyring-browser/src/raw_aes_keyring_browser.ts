@@ -56,10 +56,10 @@ export type RawAesKeyringWebCryptoInput = {
 }
 
 export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
-  public keyNamespace!: string
-  public keyName!: string
-  _wrapKey!: WrapKey<WebCryptoAlgorithmSuite>
-  _unwrapKey!: UnwrapKey<WebCryptoAlgorithmSuite>
+  public declare keyNamespace: string
+  public declare keyName: string
+  declare _wrapKey: WrapKey<WebCryptoAlgorithmSuite>
+  declare _unwrapKey: UnwrapKey<WebCryptoAlgorithmSuite>
 
   constructor(input: RawAesKeyringWebCryptoInput) {
     super()
