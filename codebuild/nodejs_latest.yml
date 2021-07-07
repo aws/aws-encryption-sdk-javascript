@@ -7,8 +7,9 @@ env:
 phases:
   install:
     runtime-versions:
-      nodejs: 10
+      nodejs: latest
     commands:
+      - node --version ; npm --version
       - npm ci --unsafe-perm
       - npm run build
   build:
