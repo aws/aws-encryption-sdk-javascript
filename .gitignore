@@ -37,6 +37,7 @@ package.json.decrypt
 
 # verdaccio
 /verdaccio/storage
+/storage
 
 # local npx cache
 /verdaccio/.npx
