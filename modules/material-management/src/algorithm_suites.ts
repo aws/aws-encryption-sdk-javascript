@@ -332,25 +332,25 @@ type AlgorithmSuiteValues = AesGcm &
   Partial<Omit<AlgCommittedSigned, keyof AesGcm>>
 
 export abstract class AlgorithmSuite implements AlgorithmSuiteValues {
-  id!: AlgorithmSuiteIdentifier
-  name!: AlgorithmSuiteName
-  messageFormat!: MessageFormat
-  encryption!: NodeEncryption | WebCryptoEncryption
-  keyLength!: KeyLength
-  keyLengthBytes!: number
-  ivLength!: IvLength
-  tagLength!: TagLength
-  cacheSafe!: boolean
-  kdf?: KDF
-  kdfHash?: NodeHash | WebCryptoHash
-  signatureCurve?: NodeECDHCurve | WebCryptoECDHCurve
-  signatureHash?: NodeHash | WebCryptoHash
-  type!: AlgorithmSuiteTypeNode | AlgorithmSuiteTypeWebCrypto
-  suiteDataLength?: SuiteDataLength
-  commitmentHash?: NodeHash | WebCryptoHash
-  commitmentLength?: CommitmentLength
-  saltLengthBytes?: HKDFSaltLengthBytes
-  commitment!: Commitment
+  declare id: AlgorithmSuiteIdentifier
+  declare name: AlgorithmSuiteName
+  declare messageFormat: MessageFormat
+  declare encryption: NodeEncryption | WebCryptoEncryption
+  declare keyLength: KeyLength
+  declare keyLengthBytes: number
+  declare ivLength: IvLength
+  declare tagLength: TagLength
+  declare cacheSafe: boolean
+  declare kdf?: KDF
+  declare kdfHash?: NodeHash | WebCryptoHash
+  declare signatureCurve?: NodeECDHCurve | WebCryptoECDHCurve
+  declare signatureHash?: NodeHash | WebCryptoHash
+  declare type: AlgorithmSuiteTypeNode | AlgorithmSuiteTypeWebCrypto
+  declare suiteDataLength?: SuiteDataLength
+  declare commitmentHash?: NodeHash | WebCryptoHash
+  declare commitmentLength?: CommitmentLength
+  declare saltLengthBytes?: HKDFSaltLengthBytes
+  declare commitment: Commitment
   constructor(suiteValues: AlgUnion) {
     needs(
       this.constructor !== AlgorithmSuite,

@@ -321,15 +321,16 @@ const supportedWebCryptoAlgorithms: SupportedWebCryptoAlgorithms = Object.freeze
 
 export class WebCryptoAlgorithmSuite
   extends AlgorithmSuite
-  implements WebCryptoAlgorithmSuiteValues {
-  messageFormat!: MessageFormat
-  encryption!: WebCryptoEncryption
-  commitment!: Commitment
-  kdfHash?: WebCryptoHash
-  signatureCurve?: WebCryptoECDHCurve
-  signatureHash?: WebCryptoHash
+  implements WebCryptoAlgorithmSuiteValues
+{
+  declare messageFormat: MessageFormat
+  declare encryption: WebCryptoEncryption
+  declare commitment: Commitment
+  declare kdfHash?: WebCryptoHash
+  declare signatureCurve?: WebCryptoECDHCurve
+  declare signatureHash?: WebCryptoHash
   type: AlgorithmSuiteTypeWebCrypto = 'webCrypto'
-  commitmentHash?: WebCryptoHash
+  declare commitmentHash?: WebCryptoHash
   constructor(id: AlgorithmSuiteIdentifier) {
     super(webCryptoAlgorithms[id])
     /* Precondition: Browsers do not support 192 bit keys so the AlgorithmSuiteIdentifier is removed.

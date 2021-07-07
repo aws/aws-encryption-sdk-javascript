@@ -33,12 +33,12 @@ const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(
 
 export class NodeCachingMaterialsManager
   implements CachingMaterialsManager<NodeAlgorithmSuite> {
-  readonly _cache!: CryptographicMaterialsCache<NodeAlgorithmSuite>
-  readonly _backingMaterialsManager!: NodeMaterialsManager
-  readonly _partition!: string
-  readonly _maxBytesEncrypted!: number
-  readonly _maxMessagesEncrypted!: number
-  readonly _maxAge!: number
+  declare readonly _cache: CryptographicMaterialsCache<NodeAlgorithmSuite>
+  declare readonly _backingMaterialsManager: NodeMaterialsManager
+  declare readonly _partition: string
+  declare readonly _maxBytesEncrypted: number
+  declare readonly _maxMessagesEncrypted: number
+  declare readonly _maxAge: number
 
   constructor(input: CachingMaterialsManagerInput<NodeAlgorithmSuite>) {
     const backingMaterialsManager =

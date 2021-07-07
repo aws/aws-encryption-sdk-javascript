@@ -36,7 +36,7 @@ export type NodeGetDecryptMaterials = GetDecryptMaterials<NodeAlgorithmSuite>
  */
 export class NodeDefaultCryptographicMaterialsManager
   implements NodeMaterialsManager {
-  readonly keyring!: KeyringNode
+  declare readonly keyring: KeyringNode
   constructor(keyring: KeyringNode) {
     /* Precondition: keyrings must be a KeyringNode. */
     needs(keyring instanceof KeyringNode, 'Unsupported type.')

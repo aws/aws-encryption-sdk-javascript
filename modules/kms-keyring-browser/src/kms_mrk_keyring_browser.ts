@@ -24,9 +24,9 @@ export class AwsKmsMrkAwareSymmetricKeyringBrowser extends AwsKmsMrkAwareSymmetr
   WebCryptoAlgorithmSuite,
   KMS
 >(KeyringWebCrypto as Newable<KeyringWebCrypto>) {
-  readonly client!: KMS
-  readonly keyId!: string
-  readonly grantTokens?: string[]
+  declare client: KMS
+  declare keyId: string
+  declare grantTokens?: string[]
 
   constructor({
     client,

@@ -24,7 +24,7 @@ export class AwsKmsMrkAwareSymmetricDiscoveryKeyringBrowser extends AwsKmsMrkAwa
   WebCryptoAlgorithmSuite,
   KMS
 >(KeyringWebCrypto as Newable<KeyringWebCrypto>) {
-  readonly client!: KMS
+  declare client: KMS
 
   constructor({
     client,

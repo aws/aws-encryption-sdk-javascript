@@ -268,15 +268,16 @@ const nodeAlgorithms: NodeAlgorithms = Object.freeze({
 
 export class NodeAlgorithmSuite
   extends AlgorithmSuite
-  implements NodeAlgorithmSuiteValues {
-  messageFormat!: MessageFormat
-  encryption!: NodeEncryption
-  commitment!: Commitment
-  kdfHash?: NodeHash
-  signatureCurve?: NodeECDHCurve
-  signatureHash?: NodeHash
+  implements NodeAlgorithmSuiteValues
+{
+  declare messageFormat: MessageFormat
+  declare encryption: NodeEncryption
+  declare commitment: Commitment
+  declare kdfHash?: NodeHash
+  declare signatureCurve?: NodeECDHCurve
+  declare signatureHash?: NodeHash
   type: AlgorithmSuiteTypeNode = 'node'
-  commitmentHash?: NodeHash
+  declare commitmentHash?: NodeHash
   constructor(id: AlgorithmSuiteIdentifier) {
     super(nodeAlgorithms[id])
     Object.setPrototypeOf(this, NodeAlgorithmSuite.prototype)

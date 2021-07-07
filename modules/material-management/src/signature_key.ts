@@ -24,9 +24,9 @@ import { AwsEsdkJsCryptoKey } from './types'
  */
 
 export class SignatureKey {
-  public readonly privateKey!: string | AwsEsdkJsCryptoKey
-  public readonly compressPoint!: Uint8Array
-  public readonly signatureCurve!: NodeECDHCurve | WebCryptoECDHCurve
+  public declare readonly privateKey: string | AwsEsdkJsCryptoKey
+  public declare readonly compressPoint: Uint8Array
+  public declare readonly signatureCurve: NodeECDHCurve | WebCryptoECDHCurve
   constructor(
     privateKey: Uint8Array | AwsEsdkJsCryptoKey,
     compressPoint: Uint8Array,
