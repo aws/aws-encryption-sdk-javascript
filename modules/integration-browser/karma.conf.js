@@ -3,6 +3,7 @@
 
 // Karma configuration
 const { readFileSync } = require('fs')
+const webpack = require('webpack')
 
 module.exports = function (config) {
   // karma-parallel will use the number CPUs as the default number of browsers to spawn
@@ -17,7 +18,7 @@ module.exports = function (config) {
       'fixtures/decrypt_tests.json',
       'fixtures/encrypt_tests.json',
       'fixtures/decrypt_oracle.json',
-      '/fixtures/concurrency.json',
+      'fixtures/concurrency.json',
       {
         pattern: 'fixtures/*.json',
         included: false,
@@ -25,18 +26,25 @@ module.exports = function (config) {
         watched: false,
         nocache: true,
       },
-      'build/module/integration.decrypt.test.js',
-      'build/module/integration.encrypt.test.js',
+      'build/module/src/*test.js',
     ],
     preprocessors: {
-      'build/module/integration.decrypt.test.js': ['webpack', 'credentials'],
-      'build/module/integration.encrypt.test.js': ['webpack', 'credentials'],
+      './build/module/src/*.js': ['webpack', 'credentials'],
       './fixtures/decrypt_tests.json': ['json_fixtures'],
       './fixtures/encrypt_tests.json': ['json_fixtures'],
       './fixtures/decrypt_oracle.json': ['json_fixtures'],
       './fixtures/concurrency.json': ['json_fixtures'],
     },
     webpack: {
+      module: {
+        rules: [
+          {
+            // yauzl is only used in the node cli for browser integration
+            test: /yauzl/,
+            use: 'null-loader',
+          },
+        ]
+      },
       mode: 'development',
       stats: {
         colors: true,
@@ -44,9 +52,17 @@ module.exports = function (config) {
         reasons: true,
         errorDetails: true,
       },
+      plugins: [
+        new webpack.ProvidePlugin({
+          Buffer: ['buffer', 'Buffer'],
+        }),
+      ],
       devtool: 'inline-source-map',
-      node: {
-        fs: 'empty',
+      resolve: {
+        fallback: {
+          fs: false,
+          crypto: false,
+        },
       },
     },
     plugins: [
