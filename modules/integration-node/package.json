@@ -21,12 +21,10 @@
     "@types/got": "^9.6.9",
     "@types/stream-to-promise": "^2.2.0",
     "@types/yargs": "^15.0.3",
-    "@types/yauzl": "^2.9.1",
     "got": "^11.8.0",
     "stream-to-promise": "^3.0.0",
-    "tslib": "^2.2.0",
-    "yargs": "^15.3.1",
-    "yauzl": "^2.10.0"
+    "tslib": "^2.3.0",
+    "yargs": "^15.3.1"
   },
   "sideEffects": false,
   "main": "./build/main/index.js",

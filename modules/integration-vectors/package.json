@@ -11,13 +11,10 @@
   },
   "dependencies": {
     "@aws-crypto/material-management": "file:../material-management",
-    "@types/got": "^9.6.9",
     "@types/stream-to-promise": "^2.2.0",
     "@types/yauzl": "^2.9.1",
-    "got": "^11.8.0",
     "stream-to-promise": "^3.0.0",
-    "tslib": "^1.11.1",
-    "yargs": "^15.3.1",
+    "tslib": "^2.3.0",
     "yauzl": "^2.10.0"
   },
   "sideEffects": false,
