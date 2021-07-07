@@ -74,7 +74,7 @@ export function fourEdksMessage() {
   return 'AYAAFO/VP38MeBJoKQshvIaF8TgAAAAEAAR0ZW1wABhrZXkzAAAAgAAAAAzIotUMc7SaFTbzk0EAIKgxmVzmYedtQj5od6KglliFAx7G3OBYHMgyvbGQVJSyAAR0ZW1wABhrZXkwAAAAgAAAAAwBe+86+eb8+uYOeoIAIFmT8yZvThnsJigzsRen9OJc0kuGE+rJyalk+yF5VdNBAAR0ZW1wABhrZXkyAAAAgAAAAAy939QOrzUF3XKc0m8AICSGMg1tdgULYD15Jr7RWkFgqCXjtwyUK86xqrU+OzV9AAR0ZW1wABhrZXkxAAAAgAAAAAxE6lJVWjxWLtvnkBYAIJUl4vhbLEjNS/3g3of4T/QvAR7TGPJZgv7cLqOP0T7uAgAAAAAMAAAQAAAAAAAAAAAAAAAAAOMcqPpQVjBzbYAHIPjMM1T/////AAAAAQAAAAAAAAAAAAAAAQAAAAQPcr1WkUGY1IDMmCgdibk0zwg4Yg=='
 }
 
-export function decryptKeyring() {
+export function decryptKeyring(): KeyringNode {
   class TestKeyring extends KeyringNode {
     async _onEncrypt(): Promise<NodeEncryptionMaterial> {
       throw new Error('I should never see this error')

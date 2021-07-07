@@ -36,7 +36,7 @@ const { encrypt, decrypt } = buildClient(
  */
 // @ts-ignore
 import { subtle } from './msrcrypto'
-configureFallback(subtle).catch((e) => {
+configureFallback(subtle as SubtleCrypto).catch((e) => {
   throw e
 })
 
