@@ -33,11 +33,8 @@ import { pipeline } from 'readable-stream'
 import { Duplex } from 'stream'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
-const {
-  serializeMessageHeader,
-  headerAuthIv,
-  buildMessageHeader,
-} = serializeFactory(fromUtf8)
+const { serializeMessageHeader, headerAuthIv, buildMessageHeader } =
+  serializeFactory(fromUtf8)
 
 export interface EncryptStreamInput {
   suiteId?: AlgorithmSuiteIdentifier
@@ -114,13 +111,8 @@ export function _encryptStream(
         'maxEncryptedDataKeys exceeded.'
       )
 
-      const {
-        getCipher,
-        messageHeader,
-        rawHeader,
-        dispose,
-        getSigner,
-      } = getEncryptionInfo(material, frameLength)
+      const { getCipher, messageHeader, rawHeader, dispose, getSigner } =
+        getEncryptionInfo(material, frameLength)
 
       wrappingStream.emit('MessageHeader', messageHeader)
 
@@ -171,9 +163,8 @@ export function getEncryptionInfo(
     suiteData: keyCommitment,
   })
 
-  const { buffer, byteOffset, byteLength } = serializeMessageHeader(
-    messageHeader
-  )
+  const { buffer, byteOffset, byteLength } =
+    serializeMessageHeader(messageHeader)
   const headerBuffer = Buffer.from(buffer, byteOffset, byteLength)
   const headerIv = headerAuthIv(ivLength)
   const validateHeader = getCipher(headerIv)

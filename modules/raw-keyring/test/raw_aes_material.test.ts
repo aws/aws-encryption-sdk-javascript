@@ -22,7 +22,8 @@ describe('NodeRawAesMaterial', () => {
     expect(Object.isFrozen(NodeRawAesMaterial.prototype)).to.equal(true))
   it('hasValidKey is false', () => expect(test.hasValidKey()).to.equal(false))
   it('Precondition: NodeRawAesMaterial suiteId must be RawAesWrappingSuiteIdentifier.', () => {
-    const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256 as any
+    const suiteId =
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256 as any
     expect(() => new NodeRawAesMaterial(suiteId)).to.throw()
   })
 })
@@ -38,7 +39,8 @@ describe('WebCryptoRawAesMaterial', () => {
     expect(Object.isFrozen(WebCryptoRawAesMaterial.prototype)).to.equal(true))
   it('hasValidKey is false', () => expect(test.hasValidKey()).to.equal(false))
   it('Precondition: WebCryptoAlgorithmSuite suiteId must be RawAesWrappingSuiteIdentifier.', () => {
-    const suiteId = AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256 as any
+    const suiteId =
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256 as any
     expect(() => new WebCryptoRawAesMaterial(suiteId)).to.throw()
   })
 })

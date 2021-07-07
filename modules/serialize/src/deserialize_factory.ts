@@ -27,9 +27,8 @@ export function deserializeFactory<Suite extends AlgorithmSuite>(
   SdkSuite: AlgorithmSuiteConstructor<Suite>
 ) {
   const decodeEncryptionContext = decodeEncryptionContextFactory(toUtf8)
-  const deserializeEncryptedDataKeys = deserializeEncryptedDataKeysFactory(
-    toUtf8
-  )
+  const deserializeEncryptedDataKeys =
+    deserializeEncryptedDataKeysFactory(toUtf8)
 
   const deserializeHeaderV1 = deserializeHeaderV1Factory({
     decodeEncryptionContext,

@@ -64,18 +64,14 @@ describe('test', () => {
   })
 
   it('kmsEncryptWithMaxEncryptedDataKeysTest, less than max', async () => {
-    const {
-      cleartext,
-      plaintext,
-    } = await kmsEncryptWithMaxEncryptedDataKeysTest(2)
+    const { cleartext, plaintext } =
+      await kmsEncryptWithMaxEncryptedDataKeysTest(2)
     expect(plaintext.toString()).to.equal(cleartext)
   })
 
   it('kmsEncryptWithMaxEncryptedDataKeysTest, equal to max', async () => {
-    const {
-      cleartext,
-      plaintext,
-    } = await kmsEncryptWithMaxEncryptedDataKeysTest(3)
+    const { cleartext, plaintext } =
+      await kmsEncryptWithMaxEncryptedDataKeysTest(3)
     expect(plaintext.toString()).to.equal(cleartext)
   })
 
@@ -87,18 +83,14 @@ describe('test', () => {
   })
 
   it('kmsDecryptWithMaxEncryptedDataKeysTest, less than max', async () => {
-    const {
-      cleartext,
-      plaintext,
-    } = await kmsDecryptWithMaxEncryptedDataKeysTest(2)
+    const { cleartext, plaintext } =
+      await kmsDecryptWithMaxEncryptedDataKeysTest(2)
     expect(plaintext.toString()).to.equal(cleartext)
   })
 
   it('kmsDecryptWithMaxEncryptedDataKeysTest, equal to max', async () => {
-    const {
-      cleartext,
-      plaintext,
-    } = await kmsDecryptWithMaxEncryptedDataKeysTest(3)
+    const { cleartext, plaintext } =
+      await kmsDecryptWithMaxEncryptedDataKeysTest(3)
     expect(plaintext.toString()).to.equal(cleartext)
   })
 

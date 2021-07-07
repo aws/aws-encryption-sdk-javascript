@@ -29,10 +29,14 @@ import {
 } from '@aws-crypto/web-crypto-backend'
 import { fromBase64, toBase64 } from '@aws-sdk/util-base64-browser'
 
-export type WebCryptoEncryptionRequest = EncryptionRequest<WebCryptoAlgorithmSuite>
-export type WebCryptoDecryptionRequest = DecryptionRequest<WebCryptoAlgorithmSuite>
-export type WebCryptoGetEncryptionMaterials = GetEncryptionMaterials<WebCryptoAlgorithmSuite>
-export type WebCryptoGetDecryptMaterials = GetDecryptMaterials<WebCryptoAlgorithmSuite>
+export type WebCryptoEncryptionRequest =
+  EncryptionRequest<WebCryptoAlgorithmSuite>
+export type WebCryptoDecryptionRequest =
+  DecryptionRequest<WebCryptoAlgorithmSuite>
+export type WebCryptoGetEncryptionMaterials =
+  GetEncryptionMaterials<WebCryptoAlgorithmSuite>
+export type WebCryptoGetDecryptMaterials =
+  GetDecryptMaterials<WebCryptoAlgorithmSuite>
 
 /**
  * The WebCryptoDefaultCryptographicMaterialsManager is a specific implementation of the CryptographicMaterialsManager.
@@ -40,7 +44,8 @@ export type WebCryptoGetDecryptMaterials = GetDecryptMaterials<WebCryptoAlgorith
  * Users should never need to create an instance of a WebCryptoDefaultCryptographicMaterialsManager.
  */
 export class WebCryptoDefaultCryptographicMaterialsManager
-  implements WebCryptoMaterialsManager {
+  implements WebCryptoMaterialsManager
+{
   declare readonly keyring: KeyringWebCrypto
   constructor(keyring: KeyringWebCrypto) {
     /* Precondition: keyrings must be a KeyringWebCrypto. */

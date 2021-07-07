@@ -32,7 +32,8 @@ const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(
 )
 
 export class NodeCachingMaterialsManager
-  implements CachingMaterialsManager<NodeAlgorithmSuite> {
+  implements CachingMaterialsManager<NodeAlgorithmSuite>
+{
   declare readonly _cache: CryptographicMaterialsCache<NodeAlgorithmSuite>
   declare readonly _backingMaterialsManager: NodeMaterialsManager
   declare readonly _partition: string
@@ -59,11 +60,10 @@ export class NodeCachingMaterialsManager
     })
   }
 
-  getEncryptionMaterials: NodeGetEncryptionMaterials = getEncryptionMaterials<NodeAlgorithmSuite>(
-    cacheKeyHelpers
-  )
-  decryptMaterials: NodeGetDecryptMaterials = decryptMaterials<NodeAlgorithmSuite>(
-    cacheKeyHelpers
-  )
-  _cacheEntryHasExceededLimits = cacheEntryHasExceededLimits<NodeAlgorithmSuite>()
+  getEncryptionMaterials: NodeGetEncryptionMaterials =
+    getEncryptionMaterials<NodeAlgorithmSuite>(cacheKeyHelpers)
+  decryptMaterials: NodeGetDecryptMaterials =
+    decryptMaterials<NodeAlgorithmSuite>(cacheKeyHelpers)
+  _cacheEntryHasExceededLimits =
+    cacheEntryHasExceededLimits<NodeAlgorithmSuite>()
 }

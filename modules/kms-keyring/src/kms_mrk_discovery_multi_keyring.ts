@@ -67,30 +67,28 @@ export function getAwsKmsMrkAwareDiscoveryMultiKeyringBuilder<
       'Configured regions must not contain a null or empty string as a region.'
     )
 
-    const children: IAwsKmsMrkAwareSymmetricDiscoveryKeyring<
-      S,
-      Client
-    >[] = regions
-      //= compliance/framework/aws-kms/aws-kms-mrk-aware-multi-keyrings.txt#2.5
-      //# A set of AWS KMS clients MUST be created by calling regional client
-      //# supplier for each region in the input set of regions.
-      .map(clientProvider)
-      //= compliance/framework/aws-kms/aws-kms-mrk-aware-multi-keyrings.txt#2.5
-      //# Then a set of AWS KMS MRK Aware Symmetric Region Discovery Keyring
-      //# (aws-kms-mrk-aware-symmetric-region-discovery-keyring.md) MUST be
-      //# created for each AWS KMS client by initializing each keyring with
-      .map((client) => {
-        /* Postcondition: If the configured clientProvider is not able to create a client for a defined region, throw an error. */
-        needs(
-          client,
-          'Configured clientProvider is unable to create a client for a configured region.'
-        )
-        return new MrkAwareDiscoveryKeyring({
-          client,
-          discoveryFilter,
-          grantTokens,
+    const children: IAwsKmsMrkAwareSymmetricDiscoveryKeyring<S, Client>[] =
+      regions
+        //= compliance/framework/aws-kms/aws-kms-mrk-aware-multi-keyrings.txt#2.5
+        //# A set of AWS KMS clients MUST be created by calling regional client
+        //# supplier for each region in the input set of regions.
+        .map(clientProvider)
+        //= compliance/framework/aws-kms/aws-kms-mrk-aware-multi-keyrings.txt#2.5
+        //# Then a set of AWS KMS MRK Aware Symmetric Region Discovery Keyring
+        //# (aws-kms-mrk-aware-symmetric-region-discovery-keyring.md) MUST be
+        //# created for each AWS KMS client by initializing each keyring with
+        .map((client) => {
+          /* Postcondition: If the configured clientProvider is not able to create a client for a defined region, throw an error. */
+          needs(
+            client,
+            'Configured clientProvider is unable to create a client for a configured region.'
+          )
+          return new MrkAwareDiscoveryKeyring({
+            client,
+            discoveryFilter,
+            grantTokens,
+          })
         })
-      })
 
     //= compliance/framework/aws-kms/aws-kms-mrk-aware-multi-keyrings.txt#2.5
     //# Then a Multi-Keyring (../multi-keyring.md#inputs) MUST be initialize

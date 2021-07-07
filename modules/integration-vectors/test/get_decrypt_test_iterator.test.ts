@@ -57,13 +57,14 @@ const keyList: KeyList = {
       encrypt: true,
       decrypt: false,
     },
-    'arn:aws:kms-not:us-west-2:658956600833:key/mrk-80bd8ecdcd4342aebd84b7dc9da498a7': {
-      encrypt: false,
-      decrypt: false,
-      type: 'aws-kms',
-      'key-id':
-        'arn:aws:kms-not:us-west-2:658956600833:key/mrk-80bd8ecdcd4342aebd84b7dc9da498a7',
-    },
+    'arn:aws:kms-not:us-west-2:658956600833:key/mrk-80bd8ecdcd4342aebd84b7dc9da498a7':
+      {
+        encrypt: false,
+        decrypt: false,
+        type: 'aws-kms',
+        'key-id':
+          'arn:aws:kms-not:us-west-2:658956600833:key/mrk-80bd8ecdcd4342aebd84b7dc9da498a7',
+      },
   },
 }
 
@@ -304,8 +305,7 @@ describe('_getDecryptTestVectorIterator yields Decrypt Tests', () => {
           'master-keys': [
             {
               type: 'aws-kms-mrk-aware',
-              key:
-                'arn:aws:kms-not:us-west-2:658956600833:key/mrk-80bd8ecdcd4342aebd84b7dc9da498a7',
+              key: 'arn:aws:kms-not:us-west-2:658956600833:key/mrk-80bd8ecdcd4342aebd84b7dc9da498a7',
             },
           ],
           result: {

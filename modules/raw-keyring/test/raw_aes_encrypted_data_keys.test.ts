@@ -19,22 +19,7 @@ const keyName = 'keyName'
 const keyNameFromUtf8 = new Uint8Array([107, 101, 121, 78, 97, 109, 101])
 const iv = new Uint8Array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 const ciphertext = new Uint8Array([
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
+  2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
 ])
 const authTag = new Uint8Array([3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3])
 

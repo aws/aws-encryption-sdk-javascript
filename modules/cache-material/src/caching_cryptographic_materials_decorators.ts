@@ -84,12 +84,8 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
     this: CachingMaterialsManager<S>,
     request: EncryptionRequest<S>
   ): Promise<EncryptionMaterial<S>> {
-    const {
-      suite,
-      encryptionContext,
-      plaintextLength,
-      commitmentPolicy,
-    } = request
+    const { suite, encryptionContext, plaintextLength, commitmentPolicy } =
+      request
 
     /* Check for early return (Postcondition): If I can not cache the EncryptionMaterial, do not even look. */
     if (
@@ -97,9 +93,8 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       typeof plaintextLength !== 'number' ||
       plaintextLength < 0
     ) {
-      const material = await this._backingMaterialsManager.getEncryptionMaterials(
-        request
-      )
+      const material =
+        await this._backingMaterialsManager.getEncryptionMaterials(request)
       return material
     }
 

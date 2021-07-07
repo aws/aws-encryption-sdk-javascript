@@ -23,7 +23,9 @@ export interface AwsKmsMrkAwareDiscoveryMultiKeyringNodeInput {
   grantTokens?: string[]
 }
 
-export const buildAwsKmsMrkAwareDiscoveryMultiKeyringNode = getAwsKmsMrkAwareDiscoveryMultiKeyringBuilder<
-  NodeAlgorithmSuite,
-  KMS
->(AwsKmsMrkAwareSymmetricDiscoveryKeyringNode, MultiKeyringNode, getKmsClient)
+export const buildAwsKmsMrkAwareDiscoveryMultiKeyringNode =
+  getAwsKmsMrkAwareDiscoveryMultiKeyringBuilder<NodeAlgorithmSuite, KMS>(
+    AwsKmsMrkAwareSymmetricDiscoveryKeyringNode,
+    MultiKeyringNode,
+    getKmsClient
+  )

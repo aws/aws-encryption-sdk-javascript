@@ -62,12 +62,8 @@ export async function _decrypt(
   const { messageHeader, algorithmSuite } = headerInfo
   const { rawHeader, headerAuth } = headerInfo
   const { headerIv, headerAuthTag } = headerAuth
-  const {
-    encryptionContext,
-    encryptedDataKeys,
-    suiteId,
-    messageId,
-  } = messageHeader
+  const { encryptionContext, encryptedDataKeys, suiteId, messageId } =
+    messageHeader
 
   // Very quick hex string
   const messageIdStr = [...messageId]

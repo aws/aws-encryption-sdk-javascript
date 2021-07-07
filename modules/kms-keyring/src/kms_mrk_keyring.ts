@@ -71,7 +71,8 @@ export function AwsKmsMrkAwareSymmetricKeyringClass<
     //# MUST implement the AWS Encryption SDK Keyring interface (../keyring-
     //# interface.md#interface)
     extends BaseKeyring
-    implements IAwsKmsMrkAwareSymmetricKeyring<S, Client> {
+    implements IAwsKmsMrkAwareSymmetricKeyring<S, Client>
+  {
     public keyId!: string
     public client!: Client
     public grantTokens?: string[]

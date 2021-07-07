@@ -26,7 +26,8 @@ import { createECDH } from 'crypto'
 
 export type NodeEncryptionRequest = EncryptionRequest<NodeAlgorithmSuite>
 export type NodeDecryptionRequest = DecryptionRequest<NodeAlgorithmSuite>
-export type NodeGetEncryptionMaterials = GetEncryptionMaterials<NodeAlgorithmSuite>
+export type NodeGetEncryptionMaterials =
+  GetEncryptionMaterials<NodeAlgorithmSuite>
 export type NodeGetDecryptMaterials = GetDecryptMaterials<NodeAlgorithmSuite>
 
 /**
@@ -35,7 +36,8 @@ export type NodeGetDecryptMaterials = GetDecryptMaterials<NodeAlgorithmSuite>
  * Users should never need to create an instance of a NodeDefaultCryptographicMaterialsManager.
  */
 export class NodeDefaultCryptographicMaterialsManager
-  implements NodeMaterialsManager {
+  implements NodeMaterialsManager
+{
   declare readonly keyring: KeyringNode
   constructor(keyring: KeyringNode) {
     /* Precondition: keyrings must be a KeyringNode. */

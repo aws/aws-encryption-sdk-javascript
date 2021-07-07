@@ -18,7 +18,8 @@ import {
 } from '@aws-crypto/material-management-browser'
 import { KMS } from 'aws-sdk'
 
-export type AwsKmsMrkAwareSymmetricDiscoveryKeyringWebCryptoInput = AwsKmsMrkAwareSymmetricDiscoveryKeyringInput<KMS>
+export type AwsKmsMrkAwareSymmetricDiscoveryKeyringWebCryptoInput =
+  AwsKmsMrkAwareSymmetricDiscoveryKeyringInput<KMS>
 
 export class AwsKmsMrkAwareSymmetricDiscoveryKeyringBrowser extends AwsKmsMrkAwareSymmetricDiscoveryKeyringClass<
   WebCryptoAlgorithmSuite,

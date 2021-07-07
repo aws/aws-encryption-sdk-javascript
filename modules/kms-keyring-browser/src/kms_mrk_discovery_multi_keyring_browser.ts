@@ -10,11 +10,9 @@ import { getKmsClient } from '.'
 import { AwsKmsMrkAwareSymmetricDiscoveryKeyringBrowser } from './kms_mrk_discovery_keyring_browser'
 import { KMS } from 'aws-sdk'
 
-export const buildAwsKmsMrkAwareDiscoveryMultiKeyringBrowser = getAwsKmsMrkAwareDiscoveryMultiKeyringBuilder<
-  WebCryptoAlgorithmSuite,
-  KMS
->(
-  AwsKmsMrkAwareSymmetricDiscoveryKeyringBrowser,
-  MultiKeyringWebCrypto,
-  getKmsClient
-)
+export const buildAwsKmsMrkAwareDiscoveryMultiKeyringBrowser =
+  getAwsKmsMrkAwareDiscoveryMultiKeyringBuilder<WebCryptoAlgorithmSuite, KMS>(
+    AwsKmsMrkAwareSymmetricDiscoveryKeyringBrowser,
+    MultiKeyringWebCrypto,
+    getKmsClient
+  )

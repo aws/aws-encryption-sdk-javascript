@@ -62,16 +62,17 @@ describe('testDecryptFixtures', () => {
       'returns a testResultVector with result TRUE if ' +
         'the expected plaintext is equal to the actual plaintext ',
       async () => {
-        const actualResults: TestVectorResult = await testPositiveDecryptFixture(
-          validPositiveTest.name,
-          fromBase64(validPlaintext),
-          fromBase64(validPositiveTest.cipherText),
-          <KeyInfoTuple[]>(<unknown>(<MockedKeyInfoTuple>{
-            mockedCmm: <MockedCmm>{},
-          })),
-          mockDecrypt,
-          mockGetCmm
-        )
+        const actualResults: TestVectorResult =
+          await testPositiveDecryptFixture(
+            validPositiveTest.name,
+            fromBase64(validPlaintext),
+            fromBase64(validPositiveTest.cipherText),
+            <KeyInfoTuple[]>(<unknown>(<MockedKeyInfoTuple>{
+              mockedCmm: <MockedCmm>{},
+            })),
+            mockDecrypt,
+            mockGetCmm
+          )
         expect(actualResults.result).to.be.true
         expect(actualResults.name).to.be.equal(validPositiveTest.name)
         expect(actualResults.err).to.be.undefined
@@ -82,16 +83,17 @@ describe('testDecryptFixtures', () => {
       'returns a testResultVector with FALSE and correct Error message' +
         'if the decryption scheme is unsupported',
       async () => {
-        const actualResults: TestVectorResult = await testPositiveDecryptFixture(
-          validPositiveTest.name,
-          fromBase64(validPlaintext),
-          fromBase64(validPositiveTest.cipherText),
-          <KeyInfoTuple[]>(<unknown>(<MockedKeyInfoTuple>{
-            mockedCmm: <MockedCmm>{ err: notSupportedDecryptMessages[0] },
-          })),
-          mockDecrypt,
-          mockGetCmm
-        )
+        const actualResults: TestVectorResult =
+          await testPositiveDecryptFixture(
+            validPositiveTest.name,
+            fromBase64(validPlaintext),
+            fromBase64(validPositiveTest.cipherText),
+            <KeyInfoTuple[]>(<unknown>(<MockedKeyInfoTuple>{
+              mockedCmm: <MockedCmm>{ err: notSupportedDecryptMessages[0] },
+            })),
+            mockDecrypt,
+            mockGetCmm
+          )
         expect(actualResults.result).to.be.false
         expect(actualResults.err).to.have.property(
           'message',
@@ -103,16 +105,17 @@ describe('testDecryptFixtures', () => {
       'returns a testResultVector with FALSE and Err' +
         'if the actualPlaintext did not meet the expected plaintext',
       async () => {
-        const actualResults: TestVectorResult = await testPositiveDecryptFixture(
-          validPositiveTest.name,
-          fromBase64(failMeText),
-          fromBase64(validPositiveTest.cipherText),
-          <KeyInfoTuple[]>(<unknown>(<MockedKeyInfoTuple>{
-            mockedCmm: <MockedCmm>{},
-          })),
-          mockDecrypt,
-          mockGetCmm
-        )
+        const actualResults: TestVectorResult =
+          await testPositiveDecryptFixture(
+            validPositiveTest.name,
+            fromBase64(failMeText),
+            fromBase64(validPositiveTest.cipherText),
+            <KeyInfoTuple[]>(<unknown>(<MockedKeyInfoTuple>{
+              mockedCmm: <MockedCmm>{},
+            })),
+            mockDecrypt,
+            mockGetCmm
+          )
         expect(actualResults.result).to.be.false
         expect(actualResults.err).to.have.property('message')
         if (actualResults.err && actualResults.err.message)
@@ -128,16 +131,17 @@ describe('testDecryptFixtures', () => {
       'returns TRUE if ' +
         'an error is thrown and the decryption scheme is supported',
       async () => {
-        const actualResults: TestVectorResult = await testNegativeDecryptFixture(
-          validNegativeTest.name,
-          validErrorDescription,
-          fromBase64(validNegativeTest.cipherText),
-          <KeyInfoTuple[]>(<unknown>(<MockedKeyInfoTuple>{
-            mockedCmm: <MockedCmm>{ err: validErrorDescription },
-          })),
-          mockDecrypt,
-          mockGetCmm
-        )
+        const actualResults: TestVectorResult =
+          await testNegativeDecryptFixture(
+            validNegativeTest.name,
+            validErrorDescription,
+            fromBase64(validNegativeTest.cipherText),
+            <KeyInfoTuple[]>(<unknown>(<MockedKeyInfoTuple>{
+              mockedCmm: <MockedCmm>{ err: validErrorDescription },
+            })),
+            mockDecrypt,
+            mockGetCmm
+          )
         expect(actualResults.result).to.be.true
         expect(actualResults.name).to.be.equal(validNegativeTest.name)
         expect(actualResults.err).to.be.undefined
@@ -148,16 +152,17 @@ describe('testDecryptFixtures', () => {
       'returns FALSE and correct Error message if' +
         'the decryption scheme is unsupported',
       async () => {
-        const actualResults: TestVectorResult = await testNegativeDecryptFixture(
-          validNegativeTest.name,
-          validErrorDescription,
-          fromBase64(validNegativeTest.cipherText),
-          <KeyInfoTuple[]>(<unknown>(<MockedKeyInfoTuple>{
-            mockedCmm: <MockedCmm>{ err: notSupportedDecryptMessages[1] },
-          })),
-          mockDecrypt,
-          mockGetCmm
-        )
+        const actualResults: TestVectorResult =
+          await testNegativeDecryptFixture(
+            validNegativeTest.name,
+            validErrorDescription,
+            fromBase64(validNegativeTest.cipherText),
+            <KeyInfoTuple[]>(<unknown>(<MockedKeyInfoTuple>{
+              mockedCmm: <MockedCmm>{ err: notSupportedDecryptMessages[1] },
+            })),
+            mockDecrypt,
+            mockGetCmm
+          )
         expect(actualResults.result).to.be.false
         expect(actualResults.err).to.have.property(
           'message',
@@ -169,16 +174,17 @@ describe('testDecryptFixtures', () => {
       'returns FALSE and correct Error message if' +
         ' the decrypt method does not throw an error',
       async () => {
-        const actualResults: TestVectorResult = await testNegativeDecryptFixture(
-          validNegativeTest.name,
-          validErrorDescription,
-          fromBase64(validNegativeTest.cipherText),
-          <KeyInfoTuple[]>(<unknown>(<MockedKeyInfoTuple>{
-            mockedCmm: <MockedCmm>{},
-          })),
-          mockDecrypt,
-          mockGetCmm
-        )
+        const actualResults: TestVectorResult =
+          await testNegativeDecryptFixture(
+            validNegativeTest.name,
+            validErrorDescription,
+            fromBase64(validNegativeTest.cipherText),
+            <KeyInfoTuple[]>(<unknown>(<MockedKeyInfoTuple>{
+              mockedCmm: <MockedCmm>{},
+            })),
+            mockDecrypt,
+            mockGetCmm
+          )
         expect(actualResults.result).to.be.false
         expect(actualResults.err).to.have.property('message')
         if (actualResults.err && actualResults.err.message)
