@@ -5,6 +5,8 @@ native Javascript implementation of the [AWS Encryption SDK](https://docs.aws.am
 
 [Security issue notifications](./CONTRIBUTING.md#security-issue-notifications)
 
+See [Support Policy](./SUPPORT_POLICY.rst) for for details on the current support status of all major versions of this library.
+
 ## Client Packages
 
 | Package | Description |
