@@ -97,7 +97,7 @@
     "@aws-sdk/credential-provider-node": "^3.11.0",
     "@aws-sdk/karma-credential-loader": "^3.11.0",
     "@aws-sdk/util-base64-browser": "^3.10.0",
-    "@types/bn.js": "^4.11.0",
+    "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.2.12",
     "@types/chai-as-promised": "^7.1.3",
     "@types/from2": "^2.3.0",
