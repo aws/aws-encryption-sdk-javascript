@@ -4,6 +4,8 @@ env:
   variables:
     NODE_OPTIONS: "--max-old-space-size=4096"
     BRANCH: "master"
+    # An explicit version bump
+    VERSION_BUMP: ""
   secrets-manager:
      OTP_SECRET_KEY: npm/aws-crypto-tools-ci-bot/2FA:OTP_SECRET_KEY
      NPM_TOKEN: npm/aws-crypto-tools-ci-bot/2FA:NPM_TOKEN
@@ -31,7 +33,7 @@ phases:
       # Publish to a local verdaccio server and run all tests against it
       - npm run verdaccio
       # Generate new version and CHANGELOG entry and push it
-      - npx lerna version --conventional-commits --git-remote origin --yes
+      - npx lerna version --conventional-commits --git-remote origin --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
       # Log the commit for posterity
       - git log -n 1
       # Extract the otp using the secrets environment variables from above.

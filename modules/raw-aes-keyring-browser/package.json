@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/raw-aes-keyring-browser",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
