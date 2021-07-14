@@ -2,6 +2,7 @@ version: 0.2
 
 env:
   variables:
+    NPM_CONFIG_UNSAFE_PERM: true
     NODE_OPTIONS: "--max-old-space-size=4096"
     BRANCH: "master"
     # An explicit version bump
