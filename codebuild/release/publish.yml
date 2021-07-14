@@ -1,0 +1,48 @@
+version: 0.2
+
+env:
+  variables:
+    NODE_OPTIONS: "--max-old-space-size=4096"
+    BRANCH: "master"
+  secrets-manager:
+     OTP_SECRET_KEY: npm/aws-crypto-tools-ci-bot/2FA:OTP_SECRET_KEY
+     NPM_TOKEN: npm/aws-crypto-tools-ci-bot/2FA:NPM_TOKEN
+
+phases:
+  install:
+    commands:
+      - npm ci --unsafe-perm
+      # Install `otplib` to extract the OTP from the npm 2FA secret
+      - npm install otplib --no-save
+      - npm run build
+    runtime-versions:
+      nodejs: 12
+  pre_build:
+    commands:
+      - git checkout $BRANCH
+  build:
+    commands:
+      # Extract the otp using the secrets environment variables from above.
+      # This will wait for the next token. This is because npm uses
+      # TOTP and the tokens time out after 30 seconds. If the process just
+      # extracted the token then the lifetime for this token
+      # would be very random. This will maximize the amount of time
+      # available on the OTP to publish.
+      - >-
+        OTP=`node -e "
+          auth=require('otplib').authenticator;
+          setTimeout(() =>
+            console.log(auth.generate(process.env.OTP_SECRET_KEY)),
+            auth.timeRemaining() * 1000);
+          "`
+      # npm will only expand env vars inside .npmrc
+      # NOTE the ' this is to keep the env var NPM_TOKEN from expanding!
+      - echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc
+      # Now we publish to npm.
+      # This is going to use the OTP generated above and the NPM_TOKEN
+      # environment variable. This will only publish things that are
+      # missing from npm. It is therefore safe to run repeatedly.
+      - npx lerna publish from-package --yes --otp $OTP
+      # remove after publishing
+      - rm .npmrc
+

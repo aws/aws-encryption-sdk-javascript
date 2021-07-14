@@ -11,9 +11,15 @@ phases:
       nodejs: latest
     commands:
       - npm ci
-      - npm run build
+      - |-
+        if [ "$PUBLISH_LOCAL" = "true" ]; then
+          npm run build
+        fi
   build:
     commands:
-      - npm run verdaccio-publish
+      - |-
+        if [ "$PUBLISH_LOCAL" = "true" ]; then
+          npm run verdaccio-publish
+        fi
       - npm run verdaccio-node-decrypt
       - npm run verdaccio-node-encrypt
