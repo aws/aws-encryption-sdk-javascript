@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.0.0](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v2.4.0...v3.0.0) (2021-07-14)
+
+
+### chore
+
+* remove node 10 from CI ([64cc85b](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/64cc85b00d231d058b4237045e2b5f5b917d582e))
+* update dependencies ([417db72](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/417db726ecbc974a744e8e59ed07c4f94c46464a))
+
+
+### BREAKING CHANGES
+
+* Removing CI coverage for Node 10
+* This commit upgrades dependencies to no longer support Node 8 and 10.
+
+
+
+
+
 # [2.4.0](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v2.3.1...v2.4.0) (2021-07-13)
 
 **Note:** Version bump only for package aws-encryption-sdk-javascript
