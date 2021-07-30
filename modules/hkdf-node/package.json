@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/hkdf-node",
-  "version": "1.0.3",
+  "version": "3.0.0",
   "description": "nodejs hkdf crypto primitive",
   "scripts": {
     "prepublishOnly": "npm run build",
@@ -23,11 +23,11 @@
     "tslib": "^2.2.0"
   },
   "sideEffects": false,
-  "main": "./build/main/index.js",
-  "module": "./build/module/index.js",
-  "types": "./build/main/index.d.ts",
+  "main": "./build/main/src/index.js",
+  "module": "./build/module/src/index.js",
+  "types": "./build/main/src/index.d.ts",
   "files": [
-    "build/**/*"
+    "build/**/src/*"
   ],
   "standard": {
     "fix": true,

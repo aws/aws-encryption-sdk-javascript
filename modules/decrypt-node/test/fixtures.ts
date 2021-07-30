@@ -62,7 +62,19 @@ export function frameSequenceOutOfOrder() {
   ) // a
 }
 
-export function decryptKeyring() {
+export function twoEdksMessage() {
+  return 'AYAAFNtHpBW/a0r4Cow3iqlZE2gAAAACAAR0ZW1wABhrZXkxAAAAgAAAAAw9RKN0naJNP4xi3S0AINJWPRlLhxvzigei6CZ26IrNnHP1V5jiGBpkACWEIqXCAAR0ZW1wABhrZXkwAAAAgAAAAAzxitQaVKs8LKSBsl4AIITotwv3smwBWSvsN8EYsk7+bEJIf7P2Rk9UyRyMwGv4AgAAAAAMAAAQAAAAAAAAAAAAAAAAAITWGeJ3S1Q7SwjTneM/x6P/////AAAAAQAAAAAAAAAAAAAAAQAAAAQPcr1WSS1mupU1rJ3mx59j/D7pWA=='
+}
+
+export function threeEdksMessage() {
+  return 'AYAAFJor2dU7emlQd3xuGJOGNO0AAAADAAR0ZW1wABhrZXkyAAAAgAAAAAyxjOhWPS0SVGkSvVgAIBxzkvIlAneqwivlJOcT7CTqfmBE+Qxda5SruJc0EIzZAAR0ZW1wABhrZXkwAAAAgAAAAAwEc7/GN70h9qW3M/QAIG4Liq/fbtx/QPd/XzG0DHWGrB94icjFf7nFO9eNvgumAAR0ZW1wABhrZXkxAAAAgAAAAAyLWx4D7J4WiqzW4wEAIOpYIFf6nplu8QX3Tqeb5B7H2VHaRyQ5eQe4B40xoaq2AgAAAAAMAAAQAAAAAAAAAAAAAAAAAFktn3/Gbtz2nk3W7Gn49lH/////AAAAAQAAAAAAAAAAAAAAAQAAAAQPcr1WJv8vkK1nDsQ51nGhbovr5w=='
+}
+
+export function fourEdksMessage() {
+  return 'AYAAFO/VP38MeBJoKQshvIaF8TgAAAAEAAR0ZW1wABhrZXkzAAAAgAAAAAzIotUMc7SaFTbzk0EAIKgxmVzmYedtQj5od6KglliFAx7G3OBYHMgyvbGQVJSyAAR0ZW1wABhrZXkwAAAAgAAAAAwBe+86+eb8+uYOeoIAIFmT8yZvThnsJigzsRen9OJc0kuGE+rJyalk+yF5VdNBAAR0ZW1wABhrZXkyAAAAgAAAAAy939QOrzUF3XKc0m8AICSGMg1tdgULYD15Jr7RWkFgqCXjtwyUK86xqrU+OzV9AAR0ZW1wABhrZXkxAAAAgAAAAAxE6lJVWjxWLtvnkBYAIJUl4vhbLEjNS/3g3of4T/QvAR7TGPJZgv7cLqOP0T7uAgAAAAAMAAAQAAAAAAAAAAAAAAAAAOMcqPpQVjBzbYAHIPjMM1T/////AAAAAQAAAAAAAAAAAAAAAQAAAAQPcr1WkUGY1IDMmCgdibk0zwg4Yg=='
+}
+
+export function decryptKeyring(): KeyringNode {
   class TestKeyring extends KeyringNode {
     async _onEncrypt(): Promise<NodeEncryptionMaterial> {
       throw new Error('I should never see this error')

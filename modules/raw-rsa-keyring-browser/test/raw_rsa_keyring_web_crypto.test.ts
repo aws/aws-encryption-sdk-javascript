@@ -5,10 +5,7 @@
 
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import {
-  RsaImportableKey,
-  RawRsaKeyringWebCrypto,
-} from '@aws-crypto/raw-rsa-keyring-browser'
+import { RsaImportableKey, RawRsaKeyringWebCrypto } from '../src/index'
 import {
   KeyringWebCrypto,
   WebCryptoEncryptionMaterial,
@@ -29,24 +26,17 @@ declare const CryptoKey: CryptoKey
  */
 const privateRsaJwkKey: RsaImportableKey = {
   alg: 'RSA-OAEP-256',
-  d:
-    'XcAlS3OYtZ5F3BFGRQH5B8soiqstUk9JkH6_sUhBUfM7yjFpn3MQACtGgOKsFIO01KWCVl7Cn6E3c-MuuT3QqNQrUx8n-WrJU8qNpDOGJ5CVpG9-xTSQVNzRV92gj8g7-BIgehtzMmirXXNsb1XeTg9zsm3iptt9VyhplGqcgOdmm72sT1Z8ZmkagaElHSg0dR1ZNGgzSfTtRg_J1tTh7cmFb1LVz069o6cRaa5ueOPNKxmEslBdVWsDo9naxd_keLiqOOMIQp-KlLuQ-Zhn5fZyqxkRPGjTKZZHitgurzfWG4ERjjrYCbZsOjEt9Tj8FXXUB8bd3qRPy5UkN-XLEQ',
-  dp:
-    'V8QYdWm4OqWpfF_NPdCGr5eqztfHiQQn1NLmkvNO8c9dc2yNizZ4GxtNNEARYjgnLK0ROCoiK5yamtVDyjZ_zzZUvE0CG8iNRg1qvaOM8n_7B2YgmUs9rJ-QKK3HVEsi_M0x-hHeRl3ocAkNfby3__yt6s43FvyrccQh89WcAr0',
-  dq:
-    'NT5lrYlvkOwXIHl8P9AQm1nNL0RkHSrWahYlagRkyU3ELySlWr2laDxXzPnngpuBvyA98iq6Z2JTn8ArtXXvTqQk6BF6np6qqg1QNQxsQeU4Aj3xOMV9EGh57Zpa8Rs0jVydxBdlRW03Fr0UChHKxmT2kS0622gdlGQAs3YxMck',
+  d: 'XcAlS3OYtZ5F3BFGRQH5B8soiqstUk9JkH6_sUhBUfM7yjFpn3MQACtGgOKsFIO01KWCVl7Cn6E3c-MuuT3QqNQrUx8n-WrJU8qNpDOGJ5CVpG9-xTSQVNzRV92gj8g7-BIgehtzMmirXXNsb1XeTg9zsm3iptt9VyhplGqcgOdmm72sT1Z8ZmkagaElHSg0dR1ZNGgzSfTtRg_J1tTh7cmFb1LVz069o6cRaa5ueOPNKxmEslBdVWsDo9naxd_keLiqOOMIQp-KlLuQ-Zhn5fZyqxkRPGjTKZZHitgurzfWG4ERjjrYCbZsOjEt9Tj8FXXUB8bd3qRPy5UkN-XLEQ',
+  dp: 'V8QYdWm4OqWpfF_NPdCGr5eqztfHiQQn1NLmkvNO8c9dc2yNizZ4GxtNNEARYjgnLK0ROCoiK5yamtVDyjZ_zzZUvE0CG8iNRg1qvaOM8n_7B2YgmUs9rJ-QKK3HVEsi_M0x-hHeRl3ocAkNfby3__yt6s43FvyrccQh89WcAr0',
+  dq: 'NT5lrYlvkOwXIHl8P9AQm1nNL0RkHSrWahYlagRkyU3ELySlWr2laDxXzPnngpuBvyA98iq6Z2JTn8ArtXXvTqQk6BF6np6qqg1QNQxsQeU4Aj3xOMV9EGh57Zpa8Rs0jVydxBdlRW03Fr0UChHKxmT2kS0622gdlGQAs3YxMck',
   e: 'AQAB',
   ext: true,
   key_ops: ['unwrapKey'],
   kty: 'RSA',
-  n:
-    '6k_jrxg7mpz7CzgAr6eRqJr1VlvjJ9uQY71hadkDZkLLZHiMl7hz73lqq3w2MfHCa3Pf3BVo5TCXGYuxKOlPb7bH0WWpMeAzOKR_X27UqfA8MBVGb4YO5HXqw0jup8-I-Zi3CQAmP87uE6GDuh7xzeAcwpGD5xE0N74-uWq3YS92PFHCavtryx-ad9VGTgfAbkV3k1-RSxIiZjzbAt3exBAn5EjMfF6FMI70_HYqO-5xGv_aAPSa1OMc_buK5QACN7gmFwqHBzw98v93iyGUc4_XJNL-jPzKNP4AT1zMc6p6RxF3SYytNq7iXIjUmm-oY8fvCSmT1F13XKdzv7DLOw',
-  p:
-    '9dGuBwEDeOHFwJ_AQXHBWu53bv_L1_9lh2X-NEBO1B7YMhYWu2nMqXEvLpwvPqyBXwWnuPdfGqu6BHv22RDAF7Lu_oUshq-9dzSwFxaC5PQ2NwtHnz0-zwhEzCE3Qw9t63_OXX87gjp5vy6c5bvb3B9EbZU33Xf9nqVEJhzFreU',
-  q:
-    '9AQ0oYhctBbFuIu4jt1HBmqQGGAECbhQAMw324MX8pVUg6GOtF0X822iEsq7aIfY8u5nTWu1kKl6s84US1yII0sJmW2Jj722r5VYDIrxk5x_mLQ6jXmfuH2kl-Lvzo6aHIVkDLIK-IaPt5teSwG71QfAPDgR6drIAuSFnJZ2Ap8',
-  qi:
-    'mfoT9tmXPhLBanX5Mg76pO21NAXR1aAQ76tS1_hJZYxP8iZtmlEdvvAMIdSibvIt7Gfi60rBPnxqmmKuitJfzIVCd4sVLjIVEjT_njjLAzU-NTQdGugPCWWo8jB8NyeFy6nrZa_Hy52ijBn-Xt5G8pzvz5lF5gRfCe09y14oNeQ',
+  n: '6k_jrxg7mpz7CzgAr6eRqJr1VlvjJ9uQY71hadkDZkLLZHiMl7hz73lqq3w2MfHCa3Pf3BVo5TCXGYuxKOlPb7bH0WWpMeAzOKR_X27UqfA8MBVGb4YO5HXqw0jup8-I-Zi3CQAmP87uE6GDuh7xzeAcwpGD5xE0N74-uWq3YS92PFHCavtryx-ad9VGTgfAbkV3k1-RSxIiZjzbAt3exBAn5EjMfF6FMI70_HYqO-5xGv_aAPSa1OMc_buK5QACN7gmFwqHBzw98v93iyGUc4_XJNL-jPzKNP4AT1zMc6p6RxF3SYytNq7iXIjUmm-oY8fvCSmT1F13XKdzv7DLOw',
+  p: '9dGuBwEDeOHFwJ_AQXHBWu53bv_L1_9lh2X-NEBO1B7YMhYWu2nMqXEvLpwvPqyBXwWnuPdfGqu6BHv22RDAF7Lu_oUshq-9dzSwFxaC5PQ2NwtHnz0-zwhEzCE3Qw9t63_OXX87gjp5vy6c5bvb3B9EbZU33Xf9nqVEJhzFreU',
+  q: '9AQ0oYhctBbFuIu4jt1HBmqQGGAECbhQAMw324MX8pVUg6GOtF0X822iEsq7aIfY8u5nTWu1kKl6s84US1yII0sJmW2Jj722r5VYDIrxk5x_mLQ6jXmfuH2kl-Lvzo6aHIVkDLIK-IaPt5teSwG71QfAPDgR6drIAuSFnJZ2Ap8',
+  qi: 'mfoT9tmXPhLBanX5Mg76pO21NAXR1aAQ76tS1_hJZYxP8iZtmlEdvvAMIdSibvIt7Gfi60rBPnxqmmKuitJfzIVCd4sVLjIVEjT_njjLAzU-NTQdGugPCWWo8jB8NyeFy6nrZa_Hy52ijBn-Xt5G8pzvz5lF5gRfCe09y14oNeQ',
 }
 const publicRsaJwkKey: RsaImportableKey = {
   alg: 'RSA-OAEP-256',
@@ -54,8 +44,7 @@ const publicRsaJwkKey: RsaImportableKey = {
   ext: true,
   key_ops: ['wrapKey'],
   kty: 'RSA',
-  n:
-    '6k_jrxg7mpz7CzgAr6eRqJr1VlvjJ9uQY71hadkDZkLLZHiMl7hz73lqq3w2MfHCa3Pf3BVo5TCXGYuxKOlPb7bH0WWpMeAzOKR_X27UqfA8MBVGb4YO5HXqw0jup8-I-Zi3CQAmP87uE6GDuh7xzeAcwpGD5xE0N74-uWq3YS92PFHCavtryx-ad9VGTgfAbkV3k1-RSxIiZjzbAt3exBAn5EjMfF6FMI70_HYqO-5xGv_aAPSa1OMc_buK5QACN7gmFwqHBzw98v93iyGUc4_XJNL-jPzKNP4AT1zMc6p6RxF3SYytNq7iXIjUmm-oY8fvCSmT1F13XKdzv7DLOw',
+  n: '6k_jrxg7mpz7CzgAr6eRqJr1VlvjJ9uQY71hadkDZkLLZHiMl7hz73lqq3w2MfHCa3Pf3BVo5TCXGYuxKOlPb7bH0WWpMeAzOKR_X27UqfA8MBVGb4YO5HXqw0jup8-I-Zi3CQAmP87uE6GDuh7xzeAcwpGD5xE0N74-uWq3YS92PFHCavtryx-ad9VGTgfAbkV3k1-RSxIiZjzbAt3exBAn5EjMfF6FMI70_HYqO-5xGv_aAPSa1OMc_buK5QACN7gmFwqHBzw98v93iyGUc4_XJNL-jPzKNP4AT1zMc6p6RxF3SYytNq7iXIjUmm-oY8fvCSmT1F13XKdzv7DLOw',
 }
 
 describe('import CryptoKey helpers', () => {

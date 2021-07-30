@@ -1,0 +1,19 @@
+version: 0.2
+
+env:
+  variables:
+    NODE_OPTIONS: "--max-old-space-size=4096"
+    NPM_CONFIG_UNSAFE_PERM: true
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 14
+    commands:
+      - npm ci
+      - npm run build
+  build:
+    commands:
+      - npm run verdaccio-publish
+      - npm run verdaccio-node-decrypt
+      - npm run verdaccio-node-encrypt

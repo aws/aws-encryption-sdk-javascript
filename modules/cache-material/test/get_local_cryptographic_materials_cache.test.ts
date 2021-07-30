@@ -152,10 +152,8 @@ describe('getLocalCryptographicMaterialsCache', () => {
 
 describe('cache eviction', () => {
   it('putDecryptionMaterial can exceed capacity', () => {
-    const {
-      getDecryptionMaterial,
-      putDecryptionMaterial,
-    } = getLocalCryptographicMaterialsCache(1)
+    const { getDecryptionMaterial, putDecryptionMaterial } =
+      getLocalCryptographicMaterialsCache(1)
 
     const key1 = 'key lost'
     const key2 = 'key replace'
@@ -170,11 +168,8 @@ describe('cache eviction', () => {
   })
 
   it('putDecryptionMaterial can be deleted', () => {
-    const {
-      getDecryptionMaterial,
-      putDecryptionMaterial,
-      del,
-    } = getLocalCryptographicMaterialsCache(1)
+    const { getDecryptionMaterial, putDecryptionMaterial, del } =
+      getLocalCryptographicMaterialsCache(1)
 
     const key = 'key deleted'
     const response: any = decryptionMaterial
@@ -186,10 +181,8 @@ describe('cache eviction', () => {
   })
 
   it('putDecryptionMaterial can be garbage collected', async () => {
-    const {
-      getDecryptionMaterial,
-      putDecryptionMaterial,
-    } = getLocalCryptographicMaterialsCache(1, 10)
+    const { getDecryptionMaterial, putDecryptionMaterial } =
+      getLocalCryptographicMaterialsCache(1, 10)
 
     const key = 'key lost'
     const response: any = decryptionMaterial
@@ -201,10 +194,8 @@ describe('cache eviction', () => {
   })
 
   it('putEncryptionMaterial can exceed capacity', () => {
-    const {
-      getEncryptionMaterial,
-      putEncryptionMaterial,
-    } = getLocalCryptographicMaterialsCache(1)
+    const { getEncryptionMaterial, putEncryptionMaterial } =
+      getLocalCryptographicMaterialsCache(1)
 
     const key1 = 'key lost'
     const key2 = 'key replace'
@@ -219,11 +210,8 @@ describe('cache eviction', () => {
   })
 
   it('putEncryptionMaterial can be deleted', async () => {
-    const {
-      getEncryptionMaterial,
-      putEncryptionMaterial,
-      del,
-    } = getLocalCryptographicMaterialsCache(1, 10)
+    const { getEncryptionMaterial, putEncryptionMaterial, del } =
+      getLocalCryptographicMaterialsCache(1, 10)
 
     const key = 'key lost'
     const response: any = encryptionMaterial
@@ -235,10 +223,8 @@ describe('cache eviction', () => {
   })
 
   it('putEncryptionMaterial can be garbage collected', async () => {
-    const {
-      getEncryptionMaterial,
-      putEncryptionMaterial,
-    } = getLocalCryptographicMaterialsCache(1, 10)
+    const { getEncryptionMaterial, putEncryptionMaterial } =
+      getLocalCryptographicMaterialsCache(1, 10)
 
     const key = 'key lost'
     const response: any = encryptionMaterial

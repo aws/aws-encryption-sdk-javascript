@@ -12,7 +12,7 @@ import {
   AesKeyInfo,
   RSAKey,
   RsaKeyInfo,
-} from '../src/types'
+} from '@aws-crypto/integration-vectors'
 
 const kmsKey: KMSKey = {
   encrypt: true,
@@ -59,6 +59,7 @@ const rsaInfo: RsaKeyInfo = {
   'provider-id': 'aws-raw-vectors-persistant',
   'encryption-algorithm': 'rsa',
   'padding-algorithm': 'pkcs1',
+  'padding-hash': 'sha1',
 }
 
 describe('how to build keyrings', () => {

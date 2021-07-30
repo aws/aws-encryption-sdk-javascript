@@ -19,6 +19,8 @@ export {
   TagLength,
   CommitmentPolicy,
   CommitmentPolicySuites,
+  SignaturePolicy,
+  SignaturePolicySuites,
   MessageFormat,
   NonCommittingAlgorithmSuiteIdentifier,
   CommittingAlgorithmSuiteIdentifier,
@@ -27,9 +29,13 @@ export {
 export { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 export { NodeAlgorithmSuite } from './node_algorithms'
 
-export { Keyring, KeyringNode, KeyringWebCrypto } from './keyring'
+export * from './keyring'
 export { KeyringTrace, KeyringTraceFlag } from './keyring_trace'
-export { MultiKeyringNode, MultiKeyringWebCrypto } from './multi_keyring'
+export {
+  MultiKeyringNode,
+  MultiKeyringWebCrypto,
+  MultiKeyring,
+} from './multi_keyring'
 export * from './materials_manager'
 
 export {

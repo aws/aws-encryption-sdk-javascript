@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/caching-materials-manager-node",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -23,10 +23,10 @@
     "tslib": "^2.2.0"
   },
   "sideEffects": false,
-  "main": "./build/main/index.js",
-  "module": "./build/module/index.js",
-  "types": "./build/main/index.d.ts",
+  "main": "./build/main/src/index.js",
+  "module": "./build/module/src/index.js",
+  "types": "./build/main/src/index.d.ts",
   "files": [
-    "build/**/*"
+    "build/**/src/*"
   ]
 }

@@ -1,0 +1,37 @@
+{
+  "name": "@aws-crypto/integration-vectors",
+  "version": "3.0.0",
+  "scripts": {
+    "build": "tsc -b tsconfig.json",
+    "lint": "run-s lint-*",
+    "lint-eslint": "eslint src/*.ts test/**/*.ts",
+    "lint-prettier": "prettier -c src/*.ts test/**/*.ts",
+    "mocha": "mocha --require source-map-support/register --require ts-node/register test/*test.ts",
+    "test": "npm run lint && npm run build && node ./build/main/index.js && npm run mocha"
+  },
+  "dependencies": {
+    "@aws-crypto/material-management": "file:../material-management",
+    "@types/stream-to-promise": "^2.2.0",
+    "@types/yauzl": "^2.9.1",
+    "stream-to-promise": "^3.0.0",
+    "tslib": "^2.3.0",
+    "yauzl": "^2.10.0"
+  },
+  "sideEffects": false,
+  "main": "./build/main/src/index.js",
+  "types": "./build/main/src/index.d.ts",
+  "files": [
+    "build/**/src/*"
+  ],
+  "description": "This repository is for compatibility tests with the other versions of the AWS Encryption SDKs.",
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [],
+  "author": {
+    "name": "AWS Crypto Tools Team",
+    "email": "aws-cryptools@amazon.com",
+    "url": "https://aws.amazon.com/javascript/"
+  },
+  "license": "Apache-2.0"
+}

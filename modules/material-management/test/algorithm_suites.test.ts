@@ -5,11 +5,14 @@
 
 import { expect } from 'chai'
 import {
-  AlgorithmSuiteIdentifier,
   AlgorithmSuite,
-  CommittingAlgorithmSuiteIdentifier,
-  CommitmentPolicySuites,
+  AlgorithmSuiteIdentifier,
   CommitmentPolicy,
+  CommitmentPolicySuites,
+  CommittingAlgorithmSuiteIdentifier,
+  NonSigningAlgorithmSuiteIdentifier,
+  SignaturePolicy,
+  SignaturePolicySuites,
 } from '../src/algorithm_suites'
 
 describe('AlgorithmSuiteIdentifier', () => {
@@ -108,6 +111,81 @@ describe('CommitmentPolicySuites', () => {
         'fake_policy' as any,
         test,
         'messageID'
+      )
+    ).to.throw('Configuration conflict. Cannot process message with ID')
+  })
+})
+
+describe('SignaturePolicySuites', () => {
+  class Test extends AlgorithmSuite {}
+  const messageId = 'messageId'
+  describe('handles signing suites correctly', () => {
+    const test = new Test({
+      id: AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256,
+    } as any)
+    it('isDecryptEnabled allows Signing suites for decrypting with policy ALLOW_DECRYPT', () => {
+      expect(() =>
+        SignaturePolicySuites.isDecryptEnabled(
+          SignaturePolicy.ALLOW_ENCRYPT_ALLOW_DECRYPT,
+          test,
+          messageId
+        )
+      ).to.not.throw()
+    })
+
+    it('isDecryptEnabled forbids Signing suites for decrypting with policy FORBID_DECRYPT', () => {
+      expect(() =>
+        SignaturePolicySuites.isDecryptEnabled(
+          SignaturePolicy.ALLOW_ENCRYPT_FORBID_DECRYPT,
+          test,
+          messageId
+        )
+      ).to.throw('Configuration conflict. Cannot process message with ID')
+    })
+  })
+
+  describe('handles non-signing suites correctly', () => {
+    const test = new Test({
+      id: AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16,
+    } as any)
+    //TODO: Get Robin or Alex Chew to validate this correct... it seems off to me...
+    it('isDecryptEnabled allows non-signing suite for decrypting with policy ALLOW_DECRYPT', () => {
+      expect(() =>
+        SignaturePolicySuites.isDecryptEnabled(
+          SignaturePolicy.ALLOW_ENCRYPT_ALLOW_DECRYPT,
+          test,
+          messageId
+        )
+      ).to.not.throw()
+    })
+
+    it('isDecryptEnabled allows non-signing suites for decrypting with policy FORBID_DECRYPT', () => {
+      expect(() =>
+        SignaturePolicySuites.isDecryptEnabled(
+          SignaturePolicy.ALLOW_ENCRYPT_FORBID_DECRYPT,
+          test,
+          messageId
+        )
+      ).to.not.throw()
+    })
+  })
+
+  it('Precondition: Only handle DecryptionMaterial for algorithm suites supported in signaturePolicy.', () => {
+    const testCommitmentPolicySuites = {
+      isDecryptEnabled: SignaturePolicySuites.isDecryptEnabled,
+      fake_policy: {
+        decryptEnabledSuites: NonSigningAlgorithmSuiteIdentifier,
+      },
+    }
+
+    const test = new Test({
+      id: AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256,
+    } as any)
+    expect(() =>
+      testCommitmentPolicySuites.isDecryptEnabled(
+        'fake_policy' as any,
+        test,
+        messageId
       )
     ).to.throw('Configuration conflict. Cannot process message with ID')
   })

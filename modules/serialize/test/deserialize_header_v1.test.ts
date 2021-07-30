@@ -116,7 +116,8 @@ describe('deserializeFactory:deserializeMessageHeader', () => {
       deserializeEncryptedDataKeys,
       SdkSuite: WebCryptoAlgorithmSuite,
     })
-    const zeroByteEncryptionContextMessageHeader = fixtures.zeroByteEncryptionContextMessageHeader()
+    const zeroByteEncryptionContextMessageHeader =
+      fixtures.zeroByteEncryptionContextMessageHeader()
     const headerIv = new Uint8Array(12).fill(1)
     const headerAuthTag = new Uint8Array(16).fill(2)
     const buffer = concatBuffers(
@@ -189,7 +190,8 @@ describe('deserializeFactory:deserializeMessageHeader', () => {
       deserializeEncryptedDataKeys,
       SdkSuite: WebCryptoAlgorithmSuite,
     })
-    const zeroByteEncryptionContextMessageHeader = fixtures.zeroByteEncryptionContextMessageHeader()
+    const zeroByteEncryptionContextMessageHeader =
+      fixtures.zeroByteEncryptionContextMessageHeader()
     const headerIv = new Uint8Array(12).fill(1)
     const headerAuthTag = new Uint8Array(16).fill(2)
     const buffer = concatBuffers(
@@ -325,7 +327,8 @@ describe('deserializeFactory:deserializeMessageHeader', () => {
       deserializeEncryptedDataKeys,
       SdkSuite: WebCryptoAlgorithmSuite,
     })
-    const reservedBytesNoZeroMessageHeader = fixtures.reservedBytesNoZeroMessageHeader()
+    const reservedBytesNoZeroMessageHeader =
+      fixtures.reservedBytesNoZeroMessageHeader()
     const headerIv = new Uint8Array(12).fill(1)
     const headerAuthTag = new Uint8Array(16).fill(2)
     const buffer = concatBuffers(
@@ -342,7 +345,8 @@ describe('deserializeFactory:deserializeMessageHeader', () => {
       deserializeEncryptedDataKeys,
       SdkSuite: WebCryptoAlgorithmSuite,
     })
-    const reservedBytesNoZeroMessageHeader = fixtures.ivLengthMismatchMessageHeader()
+    const reservedBytesNoZeroMessageHeader =
+      fixtures.ivLengthMismatchMessageHeader()
     const headerIv = new Uint8Array(12).fill(1)
     const headerAuthTag = new Uint8Array(16).fill(2)
     const buffer = concatBuffers(
@@ -351,5 +355,19 @@ describe('deserializeFactory:deserializeMessageHeader', () => {
       headerAuthTag
     )
     expect(() => deserializeMessageHeader(buffer)).to.throw('Malformed Header')
+  })
+
+  it('plumbs maxEncryptedDataKeys through', () => {
+    const deserializeMessageHeader = deserializeHeaderV1Factory({
+      decodeEncryptionContext,
+      deserializeEncryptedDataKeys,
+      SdkSuite: WebCryptoAlgorithmSuite,
+    })
+
+    expect(() =>
+      deserializeMessageHeader(fixtures.threeEdksMessagePartialHeaderV1(), {
+        maxEncryptedDataKeys: 1,
+      })
+    ).to.throw('maxEncryptedDataKeys exceeded.')
   })
 })

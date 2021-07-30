@@ -4,6 +4,7 @@
 /* eslint-env mocha */
 
 import * as chai from 'chai'
+// @ts-ignore
 import chaiAsPromised from 'chai-as-promised'
 import { buildDecrypt } from '../src/index'
 import { _decrypt } from '../src/decrypt'
@@ -44,14 +45,34 @@ describe('decrypt', () => {
 
   it('Precondition: _decrypt needs a valid commitmentPolicy.', async () => {
     await expect(
-      _decrypt('fake_policy' as any, {} as any, {} as any)
+      _decrypt(
+        { commitmentPolicy: 'fake_policy' as any, maxEncryptedDataKeys: false },
+        {} as any,
+        {} as any
+      )
     ).to.rejectedWith(Error, 'Invalid commitment policy.')
+  })
+
+  it('Precondition: _decrypt needs a valid maxEncryptedDataKeys.', async () => {
+    await expect(
+      _decrypt(
+        {
+          commitmentPolicy: CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
+          maxEncryptedDataKeys: 0,
+        },
+        {} as any,
+        {} as any
+      )
+    ).to.rejectedWith(Error, 'Invalid maxEncryptedDataKeys value.')
   })
 
   it('Precondition: The parsed header algorithmSuite in _decrypt must be supported by the commitmentPolicy.', async () => {
     await expect(
       _decrypt(
-        CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
+        {
+          commitmentPolicy: CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
+          maxEncryptedDataKeys: false,
+        },
         fixtures.decryptKeyring(),
         fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384With4Frames()
       )
@@ -74,7 +95,10 @@ describe('decrypt', () => {
     } as any
     await expect(
       _decrypt(
-        CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
+        {
+          commitmentPolicy: CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
+          maxEncryptedDataKeys: false,
+        },
         cmm,
         fromBase64(fixtures.compatibilityVectors().tests[0].ciphertext)
       )
@@ -129,7 +153,8 @@ describe('decrypt', () => {
   })
 
   it('verify incomplete chipertext will fail for a signed algorithm suite', async () => {
-    const data = fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384With4Frames()
+    const data =
+      fixtures.base64CiphertextAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384With4Frames()
     const keyring = fixtures.decryptKeyring()
 
     // First we make sure that the test vector is well formed
@@ -141,6 +166,40 @@ describe('decrypt', () => {
     for (let i = 0; data.byteLength > i; i++) {
       await expect(decrypt(keyring, data.slice(0, i))).to.rejectedWith(Error)
     }
+  })
+
+  it('can decrypt data with less than maxEncryptedDataKeys', async () => {
+    const { decrypt } = buildDecrypt({
+      commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      maxEncryptedDataKeys: 3,
+    })
+    const { plaintext } = await decrypt(
+      fixtures.decryptKeyring(),
+      fixtures.twoEdksMessage()
+    )
+    expect(plaintext).to.deep.equal(Buffer.from('asdf'))
+  })
+
+  it('can decrypt data with exactly maxEncryptedDataKeys', async () => {
+    const { decrypt } = buildDecrypt({
+      commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      maxEncryptedDataKeys: 3,
+    })
+    const { plaintext } = await decrypt(
+      fixtures.decryptKeyring(),
+      fixtures.threeEdksMessage()
+    )
+    expect(plaintext).to.deep.equal(Buffer.from('asdf'))
+  })
+
+  it('will not decrypt data with more than maxEncryptedDataKeys', async () => {
+    const { decrypt } = buildDecrypt({
+      commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      maxEncryptedDataKeys: 3,
+    })
+    await expect(
+      decrypt(fixtures.decryptKeyring(), fixtures.fourEdksMessage())
+    ).to.rejectedWith(Error, 'maxEncryptedDataKeys exceeded.')
   })
 })
 

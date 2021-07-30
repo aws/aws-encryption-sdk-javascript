@@ -78,7 +78,8 @@ const cli = yargs
     },
   })
   .demandCommand()
-const fixtures = join(__dirname, '../../fixtures')
+// This path needs to agree with the path in `karma.conf.js`
+const fixtures = join(__dirname, '../../../fixtures')
 /* Sad side effect. */
 if (!existsSync(fixtures)) {
   mkdirSync(fixtures)
@@ -91,7 +92,7 @@ if (!existsSync(fixtures)) {
     slice,
     karma,
     concurrency,
-  } = argv
+  } = await argv
 
   writeFileSync(`${fixtures}/decrypt_tests.json`, JSON.stringify([]))
   writeFileSync(`${fixtures}/encrypt_tests.json`, JSON.stringify([]))
@@ -99,13 +100,13 @@ if (!existsSync(fixtures)) {
 
   if (command === 'decrypt') {
     // It is not clear how to get yargs/typescript to play nicely with sub commands
-    const { vectorFile } = (argv as unknown) as { vectorFile: string }
+    const { vectorFile } = argv as unknown as { vectorFile: string }
     if (!existsSync(vectorFile))
       throw new Error(`No file found at ${vectorFile}`)
     await buildDecryptFixtures(fixtures, vectorFile as string, testName, slice)
   } else if (command === 'encrypt') {
     // It is not clear how to get yargs/typescript to play nicely with sub commands
-    const { manifestFile, keyFile, decryptOracle } = (argv as unknown) as {
+    const { manifestFile, keyFile, decryptOracle } = argv as unknown as {
       manifestFile: string
       keyFile: string
       decryptOracle: string

@@ -2,12 +2,17 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { open, Entry, ZipFile } from 'yauzl'
 import streamToPromise from 'stream-to-promise'
 import { writeFileSync } from 'fs'
-import { Readable } from 'stream'
-
-import { DecryptManifestList } from './types'
+import {
+  parseDecryptionFiles,
+  readUriOnce,
+  centralDirectory,
+  StreamEntry,
+  DecryptTest,
+  KeyInfoTuple,
+  DecryptionFixture,
+} from '@aws-crypto/integration-vectors'
 
 /* This function interacts with manifest information
  * and produces the fixtures in the `fixtures`
@@ -21,33 +26,15 @@ export async function buildDecryptFixtures(
   vectorFile: string,
   testName?: string,
   slice?: string
-) {
+): Promise<void> {
   const [start = 0, end = 9999] = (slice || '')
     .split(':')
     .map((n) => parseInt(n, 10))
 
-  const filesMap = await centralDirectory(vectorFile)
+  const filesMap: Map<string, StreamEntry> = await centralDirectory(vectorFile)
 
-  const readUriOnce = (() => {
-    const cache = new Map()
-    return async (uri: string) => {
-      const has = cache.get(uri)
-      if (has) return has
-      const fileInfo = filesMap.get(uri)
-      if (!fileInfo) throw new Error(`${uri} does not exist`)
-      const buffer = await streamToPromise(await fileInfo.stream())
-      cache.set(uri, buffer)
-      return buffer
-    }
-  })()
-
-  const manifestBuffer = await readUriOnce('file://manifest.json')
-  const { keys: keysFile, tests }: DecryptManifestList = JSON.parse(
-    manifestBuffer.toString('utf8')
-  )
-  const keysBuffer = await readUriOnce(keysFile)
-  const { keys } = JSON.parse(keysBuffer.toString('utf8'))
-  const testNames = []
+  const { tests, keys } = await parseDecryptionFiles(filesMap)
+  const testNames: string[] = []
   let count = 0
 
   for (const [name, testInfo] of Object.entries(tests)) {
@@ -62,78 +49,63 @@ export async function buildDecryptFixtures(
       if (count > end) continue
     }
 
-    testNames.push(name)
-
     const {
-      plaintext: plaintextFile,
+      result,
+      description,
       ciphertext,
       'master-keys': masterKeys,
-    } = testInfo
-    const plainTextInfo = filesMap.get(plaintextFile)
-    const cipherInfo = filesMap.get(ciphertext)
-    if (!cipherInfo || !plainTextInfo)
-      throw new Error(`no file for ${name}: ${ciphertext} | ${plaintextFile}`)
+      'decryption-method': decryptionMethod,
+    }: DecryptTest = testInfo
 
+    if (decryptionMethod == 'streaming-unsigned-only') {
+      // We don't have streaming in the browser so this test is not supported
+      continue
+    }
+
+    testNames.push(name)
+
+    let resultContent: { plainText: string } | { errorDescription: string }
+
+    if ('output' in result) {
+      const plainTextInfo = filesMap.get(result.output.plaintext)
+      if (!plainTextInfo)
+        throw new Error(
+          `no plaintext file for ${name}: ${result.output.plaintext}`
+        )
+      const plainTextBuffer = await readUriOnce(
+        `file://${plainTextInfo.fileName}`,
+        filesMap
+      )
+      resultContent = {
+        plainText: plainTextBuffer.toString('base64'),
+      }
+    } else {
+      resultContent = { errorDescription: result.error['error-description'] }
+    }
+
+    const cipherInfo = filesMap.get(ciphertext)
+    if (!cipherInfo) throw new Error(`no file for ${name}: ${ciphertext}`)
     const cipherText = await streamToPromise(await cipherInfo.stream())
-    const plainText = await readUriOnce(`file://${plainTextInfo.fileName}`)
+
     const keysInfo = masterKeys.map((keyInfo) => {
+      if (keyInfo.type === 'aws-kms-mrk-aware-discovery') {
+        return [keyInfo] as KeyInfoTuple
+      }
       const key = keys[keyInfo.key]
       if (!key) throw new Error(`no key for ${name}`)
-      return [keyInfo, key]
+      return [keyInfo, key] as KeyInfoTuple
     })
-
-    const test = JSON.stringify({
+    const test: DecryptionFixture = {
       name,
+      description,
       keysInfo,
       cipherFile: cipherInfo.fileName,
       cipherText: cipherText.toString('base64'),
-      plainText: plainText.toString('base64'),
-    })
+      result: resultContent,
+    }
 
-    writeFileSync(`${fixtures}/${name}.json`, test)
+    writeFileSync(`${fixtures}/${name}.json`, JSON.stringify(test))
   }
 
   writeFileSync(`${fixtures}/decrypt_tests.json`, JSON.stringify(testNames))
-}
-
-interface StreamEntry extends Entry {
-  stream: () => Promise<Readable>
-}
-
-async function centralDirectory(
-  vectorFile: string
-): Promise<Map<string, StreamEntry>> {
-  const filesMap = new Map<string, StreamEntry>()
-  return new Promise((resolve, reject) => {
-    open(
-      vectorFile,
-      { lazyEntries: true, autoClose: false },
-      (err, zipfile) => {
-        if (err || !zipfile) return reject(err)
-
-        zipfile
-          .on('entry', (entry: StreamEntry) => {
-            entry.stream = curryStream(zipfile, entry)
-            filesMap.set(`file://${entry.fileName}`, entry)
-            zipfile.readEntry()
-          })
-          .on('end', () => {
-            resolve(filesMap)
-          })
-          .on('error', (err) => reject(err))
-          .readEntry()
-      }
-    )
-  })
-}
-
-function curryStream(zipfile: ZipFile, entry: Entry) {
-  return async function stream(): Promise<Readable> {
-    return new Promise((resolve, reject) => {
-      zipfile.openReadStream(entry, (err, readStream) => {
-        if (err || !readStream) return reject(err)
-        resolve(readStream)
-      })
-    })
-  }
 }

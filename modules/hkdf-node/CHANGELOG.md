@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.0.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v2.4.0...v3.0.0) (2021-07-14)
+
+**Note:** Version bump only for package @aws-crypto/hkdf-node
+
+
+
+
+
+# [2.4.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v2.3.1...v2.4.0) (2021-07-13)
+
+**Note:** Version bump only for package @aws-crypto/hkdf-node
+
+
+
+
+
+# [2.2.0](https://github.com/aws/private-aws-encryption-sdk-javascript-staging/compare/@aws-crypto/hkdf-node@1.0.3...@aws-crypto/hkdf-node@2.2.0) (2021-05-27)
+
+**Note:** Version bump only for package @aws-crypto/hkdf-node
+
+
+
+
+
 ## [1.0.3](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/hkdf-node@1.0.2...@aws-crypto/hkdf-node@1.0.3) (2020-05-26)
 
 **Note:** Version bump only for package @aws-crypto/hkdf-node

@@ -11,6 +11,7 @@
  */
 
 import { EncryptedDataKey, needs } from '@aws-crypto/material-management'
+import { DeserializeOptions } from './types'
 import { readElements } from './read_element'
 
 // To deal with Browser and Node.js I inject a function to handle utf8 encoding.
@@ -23,10 +24,14 @@ export function deserializeEncryptedDataKeysFactory(
    * Exported for testing.  Used by deserializeMessageHeader to compose a complete solution.
    * @param buffer Uint8Array
    * @param startPos number
+   * @param deserializeOptions DeserializeOptions
    */
   function deserializeEncryptedDataKeys(
     buffer: Uint8Array,
-    startPos: number
+    startPos: number,
+    { maxEncryptedDataKeys }: DeserializeOptions = {
+      maxEncryptedDataKeys: false,
+    }
   ):
     | { encryptedDataKeys: ReadonlyArray<EncryptedDataKey>; readPos: number }
     | false {
@@ -34,6 +39,12 @@ export function deserializeEncryptedDataKeysFactory(
     needs(
       buffer.byteLength >= startPos && startPos >= 0,
       'startPos out of bounds.'
+    )
+
+    /* Precondition: deserializeEncryptedDataKeys needs a valid maxEncryptedDataKeys. */
+    needs(
+      maxEncryptedDataKeys === false || maxEncryptedDataKeys >= 1,
+      'Invalid maxEncryptedDataKeys value.'
     )
 
     /* Check for early return (Postcondition): Need to have at least Uint16 (2) bytes of data. */
@@ -54,6 +65,13 @@ export function deserializeEncryptedDataKeysFactory(
 
     /* Precondition: There must be at least 1 EncryptedDataKey element. */
     needs(encryptedDataKeysCount, 'No EncryptedDataKey found.')
+
+    /* Precondition: encryptedDataKeysCount must not exceed maxEncryptedDataKeys. */
+    needs(
+      maxEncryptedDataKeys === false ||
+        encryptedDataKeysCount <= maxEncryptedDataKeys,
+      'maxEncryptedDataKeys exceeded.'
+    )
 
     const elementInfo = readElements(
       encryptedDataKeysCount,

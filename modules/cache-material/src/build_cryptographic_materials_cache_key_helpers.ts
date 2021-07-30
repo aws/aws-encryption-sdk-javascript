@@ -21,10 +21,8 @@ export function buildCryptographicMaterialsCacheKeyHelpers<
   toUtf8: (input: Uint8Array) => string,
   sha512: (...data: (Uint8Array | string)[]) => Promise<Uint8Array>
 ): CryptographicMaterialsCacheKeyHelpersInterface<S> {
-  const {
-    serializeEncryptionContext,
-    serializeEncryptedDataKey,
-  } = serializeFactory(fromUtf8)
+  const { serializeEncryptionContext, serializeEncryptedDataKey } =
+    serializeFactory(fromUtf8)
 
   return {
     buildEncryptionMaterialCacheKey,

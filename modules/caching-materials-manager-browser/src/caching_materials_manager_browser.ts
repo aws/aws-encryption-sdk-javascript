@@ -31,13 +31,14 @@ const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(
 )
 
 export class WebCryptoCachingMaterialsManager
-  implements CachingMaterialsManager<WebCryptoAlgorithmSuite> {
-  readonly _cache!: CryptographicMaterialsCache<WebCryptoAlgorithmSuite>
-  readonly _backingMaterialsManager!: WebCryptoMaterialsManager
-  readonly _partition!: string
-  readonly _maxBytesEncrypted!: number
-  readonly _maxMessagesEncrypted!: number
-  readonly _maxAge!: number
+  implements CachingMaterialsManager<WebCryptoAlgorithmSuite>
+{
+  declare readonly _cache: CryptographicMaterialsCache<WebCryptoAlgorithmSuite>
+  declare readonly _backingMaterialsManager: WebCryptoMaterialsManager
+  declare readonly _partition: string
+  declare readonly _maxBytesEncrypted: number
+  declare readonly _maxMessagesEncrypted: number
+  declare readonly _maxAge: number
 
   constructor(input: CachingMaterialsManagerInput<WebCryptoAlgorithmSuite>) {
     const backingMaterialsManager =
@@ -60,11 +61,10 @@ export class WebCryptoCachingMaterialsManager
     })
   }
 
-  getEncryptionMaterials: WebCryptoGetEncryptionMaterials = getEncryptionMaterials<WebCryptoAlgorithmSuite>(
-    cacheKeyHelpers
-  )
-  decryptMaterials: WebCryptoGetDecryptMaterials = decryptMaterials<WebCryptoAlgorithmSuite>(
-    cacheKeyHelpers
-  )
-  _cacheEntryHasExceededLimits = cacheEntryHasExceededLimits<WebCryptoAlgorithmSuite>()
+  getEncryptionMaterials: WebCryptoGetEncryptionMaterials =
+    getEncryptionMaterials<WebCryptoAlgorithmSuite>(cacheKeyHelpers)
+  decryptMaterials: WebCryptoGetDecryptMaterials =
+    decryptMaterials<WebCryptoAlgorithmSuite>(cacheKeyHelpers)
+  _cacheEntryHasExceededLimits =
+    cacheEntryHasExceededLimits<WebCryptoAlgorithmSuite>()
 }

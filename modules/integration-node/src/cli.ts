@@ -84,7 +84,7 @@ const cli = yargs
   /* I set the result to 1 so that if I fall through the exit condition is a failure */
   let result = 1
   if (command === 'decrypt') {
-    const { vectorFile } = (argv as unknown) as { vectorFile: string }
+    const { vectorFile } = argv as unknown as { vectorFile: string }
     result = await integrationDecryptTestVectors(
       vectorFile,
       tolerateFailures,
@@ -92,7 +92,7 @@ const cli = yargs
       concurrency
     )
   } else if (command === 'encrypt') {
-    const { manifestFile, keyFile, decryptOracle } = (argv as unknown) as {
+    const { manifestFile, keyFile, decryptOracle } = argv as unknown as {
       manifestFile: string
       keyFile: string
       decryptOracle: string

@@ -9,13 +9,8 @@
 // this _can_ be done from bash or shell,
 // but now the portability problems loom large.
 
-const { spawn, execSync } = require('child_process')
+const { spawn } = require('child_process')
 const pipeStdIo = { stdio: [process.stdin, process.stdout, process.stderr] }
-
-// Always clear storage so the latest versions are published
-// I am not worried about _what_ version number is published
-// Only that it is the latest code
-execSync('rm -rf verdaccio/.npx')
 
 // I am assuming that you used `local_verdaccio_publish`
 // But either way,
@@ -29,13 +24,17 @@ const verdaccio = spawn('npx', ['verdaccio', '-c', 'verdaccio/config.yaml'], pip
 
 const args = [
   '--userconfig', 'verdaccio/npmrc',
-  '--ignore-existing',
-  '--cache', 'verdaccio/.npx',
-  // This is **very** important,
+  // In npx v6 ignore-existing let you install the latest version
+  // regardless of what was installed locally.
+  // In npx v7 this is disable and if you need to install anything
+  // then --yes is *required*
+  '--ignore-existing', '--yes',
+  // This is **very** important, (npx ~v6)
   // without this, npx may mask error codes.
   // In testing it was possible to have errors in the npx command
   // but the spawned process here did not exit with a non-zero exit code.
   // See `execCommand` in `libnpx` for specifics
+  // In npx v7 this option is deprecated
   '--always-spawn',
   // Yes, this is dangerous.
   // But I'm trying to replicate _just running npx_
@@ -44,6 +43,8 @@ const args = [
 ]
 
 spawn('npx', args, {
+    // npx v7 will *not* install from any repository if any version exists locally.
+    cwd: 'verdaccio/integration',
     // This instance of npx needs to target the verdaccio server
     // so the env var that governs this needs to be updated.
     // it is _possible_ for this value to already be set.

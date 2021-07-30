@@ -1,9 +1,8 @@
 {
-  "lerna": "3.13.3",
   "packages": [
     "modules/*"
   ],
-  "version": "independent",
+  "version": "3.0.0",
   "command": {
     "bootstrap": {
       "nohoist": [

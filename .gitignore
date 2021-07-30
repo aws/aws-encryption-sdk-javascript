@@ -37,6 +37,13 @@ package.json.decrypt
 
 # verdaccio
 /verdaccio/storage
+/storage
 
 # local npx cache
 /verdaccio/.npx
+/specification_compliance_report.html
+
+# These version files are build by genversion
+# they track the package.json version
+/modules/kms-keyring-browser/src/version.ts
+/modules/kms-keyring-node/src/version.ts

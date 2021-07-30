@@ -29,10 +29,14 @@ import {
 } from '@aws-crypto/web-crypto-backend'
 import { fromBase64, toBase64 } from '@aws-sdk/util-base64-browser'
 
-export type WebCryptoEncryptionRequest = EncryptionRequest<WebCryptoAlgorithmSuite>
-export type WebCryptoDecryptionRequest = DecryptionRequest<WebCryptoAlgorithmSuite>
-export type WebCryptoGetEncryptionMaterials = GetEncryptionMaterials<WebCryptoAlgorithmSuite>
-export type WebCryptoGetDecryptMaterials = GetDecryptMaterials<WebCryptoAlgorithmSuite>
+export type WebCryptoEncryptionRequest =
+  EncryptionRequest<WebCryptoAlgorithmSuite>
+export type WebCryptoDecryptionRequest =
+  DecryptionRequest<WebCryptoAlgorithmSuite>
+export type WebCryptoGetEncryptionMaterials =
+  GetEncryptionMaterials<WebCryptoAlgorithmSuite>
+export type WebCryptoGetDecryptMaterials =
+  GetDecryptMaterials<WebCryptoAlgorithmSuite>
 
 /**
  * The WebCryptoDefaultCryptographicMaterialsManager is a specific implementation of the CryptographicMaterialsManager.
@@ -40,8 +44,9 @@ export type WebCryptoGetDecryptMaterials = GetDecryptMaterials<WebCryptoAlgorith
  * Users should never need to create an instance of a WebCryptoDefaultCryptographicMaterialsManager.
  */
 export class WebCryptoDefaultCryptographicMaterialsManager
-  implements WebCryptoMaterialsManager {
-  readonly keyring!: KeyringWebCrypto
+  implements WebCryptoMaterialsManager
+{
+  declare readonly keyring: KeyringWebCrypto
   constructor(keyring: KeyringWebCrypto) {
     /* Precondition: keyrings must be a KeyringWebCrypto. */
     needs(keyring instanceof KeyringWebCrypto, 'Unsupported type.')
@@ -156,8 +161,18 @@ export class WebCryptoDefaultCryptographicMaterialsManager
     const { signatureCurve: namedCurve } = suite
 
     /* Check for early return (Postcondition): The WebCryptoAlgorithmSuite specification must support a signatureCurve to extract a verification key. */
-    if (!namedCurve)
+    if (!namedCurve) {
+      /* Precondition: The context must not contain a public key for a non-signing algorithm suite. */
+      needs(
+        !Object.prototype.hasOwnProperty.call(
+          encryptionContext,
+          ENCODED_SIGNER_KEY
+        ),
+        'Encryption context contains public verification key for unsigned algorithm suite.'
+      )
+
       return new WebCryptoDecryptionMaterial(suite, encryptionContext)
+    }
 
     /* Precondition: WebCryptoDefaultCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist. */
     if (!encryptionContext)

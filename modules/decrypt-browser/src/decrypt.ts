@@ -11,6 +11,7 @@ import {
   WebCryptoMaterialsManager,
   CommitmentPolicy,
   CommitmentPolicySuites,
+  ClientOptions,
 } from '@aws-crypto/material-management-browser'
 import {
   deserializeSignature,
@@ -34,12 +35,19 @@ export interface DecryptResult {
 }
 
 export async function _decrypt(
-  commitmentPolicy: CommitmentPolicy,
+  { commitmentPolicy, maxEncryptedDataKeys }: ClientOptions,
   cmm: KeyringWebCrypto | WebCryptoMaterialsManager,
   ciphertext: Uint8Array
 ): Promise<DecryptResult> {
   /* Precondition: _decrypt needs a valid commitmentPolicy. */
   needs(CommitmentPolicy[commitmentPolicy], 'Invalid commitment policy.')
+
+  // buildDecrypt defaults this to false for backwards compatibility, so this is satisfied
+  /* Precondition: _decrypt needs a valid maxEncryptedDataKeys. */
+  needs(
+    maxEncryptedDataKeys === false || maxEncryptedDataKeys >= 1,
+    'Invalid maxEncryptedDataKeys value.'
+  )
 
   /* If the cmm is a Keyring, wrap it with WebCryptoDefaultCryptographicMaterialsManager. */
   cmm =
@@ -47,17 +55,15 @@ export async function _decrypt(
       ? new WebCryptoDefaultCryptographicMaterialsManager(cmm)
       : cmm
 
-  const headerInfo = deserialize.deserializeMessageHeader(ciphertext)
+  const headerInfo = deserialize.deserializeMessageHeader(ciphertext, {
+    maxEncryptedDataKeys,
+  })
   if (headerInfo === false) throw new Error('Unable to parse Header')
   const { messageHeader, algorithmSuite } = headerInfo
   const { rawHeader, headerAuth } = headerInfo
   const { headerIv, headerAuthTag } = headerAuth
-  const {
-    encryptionContext,
-    encryptedDataKeys,
-    suiteId,
-    messageId,
-  } = messageHeader
+  const { encryptionContext, encryptedDataKeys, suiteId, messageId } =
+    messageHeader
 
   // Very quick hex string
   const messageIdStr = [...messageId]

@@ -5,13 +5,14 @@
 
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { KmsKeyringClass, KeyRingConstructible } from '../src/kms_keyring'
+import { KmsKeyringClass } from '../src/kms_keyring'
 import {
   NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier,
   NodeEncryptionMaterial,
   KeyringTraceFlag,
   Keyring,
+  Newable,
 } from '@aws-crypto/material-management'
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -50,7 +51,7 @@ describe('KmsKeyring: _onEncrypt', () => {
       }
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({
@@ -116,7 +117,7 @@ describe('KmsKeyring: _onEncrypt', () => {
       return false
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({
@@ -149,7 +150,7 @@ describe('KmsKeyring: _onEncrypt', () => {
       return false
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({
@@ -186,7 +187,7 @@ describe('KmsKeyring: _onEncrypt', () => {
       }
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({
@@ -219,7 +220,7 @@ describe('KmsKeyring: _onEncrypt', () => {
       return false
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({
@@ -250,7 +251,7 @@ describe('KmsKeyring: _onEncrypt', () => {
       }
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({
@@ -298,7 +299,7 @@ describe('KmsKeyring: _onEncrypt', () => {
       return false
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({

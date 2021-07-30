@@ -1,0 +1,27 @@
+version: 0.2
+
+env:
+  variables:
+    NODE_OPTIONS: "--max-old-space-size=4096"
+    BRANCH: "master"
+    # An explicit version bump
+    VERSION_BUMP: ""
+  git-credential-helper: yes
+
+phases:
+  install:
+    commands:
+      - npm ci --unsafe-perm
+    runtime-versions:
+      nodejs: 12
+  pre_build:
+    commands:
+      - git config --global user.name "aws-crypto-tools-ci-bot"
+      - git config --global user.email "no-reply@noemail.local"
+      - git checkout $BRANCH
+  build:
+    commands:
+      # Generate new version and CHANGELOG entry and push it
+      - npx lerna version --conventional-commits --git-remote origin --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
+      # Log the commit for posterity
+      - git log -n 1

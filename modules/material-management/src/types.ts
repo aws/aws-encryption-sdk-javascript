@@ -100,9 +100,59 @@ export interface AwsEsdkKeyObject {
    * bytes. This property is `undefined` for symmetric keys.
    */
   asymmetricKeySize?: number
+  /**
+   * This property exists only on asymmetric keys. Depending on the type of the key,
+   * this object contains information about the key. None of the information obtained
+   * through this property can be used to uniquely identify a key or to compromise the
+   * security of the key.
+   */
+  asymmetricKeyDetails?: AwsEsdkAsymmetricKeyDetails
   export(options: AwsEsdkKeyExportOptions<'pem'>): string | Buffer
   export(options?: AwsEsdkKeyExportOptions<'der'>): Buffer
+  export(options?: { format: 'jwk' }): AwsEsdkJsonWebKey
   symmetricSize?: number
   type: AwsEsdkKeyObjectType
 }
 export type AwsEsdkCreateSecretKey = (key: Uint8Array) => AwsEsdkKeyObject
+
+export interface ClientOptions {
+  commitmentPolicy: CommitmentPolicy
+  maxEncryptedDataKeys: number | false
+}
+
+export type Newable<T> = { new (...args: any[]): T }
+
+export interface AwsEsdkJsonWebKey {
+  crv?: string
+  d?: string
+  dp?: string
+  dq?: string
+  e?: string
+  k?: string
+  kty?: string
+  n?: string
+  p?: string
+  q?: string
+  qi?: string
+  x?: string
+  y?: string
+  [key: string]: unknown
+}
+export interface AwsEsdkAsymmetricKeyDetails {
+  /**
+   * Key size in bits (RSA, DSA).
+   */
+  modulusLength?: number
+  /**
+   * Public exponent (RSA).
+   */
+  publicExponent?: bigint
+  /**
+   * Size of q in bits (DSA).
+   */
+  divisorLength?: number
+  /**
+   * Name of the curve (EC).
+   */
+  namedCurve?: string
+}

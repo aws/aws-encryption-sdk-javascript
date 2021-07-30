@@ -22,13 +22,15 @@ type Material =
 export function cloneMaterial<M extends Material>(source: M): M {
   const { suite, encryptionContext } = source
 
-  const clone = (suite instanceof NodeAlgorithmSuite
-    ? source instanceof NodeEncryptionMaterial
-      ? new NodeEncryptionMaterial(suite, encryptionContext)
-      : new NodeDecryptionMaterial(suite, encryptionContext)
-    : source instanceof WebCryptoEncryptionMaterial
-    ? new WebCryptoEncryptionMaterial(suite, encryptionContext)
-    : new WebCryptoDecryptionMaterial(suite, encryptionContext)) as M
+  const clone = (
+    suite instanceof NodeAlgorithmSuite
+      ? source instanceof NodeEncryptionMaterial
+        ? new NodeEncryptionMaterial(suite, encryptionContext)
+        : new NodeDecryptionMaterial(suite, encryptionContext)
+      : source instanceof WebCryptoEncryptionMaterial
+      ? new WebCryptoEncryptionMaterial(suite, encryptionContext)
+      : new WebCryptoDecryptionMaterial(suite, encryptionContext)
+  ) as M
 
   /* The setTrace _must_ be the first trace,
    * If the material is an EncryptionMaterial

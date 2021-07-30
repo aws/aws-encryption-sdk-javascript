@@ -1,11 +1,11 @@
 {
   "name": "@aws-crypto/integration-node",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "run-s lint-*",
-    "lint-eslint": "eslint src/*.ts test/**/*.ts",
-    "lint-prettier": "prettier -c src/*.ts test/**/*.ts",
+    "lint-eslint": "eslint src/*.ts test/*.ts",
+    "lint-prettier": "prettier -c src/*.ts test/*.ts",
     "test": "npm run lint && npm run build && node ./build/main/index.js",
     "integration_node": "npx ."
   },
@@ -17,21 +17,20 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/client-node": "file:../client-node",
+    "@aws-crypto/integration-vectors": "file:../integration-vectors",
     "@types/got": "^9.6.9",
     "@types/stream-to-promise": "^2.2.0",
     "@types/yargs": "^15.0.3",
-    "@types/yauzl": "^2.9.1",
     "got": "^11.8.0",
     "stream-to-promise": "^3.0.0",
-    "tslib": "^2.2.0",
-    "yargs": "^15.3.1",
-    "yauzl": "^2.10.0"
+    "tslib": "^2.3.0",
+    "yargs": "^15.3.1"
   },
   "sideEffects": false,
-  "main": "./build/main/index.js",
-  "types": "./build/main/index.d.ts",
-  "bin": "./build/main/cli.js",
+  "main": "./build/main/src/index.js",
+  "types": "./build/main/src/index.d.ts",
+  "bin": "./build/main/src/cli.js",
   "files": [
-    "build/**/*"
+    "build/**/src/*"
   ]
 }

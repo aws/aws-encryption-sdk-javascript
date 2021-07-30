@@ -276,9 +276,8 @@ export class VerifyStream extends PortableTransformWithType {
     try {
       const { signatureInfo } = this._verifyState
       /* Precondition: The signature must be well formed. */
-      const { buffer, byteOffset, byteLength } = deserializeSignature(
-        signatureInfo
-      )
+      const { buffer, byteOffset, byteLength } =
+        deserializeSignature(signatureInfo)
       const signature = Buffer.from(buffer, byteOffset, byteLength)
       const isVerified = this._verify.awsCryptoVerify(signature)
       /* Postcondition: The signature must be valid. */

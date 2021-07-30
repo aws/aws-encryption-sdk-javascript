@@ -3,6 +3,7 @@
 
 import {
   needs,
+  KeyringWebCrypto,
   MultiKeyringWebCrypto,
   KmsKeyringBrowser,
   KmsWebCryptoClientSupplier,
@@ -11,20 +12,26 @@ import {
   WrappingSuiteIdentifier,
   RawAesWrappingSuiteIdentifier,
   RawRsaKeyringWebCrypto,
+  buildAwsKmsMrkAwareStrictMultiKeyringBrowser,
+  buildAwsKmsMrkAwareDiscoveryMultiKeyringBrowser,
 } from '@aws-crypto/client-browser'
 import {
   RsaKeyInfo,
   AesKeyInfo,
   KmsKeyInfo,
+  KmsMrkAwareKeyInfo,
+  KmsMrkAwareDiscoveryKeyInfo,
   RSAKey,
   AESKey,
   KMSKey,
   KeyInfoTuple,
-} from './types'
+  buildGetKeyring,
+} from '@aws-crypto/integration-vectors'
 
 import { fromBase64 } from '@aws-sdk/util-base64-browser'
 // @ts-ignore
 import keyto from '@trust/keyto'
+// credentials is from '@aws-sdk/karma-credential-loader'
 declare const credentials: any
 
 const Bits2RawAesWrappingSuiteIdentifier: {
@@ -38,9 +45,17 @@ const Bits2RawAesWrappingSuiteIdentifier: {
   256: RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING,
 }
 
+const keyringWebCrypto = buildGetKeyring<Promise<KeyringWebCrypto>>({
+  kmsKeyring,
+  kmsMrkAwareKeyring,
+  kmsMrkAwareDiscoveryKeyring,
+  aesKeyring,
+  rsaKeyring,
+})
+
 export async function encryptMaterialsManagerWebCrypto(
   keyInfos: KeyInfoTuple[]
-) {
+): Promise<MultiKeyringWebCrypto> {
   const [generator, ...children] = await Promise.all(
     keyInfos.map(keyringWebCrypto)
   )
@@ -49,38 +64,46 @@ export async function encryptMaterialsManagerWebCrypto(
 
 export async function decryptMaterialsManagerWebCrypto(
   keyInfos: KeyInfoTuple[]
-) {
+): Promise<MultiKeyringWebCrypto> {
   const children = await Promise.all(keyInfos.map(keyringWebCrypto))
   return new MultiKeyringWebCrypto({ children })
 }
 
-async function keyringWebCrypto([info, key]: KeyInfoTuple) {
-  if (info.type === 'aws-kms' && key.type === 'aws-kms') {
-    return kmsKeyring(info, key)
-  }
-  if (
-    info.type === 'raw' &&
-    info['encryption-algorithm'] === 'aes' &&
-    key.type === 'symmetric'
-  ) {
-    return aesKeyring(info, key)
-  }
-  if (
-    info.type === 'raw' &&
-    info['encryption-algorithm'] === 'rsa' &&
-    (key.type === 'public' || key.type === 'private')
-  ) {
-    return rsaKeyring(info, key)
-  }
-  throw new Error('Unsupported keyring type')
-}
-
-function kmsKeyring(_keyInfo: KmsKeyInfo, key: KMSKey) {
+async function kmsKeyring(_keyInfo: KmsKeyInfo, key: KMSKey) {
   const generatorKeyId = key['key-id']
   const clientProvider: KmsWebCryptoClientSupplier = (region: string) => {
     return new KMS({ region, credentials })
   }
   return new KmsKeyringBrowser({ generatorKeyId, clientProvider })
+}
+
+async function kmsMrkAwareKeyring(_keyInfo: KmsMrkAwareKeyInfo, key: KMSKey) {
+  const generatorKeyId = key['key-id']
+  const clientProvider: KmsWebCryptoClientSupplier = (region: string) => {
+    return new KMS({ region, credentials })
+  }
+  return buildAwsKmsMrkAwareStrictMultiKeyringBrowser({
+    generatorKeyId,
+    clientProvider,
+  })
+}
+
+async function kmsMrkAwareDiscoveryKeyring(
+  keyInfo: KmsMrkAwareDiscoveryKeyInfo
+) {
+  const regions = [keyInfo['default-mrk-region']]
+  const { 'aws-kms-discovery-filter': filter } = keyInfo
+  const discoveryFilter = filter
+    ? { partition: filter.partition, accountIDs: filter['account-ids'] }
+    : undefined
+  const clientProvider: KmsWebCryptoClientSupplier = (region: string) => {
+    return new KMS({ region, credentials })
+  }
+  return buildAwsKmsMrkAwareDiscoveryMultiKeyringBrowser({
+    discoveryFilter,
+    regions,
+    clientProvider,
+  })
 }
 
 async function aesKeyring(keyInfo: AesKeyInfo, key: AESKey) {

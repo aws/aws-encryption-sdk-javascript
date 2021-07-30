@@ -11,7 +11,11 @@
  */
 
 import { AlgorithmSuite, needs } from '@aws-crypto/material-management'
-import { HeaderInfo, AlgorithmSuiteConstructor } from './types'
+import {
+  HeaderInfo,
+  AlgorithmSuiteConstructor,
+  DeserializeOptions,
+} from './types'
 import { decodeEncryptionContextFactory } from './decode_encryption_context'
 import { deserializeEncryptedDataKeysFactory } from './deserialize_encrypted_data_keys'
 import { deserializeHeaderV1Factory } from './deserialize_header_v1'
@@ -23,9 +27,8 @@ export function deserializeFactory<Suite extends AlgorithmSuite>(
   SdkSuite: AlgorithmSuiteConstructor<Suite>
 ) {
   const decodeEncryptionContext = decodeEncryptionContextFactory(toUtf8)
-  const deserializeEncryptedDataKeys = deserializeEncryptedDataKeysFactory(
-    toUtf8
-  )
+  const deserializeEncryptedDataKeys =
+    deserializeEncryptedDataKeysFactory(toUtf8)
 
   const deserializeHeaderV1 = deserializeHeaderV1Factory({
     decodeEncryptionContext,
@@ -61,13 +64,14 @@ export function deserializeFactory<Suite extends AlgorithmSuite>(
   }
 
   function deserializeMessageHeader(
-    messageBuffer: Uint8Array
+    messageBuffer: Uint8Array,
+    deserializeOptions: DeserializeOptions = { maxEncryptedDataKeys: false }
   ): HeaderInfo | false {
     const messageFormatVersion = messageBuffer[0]
     const deserializer = deserializeMap.get(messageFormatVersion)
     /* Precondition: A valid deserializer must exist. */
     needs(deserializer, 'Not a supported message format version.')
 
-    return deserializer(messageBuffer)
+    return deserializer(messageBuffer, deserializeOptions)
   }
 }

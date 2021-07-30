@@ -3,6 +3,7 @@
 
 import {
   needs,
+  KeyringNode,
   MultiKeyringNode,
   KmsKeyringNode,
   RawAesKeyringNode,
@@ -10,16 +11,21 @@ import {
   RawAesWrappingSuiteIdentifier,
   RawRsaKeyringNode,
   oaepHashSupported,
+  buildAwsKmsMrkAwareStrictMultiKeyringNode,
+  buildAwsKmsMrkAwareDiscoveryMultiKeyringNode,
 } from '@aws-crypto/client-node'
 import {
   RsaKeyInfo,
   AesKeyInfo,
   KmsKeyInfo,
+  KmsMrkAwareKeyInfo,
+  KmsMrkAwareDiscoveryKeyInfo,
   RSAKey,
   AESKey,
   KMSKey,
   KeyInfoTuple,
-} from './types'
+  buildGetKeyring,
+} from '@aws-crypto/integration-vectors'
 import { constants } from 'crypto'
 
 const Bits2RawAesWrappingSuiteIdentifier: {
@@ -29,6 +35,14 @@ const Bits2RawAesWrappingSuiteIdentifier: {
   192: RawAesWrappingSuiteIdentifier.AES192_GCM_IV12_TAG16_NO_PADDING,
   256: RawAesWrappingSuiteIdentifier.AES256_GCM_IV12_TAG16_NO_PADDING,
 }
+
+export const keyringNode = buildGetKeyring<KeyringNode>({
+  kmsKeyring,
+  kmsMrkAwareKeyring,
+  kmsMrkAwareDiscoveryKeyring,
+  aesKeyring,
+  rsaKeyring,
+})
 
 export function encryptMaterialsManagerNode(keyInfos: KeyInfoTuple[]) {
   const [generator, ...children] = keyInfos.map(keyringNode)
@@ -40,30 +54,28 @@ export function decryptMaterialsManagerNode(keyInfos: KeyInfoTuple[]) {
   return new MultiKeyringNode({ children })
 }
 
-export function keyringNode([info, key]: KeyInfoTuple) {
-  if (info.type === 'aws-kms' && key.type === 'aws-kms') {
-    return kmsKeyring(info, key)
-  }
-  if (
-    info.type === 'raw' &&
-    info['encryption-algorithm'] === 'aes' &&
-    key.type === 'symmetric'
-  ) {
-    return aesKeyring(info, key)
-  }
-  if (
-    info.type === 'raw' &&
-    info['encryption-algorithm'] === 'rsa' &&
-    (key.type === 'public' || key.type === 'private')
-  ) {
-    return rsaKeyring(info, key)
-  }
-  throw new Error('Unsupported keyring type')
-}
-
 export function kmsKeyring(_keyInfo: KmsKeyInfo, key: KMSKey) {
   const generatorKeyId = key['key-id']
   return new KmsKeyringNode({ generatorKeyId })
+}
+
+export function kmsMrkAwareKeyring(_keyInfo: KmsMrkAwareKeyInfo, key: KMSKey) {
+  const generatorKeyId = key['key-id']
+  return buildAwsKmsMrkAwareStrictMultiKeyringNode({ generatorKeyId })
+}
+
+export function kmsMrkAwareDiscoveryKeyring(
+  keyInfo: KmsMrkAwareDiscoveryKeyInfo
+) {
+  const regions = [keyInfo['default-mrk-region']]
+  const { 'aws-kms-discovery-filter': filter } = keyInfo
+  const discoveryFilter = filter
+    ? { partition: filter.partition, accountIDs: filter['account-ids'] }
+    : undefined
+  return buildAwsKmsMrkAwareDiscoveryMultiKeyringNode({
+    discoveryFilter,
+    regions,
+  })
 }
 
 export function aesKeyring(keyInfo: AesKeyInfo, key: AESKey) {

@@ -1,3 +1,6 @@
 [submodule "aws-encryption-sdk-test-vectors"]
 	path = aws-encryption-sdk-test-vectors
 	url = https://github.com/awslabs/aws-encryption-sdk-test-vectors.git
+[submodule "aws-encryption-sdk-specification"]
+	path = aws-encryption-sdk-specification
+	url = https://github.com/awslabs/aws-encryption-sdk-specification.git

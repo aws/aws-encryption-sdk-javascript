@@ -15,6 +15,7 @@ import {
   immutableClass,
   readOnlyProperty,
   unwrapDataKey,
+  Newable,
 } from '@aws-crypto/material-management'
 import {
   KMS_PROVIDER_ID,
@@ -23,10 +24,7 @@ import {
   decrypt,
   kmsResponseToEncryptedDataKey,
 } from './helpers'
-import {
-  regionFromKmsKeyArn,
-  decomposeAwsKmsKeyArn,
-} from './region_from_kms_key_arn'
+import { validAwsKmsIdentifier, parseAwsKmsKeyArn } from './arn_parsing'
 
 export interface KmsKeyringInput<Client extends AwsEsdkKMSInterface> {
   clientProvider: KmsClientSupplier<Client>
@@ -40,7 +38,7 @@ export interface KmsKeyringInput<Client extends AwsEsdkKMSInterface> {
   }
 }
 
-export interface KeyRing<
+export interface KmsKeyRing<
   S extends SupportedAlgorithmSuites,
   Client extends AwsEsdkKMSInterface
 > extends Keyring<S> {
@@ -64,24 +62,20 @@ export interface KmsKeyRingConstructible<
   S extends SupportedAlgorithmSuites,
   Client extends AwsEsdkKMSInterface
 > {
-  new (input: KmsKeyringInput<Client>): KeyRing<S, Client>
-}
-
-export interface KeyRingConstructible<S extends SupportedAlgorithmSuites> {
-  new (): Keyring<S>
+  new (input: KmsKeyringInput<Client>): KmsKeyRing<S, Client>
 }
 
 export function KmsKeyringClass<
   S extends SupportedAlgorithmSuites,
   Client extends AwsEsdkKMSInterface
->(BaseKeyring: KeyRingConstructible<S>): KmsKeyRingConstructible<S, Client> {
-  class KmsKeyring extends BaseKeyring implements KeyRing<S, Client> {
-    public keyIds!: ReadonlyArray<string>
-    public generatorKeyId?: string
-    public clientProvider!: KmsClientSupplier<Client>
-    public grantTokens?: string[]
-    public isDiscovery!: boolean
-    public discoveryFilter?: Readonly<{
+>(BaseKeyring: Newable<Keyring<S>>): KmsKeyRingConstructible<S, Client> {
+  class KmsKeyring extends BaseKeyring implements KmsKeyRing<S, Client> {
+    public declare keyIds: ReadonlyArray<string>
+    public declare generatorKeyId?: string
+    public declare clientProvider: KmsClientSupplier<Client>
+    public declare grantTokens?: string[]
+    public declare isDiscovery: boolean
+    public declare discoveryFilter?: Readonly<{
       accountIDs: readonly string[]
       partition: string
     }>
@@ -130,14 +124,11 @@ export function KmsKeyringClass<
 
       /* Precondition: All KMS key identifiers must be valid. */
       needs(
-        !generatorKeyId ||
-          typeof regionFromKmsKeyArn(generatorKeyId) === 'string',
+        !generatorKeyId || validAwsKmsIdentifier(generatorKeyId),
         'Malformed arn.'
       )
       needs(
-        keyIds.every(
-          (keyArn) => typeof regionFromKmsKeyArn(keyArn) === 'string'
-        ),
+        keyIds.every((keyArn) => validAwsKmsIdentifier(keyArn)),
         'Malformed arn.'
       )
       /* Precondition: clientProvider needs to be a callable function. */
@@ -277,7 +268,7 @@ export function KmsKeyringClass<
         /* Postcondition: The KeyId from KMS must match the encoded KeyID. */
         needs(
           dataKey.KeyId === edk.providerInfo,
-          'KMS Decryption key does not match serialized provider.'
+          'KMS Decryption key does not match the requested key id.'
         )
 
         const flags =
@@ -324,7 +315,7 @@ export function KmsKeyringClass<
 function filterEDKs<
   S extends SupportedAlgorithmSuites,
   Client extends AwsEsdkKMSInterface
->(keyIds: string[], { isDiscovery, discoveryFilter }: KeyRing<S, Client>) {
+>(keyIds: string[], { isDiscovery, discoveryFilter }: KmsKeyRing<S, Client>) {
   return function filter({ providerId, providerInfo }: EncryptedDataKey) {
     /* Check for early return (Postcondition): Only AWS KMS EDK should be attempted. */
     if (providerId !== KMS_PROVIDER_ID) return false
@@ -335,6 +326,9 @@ function filterEDKs<
       /* Check for early return (Postcondition): There is no discoveryFilter to further condition discovery. */
       if (!discoveryFilter) return true
 
+      const parsedArn = parseAwsKmsKeyArn(providerInfo)
+      /* Postcondition: Provider info is a well formed AWS KMS ARN. */
+      needs(parsedArn, 'Malformed arn in provider info.')
       /* If the providerInfo is an invalid ARN this will throw.
        * But, this function is also used to extract regions
        * from an CMK to generate a regional client.
@@ -342,7 +336,7 @@ function filterEDKs<
        * that looks like a bare alias or key id.
        * However, these constructions will not have an account or partition.
        */
-      const { account, partition } = decomposeAwsKmsKeyArn(providerInfo)
+      const { AccountId, Partition } = parsedArn
       /* Postcondition: The account and partition *must* match the discovery filter.
        * Since we are offering a runtime discovery of CMKs
        * it is best to have some form of filter on this.
@@ -352,8 +346,8 @@ function filterEDKs<
        * when the AWS KMS Keyring is instantiated.
        */
       return (
-        discoveryFilter.partition === partition &&
-        discoveryFilter.accountIDs.some((a) => a === account)
+        discoveryFilter.partition === Partition &&
+        discoveryFilter.accountIDs.some((a) => a === AccountId)
       )
     } else {
       /* Postcondition: The EDK CMK (providerInfo) *must* match a configured CMK. */

@@ -208,8 +208,7 @@ const nodeAlgAes256GcmHkdfSha512Committing: NodeAlgCommitted = {
 }
 
 const nodeAlgAes256GcmHkdfSha512CommittingEcdsaP384: NodeAlgCommittedSigned = {
-  id:
-    AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384,
+  id: AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384,
   messageFormat: MessageFormat.V2,
   encryption: 'aes-256-gcm',
   keyLength: 256,
@@ -240,43 +239,36 @@ const nodeAlgorithms: NodeAlgorithms = Object.freeze({
   [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16]: Object.freeze(
     nodeAlgAes256GcmIv12Tag16
   ),
-  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(
-    nodeAlgAes128GcmIv12Tag16HkdfSha256
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(
-    nodeAlgAes192GcmIv12Tag16HkdfSha256
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(
-    nodeAlgAes256GcmIv12Tag16HkdfSha256
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256]: Object.freeze(
-    nodeAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(
-    nodeAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(
-    nodeAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY]: Object.freeze(
-    nodeAlgAes256GcmHkdfSha512Committing
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384]: Object.freeze(
-    nodeAlgAes256GcmHkdfSha512CommittingEcdsaP384
-  ),
+  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256]:
+    Object.freeze(nodeAlgAes128GcmIv12Tag16HkdfSha256),
+  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256]:
+    Object.freeze(nodeAlgAes192GcmIv12Tag16HkdfSha256),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256]:
+    Object.freeze(nodeAlgAes256GcmIv12Tag16HkdfSha256),
+  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256]:
+    Object.freeze(nodeAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256),
+  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]:
+    Object.freeze(nodeAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]:
+    Object.freeze(nodeAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY]:
+    Object.freeze(nodeAlgAes256GcmHkdfSha512Committing),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384]:
+    Object.freeze(nodeAlgAes256GcmHkdfSha512CommittingEcdsaP384),
 })
 
 export class NodeAlgorithmSuite
   extends AlgorithmSuite
-  implements NodeAlgorithmSuiteValues {
-  messageFormat!: MessageFormat
-  encryption!: NodeEncryption
-  commitment!: Commitment
-  kdfHash?: NodeHash
-  signatureCurve?: NodeECDHCurve
-  signatureHash?: NodeHash
+  implements NodeAlgorithmSuiteValues
+{
+  declare messageFormat: MessageFormat
+  declare encryption: NodeEncryption
+  declare commitment: Commitment
+  declare kdfHash?: NodeHash
+  declare signatureCurve?: NodeECDHCurve
+  declare signatureHash?: NodeHash
   type: AlgorithmSuiteTypeNode = 'node'
-  commitmentHash?: NodeHash
+  declare commitmentHash?: NodeHash
   constructor(id: AlgorithmSuiteIdentifier) {
     super(nodeAlgorithms[id])
     Object.setPrototypeOf(this, NodeAlgorithmSuite.prototype)

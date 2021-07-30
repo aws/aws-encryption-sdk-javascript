@@ -1,0 +1,65 @@
+version: 0.2
+
+batch:
+  fast-fail: true 
+  build-graph:
+
+# Lint and specification compliance
+    - identifier: compliance
+      buildspec: codebuild/compliance.yml
+
+# Unit Tests
+    - identifier: testNodejsLatest
+      buildspec: codebuild/nodejs_latest.yml
+      env:
+        image: aws/codebuild/standard:5.0
+    - identifier: testBrowser
+      buildspec: codebuild/browser.yml
+
+# Integration Tests
+    - identifier: testVectorsNodejsLatest
+      buildspec: codebuild/test_vectors/nodejs_latest.yml
+      env:
+        variables:
+          PUBLISH_LOCAL: "true"
+        image: aws/codebuild/standard:5.0
+    - identifier: testVectorsBrowser
+      buildspec: codebuild/test_vectors/browser.yml
+      env:
+        variables:
+          PUBLISH_LOCAL: "true"
+        image: aws/codebuild/standard:5.0
+
+# Version the project and push git commits and tags
+    - identifier: version
+      depend-on:
+        - compliance
+        - testNodejsLatest
+        - testBrowser
+        - testVectorsNodejsLatest
+        - testVectorsBrowser
+      buildspec: codebuild/release/version.yml
+
+# Publish the release to npm
+    - identifier: publish
+      depend-on:
+        - version
+      buildspec: codebuild/release/publish.yml
+
+# Validate that the published versions are available
+    - identifier: validateNodejs
+      depend-on:
+        - publish
+      buildspec: codebuild/test_vectors/nodejs_latest.yml
+      env:
+        variables:
+          PUBLISH_LOCAL: "false"
+        image: aws/codebuild/standard:5.0
+    - identifier: validateBrowser
+      depend-on:
+        - publish
+      buildspec: codebuild/test_vectors/browser.yml
+      env:
+        variables:
+          PUBLISH_LOCAL: "false"
+        image: aws/codebuild/standard:5.0

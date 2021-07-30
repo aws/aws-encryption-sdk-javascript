@@ -4,6 +4,7 @@
 /* eslint-env mocha */
 
 import * as chai from 'chai'
+// @ts-ignore
 import chaiAsPromised from 'chai-as-promised'
 import {
   KeyringNode,

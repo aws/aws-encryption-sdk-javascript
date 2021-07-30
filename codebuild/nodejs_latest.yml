@@ -1,0 +1,17 @@
+version: 0.2
+
+env:
+  variables:
+    NODE_OPTIONS: "--max-old-space-size=4096"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: latest
+    commands:
+      - node --version ; npm --version
+      - npm ci --unsafe-perm
+      - npm run build
+  build:
+    commands:
+      - npm run coverage-node

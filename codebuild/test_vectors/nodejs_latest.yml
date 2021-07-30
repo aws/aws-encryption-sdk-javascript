@@ -1,0 +1,25 @@
+version: 0.2
+
+env:
+  variables:
+    NODE_OPTIONS: "--max-old-space-size=4096"
+    NPM_CONFIG_UNSAFE_PERM: true
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: latest
+    commands:
+      - npm ci
+      - |-
+        if [ "$PUBLISH_LOCAL" = "true" ]; then
+          npm run build
+        fi
+  build:
+    commands:
+      - |-
+        if [ "$PUBLISH_LOCAL" = "true" ]; then
+          npm run verdaccio-publish
+        fi
+      - npm run verdaccio-node-decrypt
+      - npm run verdaccio-node-encrypt

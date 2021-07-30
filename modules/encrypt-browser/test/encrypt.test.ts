@@ -4,6 +4,7 @@
 /* eslint-env mocha */
 
 import * as chai from 'chai'
+// @ts-ignore
 import chaiAsPromised from 'chai-as-promised'
 import {
   WebCryptoDecryptionMaterial,
@@ -99,8 +100,25 @@ describe('encrypt structural testing', () => {
 
   it('Precondition: _encrypt needs a valid commitmentPolicy.', async () => {
     await expect(
-      _encrypt('fake_policy' as any, {} as any, {} as any)
+      _encrypt(
+        { commitmentPolicy: 'fake_policy' as any, maxEncryptedDataKeys: false },
+        {} as any,
+        {} as any
+      )
     ).to.rejectedWith(Error, 'Invalid commitment policy.')
+  })
+
+  it('Precondition: _encrypt needs a valid maxEncryptedDataKeys.', async () => {
+    await expect(
+      _encrypt(
+        {
+          commitmentPolicy: CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
+          maxEncryptedDataKeys: 0,
+        },
+        {} as any,
+        {} as any
+      )
+    ).to.rejectedWith(Error, 'Invalid maxEncryptedDataKeys value.')
   })
 
   it('Precondition: The frameLength must be less than the maximum frame size for browser encryption.', async () => {
@@ -113,7 +131,10 @@ describe('encrypt structural testing', () => {
   it('Precondition: Only request WebCryptoEncryptionMaterial for algorithm suites supported in commitmentPolicy.', async () => {
     await expect(
       _encrypt(
-        CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+        {
+          commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+          maxEncryptedDataKeys: false,
+        },
         keyRing,
         fromUtf8('asdf'),
         {
@@ -142,7 +163,10 @@ describe('encrypt structural testing', () => {
     } as any
     await expect(
       _encrypt(
-        CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+        {
+          commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+          maxEncryptedDataKeys: false,
+        },
         cmm,
         fromUtf8('asdf')
       )
@@ -151,6 +175,52 @@ describe('encrypt structural testing', () => {
       'Configuration conflict. Cannot encrypt due to CommitmentPolicy'
     )
     expect(called_getEncryptionMaterials).to.equal(true)
+  })
+
+  it('Precondition: _encrypt encryption materials must not exceed maxEncryptedDataKeys', async () => {
+    for (const numKeys of [2, 3, 4]) {
+      let called_getEncryptionMaterials = false
+      const cmm = {
+        async getEncryptionMaterials() {
+          called_getEncryptionMaterials = true
+          const material = await keyRing.onEncrypt(
+            new WebCryptoEncryptionMaterial(
+              new WebCryptoAlgorithmSuite(
+                AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY
+              ),
+              {}
+            )
+          )
+          for (let i = 1; i < numKeys; i++) {
+            material.addEncryptedDataKey(
+              edk,
+              KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY
+            )
+          }
+          return material
+        },
+      } as any
+
+      const encryptPromise = _encrypt(
+        {
+          commitmentPolicy: CommitmentPolicy.REQUIRE_ENCRYPT_ALLOW_DECRYPT,
+          maxEncryptedDataKeys: 3,
+        },
+        cmm,
+        fromUtf8('asdf')
+      )
+
+      if (numKeys > 3) {
+        await expect(encryptPromise).to.rejectedWith(
+          Error,
+          'maxEncryptedDataKeys exceeded.'
+        )
+      } else {
+        await encryptPromise
+      }
+
+      expect(called_getEncryptionMaterials).to.equal(true)
+    }
   })
 
   it('can fully parse a framed message', async () => {

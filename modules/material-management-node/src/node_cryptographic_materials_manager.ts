@@ -26,7 +26,8 @@ import { createECDH } from 'crypto'
 
 export type NodeEncryptionRequest = EncryptionRequest<NodeAlgorithmSuite>
 export type NodeDecryptionRequest = DecryptionRequest<NodeAlgorithmSuite>
-export type NodeGetEncryptionMaterials = GetEncryptionMaterials<NodeAlgorithmSuite>
+export type NodeGetEncryptionMaterials =
+  GetEncryptionMaterials<NodeAlgorithmSuite>
 export type NodeGetDecryptMaterials = GetDecryptMaterials<NodeAlgorithmSuite>
 
 /**
@@ -35,8 +36,9 @@ export type NodeGetDecryptMaterials = GetDecryptMaterials<NodeAlgorithmSuite>
  * Users should never need to create an instance of a NodeDefaultCryptographicMaterialsManager.
  */
 export class NodeDefaultCryptographicMaterialsManager
-  implements NodeMaterialsManager {
-  readonly keyring!: KeyringNode
+  implements NodeMaterialsManager
+{
+  declare readonly keyring: KeyringNode
   constructor(keyring: KeyringNode) {
     /* Precondition: keyrings must be a KeyringNode. */
     needs(keyring instanceof KeyringNode, 'Unsupported type.')
@@ -141,8 +143,19 @@ export class NodeDefaultCryptographicMaterialsManager
   ) {
     const { signatureCurve: namedCurve } = suite
 
-    /* Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve to load a signature key. */
-    if (!namedCurve) return new NodeDecryptionMaterial(suite, encryptionContext)
+    if (!namedCurve) {
+      /* Precondition: NodeDefaultCryptographicMaterialsManager The context must not contain a public key for a non-signing algorithm suite. */
+      needs(
+        !Object.prototype.hasOwnProperty.call(
+          encryptionContext,
+          ENCODED_SIGNER_KEY
+        ),
+        'Encryption context contains public verification key for unsigned algorithm suite.'
+      )
+
+      /* Check for early return (Postcondition): The algorithm suite specification must support a signatureCurve to load a signature key. */
+      return new NodeDecryptionMaterial(suite, encryptionContext)
+    }
 
     /* Precondition: NodeDefaultCryptographicMaterialsManager If the algorithm suite specification requires a signatureCurve a context must exist. */
     if (!encryptionContext)

@@ -43,6 +43,12 @@ export enum CommitmentPolicy {
 }
 Object.freeze(CommitmentPolicy)
 
+export enum SignaturePolicy {
+  'ALLOW_ENCRYPT_ALLOW_DECRYPT' = 'ALLOW_ENCRYPT_ALLOW_DECRYPT',
+  'ALLOW_ENCRYPT_FORBID_DECRYPT' = 'ALLOW_ENCRYPT_FORBID_DECRYPT',
+}
+Object.freeze(SignaturePolicy)
+
 /* Typescript enums are useful, but tricky.
  * I have to use Declaration Merging
  * to make everything work.
@@ -71,6 +77,68 @@ Object.freeze(CommitmentPolicy)
  * like values in the parent enum.
  *
  */
+
+export type NonSigningAlgorithmSuiteIdentifier = Exclude<
+  AlgorithmSuiteIdentifier,
+  | typeof AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256
+  | typeof AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+  | typeof AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
+  | typeof AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
+>
+
+export const NonSigningAlgorithmSuiteIdentifier = (() => {
+  const {
+    ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256,
+    ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384,
+    ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384,
+    ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384,
+    // Both the name side above, and the id side below
+    [0x0214]: NAME_ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256,
+    [0x0346]: NAME_ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384,
+    [0x0378]: NAME_ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384,
+    [0x0578]: NAME_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384,
+    ...NonSigningAlgorithmSuiteIdentifier
+  } = AlgorithmSuiteIdentifier
+  return NonSigningAlgorithmSuiteIdentifier
+})()
+
+export const SignaturePolicySuites = Object.freeze({
+  isDecryptEnabled(
+    signaturePolicy: SignaturePolicy,
+    suite: AlgorithmSuiteIdentifier | AlgorithmSuite,
+    messageId: string
+  ): void {
+    const id = (suite as AlgorithmSuite).id || suite
+    const name = (suite as AlgorithmSuite).name || AlgorithmSuiteIdentifier[id]
+    let decryption_client_name = 'decryptStream'
+    let signature_description = 'signed'
+    if (signaturePolicy === SignaturePolicy.ALLOW_ENCRYPT_FORBID_DECRYPT) {
+      decryption_client_name = 'decryptUnsignedMessageStream'
+      signature_description = 'un-signed'
+    }
+
+    /* Precondition: Only handle DecryptionMaterial for algorithm suites supported in signaturePolicy. */
+    needs(
+      this[signaturePolicy].decryptEnabledSuites[id],
+      `Configuration conflict. ` +
+        `Cannot process message with ID ${messageId} ` +
+        `due to client method ${decryption_client_name} ` +
+        `requiring only ${signature_description} messages. ` +
+        `Algorithm ID was ${name}. ` +
+        `See: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#digital-sigs`
+    )
+  },
+  [SignaturePolicy.ALLOW_ENCRYPT_ALLOW_DECRYPT]: Object.freeze({
+    decryptEnabledSuites: AlgorithmSuiteIdentifier,
+    defaultAlgorithmSuite:
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384,
+  }),
+  [SignaturePolicy.ALLOW_ENCRYPT_FORBID_DECRYPT]: Object.freeze({
+    decryptEnabledSuites: NonSigningAlgorithmSuiteIdentifier,
+    defaultAlgorithmSuite:
+      AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY,
+  }),
+})
 
 export type NonCommittingAlgorithmSuiteIdentifier = Exclude<
   AlgorithmSuiteIdentifier,
@@ -264,25 +332,25 @@ type AlgorithmSuiteValues = AesGcm &
   Partial<Omit<AlgCommittedSigned, keyof AesGcm>>
 
 export abstract class AlgorithmSuite implements AlgorithmSuiteValues {
-  id!: AlgorithmSuiteIdentifier
-  name!: AlgorithmSuiteName
-  messageFormat!: MessageFormat
-  encryption!: NodeEncryption | WebCryptoEncryption
-  keyLength!: KeyLength
-  keyLengthBytes!: number
-  ivLength!: IvLength
-  tagLength!: TagLength
-  cacheSafe!: boolean
-  kdf?: KDF
-  kdfHash?: NodeHash | WebCryptoHash
-  signatureCurve?: NodeECDHCurve | WebCryptoECDHCurve
-  signatureHash?: NodeHash | WebCryptoHash
-  type!: AlgorithmSuiteTypeNode | AlgorithmSuiteTypeWebCrypto
-  suiteDataLength?: SuiteDataLength
-  commitmentHash?: NodeHash | WebCryptoHash
-  commitmentLength?: CommitmentLength
-  saltLengthBytes?: HKDFSaltLengthBytes
-  commitment!: Commitment
+  declare id: AlgorithmSuiteIdentifier
+  declare name: AlgorithmSuiteName
+  declare messageFormat: MessageFormat
+  declare encryption: NodeEncryption | WebCryptoEncryption
+  declare keyLength: KeyLength
+  declare keyLengthBytes: number
+  declare ivLength: IvLength
+  declare tagLength: TagLength
+  declare cacheSafe: boolean
+  declare kdf?: KDF
+  declare kdfHash?: NodeHash | WebCryptoHash
+  declare signatureCurve?: NodeECDHCurve | WebCryptoECDHCurve
+  declare signatureHash?: NodeHash | WebCryptoHash
+  declare type: AlgorithmSuiteTypeNode | AlgorithmSuiteTypeWebCrypto
+  declare suiteDataLength?: SuiteDataLength
+  declare commitmentHash?: NodeHash | WebCryptoHash
+  declare commitmentLength?: CommitmentLength
+  declare saltLengthBytes?: HKDFSaltLengthBytes
+  declare commitment: Commitment
   constructor(suiteValues: AlgUnion) {
     needs(
       this.constructor !== AlgorithmSuite,

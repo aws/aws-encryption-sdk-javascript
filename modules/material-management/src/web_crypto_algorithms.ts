@@ -149,49 +149,52 @@ const webCryptoAlgAes256GcmIv12Tag16HkdfSha256: WebCryptoAlgKdf = {
   cacheSafe: true,
   commitment: 'NONE',
 }
-const webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256: WebCryptoAlgKdfSigned = {
-  id: AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256,
-  messageFormat: MessageFormat.V1,
-  encryption: 'AES-GCM',
-  keyLength: 128,
-  ivLength: 12,
-  tagLength: 128,
-  kdf: 'HKDF',
-  kdfHash: 'SHA-256',
-  cacheSafe: true,
-  signatureCurve: 'P-256',
-  signatureHash: 'SHA-256',
-  commitment: 'NONE',
-}
+const webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256: WebCryptoAlgKdfSigned =
+  {
+    id: AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256,
+    messageFormat: MessageFormat.V1,
+    encryption: 'AES-GCM',
+    keyLength: 128,
+    ivLength: 12,
+    tagLength: 128,
+    kdf: 'HKDF',
+    kdfHash: 'SHA-256',
+    cacheSafe: true,
+    signatureCurve: 'P-256',
+    signatureHash: 'SHA-256',
+    commitment: 'NONE',
+  }
 /* Web browsers do not support 192 bit key lengths at this time. */
-const webCryptoAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384: WebCryptoAlgKdfSigned = {
-  id: AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384,
-  messageFormat: MessageFormat.V1,
-  encryption: 'AES-GCM',
-  keyLength: 192,
-  ivLength: 12,
-  tagLength: 128,
-  kdf: 'HKDF',
-  kdfHash: 'SHA-384',
-  cacheSafe: true,
-  signatureCurve: 'P-384',
-  signatureHash: 'SHA-384',
-  commitment: 'NONE',
-}
-const webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384: WebCryptoAlgKdfSigned = {
-  id: AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384,
-  messageFormat: MessageFormat.V1,
-  encryption: 'AES-GCM',
-  keyLength: 256,
-  ivLength: 12,
-  tagLength: 128,
-  kdf: 'HKDF',
-  kdfHash: 'SHA-384',
-  cacheSafe: true,
-  signatureCurve: 'P-384',
-  signatureHash: 'SHA-384',
-  commitment: 'NONE',
-}
+const webCryptoAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384: WebCryptoAlgKdfSigned =
+  {
+    id: AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384,
+    messageFormat: MessageFormat.V1,
+    encryption: 'AES-GCM',
+    keyLength: 192,
+    ivLength: 12,
+    tagLength: 128,
+    kdf: 'HKDF',
+    kdfHash: 'SHA-384',
+    cacheSafe: true,
+    signatureCurve: 'P-384',
+    signatureHash: 'SHA-384',
+    commitment: 'NONE',
+  }
+const webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384: WebCryptoAlgKdfSigned =
+  {
+    id: AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384,
+    messageFormat: MessageFormat.V1,
+    encryption: 'AES-GCM',
+    keyLength: 256,
+    ivLength: 12,
+    tagLength: 128,
+    kdf: 'HKDF',
+    kdfHash: 'SHA-384',
+    cacheSafe: true,
+    signatureCurve: 'P-384',
+    signatureHash: 'SHA-384',
+    commitment: 'NONE',
+  }
 
 const webCryptoAlgAes256GcmHkdfSha512Committing: WebCryptoAlgCommitted = {
   id: AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY,
@@ -210,25 +213,25 @@ const webCryptoAlgAes256GcmHkdfSha512Committing: WebCryptoAlgCommitted = {
   saltLengthBytes: 32,
 }
 
-const webCryptoAlgAes256GcmHkdfSha512CommittingEcdsaP384: WebCryptoAlgCommittedSigned = {
-  id:
-    AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384,
-  messageFormat: MessageFormat.V2,
-  encryption: 'AES-GCM',
-  keyLength: 256,
-  ivLength: 12,
-  tagLength: 128,
-  kdf: 'HKDF',
-  kdfHash: 'SHA-512',
-  cacheSafe: true,
-  signatureCurve: 'P-384',
-  signatureHash: 'SHA-384',
-  commitment: 'KEY',
-  commitmentHash: 'SHA-512',
-  suiteDataLength: 32,
-  commitmentLength: 256,
-  saltLengthBytes: 32,
-}
+const webCryptoAlgAes256GcmHkdfSha512CommittingEcdsaP384: WebCryptoAlgCommittedSigned =
+  {
+    id: AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384,
+    messageFormat: MessageFormat.V2,
+    encryption: 'AES-GCM',
+    keyLength: 256,
+    ivLength: 12,
+    tagLength: 128,
+    kdf: 'HKDF',
+    kdfHash: 'SHA-512',
+    cacheSafe: true,
+    signatureCurve: 'P-384',
+    signatureHash: 'SHA-384',
+    commitment: 'KEY',
+    commitmentHash: 'SHA-512',
+    suiteDataLength: 32,
+    commitmentLength: 256,
+    saltLengthBytes: 32,
+  }
 
 type WebCryptoAlgorithms = Readonly<
   { [id in AlgorithmSuiteIdentifier]: WebCryptoAlgUnion }
@@ -243,30 +246,22 @@ const webCryptoAlgorithms: WebCryptoAlgorithms = Object.freeze({
   [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16]: Object.freeze(
     webCryptoAlgAes256GcmIv12Tag16
   ),
-  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(
-    webCryptoAlgAes128GcmIv12Tag16HkdfSha256
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(
-    webCryptoAlgAes192GcmIv12Tag16HkdfSha256
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(
-    webCryptoAlgAes256GcmIv12Tag16HkdfSha256
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256]: Object.freeze(
-    webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(
-    webCryptoAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(
-    webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY]: Object.freeze(
-    webCryptoAlgAes256GcmHkdfSha512Committing
-  ),
-  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384]: Object.freeze(
-    webCryptoAlgAes256GcmHkdfSha512CommittingEcdsaP384
-  ),
+  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256]:
+    Object.freeze(webCryptoAlgAes128GcmIv12Tag16HkdfSha256),
+  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256]:
+    Object.freeze(webCryptoAlgAes192GcmIv12Tag16HkdfSha256),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256]:
+    Object.freeze(webCryptoAlgAes256GcmIv12Tag16HkdfSha256),
+  [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256]:
+    Object.freeze(webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256),
+  [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]:
+    Object.freeze(webCryptoAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]:
+    Object.freeze(webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY]:
+    Object.freeze(webCryptoAlgAes256GcmHkdfSha512Committing),
+  [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384]:
+    Object.freeze(webCryptoAlgAes256GcmHkdfSha512CommittingEcdsaP384),
 })
 
 /* Web browsers do not support 192 bit key lengths at this time.
@@ -287,8 +282,8 @@ type WebCryptoAlgorithmSuiteIdentifier = Exclude<
 type SupportedWebCryptoAlgorithms = Readonly<
   { [id in WebCryptoAlgorithmSuiteIdentifier]: WebCryptoAlgUnion }
 >
-const supportedWebCryptoAlgorithms: SupportedWebCryptoAlgorithms = Object.freeze(
-  {
+const supportedWebCryptoAlgorithms: SupportedWebCryptoAlgorithms =
+  Object.freeze({
     [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16]: Object.freeze(
       webCryptoAlgAes128GcmIv12Tag16
     ),
@@ -296,40 +291,34 @@ const supportedWebCryptoAlgorithms: SupportedWebCryptoAlgorithms = Object.freeze
     [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16]: Object.freeze(
       webCryptoAlgAes256GcmIv12Tag16
     ),
-    [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(
-      webCryptoAlgAes128GcmIv12Tag16HkdfSha256
-    ),
+    [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256]:
+      Object.freeze(webCryptoAlgAes128GcmIv12Tag16HkdfSha256),
     // [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16HkdfSha256),
-    [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256]: Object.freeze(
-      webCryptoAlgAes256GcmIv12Tag16HkdfSha256
-    ),
-    [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256]: Object.freeze(
-      webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256
-    ),
+    [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256]:
+      Object.freeze(webCryptoAlgAes256GcmIv12Tag16HkdfSha256),
+    [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256_ECDSA_P256]:
+      Object.freeze(webCryptoAlgAes128GcmIv12Tag16HkdfSha256EcdsaP256),
     // [AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(webCryptoAlgAes192GcmIv12Tag16HkdfSha384EcdsaP384),
-    [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]: Object.freeze(
-      webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384
-    ),
-    [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY]: Object.freeze(
-      webCryptoAlgAes256GcmHkdfSha512Committing
-    ),
-    [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384]: Object.freeze(
-      webCryptoAlgAes256GcmHkdfSha512CommittingEcdsaP384
-    ),
-  }
-)
+    [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384]:
+      Object.freeze(webCryptoAlgAes256GcmIv12Tag16HkdfSha384EcdsaP384),
+    [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY]:
+      Object.freeze(webCryptoAlgAes256GcmHkdfSha512Committing),
+    [AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384]:
+      Object.freeze(webCryptoAlgAes256GcmHkdfSha512CommittingEcdsaP384),
+  })
 
 export class WebCryptoAlgorithmSuite
   extends AlgorithmSuite
-  implements WebCryptoAlgorithmSuiteValues {
-  messageFormat!: MessageFormat
-  encryption!: WebCryptoEncryption
-  commitment!: Commitment
-  kdfHash?: WebCryptoHash
-  signatureCurve?: WebCryptoECDHCurve
-  signatureHash?: WebCryptoHash
+  implements WebCryptoAlgorithmSuiteValues
+{
+  declare messageFormat: MessageFormat
+  declare encryption: WebCryptoEncryption
+  declare commitment: Commitment
+  declare kdfHash?: WebCryptoHash
+  declare signatureCurve?: WebCryptoECDHCurve
+  declare signatureHash?: WebCryptoHash
   type: AlgorithmSuiteTypeWebCrypto = 'webCrypto'
-  commitmentHash?: WebCryptoHash
+  declare commitmentHash?: WebCryptoHash
   constructor(id: AlgorithmSuiteIdentifier) {
     super(webCryptoAlgorithms[id])
     /* Precondition: Browsers do not support 192 bit keys so the AlgorithmSuiteIdentifier is removed.

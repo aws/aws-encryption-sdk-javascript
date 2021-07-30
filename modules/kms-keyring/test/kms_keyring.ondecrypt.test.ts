@@ -5,7 +5,7 @@
 
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { KmsKeyringClass, KeyRingConstructible } from '../src/kms_keyring'
+import { KmsKeyringClass } from '../src/kms_keyring'
 import {
   NodeAlgorithmSuite,
   AlgorithmSuiteIdentifier,
@@ -13,6 +13,7 @@ import {
   NodeDecryptionMaterial,
   EncryptedDataKey,
   Keyring,
+  Newable,
 } from '@aws-crypto/material-management'
 chai.use(chaiAsPromised)
 const { expect } = chai
@@ -48,7 +49,7 @@ describe('KmsKeyring: _onDecrypt', () => {
       }
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({
@@ -111,7 +112,7 @@ describe('KmsKeyring: _onDecrypt', () => {
       }
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({
@@ -143,6 +144,40 @@ describe('KmsKeyring: _onDecrypt', () => {
     expect(
       traceDecrypt.flags & KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX
     ).to.equal(KeyringTraceFlag.WRAPPING_KEY_VERIFIED_ENC_CTX)
+  })
+
+  it('Postcondition: Provider info is a well formed AWS KMS ARN.', async () => {
+    const aliasArn = 'alias/example-alias'
+    const context = { some: 'context' }
+    const grantTokens = ['grant']
+    const discovery = true
+    const suite = new NodeAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
+
+    let kmsCalled = false
+    const clientProvider: any = () => {
+      kmsCalled = true
+    }
+    class TestKmsKeyring extends KmsKeyringClass(
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
+    ) {}
+
+    const edk = new EncryptedDataKey({
+      providerId: 'aws-kms',
+      providerInfo: aliasArn,
+      encryptedDataKey: Buffer.from(aliasArn),
+    })
+
+    await expect(
+      new TestKmsKeyring({
+        clientProvider,
+        grantTokens,
+        discovery,
+        discoveryFilter: { partition: 'aws', accountIDs: ['123456789012'] },
+      }).onDecrypt(new NodeDecryptionMaterial(suite, context), [edk])
+    ).to.eventually.rejectedWith('Malformed arn in provider info.')
+    expect(kmsCalled).to.equal(false)
   })
 
   it('decrypt errors should not halt', async () => {
@@ -182,7 +217,7 @@ describe('KmsKeyring: _onDecrypt', () => {
       }
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({
@@ -227,7 +262,7 @@ describe('KmsKeyring: _onDecrypt', () => {
       kmsCalled = true
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const edk = new EncryptedDataKey({
@@ -261,7 +296,7 @@ describe('KmsKeyring: _onDecrypt', () => {
       kmsCalled = true
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const edk = new EncryptedDataKey({
@@ -314,7 +349,7 @@ describe('KmsKeyring: _onDecrypt', () => {
 
     const clientProvider: any = () => false
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({
@@ -363,7 +398,7 @@ describe('KmsKeyring: _onDecrypt', () => {
       }
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({
@@ -386,7 +421,7 @@ describe('KmsKeyring: _onDecrypt', () => {
       )
     ).to.rejectedWith(
       Error,
-      'KMS Decryption key does not match serialized provider.'
+      'KMS Decryption key does not match the requested key id.'
     )
   })
 
@@ -418,7 +453,7 @@ describe('KmsKeyring: _onDecrypt', () => {
       }
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({
@@ -462,7 +497,7 @@ describe('KmsKeyring: _onDecrypt', () => {
       }
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const testKeyring = new TestKmsKeyring({
@@ -514,7 +549,7 @@ describe('KmsKeyring: _onDecrypt', () => {
       kmsCalled = true
     }
     class TestKmsKeyring extends KmsKeyringClass(
-      Keyring as KeyRingConstructible<NodeAlgorithmSuite>
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
     ) {}
 
     const edk = new EncryptedDataKey({
