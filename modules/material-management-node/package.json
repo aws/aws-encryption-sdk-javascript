@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/material-management-node",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",

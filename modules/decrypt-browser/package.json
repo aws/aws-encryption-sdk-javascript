@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/decrypt-browser",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "scripts": {
     "prepublishOnly": "tsc -p tsconfig.json && tsc -p tsconfig.module.json",
     "lint": "run-s lint-*",

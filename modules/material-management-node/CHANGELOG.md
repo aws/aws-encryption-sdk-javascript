@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.2](https://github.com/aws/aws-encryption-sdk-javascript/compare/v3.0.0...v3.0.2) (2021-09-08)
+
+
+### Bug Fixes
+
+* Update @types/node to 16.7.9 ([#723](https://github.com/aws/aws-encryption-sdk-javascript/issues/723)) ([7ba9425](https://github.com/aws/aws-encryption-sdk-javascript/commit/7ba9425166ce0adc5feda67415e514f4d5616b87))
+
+
+
+
+
 ## [3.0.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/v3.0.0...v3.0.1) (2021-09-07)
 
 
