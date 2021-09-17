@@ -263,7 +263,7 @@ export class VerifyStream extends PortableTransformWithType {
     return super.push(chunk, encoding)
   }
 
-  _flush(callback: (err?: Error) => void) {
+  _flush(callback: (err?: Error | any | unknown) => void) {
     const { finalAuthTagReceived } = this._verifyState
     /* Precondition: All ciphertext MUST have been received.
      * The verify stream has ended,
@@ -284,9 +284,7 @@ export class VerifyStream extends PortableTransformWithType {
       needs(isVerified, 'Invalid Signature')
       callback()
     } catch (e) {
-      if (e instanceof Error) {
-        callback(e)
-      }
+      callback(e)
     }
   }
 }

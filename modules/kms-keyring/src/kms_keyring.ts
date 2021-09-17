@@ -16,6 +16,7 @@ import {
   readOnlyProperty,
   unwrapDataKey,
   Newable,
+  ErrorPlus,
 } from '@aws-crypto/material-management'
 import {
   KMS_PROVIDER_ID,
@@ -243,7 +244,7 @@ export function KmsKeyringClass<
        */
       const decryptableEDKs = encryptedDataKeys.filter(filterEDKs(keyIds, this))
 
-      const cmkErrors: Error[] = []
+      const cmkErrors: ErrorPlus[] = []
 
       for (const edk of decryptableEDKs) {
         let dataKey: RequiredDecryptResponse | false = false
@@ -259,9 +260,7 @@ export function KmsKeyringClass<
            * If the caller does not have access they may have access
            * through another Keyring.
            */
-          if (e instanceof Error) {
-            cmkErrors.push(e)
-          }
+          cmkErrors.push({ errPlus: e })
         }
 
         /* Check for early return (Postcondition): clientProvider may not return a client. */
@@ -302,7 +301,7 @@ export function KmsKeyringClass<
         material.hasValidKey() ||
           (!material.hasValidKey() && !cmkErrors.length),
         cmkErrors.reduce(
-          (m, e, i) => `${m} Error #${i + 1} \n ${e.stack} \n`,
+          (m, e, i) => `${m} Error #${i + 1} \n ${e.errPlus.stack} \n`,
           'Unable to decrypt data key and one or more KMS CMKs had an error. \n '
         )
       )
