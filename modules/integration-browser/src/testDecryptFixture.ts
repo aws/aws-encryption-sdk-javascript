@@ -96,7 +96,7 @@ export async function testNegativeDecryptFixture(
     const cmm = await _getCmm(keyInfos)
     decryptResult = await _decrypt(cmm, cipher)
   } catch (err) {
-    if (notSupportedDecryptMessages.includes(err.message))
+    if ( err instanceof Error && notSupportedDecryptMessages.includes(err.message))
       return { result: false, name, err: err }
     return { result: true, name }
   }

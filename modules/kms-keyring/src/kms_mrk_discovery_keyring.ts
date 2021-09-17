@@ -253,7 +253,9 @@ export function AwsKmsMrkAwareSymmetricDiscoveryKeyringClass<
           //# If the response does not satisfies these requirements then an error
           //# is collected and the next encrypted data key in the filtered set MUST
           //# be attempted.
-          cmkErrors.push(e)
+          if (e instanceof Error) {
+            cmkErrors.push(e)
+          }
         }
       }
       //= compliance/framework/aws-kms/aws-kms-mrk-aware-symmetric-region-discovery-keyring.txt#2.8

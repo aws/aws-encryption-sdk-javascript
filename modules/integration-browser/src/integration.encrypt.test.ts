@@ -60,7 +60,7 @@ function aTest(testName: string, decryptOracle: string) {
       needs(response.ok, `Failed to decrypt: ${toUtf8(body)}`)
       expect(plainText).toEqual(new Uint8Array(body))
     } catch (e) {
-      if (!notSupportedMessages.includes(e.message)) throw e
+      if (e instanceof Error && !notSupportedMessages.includes(e.message)) throw e
     }
   })
 }

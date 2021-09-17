@@ -259,7 +259,9 @@ export function KmsKeyringClass<
            * If the caller does not have access they may have access
            * through another Keyring.
            */
-          cmkErrors.push(e)
+          if (e instanceof Error) {
+            cmkErrors.push(e)
+          }
         }
 
         /* Check for early return (Postcondition): clientProvider may not return a client. */

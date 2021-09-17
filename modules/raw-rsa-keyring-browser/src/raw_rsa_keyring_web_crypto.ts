@@ -193,6 +193,7 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
     const { wrappingAlgorithm, format, key } = getImportOptions(publicKey)
     const backend = await getWebCryptoBackend()
     const subtle = getNonZeroByteBackend(backend)
+    // @ts-ignore // TS2769: No overload matches this call
     return subtle.importKey(format, key, wrappingAlgorithm, false, ['wrapKey'])
   }
 
@@ -203,12 +204,14 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
     const backend = await getWebCryptoBackend()
 
     if (isFullSupportWebCryptoBackend(backend)) {
+      // @ts-ignore // TS2769: No overload matches this call
       return backend.subtle.importKey(format, key, wrappingAlgorithm, false, [
         'unwrapKey',
       ])
     } else {
       return Promise.all([
         backend.nonZeroByteSubtle.importKey(
+          // @ts-ignore // TS2769: No overload matches this call
           format,
           key,
           wrappingAlgorithm,
@@ -216,6 +219,7 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
           ['unwrapKey']
         ),
         backend.zeroByteSubtle.importKey(
+          // @ts-ignore // TS2769: No overload matches this call
           format,
           key,
           wrappingAlgorithm,

@@ -75,11 +75,10 @@ const cli = yargs
   .demandCommand()
 
 ;(async (argv) => {
+  // prettier-ignore
   const {
-    _: [command],
-    tolerateFailures,
-    testName,
-    concurrency,
+    // @ts-ignore // ignoring TS2339
+    _: [command], tolerateFailures, testName, concurrency,
   } = argv
   /* I set the result to 1 so that if I fall through the exit condition is a failure */
   let result = 1

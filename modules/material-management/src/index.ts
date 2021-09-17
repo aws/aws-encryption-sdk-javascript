@@ -76,7 +76,7 @@ export {
   readOnlyProperty,
 } from './immutable_class'
 
-export { needs } from './needs'
+export { needs, NotSupported } from './needs'
 export { cloneMaterial } from './clone_cryptographic_material'
 
 export * from './types'

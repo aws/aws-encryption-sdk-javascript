@@ -344,7 +344,9 @@ export function AwsKmsMrkAwareSymmetricKeyringClass<
           //# If the response does not satisfies these requirements then an error
           //# MUST be collected and the next encrypted data key in the filtered set
           //# MUST be attempted.
-          cmkErrors.push(e)
+          if (e instanceof Error) {
+            cmkErrors.push(e)
+          }
         }
       }
 

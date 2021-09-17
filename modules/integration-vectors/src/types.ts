@@ -61,7 +61,7 @@ export interface TestVectorResult {
   name: string
   result: boolean
   description?: string
-  err?: Error
+  err?: Error | string | any
 }
 
 export interface StreamEntry extends Entry {

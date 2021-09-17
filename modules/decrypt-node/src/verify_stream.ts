@@ -284,7 +284,9 @@ export class VerifyStream extends PortableTransformWithType {
       needs(isVerified, 'Invalid Signature')
       callback()
     } catch (e) {
-      callback(e)
+      if (e instanceof Error) {
+        callback(e)
+      }
     }
   }
 }

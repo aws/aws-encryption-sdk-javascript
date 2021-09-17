@@ -132,7 +132,9 @@ function buildPrivateOnDecrypt<S extends SupportedAlgorithmSuites>() {
          * If the caller does not have access they may have access
          * through another Keyring.
          */
-        childKeyringErrors.push(e)
+        if (e instanceof Error) {
+          childKeyringErrors.push(e)
+        }
       }
     }
 
