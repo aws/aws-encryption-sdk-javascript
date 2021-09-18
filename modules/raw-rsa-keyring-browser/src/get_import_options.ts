@@ -64,7 +64,17 @@ const RsaPaddingMap: {
   [RsaPadding.OAEP_SHA512_MFG1]: OAEP_SHA512_MFG1,
 })
 
-export function getImportOptions(keyInfo: RsaImportableKey) {
+export function getImportOptions(keyInfo: RsaImportableKey):
+  | {
+      format: 'jwk'
+      wrappingAlgorithm: RsaWrappingKeyAlgorithm
+      key: RsaJsonWebKey
+    }
+  | {
+      format: 'raw' | 'pkcs8' | 'spki'
+      wrappingAlgorithm: RsaWrappingKeyAlgorithm
+      key: Uint8Array
+    } {
   const { alg } = keyInfo as RsaJsonWebKey
   const { padding } = keyInfo as BinaryKey
   if (JsonWebKeyMap[alg]) {
