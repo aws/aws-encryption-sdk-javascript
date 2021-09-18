@@ -13,6 +13,7 @@ import {
   readOnlyProperty,
   SupportedAlgorithmSuites,
   Newable,
+  ErrorPlus,
 } from '@aws-crypto/material-management'
 import {
   constructArnInOtherRegion,
@@ -170,7 +171,7 @@ export function AwsKmsMrkAwareSymmetricDiscoveryKeyringClass<
       //# The set of encrypted data keys MUST first be filtered to match this
       //# keyring's configuration.
       const decryptableEDKs = encryptedDataKeys.filter(filterEDKs(this))
-      const cmkErrors: Error[] = []
+      const cmkErrors: ErrorPlus[] = []
 
       //= compliance/framework/aws-kms/aws-kms-mrk-aware-symmetric-region-discovery-keyring.txt#2.8
       //# For each encrypted data key in the filtered set, one at a time, the
@@ -253,9 +254,7 @@ export function AwsKmsMrkAwareSymmetricDiscoveryKeyringClass<
           //# If the response does not satisfies these requirements then an error
           //# is collected and the next encrypted data key in the filtered set MUST
           //# be attempted.
-          if (e instanceof Error) {
-            cmkErrors.push(e)
-          }
+          cmkErrors.push({ errPlus: e })
         }
       }
       //= compliance/framework/aws-kms/aws-kms-mrk-aware-symmetric-region-discovery-keyring.txt#2.8
@@ -268,7 +267,7 @@ export function AwsKmsMrkAwareSymmetricDiscoveryKeyringClass<
           `Unable to decrypt data key${
             !decryptableEDKs.length ? ': No EDKs supplied' : ''
           }.`,
-          ...cmkErrors.map((e, i) => `Error #${i + 1}  \n${e.stack}`),
+          ...cmkErrors.map((e, i) => `Error #${i + 1}  \n${e.errPlus.stack}`),
         ].join('\n')
       )
       return material

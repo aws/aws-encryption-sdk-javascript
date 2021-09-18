@@ -15,6 +15,7 @@ import {
   readOnlyProperty,
   unwrapDataKey,
   Newable,
+  ErrorPlus,
 } from '@aws-crypto/material-management'
 import {
   KMS_PROVIDER_ID,
@@ -274,7 +275,7 @@ export function AwsKmsMrkAwareSymmetricKeyringClass<
       //# keyring's configuration.
       const decryptableEDKs = encryptedDataKeys.filter(filterEDKs(keyId))
 
-      const cmkErrors: Error[] = []
+      const cmkErrors: ErrorPlus[] = []
 
       //= compliance/framework/aws-kms/aws-kms-mrk-aware-symmetric-keyring.txt#2.8
       //# For each encrypted data key in the filtered set, one at a time, the
@@ -344,9 +345,7 @@ export function AwsKmsMrkAwareSymmetricKeyringClass<
           //# If the response does not satisfies these requirements then an error
           //# MUST be collected and the next encrypted data key in the filtered set
           //# MUST be attempted.
-          if (e instanceof Error) {
-            cmkErrors.push(e)
-          }
+          cmkErrors.push({ errPlus: e })
         }
       }
 
@@ -360,7 +359,7 @@ export function AwsKmsMrkAwareSymmetricKeyringClass<
           `Unable to decrypt data key${
             !decryptableEDKs.length ? ': No EDKs supplied' : ''
           }.`,
-          ...cmkErrors.map((e, i) => `Error #${i + 1}  \n${e.stack}`),
+          ...cmkErrors.map((e, i) => `Error #${i + 1}  \n${e.errPlus.stack}`),
         ].join('\n')
       )
 
