@@ -39,6 +39,7 @@ import {
   flattenMixedCryptoKey,
 } from './get_import_options'
 
+// noinspection TypeScriptValidateTypes
 export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
   public declare keyNamespace: string
   public declare keyName: string
@@ -193,38 +194,46 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
     const { wrappingAlgorithm, format, key } = getImportOptions(publicKey)
     const backend = await getWebCryptoBackend()
     const subtle = getNonZeroByteBackend(backend)
-    // @ts-ignore // TS2769: No overload matches this call
+    // @ts-ignore // see TS2769 Note below
     return subtle.importKey(format, key, wrappingAlgorithm, false, ['wrapKey'])
   }
+
+  // TS2769 Note:
+  // TS2769 is "No overload matches this call".
+  // Above and below, TS is incorrect.
+  // `importKey` has two overrides,
+  // They are abbreviated below:
+  // ```
+  // importKey(format: "jwk", keyData: JsonWebKey, algorithm: AlgorithmIdentifier | ... , extractable: boolean, keyUsages: KeyUsage[]): Promise<CryptoKey>;
+  // importKey(format:  "raw" | "pkcs8" | "spki", keyData: BufferSource, algorithm: AlgorithmIdentifier | ..., extractable: boolean, keyUsages: KeyUsage[]): Promise<CryptoKey>;
+  // ```
+  // The method getImportOptions explicitly
+  // returns format & key that match
+  // these overrides.
+  // However, TS is unable to recognize this.
 
   static async importPrivateKey(
     privateKey: RsaImportableKey
   ): Promise<AwsEsdkJsCryptoKey | MixedBackendCryptoKey> {
-    const { wrappingAlgorithm, format, key } = getImportOptions(privateKey)
+    const { format, key, wrappingAlgorithm } = getImportOptions(privateKey)
     const backend = await getWebCryptoBackend()
 
     if (isFullSupportWebCryptoBackend(backend)) {
-      // @ts-ignore // TS2769: No overload matches this call
-      return backend.subtle.importKey(format, key, wrappingAlgorithm, false, [
-        'unwrapKey',
-      ])
+      // prettier-ignore
+      return backend.subtle.importKey(
+        // @ts-ignore // see TS2769 Note above
+        format, key, wrappingAlgorithm, false, ['unwrapKey']
+      )
     } else {
+      // prettier-ignore
       return Promise.all([
         backend.nonZeroByteSubtle.importKey(
-          // @ts-ignore // TS2769: No overload matches this call
-          format,
-          key,
-          wrappingAlgorithm,
-          false,
-          ['unwrapKey']
+          // @ts-ignore // see TS2769 Note above
+          format, key, wrappingAlgorithm, false, ['unwrapKey']
         ),
         backend.zeroByteSubtle.importKey(
-          // @ts-ignore // TS2769: No overload matches this call
-          format,
-          key,
-          wrappingAlgorithm,
-          false,
-          ['unwrapKey']
+          // @ts-ignore // see TS2769 Note above
+          format, key, wrappingAlgorithm, false, ['unwrapKey']
         ),
       ]).then(([nonZeroByteCryptoKey, zeroByteCryptoKey]) => ({
         nonZeroByteCryptoKey,
