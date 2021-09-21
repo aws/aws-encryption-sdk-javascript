@@ -11,7 +11,7 @@ import {
   NodeHash,
 } from '@aws-crypto/material-management'
 import {
-  Sign,
+  Signer,
   Verify,
   createCipheriv,
   createDecipheriv,
@@ -55,7 +55,7 @@ export interface GetCipherInfo {
 }
 
 export interface GetSigner {
-  (): Sign & { awsCryptoSign: () => Buffer }
+  (): Signer & { awsCryptoSign: () => Buffer }
 }
 
 export interface NodeEncryptionMaterialHelper {
