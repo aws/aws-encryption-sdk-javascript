@@ -80,9 +80,9 @@ export class VerifyStream extends PortableTransformWithType {
         if (verify) {
           const { rawHeader, headerAuth, messageHeader } = headerInfo
           const { headerIv, headerAuthTag } = headerAuth
-          verify.update(rawHeader)
+          verify.update(<Buffer>rawHeader)
           verify.update(
-            serializeMessageHeaderAuth({
+            <Buffer>serializeMessageHeaderAuth({
               headerIv,
               headerAuthTag,
               messageHeader,
