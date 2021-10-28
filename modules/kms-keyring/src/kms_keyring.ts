@@ -16,7 +16,7 @@ import {
   readOnlyProperty,
   unwrapDataKey,
   Newable,
-  ErrorPlus,
+  Catchable,
 } from '@aws-crypto/material-management'
 import {
   KMS_PROVIDER_ID,
@@ -244,7 +244,7 @@ export function KmsKeyringClass<
        */
       const decryptableEDKs = encryptedDataKeys.filter(filterEDKs(keyIds, this))
 
-      const cmkErrors: ErrorPlus[] = []
+      const cmkErrors: Catchable[] = []
 
       for (const edk of decryptableEDKs) {
         let dataKey: RequiredDecryptResponse | false = false

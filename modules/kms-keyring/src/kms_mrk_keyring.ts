@@ -15,7 +15,7 @@ import {
   readOnlyProperty,
   unwrapDataKey,
   Newable,
-  ErrorPlus,
+  Catchable,
 } from '@aws-crypto/material-management'
 import {
   KMS_PROVIDER_ID,
@@ -275,7 +275,7 @@ export function AwsKmsMrkAwareSymmetricKeyringClass<
       //# keyring's configuration.
       const decryptableEDKs = encryptedDataKeys.filter(filterEDKs(keyId))
 
-      const cmkErrors: ErrorPlus[] = []
+      const cmkErrors: Catchable[] = []
 
       //= compliance/framework/aws-kms/aws-kms-mrk-aware-symmetric-keyring.txt#2.8
       //# For each encrypted data key in the filtered set, one at a time, the

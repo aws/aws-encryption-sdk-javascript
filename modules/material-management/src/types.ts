@@ -157,6 +157,6 @@ export interface AwsEsdkAsymmetricKeyDetails {
   namedCurve?: string
 }
 
-export interface ErrorPlus {
+export interface Catchable {
   errPlus?: Error | string | any
 }

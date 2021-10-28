@@ -13,7 +13,7 @@ import {
   readOnlyProperty,
   SupportedAlgorithmSuites,
   Newable,
-  ErrorPlus,
+  Catchable,
 } from '@aws-crypto/material-management'
 import {
   constructArnInOtherRegion,
@@ -171,7 +171,7 @@ export function AwsKmsMrkAwareSymmetricDiscoveryKeyringClass<
       //# The set of encrypted data keys MUST first be filtered to match this
       //# keyring's configuration.
       const decryptableEDKs = encryptedDataKeys.filter(filterEDKs(this))
-      const cmkErrors: ErrorPlus[] = []
+      const cmkErrors: Catchable[] = []
 
       //= compliance/framework/aws-kms/aws-kms-mrk-aware-symmetric-region-discovery-keyring.txt#2.8
       //# For each encrypted data key in the filtered set, one at a time, the

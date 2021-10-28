@@ -7,7 +7,7 @@ import {
   SupportedAlgorithmSuites,
   EncryptionMaterial,
   DecryptionMaterial,
-  ErrorPlus,
+  Catchable,
 } from './types'
 import { needs } from './needs'
 import { EncryptedDataKey } from './encrypted_data_key'
@@ -120,7 +120,7 @@ function buildPrivateOnDecrypt<S extends SupportedAlgorithmSuites>() {
     const children = this.children.slice()
     if (this.generator) children.unshift(this.generator)
 
-    const childKeyringErrors: ErrorPlus[] = []
+    const childKeyringErrors: Catchable[] = []
 
     for (const keyring of children) {
       /* Check for early return (Postcondition): Do not attempt to decrypt once I have a valid key. */
