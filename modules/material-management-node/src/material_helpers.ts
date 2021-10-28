@@ -11,8 +11,6 @@ import {
   NodeHash,
 } from '@aws-crypto/material-management'
 import {
-  Signer,
-  Verify,
   createCipheriv,
   createDecipheriv,
   createSign,
@@ -21,6 +19,7 @@ import {
 } from 'crypto'
 import { HKDF } from '@aws-crypto/hkdf-node'
 import { kdfInfo, kdfCommitKeyInfo } from '@aws-crypto/serialize'
+import { AwsESDKSigner, AwsESDKVerify } from './types'
 
 export interface AwsEsdkJsCipherGCM {
   update(data: Buffer): Buffer
@@ -55,7 +54,7 @@ export interface GetCipherInfo {
 }
 
 export interface GetSigner {
-  (): Signer & { awsCryptoSign: () => Buffer }
+  (): AwsESDKSigner & { awsCryptoSign: () => Buffer }
 }
 
 export interface NodeEncryptionMaterialHelper {
@@ -128,7 +127,7 @@ export interface GetDecipherInfo {
 }
 
 export interface GetVerify {
-  (): Verify & { awsCryptoVerify: (signature: Buffer) => boolean }
+  (): AwsESDKVerify & { awsCryptoVerify: (signature: Buffer) => boolean }
 }
 
 export interface NodeDecryptionMaterialHelper {
