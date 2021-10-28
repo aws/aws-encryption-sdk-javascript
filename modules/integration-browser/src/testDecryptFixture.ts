@@ -6,6 +6,7 @@ import {
   MultiKeyringWebCrypto,
   WebCryptoMaterialsManager,
   DecryptResult,
+  needs,
 } from '@aws-crypto/client-browser'
 import {
   DecryptionFixture,
@@ -69,14 +70,17 @@ export async function testPositiveDecryptFixture(
     ) {
       return { result: true, name }
     }
-    // noinspection ExceptionCaughtLocallyJS
+    /* If the actual plaintext does not match the expected plaintext,*/
     throw new Error(
       expectedNotActualPlaintextMessage +
         `\n expected plaintext: ${expectedPlainText}` +
         `\n actual plaintext: ${decryptResult.plaintext}`
     )
   } catch (err) {
+    /* it FAILED with err.message as expectedNotActualPlaintextMessage */
     return { result: false, name, err }
+    //By catching the err and returning it above, we also satisfy:
+    /* If the decryption is NOT supported,  FAILED with err.message in notSupportedDecryptMessages */
   }
 }
 
@@ -96,13 +100,18 @@ export async function testNegativeDecryptFixture(
     const cmm = await _getCmm(keyInfos)
     decryptResult = await _decrypt(cmm, cipher)
   } catch (err) {
-    if (
-      err instanceof Error &&
-      notSupportedDecryptMessages.includes(err.message)
+    needs(
+      err instanceof Error,
+      `Thrown object must be an error but was ${typeof err}`
     )
+    if (notSupportedDecryptMessages.includes(err.message)) {
+      /* If the decryption is NOT supported,  FAILED with err.message in notSupportedDecryptMessages */
       return { result: false, name, err: err }
+    }
+    /* If it is a negative test, and it throws an error outside of notSupportedDecryptMessages, it PASSED.*/
     return { result: true, name }
   }
+  /* If it is a negative test, and it does not throw an error, it FAILED */
   return {
     result: false,
     name,
