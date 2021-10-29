@@ -8,15 +8,10 @@ phases:
   install:
     commands:
       - apt remove nodejs
-      - NVM_DIR=$CODEBUILD_SRC_DIR/.nvm
-      - mkdir $NVM_DIR
-      - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-      - chmod +x "$NVM_DIR/nvm.sh"
-      - . "$NVM_DIR/nvm.sh"
-      - nvm install 16
-      - nvm alias default 16
-      - npm -v
+      - curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+      - apt install -y nodejs
       - node -v
+      - npm -v
       - npm ci --unsafe-perm
       - npm run build
   build:
