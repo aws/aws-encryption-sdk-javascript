@@ -8,9 +8,10 @@ phases:
   install:
     commands:
       - apt remove nodejs
+      - NVM_DIR=$CODEBUILD_SRC_DIR/.nvm
+      - mkdir $NVM_DIR
       - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-      - export NVM_DIR="$HOME/.nvm"
-      - [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+      - export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
       - command -v nvm
       - nvm install 16
       - nvm alias default 16
