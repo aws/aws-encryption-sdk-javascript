@@ -7,7 +7,7 @@ env:
 phases:
   install:
     commands:
-      - apt-get uninstall nodejs
+      - apt remove nodejs
       - curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
       - apt-get install -y nodejs
       - npm ci --unsafe-perm
