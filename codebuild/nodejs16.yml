@@ -7,7 +7,11 @@ env:
 phases:
   install:
     commands:
-      - apt remove nodejs
+      - apt remove nodejs npm
+      - TO_REMOVE=$(which npm)
+      - rm $TO_REMOVE
+      - TO_REMOVE=$(which node)
+      - rm $TO_REMOVE
       - curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
       - apt install -y nodejs
       - node -v
