@@ -13,6 +13,10 @@ batch:
       buildspec: codebuild/nodejs14.yml
       env:
         image: aws/codebuild/standard:5.0
+    - identifier: testNodejs16
+      buildspec: codebuild/nodejs16.yml
+      env:
+        image: aws/codebuild/standard:5.0
     - identifier: testBrowser
       buildspec: codebuild/browser.yml
     - identifier: compliance
