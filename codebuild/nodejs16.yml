@@ -13,7 +13,6 @@ phases:
       - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
       - chmod +x "$NVM_DIR/nvm.sh"
       - . "$NVM_DIR/nvm.sh"
-      - command -v nvm
       - nvm install 16
       - nvm alias default 16
       - npm -v
