@@ -23,3 +23,4 @@ phases:
       - npm -v
       - node -v
       - npm run coverage-node
+      - npm run node-integration
