@@ -7,7 +7,7 @@ env:
 phases:
   install:
     commands:
-      - apt remove nodejs npm
+      - apt remove nodejs
       - TO_REMOVE=$(which npm)
       - rm $TO_REMOVE
       - TO_REMOVE=$(which node)
