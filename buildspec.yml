@@ -29,10 +29,10 @@ batch:
         image: aws/codebuild/standard:5.0
     - identifier: testVectorsNodejs12
       buildspec: codebuild/test_vectors/nodejs12.yml
-    - identifier: testVectorsNodejs14
-      buildspec: codebuild/test_vectors/nodejs14.yml
-      env:
-        image: aws/codebuild/standard:5.0
+#    - identifier: testVectorsNodejs14
+#      buildspec: codebuild/test_vectors/nodejs14.yml
+#      env:
+#        image: aws/codebuild/standard:5.0
     - identifier: testVectorsNodejs16
       buildspec: codebuild/test_vectors/nodejs16.yml
       env:
