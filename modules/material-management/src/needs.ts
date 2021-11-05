@@ -22,12 +22,3 @@ export function needs(
   }
 }
 
-export class NotSupported extends Error {
-  code: string
-
-  constructor(message?: string) {
-    super(message)
-    Object.setPrototypeOf(this, NotSupported.prototype)
-    this.code = 'NOT_SUPPORTED'
-  }
-}
