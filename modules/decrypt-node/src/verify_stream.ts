@@ -80,9 +80,9 @@ export class VerifyStream extends PortableTransformWithType {
         if (verify) {
           const { rawHeader, headerAuth, messageHeader } = headerInfo
           const { headerIv, headerAuthTag } = headerAuth
-          verify.update(rawHeader)
+          verify.update(<Buffer>rawHeader)
           verify.update(
-            serializeMessageHeaderAuth({
+            <Buffer>serializeMessageHeaderAuth({
               headerIv,
               headerAuthTag,
               messageHeader,
@@ -263,7 +263,7 @@ export class VerifyStream extends PortableTransformWithType {
     return super.push(chunk, encoding)
   }
 
-  _flush(callback: (err?: Error) => void) {
+  _flush(callback: (err?: Error | any | unknown) => void) {
     const { finalAuthTagReceived } = this._verifyState
     /* Precondition: All ciphertext MUST have been received.
      * The verify stream has ended,

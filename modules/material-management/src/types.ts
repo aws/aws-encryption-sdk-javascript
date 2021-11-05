@@ -5,10 +5,10 @@ import { NodeAlgorithmSuite } from './node_algorithms'
 import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 import { EncryptedDataKey } from './encrypted_data_key'
 import {
-  NodeEncryptionMaterial,
-  WebCryptoEncryptionMaterial,
   NodeDecryptionMaterial,
+  NodeEncryptionMaterial,
   WebCryptoDecryptionMaterial,
+  WebCryptoEncryptionMaterial,
 } from './cryptographic_material'
 import { CommitmentPolicy } from './algorithm_suites'
 
@@ -155,4 +155,8 @@ export interface AwsEsdkAsymmetricKeyDetails {
    * Name of the curve (EC).
    */
   namedCurve?: string
+}
+
+export interface Catchable {
+  errPlus?: Error | string | any
 }

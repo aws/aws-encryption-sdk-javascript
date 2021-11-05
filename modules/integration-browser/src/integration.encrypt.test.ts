@@ -59,8 +59,15 @@ function aTest(testName: string, decryptOracle: string) {
       const body = await response.arrayBuffer()
       needs(response.ok, `Failed to decrypt: ${toUtf8(body)}`)
       expect(plainText).toEqual(new Uint8Array(body))
-    } catch (e) {
-      if (!notSupportedMessages.includes(e.message)) throw e
+    } catch (err) {
+      needs(
+        err instanceof Error,
+        `Thrown object must be an error but was ${typeof err}`
+      )
+      needs(
+        notSupportedMessages.includes(err.message),
+        `Error message should be in notSupportedMessages but was ${err.message}`
+      )
     }
   })
 }

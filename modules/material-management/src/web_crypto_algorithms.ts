@@ -233,9 +233,9 @@ const webCryptoAlgAes256GcmHkdfSha512CommittingEcdsaP384: WebCryptoAlgCommittedS
     saltLengthBytes: 32,
   }
 
-type WebCryptoAlgorithms = Readonly<
-  { [id in AlgorithmSuiteIdentifier]: WebCryptoAlgUnion }
->
+type WebCryptoAlgorithms = Readonly<{
+  [id in AlgorithmSuiteIdentifier]: WebCryptoAlgUnion
+}>
 const webCryptoAlgorithms: WebCryptoAlgorithms = Object.freeze({
   [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16]: Object.freeze(
     webCryptoAlgAes128GcmIv12Tag16
@@ -279,9 +279,9 @@ type WebCryptoAlgorithmSuiteIdentifier = Exclude<
   >,
   AlgorithmSuiteIdentifier.ALG_AES192_GCM_IV12_TAG16_HKDF_SHA384_ECDSA_P384
 >
-type SupportedWebCryptoAlgorithms = Readonly<
-  { [id in WebCryptoAlgorithmSuiteIdentifier]: WebCryptoAlgUnion }
->
+type SupportedWebCryptoAlgorithms = Readonly<{
+  [id in WebCryptoAlgorithmSuiteIdentifier]: WebCryptoAlgUnion
+}>
 const supportedWebCryptoAlgorithms: SupportedWebCryptoAlgorithms =
   Object.freeze({
     [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16]: Object.freeze(

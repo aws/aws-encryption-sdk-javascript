@@ -11,7 +11,7 @@
  * But sending an invalid hash to a version that does not support oaepHash will be ignored.
  */
 
-import { needs } from '@aws-crypto/material-management-node'
+import { needs, NotSupported } from '@aws-crypto/material-management-node'
 
 import { constants, publicEncrypt } from 'crypto'
 
@@ -32,10 +32,13 @@ export const oaepHashSupported = (function () {
      */
     return false
   } catch (ex) {
-    needs(
-      ex.code === 'ERR_OSSL_EVP_INVALID_DIGEST',
-      'Unexpected error testing oaepHash.'
-    )
-    return true
+    if (ex instanceof NotSupported) {
+      needs(
+        ex.code === 'ERR_OSSL_EVP_INVALID_DIGEST',
+        'Unexpected error testing oaepHash.'
+      )
+      return true
+    }
+    return Error('Unexpected error testing oaepHash.')
   }
 })()

@@ -226,9 +226,9 @@ const nodeAlgAes256GcmHkdfSha512CommittingEcdsaP384: NodeAlgCommittedSigned = {
   saltLengthBytes: 32,
 }
 
-type NodeAlgorithms = Readonly<
-  { [id in AlgorithmSuiteIdentifier]: NodeAlgUnion }
->
+type NodeAlgorithms = Readonly<{
+  [id in AlgorithmSuiteIdentifier]: NodeAlgUnion
+}>
 const nodeAlgorithms: NodeAlgorithms = Object.freeze({
   [AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16]: Object.freeze(
     nodeAlgAes128GcmIv12Tag16

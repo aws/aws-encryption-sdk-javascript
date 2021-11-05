@@ -22,6 +22,7 @@ export {
   KeyringTrace,
   KeyringTraceFlag,
   needs,
+  NotSupported,
   KeyringNode,
   MultiKeyringNode,
   immutableBaseClass,
