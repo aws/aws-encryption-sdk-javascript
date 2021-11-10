@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.1.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v3.0.3...v3.1.0) (2021-11-10)
+
+
+### Bug Fixes
+
+* Pin karma-credential-loader to 3.38.0 ([#795](https://github.com/aws/aws-encryption-sdk-javascript/issues/795)) ([fe63723](https://github.com/aws/aws-encryption-sdk-javascript/commit/fe63723d1b6cc6ce68832ba5cc87c9c980f1f39e))
+
+
+### Features
+
+* **node:** support node v16 ([#741](https://github.com/aws/aws-encryption-sdk-javascript/issues/741)) ([66e63b5](https://github.com/aws/aws-encryption-sdk-javascript/commit/66e63b5af2dffa9ee128a323f14cbbb8520a5053))
+
+
+
+
+
 ## [3.0.2](https://github.com/aws/aws-encryption-sdk-javascript/compare/v3.0.0...v3.0.2) (2021-09-08)
 
 **Note:** Version bump only for package @aws-crypto/integration-browser

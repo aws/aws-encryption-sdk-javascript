@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/decrypt-node",
-  "version": "3.0.3",
+  "version": "3.1.0",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
