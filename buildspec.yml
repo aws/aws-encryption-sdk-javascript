@@ -5,5 +5,9 @@ batch:
   build-list:
     - identifier: nodejs10
       buildspec: codebuild/nodejs10.yml
+      env:
+        image: aws/codebuild/standard:4.0
     - identifier: nodejs12
       buildspec: codebuild/nodejs12.yml
+      env:
+        image: aws/codebuild/standard:4.0
