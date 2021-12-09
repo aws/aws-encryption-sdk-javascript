@@ -80,3 +80,4 @@ export { needs } from './needs'
 export { cloneMaterial } from './clone_cryptographic_material'
 
 export * from './types'
+export { NotSupported } from './error'

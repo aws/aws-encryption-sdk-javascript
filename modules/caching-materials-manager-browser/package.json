@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/caching-materials-manager-browser",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -23,7 +23,7 @@
     "@aws-crypto/serialize": "file:../serialize",
     "@aws-crypto/web-crypto-backend": "file:../web-crypto-backend",
     "@aws-sdk/util-base64-browser": "3.1.0",
-    "@aws-sdk/util-utf8-browser": "3.13.1",
+    "@aws-sdk/util-utf8-browser": "3.23.0",
     "tslib": "^2.2.0"
   },
   "sideEffects": false,

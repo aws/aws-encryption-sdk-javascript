@@ -429,7 +429,7 @@ describe('getEncryptHelper', () => {
 
     const signer = helper.getSigner()
     expect(signer).to.haveOwnProperty('awsCryptoSign').and.to.be.a('function')
-    signer.update('data')
+    signer.update(Buffer.from('data'))
     const sig = signer.awsCryptoSign()
     expect(sig).instanceOf(Buffer)
   })
@@ -564,7 +564,7 @@ describe('getDecryptionHelper', () => {
 
     const verify = helper.getVerify()
     expect(verify).to.haveOwnProperty('awsCryptoVerify').and.to.be.a('function')
-    verify.update('data')
+    verify.update(Buffer.from('data'))
     const isValid = verify.awsCryptoVerify(Buffer.alloc(5))
     expect(isValid).to.equal(false)
   })

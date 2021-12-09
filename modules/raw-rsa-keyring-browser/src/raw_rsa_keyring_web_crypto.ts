@@ -39,6 +39,7 @@ import {
   flattenMixedCryptoKey,
 } from './get_import_options'
 
+// noinspection TypeScriptValidateTypes
 export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
   public declare keyNamespace: string
   public declare keyName: string
@@ -190,38 +191,25 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
   static async importPublicKey(
     publicKey: RsaImportableKey
   ): Promise<AwsEsdkJsCryptoKey> {
-    const { wrappingAlgorithm, format, key } = getImportOptions(publicKey)
+    const op = getImportOptions(publicKey)
     const backend = await getWebCryptoBackend()
     const subtle = getNonZeroByteBackend(backend)
-    return subtle.importKey(format, key, wrappingAlgorithm, false, ['wrapKey'])
+
+    return ImportKeyTypeOverload(op, subtle, ['wrapKey'])
   }
 
   static async importPrivateKey(
     privateKey: RsaImportableKey
   ): Promise<AwsEsdkJsCryptoKey | MixedBackendCryptoKey> {
-    const { wrappingAlgorithm, format, key } = getImportOptions(privateKey)
+    const op = getImportOptions(privateKey)
     const backend = await getWebCryptoBackend()
 
     if (isFullSupportWebCryptoBackend(backend)) {
-      return backend.subtle.importKey(format, key, wrappingAlgorithm, false, [
-        'unwrapKey',
-      ])
+      return ImportKeyTypeOverload(op, backend.subtle, ['unwrapKey'])
     } else {
       return Promise.all([
-        backend.nonZeroByteSubtle.importKey(
-          format,
-          key,
-          wrappingAlgorithm,
-          false,
-          ['unwrapKey']
-        ),
-        backend.zeroByteSubtle.importKey(
-          format,
-          key,
-          wrappingAlgorithm,
-          false,
-          ['unwrapKey']
-        ),
+        ImportKeyTypeOverload(op, backend.nonZeroByteSubtle, ['unwrapKey']),
+        ImportKeyTypeOverload(op, backend.zeroByteSubtle, ['unwrapKey']),
       ]).then(([nonZeroByteCryptoKey, zeroByteCryptoKey]) => ({
         nonZeroByteCryptoKey,
         zeroByteCryptoKey,
@@ -230,3 +218,47 @@ export class RawRsaKeyringWebCrypto extends KeyringWebCrypto {
   }
 }
 immutableClass(RawRsaKeyringWebCrypto)
+
+// TS2769 Note:
+// TS2769 is "No overload matches this call".
+// Above and below, TS is incorrect.
+// `importKey` has two overrides,
+// They are abbreviated below:
+// ```
+// importKey(format: "jwk", keyData: JsonWebKey, algorithm: AlgorithmIdentifier | ... , extractable: boolean, keyUsages: KeyUsage[]): Promise<CryptoKey>;
+// importKey(format:  "raw" | "pkcs8" | "spki", keyData: BufferSource, algorithm: AlgorithmIdentifier | ..., extractable: boolean, keyUsages: KeyUsage[]): Promise<CryptoKey>;
+// ```
+// The method getImportOptions explicitly
+// returns format & key that match
+// these overrides.
+// However, TS is unable to recognize this easily.
+// The following ugly function does the disambiguation.
+// There are 2 problems that TS is having.
+// First when format key and wrappingAlgorithm are independent,
+// TS does not _remember_ the relationship between format and key.
+// The second issue is related,
+// when trying to select the proper overload,
+// it is collapsing the definition of format.
+// Thus discriminating the union by `format`
+// helps TS understand all the arguments.
+async function ImportKeyTypeOverload(
+  op: ReturnType<typeof getImportOptions>,
+  subtle: SubtleCrypto,
+  keyUsages: KeyUsage[]
+): Promise<AwsEsdkJsCryptoKey> {
+  return op.format == 'jwk'
+    ? subtle.importKey(
+        op.format,
+        op.key,
+        op.wrappingAlgorithm,
+        false,
+        keyUsages
+      )
+    : subtle.importKey(
+        op.format,
+        op.key,
+        op.wrappingAlgorithm,
+        false,
+        keyUsages
+      )
+}

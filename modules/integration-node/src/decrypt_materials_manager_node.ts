@@ -2,29 +2,29 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-  needs,
+  buildAwsKmsMrkAwareDiscoveryMultiKeyringNode,
+  buildAwsKmsMrkAwareStrictMultiKeyringNode,
   KeyringNode,
-  MultiKeyringNode,
   KmsKeyringNode,
+  MultiKeyringNode,
+  needs,
+  oaepHashSupported,
   RawAesKeyringNode,
-  WrappingSuiteIdentifier,
   RawAesWrappingSuiteIdentifier,
   RawRsaKeyringNode,
-  oaepHashSupported,
-  buildAwsKmsMrkAwareStrictMultiKeyringNode,
-  buildAwsKmsMrkAwareDiscoveryMultiKeyringNode,
+  WrappingSuiteIdentifier,
 } from '@aws-crypto/client-node'
 import {
-  RsaKeyInfo,
-  AesKeyInfo,
-  KmsKeyInfo,
-  KmsMrkAwareKeyInfo,
-  KmsMrkAwareDiscoveryKeyInfo,
-  RSAKey,
   AESKey,
-  KMSKey,
-  KeyInfoTuple,
+  AesKeyInfo,
   buildGetKeyring,
+  KeyInfoTuple,
+  KMSKey,
+  KmsKeyInfo,
+  KmsMrkAwareDiscoveryKeyInfo,
+  KmsMrkAwareKeyInfo,
+  RSAKey,
+  RsaKeyInfo,
 } from '@aws-crypto/integration-vectors'
 import { constants } from 'crypto'
 
@@ -116,13 +116,4 @@ export function rsaPadding(keyInfo: RsaKeyInfo) {
   const oaepHash = keyInfo['padding-hash']
   needs(oaepHashSupported || oaepHash === 'sha1', 'Not supported at this time.')
   return { padding, oaepHash }
-}
-
-export class NotSupported extends Error {
-  code: string
-  constructor(message?: string) {
-    super(message)
-    Object.setPrototypeOf(this, NotSupported.prototype)
-    this.code = 'NOT_SUPPORTED'
-  }
 }

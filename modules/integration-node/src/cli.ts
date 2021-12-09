@@ -80,7 +80,7 @@ const cli = yargs
     tolerateFailures,
     testName,
     concurrency,
-  } = argv
+  } = await argv
   /* I set the result to 1 so that if I fall through the exit condition is a failure */
   let result = 1
   if (command === 'decrypt') {

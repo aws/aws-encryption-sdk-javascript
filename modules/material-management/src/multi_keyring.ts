@@ -7,6 +7,7 @@ import {
   SupportedAlgorithmSuites,
   EncryptionMaterial,
   DecryptionMaterial,
+  Catchable,
 } from './types'
 import { needs } from './needs'
 import { EncryptedDataKey } from './encrypted_data_key'
@@ -119,7 +120,7 @@ function buildPrivateOnDecrypt<S extends SupportedAlgorithmSuites>() {
     const children = this.children.slice()
     if (this.generator) children.unshift(this.generator)
 
-    const childKeyringErrors: Error[] = []
+    const childKeyringErrors: Catchable[] = []
 
     for (const keyring of children) {
       /* Check for early return (Postcondition): Do not attempt to decrypt once I have a valid key. */
@@ -132,7 +133,7 @@ function buildPrivateOnDecrypt<S extends SupportedAlgorithmSuites>() {
          * If the caller does not have access they may have access
          * through another Keyring.
          */
-        childKeyringErrors.push(e)
+        childKeyringErrors.push({ errPlus: e })
       }
     }
 
@@ -149,7 +150,7 @@ function buildPrivateOnDecrypt<S extends SupportedAlgorithmSuites>() {
       material.hasValidKey() ||
         (!material.hasValidKey() && !childKeyringErrors.length),
       childKeyringErrors.reduce(
-        (m, e, i) => `${m} Error #${i + 1} \n ${e.stack} \n`,
+        (m, e, i) => `${m} Error #${i + 1} \n ${e.errPlus.stack} \n`,
         'Unable to decrypt data key and one or more child keyrings had an error. \n '
       )
     )

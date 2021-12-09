@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/integration-browser",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "run-s lint-*",
@@ -20,9 +20,9 @@
     "@aws-crypto/client-browser": "file:../client-browser",
     "@aws-crypto/integration-vectors": "file:../integration-vectors",
     "@aws-sdk/credential-provider-node": "^3.11.0",
-    "@aws-sdk/karma-credential-loader": "^3.11.0",
+    "@aws-sdk/karma-credential-loader": "3.38.0",
     "@aws-sdk/util-base64-browser": "^3.10.0",
-    "@aws-sdk/util-utf8-browser": "3.1.0",
+    "@aws-sdk/util-utf8-browser": "3.23.0",
     "@trust/keyto": "^1.0.1",
     "@types/got": "^9.6.9",
     "@types/stream-to-promise": "^2.2.0",
