@@ -375,6 +375,15 @@ describe('encrypt structural testing', () => {
     const plaintext = new Uint8Array()
     const { result, messageHeader } = await encrypt(keyRing, plaintext)
 
+    /* The default algorithm suite will add a signature key to the context.
+     * So I only check that the passed context elements exist.
+     */
+    expect(messageHeader.encryptionContext)
+      .to.haveOwnProperty('simple')
+      .and.to.equal('context')
+    expect(messageHeader.encryptedDataKeys).lengthOf(1)
+    expect(messageHeader.encryptedDataKeys[0]).to.deep.equal(edk)
+
     const headerInfo = deserializeMessageHeader(result)
     if (!headerInfo) throw new Error('this should never happen')
 
