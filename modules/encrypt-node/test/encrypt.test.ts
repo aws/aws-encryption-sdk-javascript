@@ -373,7 +373,10 @@ describe('encrypt structural testing', () => {
 
   it('can encrypt empty message', async () => {
     const plaintext = new Uint8Array()
-    const { result, messageHeader } = await encrypt(keyRing, plaintext)
+    const encryptionContext = { simple: 'context' }
+    const { result, messageHeader } = await encrypt(keyRing, plaintext, {
+      encryptionContext,
+    })
 
     /* The default algorithm suite will add a signature key to the context.
      * So I only check that the passed context elements exist.
