@@ -370,6 +370,46 @@ describe('encrypt structural testing', () => {
     // This will throw if it does not deserialize correctly
     deserializeSignature(footerSection)
   })
+
+  it('can encrypt empty message', async () => {
+    const plaintext = new Uint8Array()
+    const encryptionContext = { simple: 'context' }
+    const { result, messageHeader } = await encrypt(keyRing, plaintext, {
+      encryptionContext,
+    })
+
+    /* The default algorithm suite will add a signature key to the context.
+     * So I only check that the passed context elements exist.
+     */
+    expect(messageHeader.encryptionContext)
+      .to.haveOwnProperty('simple')
+      .and.to.equal('context')
+    expect(messageHeader.encryptedDataKeys).lengthOf(1)
+    expect(messageHeader.encryptedDataKeys[0]).to.deep.equal(edk)
+
+    const headerInfo = deserializeMessageHeader(result)
+    if (!headerInfo) throw new Error('this should never happen')
+
+    expect(messageHeader).to.deep.equal(headerInfo.messageHeader)
+
+    const readPos =
+      headerInfo.headerLength + headerInfo.headerAuth.headerAuthLength
+    const bodyHeader = decodeBodyHeader(result, headerInfo, readPos)
+
+    if (!bodyHeader) throw new Error('I should never see this error')
+
+    expect(bodyHeader.isFinalFrame).to.equal(true)
+    expect(bodyHeader.contentLength).to.equal(0)
+
+    const sigPos =
+      bodyHeader.readPos + bodyHeader.contentLength + bodyHeader.tagLength / 8
+
+    // This implicitly tests that I have consumed all the data,
+    // because otherwise the footer section will be too large
+    const footerSection = result.slice(sigPos)
+    // This will throw if it does not deserialize correctly
+    deserializeSignature(footerSection)
+  })
 })
 
 async function finishedAsync(stream: any) {
