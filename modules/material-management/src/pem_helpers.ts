@@ -92,7 +92,7 @@ export function chunk64(buff: Buffer) {
   const chunks: string[] = new Array(numChunks)
 
   for (let i = 0, o = 0; i < numChunks; ++i, o += chunkSize) {
-    chunks[i] = str.substr(o, chunkSize)
+    chunks[i] = str.slice(o, o + chunkSize)
   }
 
   return chunks
