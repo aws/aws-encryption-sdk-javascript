@@ -48,7 +48,7 @@ const context = {
  * @param filename string of file name you wish to encrypt
  * @param framesize optional parameter to determine frame size; default is 4096 bytes
  */
-export async function kmsEncryptStream(filename:string, framesize?:number) {
+export async function kmsEncryptStream(filename: string, framesize?: number) {
     const readable = createReadStream(filename)
     const encFile = filename + '.encrypted'
     const writeable = createWriteStream(encFile)
