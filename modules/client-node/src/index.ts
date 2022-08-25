@@ -12,6 +12,7 @@ export * from '@aws-crypto/raw-rsa-keyring-node'
 import {
   CommitmentPolicy,
   ClientOptions,
+  EndOfSupportWarning
 } from '@aws-crypto/material-management-node'
 
 import { buildEncrypt } from '@aws-crypto/encrypt-node'
@@ -20,6 +21,7 @@ import { buildDecrypt, DecryptOutput } from '@aws-crypto/decrypt-node'
 export function buildClient(
   options: CommitmentPolicy | ClientOptions
 ): ReturnType<typeof buildEncrypt> & ReturnType<typeof buildDecrypt> {
+  console.log(EndOfSupportWarning.v1)
   return {
     ...buildEncrypt(options),
     ...buildDecrypt(options),

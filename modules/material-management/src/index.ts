@@ -77,3 +77,9 @@ export { needs } from './needs'
 export { cloneMaterial } from './clone_cryptographic_material'
 
 export * from './types'
+
+export enum EndOfSupportWarning {
+  'v1' = "This major version (1.x) of the AWS Encryption SDK for JavaScript has reached End-of-Support.\n" +
+    "It will no longer receive security updates or bug fixes.\n" +
+    "Consider updating to the latest version of the AWS Encryption SDK."
+}
