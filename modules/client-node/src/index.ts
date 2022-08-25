@@ -12,7 +12,7 @@ export * from '@aws-crypto/raw-rsa-keyring-node'
 import {
   CommitmentPolicy,
   ClientOptions,
-  EndOfSupportWarning
+  EndOfSupportWarning,
 } from '@aws-crypto/material-management-node'
 
 import { buildEncrypt } from '@aws-crypto/encrypt-node'

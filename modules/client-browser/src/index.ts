@@ -13,7 +13,7 @@ export * from '@aws-crypto/web-crypto-backend'
 import {
   CommitmentPolicy,
   ClientOptions,
-  EndOfSupportWarning
+  EndOfSupportWarning,
 } from '@aws-crypto/material-management-browser'
 
 import { buildEncrypt } from '@aws-crypto/encrypt-browser'

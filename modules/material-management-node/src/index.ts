@@ -38,5 +38,5 @@ export {
   PolicyOptions,
   MessageFormat,
   ClientOptions,
-  EndOfSupportWarning
+  EndOfSupportWarning,
 } from '@aws-crypto/material-management'
