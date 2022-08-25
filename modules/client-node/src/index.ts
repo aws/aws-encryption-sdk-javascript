@@ -21,7 +21,7 @@ import { buildDecrypt, DecryptOutput } from '@aws-crypto/decrypt-node'
 export function buildClient(
   options: CommitmentPolicy | ClientOptions
 ): ReturnType<typeof buildEncrypt> & ReturnType<typeof buildDecrypt> {
-  console.log(EndOfSupportWarning.v1)
+  console.warn(EndOfSupportWarning.v1)
   return {
     ...buildEncrypt(options),
     ...buildDecrypt(options),
