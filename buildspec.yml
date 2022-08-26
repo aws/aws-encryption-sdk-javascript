@@ -7,3 +7,5 @@ batch:
       buildspec: codebuild/nodejs10.yml
     - identifier: nodejs12
       buildspec: codebuild/nodejs12.yml
+      env:
+        image: aws/codebuild/standard:5.0
