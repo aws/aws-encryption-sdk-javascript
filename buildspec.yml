@@ -9,3 +9,4 @@ batch:
       buildspec: codebuild/nodejs12.yml
       env:
         image: aws/codebuild/standard:5.0
+        compute-type: BUILD_GENERAL1_MEDIUM
