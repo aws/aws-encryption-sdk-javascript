@@ -13,6 +13,7 @@ phases:
             - npm run build
     build:
         commands:
-            - npm test
+            - npm run lint
+            - npm run coverage-node
             - npm run test_conditions
             - npm run verdaccio
