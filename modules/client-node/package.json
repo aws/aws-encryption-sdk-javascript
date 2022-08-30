@@ -9,7 +9,7 @@
     "CSE",
     "aws"
   ],
-  "version": "1.9.0",
+  "version": "1.9.1",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "run-s lint-*",
