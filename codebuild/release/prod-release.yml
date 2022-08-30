@@ -13,7 +13,6 @@ batch:
 # Version the project and push git commits and tags
     - identifier: version
       depend-on:
-        - nodejs10
         - nodejs12
       buildspec: codebuild/release/version.yml
       env:
