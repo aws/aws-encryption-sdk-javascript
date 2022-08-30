@@ -65,6 +65,7 @@ For a more detailed explanation, see multi_keyring.ts.
 ## How to Use
 
 To see these examples in action, run `npm test`.
+Note: Remember to first run `npm build` in the root of the project.
 
 ## License
 
