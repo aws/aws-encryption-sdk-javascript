@@ -39,9 +39,9 @@
     "integration": "run-s integration-*",
     "verdaccio": "run-s verdaccio-*",
     "verdaccio-publish": "./util/local_verdaccio_publish",
-    "verdaccio-publish-browser-decrypt": "./util/npx_verdaccio @aws-crypto/integration-browser decrypt -v $npm_package_config_localTestVectors --karma -c cpu",
+    "verdaccio-publish-browser-decrypt": "./util/npx_verdaccio @aws-crypto/integration-browser decrypt -v $PWD/$npm_package_config_localTestVectors  --karma -c cpu",
     "verdaccio-publish-browser-encrypt": "./util/npx_verdaccio @aws-crypto/integration-browser encrypt -m $npm_package_config_encryptManifestList -k $npm_package_config_encryptKeyManifest -o $npm_package_config_decryptOracle --karma -c cpu",
-    "verdaccio-publish-node-decrypt": "./util/npx_verdaccio @aws-crypto/integration-node decrypt -v $npm_package_config_localTestVectors -c cpu",
+    "verdaccio-publish-node-decrypt": "./util/npx_verdaccio @aws-crypto/integration-node decrypt -v $PWD/$npm_package_config_localTestVectors  -c cpu",
     "verdaccio-publish-node-encrypt": "./util/npx_verdaccio @aws-crypto/integration-node encrypt -m $npm_package_config_encryptManifestList -k $npm_package_config_encryptKeyManifest -o $npm_package_config_decryptOracle -c cpu",
     "test_conditions": "./util/test_conditions"
   },

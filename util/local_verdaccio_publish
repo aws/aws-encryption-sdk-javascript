@@ -33,9 +33,9 @@ const args = [
   '--no-git-tag-version',
   '--no-push',
   '--no-git-reset',
-  '--ignore-scripts',
   '--preid', 'ci',
-  '--no-verify-access'
+  '--no-verify-access',
+  '--force-publish'
 ]
 spawn('npx', args, pipeStdIo)
   .on('close', (code) => {
@@ -43,6 +43,7 @@ spawn('npx', args, pipeStdIo)
     // Roll them back
     // Ideally, we would find a way to not have to do this
     execSync('git checkout -- modules/**/package.json')
+    execSync('git checkout -- lerna.json')
 
     // Kill the background verdaccio server
     verdaccio.kill()
