@@ -12,6 +12,11 @@ module.exports = function (config) {
   const concurrency = JSON.parse(readFileSync('./fixtures/concurrency.json'))
   config.set({
     basePath: '',
+    client: {
+      jasmine: {
+        timeoutInterval: 10000
+      }
+    },
     frameworks: ['parallel', 'jasmine'],
     files: [
       'fixtures/decrypt_tests.json',
