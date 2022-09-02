@@ -18,6 +18,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/client-browser": "file:../client-browser",
+    "@aws-crypto/integration-vectors": "file:../integration-vectors",
     "@aws-sdk/karma-credential-loader": "3.1.0",
     "@aws-sdk/util-base64-browser": "3.1.0",
     "@aws-sdk/util-utf8-browser": "3.1.0",
