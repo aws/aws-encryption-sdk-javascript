@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/integration-node",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "run-s lint-*",
@@ -17,7 +17,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/client-node": "file:../client-node",
-    "@aws-crypto/integration-vectors": "file:../integration-vectors",  
+    "@aws-crypto/integration-vectors": "file:../integration-vectors",
     "@types/got": "^9.6.9",
     "@types/stream-to-promise": "^2.2.0",
     "@types/yargs": "^15.0.3",

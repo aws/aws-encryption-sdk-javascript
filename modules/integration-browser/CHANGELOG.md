@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.9.2](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/integration-browser@1.9.1...@aws-crypto/integration-browser@1.9.2) (2022-09-07)
+
+
+### Bug Fixes
+
+* **verdaccio:** back port verdaccio fixes from master ([#1008](https://github.com/aws/aws-encryption-sdk-javascript/issues/1008)) ([2bef752](https://github.com/aws/aws-encryption-sdk-javascript/commit/2bef752fa099c9331b2c31bad269fc0f900adace))
+
+
+
+
+
 ## [1.9.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/@aws-crypto/integration-browser@1.9.0...@aws-crypto/integration-browser@1.9.1) (2022-08-30)
 
 **Note:** Version bump only for package @aws-crypto/integration-browser
