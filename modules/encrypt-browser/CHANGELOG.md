@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/v3.1.0...v3.1.1) (2022-03-15)
+
+
+### Bug Fixes
+
+* browser-encrypt can encrypt 0 bytes ([#866](https://github.com/aws/aws-encryption-sdk-javascript/issues/866)) ([32f7fa2](https://github.com/aws/aws-encryption-sdk-javascript/commit/32f7fa245b5f9fc69a3c64309ccda5ae42a842b2))
+
+
+
+
+
 # [3.1.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v3.0.3...v3.1.0) (2021-11-10)
 
 **Note:** Version bump only for package @aws-crypto/encrypt-browser

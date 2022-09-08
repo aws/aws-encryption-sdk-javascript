@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/encrypt-node",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "scripts": {
     "prepublishOnly": "tsc -p tsconfig.json && tsc -p tsconfig.module.json",
     "lint": "run-s lint-*",

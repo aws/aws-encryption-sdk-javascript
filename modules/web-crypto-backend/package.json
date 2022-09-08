@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/web-crypto-backend",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",

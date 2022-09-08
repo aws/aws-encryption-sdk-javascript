@@ -138,14 +138,14 @@ export async function _encrypt(
     await getSubtleEncrypt(headerIv, header)(new Uint8Array(0))
   )
 
-  const numberOfFrames = Math.ceil(plaintextLength / frameLength)
+  // In the case of plaintextLength == 0 there still needs to be 1 frame.
+  const numberOfFrames = Math.max(Math.ceil(plaintextLength / frameLength), 1)
   /* The final frame has a variable length.
    * The value needs to be known, but should only be calculated once.
    * So I calculate how much of a frame I should have at the end.
    * This value will NEVER be larger than the frameLength.
    */
-  const finalFrameLength =
-    frameLength - (numberOfFrames * frameLength - plaintextLength)
+  const finalFrameLength = plaintextLength - (numberOfFrames - 1) * frameLength
   const bodyContent = []
 
   for (
