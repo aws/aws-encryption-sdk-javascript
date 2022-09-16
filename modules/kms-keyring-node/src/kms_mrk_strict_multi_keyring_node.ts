@@ -6,7 +6,7 @@ import { KmsClientSupplier } from '@aws-crypto/kms-keyring'
 import {
   MultiKeyringNode,
   NodeAlgorithmSuite,
-} from '@aws-crypto/material-management'
+} from '@aws-crypto/material-management-node'
 import { getKmsClient } from '.'
 import { AwsKmsMrkAwareSymmetricKeyringNode } from './kms_mrk_keyring_node'
 import { KMS } from 'aws-sdk'
