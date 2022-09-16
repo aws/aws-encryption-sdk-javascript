@@ -20,7 +20,6 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/kms-keyring": "file:../kms-keyring",
-    "@aws-crypto/material-management": "file:../material-management",
     "@aws-crypto/material-management-node": "file:../material-management-node",
     "aws-sdk": "^2.650.0",
     "tslib": "^2.2.0"
