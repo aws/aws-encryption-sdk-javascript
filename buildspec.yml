@@ -33,3 +33,5 @@ batch:
         image: aws/codebuild/standard:5.0
     - identifier: testVectorsBrowser
       buildspec: codebuild/test_vectors/browser.yml
+      env:
+        image: aws/codebuild/standard:5.0
