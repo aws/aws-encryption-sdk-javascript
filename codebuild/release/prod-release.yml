@@ -57,7 +57,9 @@ phases:
       # This is going to use the OTP generated above and the NPM_TOKEN
       # environment variable. This will only publish things that are
       # missing from npm. It is therefore safe to run repeatedly.
-      - npx lerna publish from-package --yes --otp $OTP
+      # We make sure to specify a tag, otherwise the default is latest.
+      # This branch is no longer the latest MV so it must be avoided.
+      - npx lerna publish from-package --yes --otp $OTP --dist-tag '2.x'
       # remove after publishing
       - rm .npmrc
       # Clear out the verdaccio cache so that we get the latest version
