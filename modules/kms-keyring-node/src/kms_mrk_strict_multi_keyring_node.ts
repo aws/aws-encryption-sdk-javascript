@@ -1,7 +1,7 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { getAwsKmsMrkAwareStrictMultiKeyringBuilder } from '@aws-crypto/kms-keyring'
+import { getAwsKmsMrkAwareStrictMultiKeyringBuilder, AwsEsdkKMSInterface } from '@aws-crypto/kms-keyring'
 import { KmsClientSupplier } from '@aws-crypto/kms-keyring'
 import {
   MultiKeyringNode,
@@ -9,17 +9,16 @@ import {
 } from '@aws-crypto/material-management-node'
 import { getKmsClient } from '.'
 import { AwsKmsMrkAwareSymmetricKeyringNode } from './kms_mrk_keyring_node'
-import { KMS } from 'aws-sdk'
 
 export interface AwsKmsMrkAwareStrictMultiKeyringNodeInput {
-  clientProvider?: KmsClientSupplier<KMS>
+  clientProvider?: KmsClientSupplier<AwsEsdkKMSInterface>
   generatorKeyId?: string
   keyIds?: string[]
   grantTokens?: string[]
 }
 
 export const buildAwsKmsMrkAwareStrictMultiKeyringNode =
-  getAwsKmsMrkAwareStrictMultiKeyringBuilder<NodeAlgorithmSuite, KMS>(
+  getAwsKmsMrkAwareStrictMultiKeyringBuilder<NodeAlgorithmSuite, AwsEsdkKMSInterface>(
     AwsKmsMrkAwareSymmetricKeyringNode,
     MultiKeyringNode,
     getKmsClient

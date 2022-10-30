@@ -128,7 +128,29 @@ export function AwsKmsMrkAwareSymmetricDiscoveryKeyringClass<
       )
 
       readOnlyProperty(this, 'client', client)
-      readOnlyProperty(this, 'clientRegion', clientRegion)
+
+      // AWS SDK v3 stores the clientRegion behind an async function
+      if (typeof clientRegion == 'function') {
+        /* Postcondition: Store the AWS SDK V3 region promise as the clientRegion.
+         * This information MUST be communicated to OnDecrypt.
+         * If a caller creates a keyring,
+         * and then calls OnDecrypt all in synchronous code
+         * then the v3 region will not have been able to resolve.
+         * If clientRegion was null,
+         * then the keyring would filter out all EDKs
+         * because the region does not match.
+         */
+        this.clientRegion = clientRegion()
+          .then((region: string) => {
+            /* Postcondition: Resolve the AWS SDK V3 region promise and update clientRegion. */
+            readOnlyProperty(this, 'clientRegion', region)
+            /* Postcondition: Resolve the promise with the value set. */
+            return region
+          })
+      } else {
+        readOnlyProperty(this, 'clientRegion', clientRegion)
+      }
+
       readOnlyProperty(this, 'grantTokens', grantTokens)
       readOnlyProperty(
         this,
@@ -164,6 +186,17 @@ export function AwsKmsMrkAwareSymmetricDiscoveryKeyringClass<
       //# immediately return the unmodified decryption materials
       //# (structures.md#decryption-materials).
       if (material.hasValidKey()) return material
+
+      // See the constructor, this is to support both AWS SDK v2 and v3.
+      needs(
+        typeof this.clientRegion === 'string'
+        /* Precondition: AWS SDK V3 region promise MUST have resolved to a string.
+         * In the constructor the region promise resolves
+         * to the same value that is then set.
+         */
+        // @ts-ignore
+        || typeof (await this.clientRegion) == 'string'
+        , 'clientRegion MUST be a string.')
 
       const { client, grantTokens, clientRegion } = this
 
