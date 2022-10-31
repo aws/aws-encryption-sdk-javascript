@@ -126,12 +126,11 @@ describe('AwsKmsMrkAwareSymmetricDiscoveryKeyringNode can encrypt/decrypt with A
   })
 
   it('can decrypt an EncryptedDataKey', async () => {
-    const { CiphertextBlob } = await client
-      .generateDataKey({
-        KeyId: keyId,
-        NumberOfBytes: suite.keyLengthBytes,
-        EncryptionContext: encryptionContext,
-      })
+    const { CiphertextBlob } = await client.generateDataKey({
+      KeyId: keyId,
+      NumberOfBytes: suite.keyLengthBytes,
+      EncryptionContext: encryptionContext,
+    })
     console.log(CiphertextBlob)
     needs(CiphertextBlob instanceof Uint8Array, 'never')
     const edk = new EncryptedDataKey({

@@ -16,6 +16,7 @@ export type AwsKmsMrkAwareSymmetricDiscoveryKeyringNodeInput =
   AwsKmsMrkAwareSymmetricDiscoveryKeyringInput<AwsEsdkKMSInterface>
 
 export const AwsKmsMrkAwareSymmetricDiscoveryKeyringNode =
-  AwsKmsMrkAwareSymmetricDiscoveryKeyringClass<NodeAlgorithmSuite, AwsEsdkKMSInterface>(
-    KeyringNode as Newable<KeyringNode>
-  )
+  AwsKmsMrkAwareSymmetricDiscoveryKeyringClass<
+    NodeAlgorithmSuite,
+    AwsEsdkKMSInterface
+  >(KeyringNode as Newable<KeyringNode>)

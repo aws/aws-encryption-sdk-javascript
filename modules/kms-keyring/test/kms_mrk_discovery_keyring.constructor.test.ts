@@ -102,13 +102,16 @@ describe('AwsKmsMrkAwareSymmetricDiscoveryKeyring: constructor', () => {
     }
   })
 
-
   it('Postcondition: Store the AWS SDK V3 region promise as the clientRegion.', async () => {
     let regionCalled = false
-    const client: any = { config: { region: async () => {
-      regionCalled = true
-      return 'us-west-2'
-    } } }
+    const client: any = {
+      config: {
+        region: async () => {
+          regionCalled = true
+          return 'us-west-2'
+        },
+      },
+    }
 
     class TestAwsKmsMrkAwareSymmetricDiscoveryKeyring extends AwsKmsMrkAwareSymmetricDiscoveryKeyringClass(
       Keyring as Newable<Keyring<NodeAlgorithmSuite>>
@@ -120,7 +123,10 @@ describe('AwsKmsMrkAwareSymmetricDiscoveryKeyring: constructor', () => {
     expect(regionCalled).to.equal(true)
     expect(test.clientRegion).to.not.equal(client.config.region)
     // @ts-ignore This is to check that the value is a promise
-    expect(typeof test.clientRegion === 'object' && typeof test.clientRegion.then === 'function').to.equal(true)
+    expect(
+      typeof test.clientRegion === 'object' &&
+        typeof test.clientRegion.then === 'function'
+    ).to.equal(true)
   })
 
   it('Postcondition: Resolve the AWS SDK V3 region promise and update clientRegion.', async () => {
@@ -136,7 +142,9 @@ describe('AwsKmsMrkAwareSymmetricDiscoveryKeyring: constructor', () => {
     })
     await test.clientRegion
     expect(test.clientRegion).to.equal(region)
-    expect(Object.getOwnPropertyDescriptor(test, 'clientRegion')?.writable).to.equal(false)
+    expect(
+      Object.getOwnPropertyDescriptor(test, 'clientRegion')?.writable
+    ).to.equal(false)
   })
 
   it('Postcondition: Resolve the promise with the value set.', async () => {
@@ -150,7 +158,7 @@ describe('AwsKmsMrkAwareSymmetricDiscoveryKeyring: constructor', () => {
     const test = new TestAwsKmsMrkAwareSymmetricDiscoveryKeyring({
       client,
     })
-    
+
     await expect(test.clientRegion).to.eventually.equal(region)
   })
 })

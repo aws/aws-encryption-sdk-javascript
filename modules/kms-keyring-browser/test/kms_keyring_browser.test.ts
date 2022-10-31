@@ -91,7 +91,6 @@ describe('KmsKeyringBrowser can encrypt/decrypt with AWS SDK v2 client', () => {
   })
 })
 
-
 describe('KmsKeyringBrowser can encrypt/decrypt with AWS SDK v3 client', () => {
   const generatorKeyId =
     'arn:aws:kms:us-west-2:658956600833:alias/EncryptDecrypt'

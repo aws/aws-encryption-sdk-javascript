@@ -10,7 +10,7 @@ import {
   limitRegions,
   excludeRegions,
   cacheClients,
-  AwsEsdkKMSInterface
+  AwsEsdkKMSInterface,
 } from '@aws-crypto/kms-keyring'
 import {
   immutableClass,
@@ -32,9 +32,10 @@ export type KMSNodeConstructible = KMSConstructible<
 >
 export type KmsNodeClientSupplier = KmsClientSupplier<AwsEsdkKMSInterface>
 
-export class KmsKeyringNode extends KmsKeyringClass<NodeAlgorithmSuite, AwsEsdkKMSInterface>(
-  KeyringNode as Newable<KeyringNode>
-) {
+export class KmsKeyringNode extends KmsKeyringClass<
+  NodeAlgorithmSuite,
+  AwsEsdkKMSInterface
+>(KeyringNode as Newable<KeyringNode>) {
   constructor({
     clientProvider = cacheKmsClients,
     keyIds,

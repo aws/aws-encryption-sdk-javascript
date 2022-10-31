@@ -24,8 +24,7 @@ export interface AwsKmsMrkAwareDiscoveryMultiKeyringNodeInput {
 }
 
 export const buildAwsKmsMrkAwareDiscoveryMultiKeyringNode =
-  getAwsKmsMrkAwareDiscoveryMultiKeyringBuilder<NodeAlgorithmSuite, AwsEsdkKMSInterface>(
-    AwsKmsMrkAwareSymmetricDiscoveryKeyringNode,
-    MultiKeyringNode,
-    getKmsClient
-  )
+  getAwsKmsMrkAwareDiscoveryMultiKeyringBuilder<
+    NodeAlgorithmSuite,
+    AwsEsdkKMSInterface
+  >(AwsKmsMrkAwareSymmetricDiscoveryKeyringNode, MultiKeyringNode, getKmsClient)

@@ -30,7 +30,9 @@ const getKmsClient = getClient(KMS, {
 })
 const cacheKmsClients = cacheClients(getKmsClient)
 
-export type KmsKeyringWebCryptoInput = Partial<KmsKeyringInput<AwsEsdkKMSInterface>>
+export type KmsKeyringWebCryptoInput = Partial<
+  KmsKeyringInput<AwsEsdkKMSInterface>
+>
 export type KMSWebCryptoConstructible = KMSConstructible<
   KMS,
   KMS.ClientConfiguration

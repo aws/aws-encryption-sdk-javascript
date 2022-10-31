@@ -817,11 +817,12 @@ describe('AwsKmsMrkAwareSymmetricDiscoveryKeyring: _onDecrypt', () => {
       client,
     })
 
-    await expect((async () => {
-      const material: any = { hasValidKey: () => false}
+    await expect(
+      (async () => {
+        const material: any = { hasValidKey: () => false }
 
-      await test._onDecrypt(material, [])
-
-    })()).to.eventually.rejectedWith('clientRegion MUST be a string.')
+        await test._onDecrypt(material, [])
+      })()
+    ).to.eventually.rejectedWith('clientRegion MUST be a string.')
   })
 })

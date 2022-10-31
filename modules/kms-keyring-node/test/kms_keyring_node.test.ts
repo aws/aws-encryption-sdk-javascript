@@ -46,9 +46,9 @@ describe('KmsKeyringNode can encrypt/decrypt with AWS SDK v2 client', () => {
   const keyArn =
     'arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f'
   const keyIds = [keyArn]
-  
+
   const clientProvider = getClient(V2KMS)
-  
+
   const keyring = new KmsKeyringNode({ clientProvider, generatorKeyId, keyIds })
   let encryptedDataKey: EncryptedDataKey
   let udk: Uint8Array
@@ -115,5 +115,3 @@ describe('KmsKeyringNode can encrypt/decrypt with AWS SDK v3 client', () => {
     expect(unwrapDataKey(test.getUnencryptedDataKey())).to.deep.equal(udk)
   })
 })
-
-
