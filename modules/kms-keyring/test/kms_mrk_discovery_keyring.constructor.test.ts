@@ -123,9 +123,10 @@ describe('AwsKmsMrkAwareSymmetricDiscoveryKeyring: constructor', () => {
     })
     expect(regionCalled).to.equal(true)
     expect(test.clientRegion).to.not.equal(client.config.region)
-    // @ts-ignore This is to check that the value is a promise
+    // This is to check that the value is a promise
     expect(
       typeof test.clientRegion === 'object' &&
+        // @ts-ignore
         typeof test.clientRegion.then === 'function'
     ).to.equal(true)
   })
