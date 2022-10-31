@@ -225,8 +225,8 @@ function chunkCipherTextStream(ciphertext: Buffer, { size }: { size: number }) {
       next: (err: Error | null, chunk: Uint8Array | null) => void
     ) => {
       const { value, done } = eat(i, size)
-      if (done) return next(null, null)
-      next(null, new Uint8Array(value))
+      if (done) return queueMicrotask(() => next(null, null))
+      queueMicrotask(() => next(null, new Uint8Array(value)))
     }
   )
 

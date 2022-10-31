@@ -6,11 +6,12 @@ env:
 
 phases:
   install:
-    runtime-versions:
-      nodejs: latest
     commands:
+      - n 18
       - npm ci --unsafe-perm
       - npm run build
   build:
     commands:
+      - npm -v
+      - node -v
       - npm run coverage-browser

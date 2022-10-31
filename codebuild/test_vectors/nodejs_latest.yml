@@ -7,9 +7,8 @@ env:
 
 phases:
   install:
-    runtime-versions:
-      nodejs: latest
     commands:
+      - n 18
       - npm ci
       - |-
         if [ "$PUBLISH_LOCAL" = "true" ]; then
