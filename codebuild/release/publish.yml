@@ -4,6 +4,8 @@ env:
   variables:
     NODE_OPTIONS: "--max-old-space-size=4096"
     BRANCH: "master"
+    # An explicit distribution tag
+    DIST_TAG: "latest"
   secrets-manager:
      OTP_SECRET_KEY: npm/aws-crypto-tools-ci-bot/2FA:OTP_SECRET_KEY
      NPM_TOKEN: npm/aws-crypto-tools-ci-bot/2FA:NPM_TOKEN
@@ -42,7 +44,7 @@ phases:
       # This is going to use the OTP generated above and the NPM_TOKEN
       # environment variable. This will only publish things that are
       # missing from npm. It is therefore safe to run repeatedly.
-      - npx lerna publish from-package --yes --otp $OTP
+      - npx lerna publish from-package --yes --otp $OTP --dist-tag $DIST_TAG
       # remove after publishing
       - rm .npmrc
 
