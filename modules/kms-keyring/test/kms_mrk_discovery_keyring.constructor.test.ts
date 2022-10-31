@@ -9,6 +9,7 @@ import {
   NodeAlgorithmSuite,
   Keyring,
   Newable,
+  needs,
 } from '@aws-crypto/material-management'
 
 describe('AwsKmsMrkAwareSymmetricDiscoveryKeyring: constructor', () => {
@@ -141,10 +142,10 @@ describe('AwsKmsMrkAwareSymmetricDiscoveryKeyring: constructor', () => {
       client,
     })
     await test.clientRegion
+    const prop = Object.getOwnPropertyDescriptor(test, 'clientRegion')
     expect(test.clientRegion).to.equal(region)
-    expect(
-      Object.getOwnPropertyDescriptor(test, 'clientRegion')?.writable
-    ).to.equal(false)
+    needs(prop, 'The clientRegion MUST exist')
+    expect(prop.writable).to.equal(false)
   })
 
   it('Postcondition: Resolve the promise with the value set.', async () => {
