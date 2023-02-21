@@ -37,6 +37,11 @@ const args = [
   '--no-verify-access',
   '--force-publish'
 ]
+
+if ("CODEBUILD_RESOLVED_SOURCE_VERSION" in process.env) {
+  args.push('--git-head ${CODEBUILD_RESOLVED_SOURCE_VERSION}')
+}
+
 spawn('npx', args, pipeStdIo)
   .on('close', (code) => {
     // The above command will make some modifications,
