@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.2.0](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v3.1.1...v3.2.0) (2023-02-23)
+
+
+### Features
+
+* Support AWS SDK v3 ([#1043](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1043)) ([33a9e43](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/33a9e43b3808e67c0852a436ccfb3f0ffab844c2))
+* Support Node v18 ([#1041](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1041)) ([5f39e1e](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/5f39e1ec61527473a0b9673f82259a75c2e37370))
+
+
+
+
+
 ## [3.1.1](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v3.1.0...v3.1.1) (2022-03-15)
 
 
