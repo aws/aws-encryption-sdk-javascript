@@ -804,4 +804,25 @@ describe('AwsKmsMrkAwareSymmetricDiscoveryKeyring: _onDecrypt', () => {
       )
     })
   })
+
+  it('Precondition: AWS SDK V3 region promise MUST have resolved to a string.', async () => {
+    const notAString = {}
+    const client: any = { config: { region: async () => notAString } }
+
+    class TestAwsKmsMrkAwareSymmetricDiscoveryKeyring extends AwsKmsMrkAwareSymmetricDiscoveryKeyringClass(
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
+    ) {}
+
+    const test = new TestAwsKmsMrkAwareSymmetricDiscoveryKeyring({
+      client,
+    })
+
+    await expect(
+      (async () => {
+        const material: any = { hasValidKey: () => false }
+
+        await test._onDecrypt(material, [])
+      })()
+    ).to.eventually.rejectedWith('clientRegion MUST be a string.')
+  })
 })
