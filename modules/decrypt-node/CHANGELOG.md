@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.2.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v3.1.1...v3.2.0) (2023-02-23)
+
+
+### Features
+
+* Support Node v18 ([#1041](https://github.com/aws/aws-encryption-sdk-javascript/issues/1041)) ([5f39e1e](https://github.com/aws/aws-encryption-sdk-javascript/commit/5f39e1ec61527473a0b9673f82259a75c2e37370))
+
+
+
+
+
 # [3.1.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v3.0.3...v3.1.0) (2021-11-10)
 
 

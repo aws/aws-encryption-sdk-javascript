@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/kms-keyring-browser",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "scripts": {
     "prepublishOnly": "npm run generate-version.ts; npm run build",
     "generate-version.ts": "npx genversion --es6  src/version.ts",
