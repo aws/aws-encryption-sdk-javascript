@@ -4,6 +4,7 @@
 import {
   AwsKmsMrkAwareSymmetricDiscoveryKeyringClass,
   AwsKmsMrkAwareSymmetricDiscoveryKeyringInput,
+  AwsEsdkKMSInterface,
 } from '@aws-crypto/kms-keyring'
 import {
   WebCryptoAlgorithmSuite,
@@ -16,16 +17,15 @@ import {
   KeyringWebCrypto,
   Newable,
 } from '@aws-crypto/material-management-browser'
-import { KMS } from 'aws-sdk'
 
 export type AwsKmsMrkAwareSymmetricDiscoveryKeyringWebCryptoInput =
-  AwsKmsMrkAwareSymmetricDiscoveryKeyringInput<KMS>
+  AwsKmsMrkAwareSymmetricDiscoveryKeyringInput<AwsEsdkKMSInterface>
 
 export class AwsKmsMrkAwareSymmetricDiscoveryKeyringBrowser extends AwsKmsMrkAwareSymmetricDiscoveryKeyringClass<
   WebCryptoAlgorithmSuite,
-  KMS
+  AwsEsdkKMSInterface
 >(KeyringWebCrypto as Newable<KeyringWebCrypto>) {
-  declare client: KMS
+  declare client: AwsEsdkKMSInterface
 
   constructor({
     client,

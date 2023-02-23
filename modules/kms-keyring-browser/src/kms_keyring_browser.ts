@@ -10,6 +10,7 @@ import {
   limitRegions,
   excludeRegions,
   cacheClients,
+  AwsEsdkKMSInterface,
 } from '@aws-crypto/kms-keyring'
 import {
   WebCryptoAlgorithmSuite,
@@ -29,16 +30,18 @@ const getKmsClient = getClient(KMS, {
 })
 const cacheKmsClients = cacheClients(getKmsClient)
 
-export type KmsKeyringWebCryptoInput = Partial<KmsKeyringInput<KMS>>
+export type KmsKeyringWebCryptoInput = Partial<
+  KmsKeyringInput<AwsEsdkKMSInterface>
+>
 export type KMSWebCryptoConstructible = KMSConstructible<
   KMS,
   KMS.ClientConfiguration
 >
-export type KmsWebCryptoClientSupplier = KmsClientSupplier<KMS>
+export type KmsWebCryptoClientSupplier = KmsClientSupplier<AwsEsdkKMSInterface>
 
 export class KmsKeyringBrowser extends KmsKeyringClass<
   WebCryptoAlgorithmSuite,
-  KMS
+  AwsEsdkKMSInterface
 >(KeyringWebCrypto as Newable<KeyringWebCrypto>) {
   constructor({
     clientProvider = cacheKmsClients,

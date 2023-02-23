@@ -9,6 +9,7 @@ import {
   NodeAlgorithmSuite,
   Keyring,
   Newable,
+  needs,
 } from '@aws-crypto/material-management'
 
 describe('AwsKmsMrkAwareSymmetricDiscoveryKeyring: constructor', () => {
@@ -100,5 +101,66 @@ describe('AwsKmsMrkAwareSymmetricDiscoveryKeyring: constructor', () => {
           })
       ).to.throw('A discovery filter must be able to match something.')
     }
+  })
+
+  it('Postcondition: Store the AWS SDK V3 region promise as the clientRegion.', async () => {
+    let regionCalled = false
+    const client: any = {
+      config: {
+        region: async () => {
+          regionCalled = true
+          return 'us-west-2'
+        },
+      },
+    }
+
+    class TestAwsKmsMrkAwareSymmetricDiscoveryKeyring extends AwsKmsMrkAwareSymmetricDiscoveryKeyringClass(
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
+    ) {}
+
+    const test = new TestAwsKmsMrkAwareSymmetricDiscoveryKeyring({
+      client,
+    })
+    expect(regionCalled).to.equal(true)
+    expect(test.clientRegion).to.not.equal(client.config.region)
+    // This is to check that the value is a promise
+    expect(
+      typeof test.clientRegion === 'object' &&
+        // @ts-ignore
+        typeof test.clientRegion.then === 'function'
+    ).to.equal(true)
+  })
+
+  it('Postcondition: Resolve the AWS SDK V3 region promise and update clientRegion.', async () => {
+    const region = 'us-west-2'
+    const client: any = { config: { region: async () => region } }
+
+    class TestAwsKmsMrkAwareSymmetricDiscoveryKeyring extends AwsKmsMrkAwareSymmetricDiscoveryKeyringClass(
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
+    ) {}
+
+    const test = new TestAwsKmsMrkAwareSymmetricDiscoveryKeyring({
+      client,
+    })
+    await test.clientRegion
+    const prop = Object.getOwnPropertyDescriptor(test, 'clientRegion')
+    expect(test.clientRegion).to.equal(region)
+    needs(prop, 'The clientRegion MUST exist')
+    expect(prop.writable).to.equal(false)
+  })
+
+  it('Postcondition: Resolve the promise with the value set.', async () => {
+    const region = 'us-west-2'
+    const client: any = { config: { region: async () => region } }
+
+    class TestAwsKmsMrkAwareSymmetricDiscoveryKeyring extends AwsKmsMrkAwareSymmetricDiscoveryKeyringClass(
+      Keyring as Newable<Keyring<NodeAlgorithmSuite>>
+    ) {}
+
+    const test = new TestAwsKmsMrkAwareSymmetricDiscoveryKeyring({
+      client,
+    })
+
+    await expect(test.clientRegion).to.eventually.equal(region)
   })
 })

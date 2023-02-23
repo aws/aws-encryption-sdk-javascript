@@ -45,5 +45,5 @@ export function readOnlyProperty<T, K extends keyof T>(
   name: K,
   value: T[K]
 ) {
-  Object.defineProperty(obj, name, { value, enumerable: true })
+  Object.defineProperty(obj, name, { value, enumerable: true, writable: false })
 }
