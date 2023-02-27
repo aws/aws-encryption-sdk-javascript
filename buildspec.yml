@@ -7,10 +7,6 @@ batch:
       buildspec: codebuild/nodejs_latest.yml
       env:
         image: aws/codebuild/standard:5.0
-    - identifier: testNodejs12
-      buildspec: codebuild/nodejs12.yml
-      env:
-        image: aws/codebuild/standard:5.0
     - identifier: testNodejs14
       buildspec: codebuild/nodejs14.yml
       env:
@@ -32,10 +28,6 @@ batch:
       env:
         variables:
           PUBLISH_LOCAL: "true"
-        image: aws/codebuild/standard:5.0
-    - identifier: testVectorsNodejs12
-      buildspec: codebuild/test_vectors/nodejs12.yml
-      env:
         image: aws/codebuild/standard:5.0
     - identifier: testVectorsNodejs14
       buildspec: codebuild/test_vectors/nodejs14.yml

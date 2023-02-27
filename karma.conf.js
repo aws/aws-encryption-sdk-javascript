@@ -36,9 +36,6 @@ module.exports = function (config) {
       'modules/**/build/module/test/*.js': ['webpack', 'credentials'],
     },
     webpack: {
-      resolve: {
-        extensions: ['.js'],
-      },
       mode: 'development',
       module: {
         rules: [
@@ -75,9 +72,11 @@ module.exports = function (config) {
       },
       devtool: 'source-map',
       resolve: {
+        extensions: ['.js'],
         fallback: {
           fs: false,
           crypto: false,
+          util: false
         },
       },
     },
