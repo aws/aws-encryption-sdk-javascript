@@ -1,5 +1,6 @@
 ## AWS Encryption SDK for Javascript
 
+
 The AWS Encryption SDK for Javascript provides a fully compliant,
 native Javascript implementation of the [AWS Encryption SDK](https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/introduction.html)
 
