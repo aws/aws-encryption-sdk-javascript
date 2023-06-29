@@ -9,7 +9,7 @@ phases:
   install:
     commands:
       - n 18
-      - npm ci
+      - npm ci --unsafe-perm
       - |-
         if [ "$PUBLISH_LOCAL" = "true" ]; then
           npm run build

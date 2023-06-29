@@ -26,14 +26,20 @@ batch:
     - identifier: testVectorsNodejs16
       buildspec: codebuild/test_vectors/nodejs16.yml
       env:
+        variables:
+          PUBLISH_LOCAL: "true"
         image: aws/codebuild/standard:5.0
     - identifier: testVectorsNodejs18
       buildspec: codebuild/test_vectors/nodejs18.yml
       env:
+        variables:
+          PUBLISH_LOCAL: "true"
         image: aws/codebuild/standard:5.0
     - identifier: testVectorsNodejs20
       buildspec: codebuild/test_vectors/nodejs20.yml
       env:
+        variables:
+          PUBLISH_LOCAL: "true"
         image: aws/codebuild/standard:5.0
     - identifier: testVectorsBrowser18
       buildspec: codebuild/test_vectors/browser18.yml

@@ -9,22 +9,22 @@ batch:
       buildspec: codebuild/compliance.yml
 
 # Unit Tests
-    - identifier: testNodejsLatest
-      buildspec: codebuild/nodejs_latest.yml
+    - identifier: testNodejs20
+      buildspec: codebuild/nodejs20.yml
       env:
         image: aws/codebuild/standard:5.0
-    - identifier: testBrowser
-      buildspec: codebuild/browser.yml
+    - identifier: testBrowser18
+      buildspec: codebuild/browser18.yml
 
 # Integration Tests
-    - identifier: testVectorsNodejsLatest
-      buildspec: codebuild/test_vectors/nodejs_latest.yml
+    - identifier: testVectorsNodejs20
+      buildspec: codebuild/test_vectors/nodejs20.yml
       env:
         variables:
           PUBLISH_LOCAL: "true"
         image: aws/codebuild/standard:5.0
-    - identifier: testVectorsBrowser
-      buildspec: codebuild/test_vectors/browser.yml
+    - identifier: testVectorsBrowser18
+      buildspec: codebuild/test_vectors/browser18.yml
       env:
         variables:
           PUBLISH_LOCAL: "true"
@@ -34,10 +34,10 @@ batch:
     - identifier: version
       depend-on:
         - compliance
-        - testNodejsLatest
-        - testBrowser
-        - testVectorsNodejsLatest
-        - testVectorsBrowser
+        - testNodejs20
+        - testBrowser18
+        - testVectorsNodejs20
+        - testVectorsBrowser18
       buildspec: codebuild/release/version.yml
 
 # Publish the release to npm
@@ -50,7 +50,7 @@ batch:
     - identifier: validateNodejs
       depend-on:
         - publish
-      buildspec: codebuild/test_vectors/nodejs_latest.yml
+      buildspec: codebuild/test_vectors/nodejs20.yml
       env:
         variables:
           PUBLISH_LOCAL: "false"
@@ -58,7 +58,7 @@ batch:
     - identifier: validateBrowser
       depend-on:
         - publish
-      buildspec: codebuild/test_vectors/browser.yml
+      buildspec: codebuild/test_vectors/browser18.yml
       env:
         variables:
           PUBLISH_LOCAL: "false"
