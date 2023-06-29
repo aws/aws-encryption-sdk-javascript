@@ -7,13 +7,16 @@ env:
 
 phases:
   install:
-    runtime-versions:
-      nodejs: 12
     commands:
-      - npm ci
+      - n 18
+      - node -v
+      - npm -v
+      - npm ci --unsafe-perm
       - npm run build
   build:
     commands:
+      - npm -v
+      - node -v
       - npm run verdaccio-publish
       - npm run verdaccio-node-decrypt
       - npm run verdaccio-node-encrypt

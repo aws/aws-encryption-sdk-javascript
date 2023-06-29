@@ -8,9 +8,12 @@ phases:
   install:
     commands:
       - n 18
-      - node --version ; npm --version
+      - node -v
+      - npm -v
       - npm ci --unsafe-perm
       - npm run build
   build:
     commands:
+      - npm -v
+      - node -v
       - npm run coverage-node
