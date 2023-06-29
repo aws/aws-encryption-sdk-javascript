@@ -22,6 +22,7 @@
     "@aws-crypto/kms-keyring": "file:../kms-keyring",
     "@aws-crypto/material-management-browser": "file:../material-management-browser",
     "@aws-crypto/web-crypto-backend": "file:../web-crypto-backend",
+    "@aws-sdk/client-kms": "^3.363.0",
     "tslib": "^2.2.0"
   },
   "sideEffects": false,
