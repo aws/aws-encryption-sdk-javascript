@@ -96,6 +96,7 @@
     "modules/*"
   ],
   "devDependencies": {
+    "aws-sdk": "^2.1409.0",
     "@aws-sdk/credential-provider-node": "^3.362.0",
     "@aws-sdk/karma-credential-loader": "^3.38.0",
     "@aws-sdk/util-base64-browser": "^3.209.0",
