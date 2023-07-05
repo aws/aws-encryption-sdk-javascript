@@ -6,9 +6,9 @@ env:
 
 phases:
   install:
-    runtime-versions:
-      nodejs: 14
     commands:
+      - n 20
+      - node --version ; npm --version
       - npm ci --unsafe-perm
       - npm run build
   build:

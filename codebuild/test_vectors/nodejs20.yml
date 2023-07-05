@@ -8,14 +8,15 @@ env:
 phases:
   install:
     commands:
-      - n 18
-      - npm ci
+      - n 20
+      - npm ci --unsafe-perm
       - |-
         if [ "$PUBLISH_LOCAL" = "true" ]; then
           npm run build
         fi
   build:
     commands:
+      - node -v
       - |-
         if [ "$PUBLISH_LOCAL" = "true" ]; then
           npm run verdaccio-publish

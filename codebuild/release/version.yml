@@ -13,7 +13,7 @@ phases:
     commands:
       - npm ci --unsafe-perm
     runtime-versions:
-      nodejs: 14
+      nodejs: 16
   pre_build:
     commands:
       - git config --global user.name "aws-crypto-tools-ci-bot"

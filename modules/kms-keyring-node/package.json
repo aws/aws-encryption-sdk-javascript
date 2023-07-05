@@ -21,7 +21,7 @@
   "dependencies": {
     "@aws-crypto/kms-keyring": "file:../kms-keyring",
     "@aws-crypto/material-management-node": "file:../material-management-node",
-    "aws-sdk": "^2.1360.0",
+    "@aws-sdk/client-kms": "^3.362.0",
     "tslib": "^2.2.0"
   },
   "sideEffects": false,
