@@ -162,8 +162,8 @@ export type CommittingAlgorithmSuiteIdentifier = Extract<
   AlgorithmSuiteIdentifier,
   | typeof AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY
   | typeof AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
-  | typeof AlgorithmSuiteIdentifier[0x0478]
-  | typeof AlgorithmSuiteIdentifier[0x0578]
+  | (typeof AlgorithmSuiteIdentifier)[0x0478]
+  | (typeof AlgorithmSuiteIdentifier)[0x0578]
 >
 
 export const CommittingAlgorithmSuiteIdentifier = (() => {
