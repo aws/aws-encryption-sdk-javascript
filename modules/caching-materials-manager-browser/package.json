@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/caching-materials-manager-browser",
-  "version": "3.2.0",
+  "version": "3.2.2",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
