@@ -1,17 +1,11 @@
 {
-  "packages": [
-    "modules/*"
-  ],
-  "version": "3.2.1",
+  "packages": ["modules/*"],
+  "version": "3.2.2",
   "command": {
     "bootstrap": {
-      "nohoist": [
-        "typedoc"
-      ]
+      "nohoist": ["typedoc"]
     }
   },
   "hoist": true,
-  "nohoist": [
-    "typedoc"
-  ]
+  "nohoist": ["typedoc"]
 }
