@@ -18,7 +18,7 @@ phases:
       - npm install otplib --no-save
       - npm run build
     runtime-versions:
-      nodejs: 12
+      nodejs: 14
   pre_build:
     commands:
       - git checkout $BRANCH
