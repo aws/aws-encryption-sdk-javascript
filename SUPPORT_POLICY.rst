@@ -30,9 +30,9 @@ This table describes the current support status of each major version of the AWS
       - 
       - 
     * - 3.x
-      - General Availability
-      - 
-      - 
+      - Maintenance
+      - End of Support
+      - 2024-01-17
     * - 4.x
       - General Availability
       - 
