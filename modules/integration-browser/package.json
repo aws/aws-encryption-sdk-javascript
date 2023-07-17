@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/integration-browser",
-  "version": "3.2.2",
+  "version": "4.0.0",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "run-s lint-*",
