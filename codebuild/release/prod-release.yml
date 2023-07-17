@@ -12,7 +12,7 @@ batch:
     - identifier: testNodejs20
       buildspec: codebuild/nodejs20.yml
       env:
-        image: aws/codebuild/standard:6.0
+        image: aws/codebuild/standard:5.0
     - identifier: testBrowser18
       buildspec: codebuild/browser18.yml
 
@@ -22,13 +22,13 @@ batch:
       env:
         variables:
           PUBLISH_LOCAL: "true"
-        image: aws/codebuild/standard:6.0
+        image: aws/codebuild/standard:5.0
     - identifier: testVectorsBrowser18
       buildspec: codebuild/test_vectors/browser18.yml
       env:
         variables:
           PUBLISH_LOCAL: "true"
-        image: aws/codebuild/standard:6.0
+        image: aws/codebuild/standard:5.0
 
 # Version the project and push git commits and tags
     - identifier: version
@@ -54,7 +54,7 @@ batch:
       env:
         variables:
           PUBLISH_LOCAL: "false"
-        image: aws/codebuild/standard:6.0
+        image: aws/codebuild/standard:5.0
     - identifier: validateBrowser
       depend-on:
         - publish
@@ -62,4 +62,4 @@ batch:
       env:
         variables:
           PUBLISH_LOCAL: "false"
-        image: aws/codebuild/standard:6.0
+        image: aws/codebuild/standard:5.0
