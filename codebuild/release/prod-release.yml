@@ -39,12 +39,16 @@ batch:
         - testVectorsNodejs20
         - testVectorsBrowser18
       buildspec: codebuild/release/version.yml
+      env:
+        image: aws/codebuild/standard:6.0
 
 # Publish the release to npm
     - identifier: publish
       depend-on:
         - version
       buildspec: codebuild/release/publish.yml
+      env:
+        image: aws/codebuild/standard:6.0
 
 # Validate that the published versions are available
     - identifier: validateNodejs
