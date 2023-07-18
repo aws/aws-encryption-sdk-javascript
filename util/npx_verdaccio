@@ -60,4 +60,6 @@ spawn('npx', args, {
     // we need to forward this.
     // Otherwise the entire CI build may think that things succeeded.
     if (code !== 0) throw Error(`Exit code: ${code}`)
+
+    process.exit()
   })
