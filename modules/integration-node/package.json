@@ -21,7 +21,7 @@
     "@types/got": "^9.6.9",
     "@types/stream-to-promise": "^2.2.0",
     "@types/yargs": "^17.0.1",
-    "got": "^11.8.0",
+    "got": "^13.0.0",
     "stream-to-promise": "^3.0.0",
     "tslib": "^2.3.0",
     "yargs": "^17.0.1"
