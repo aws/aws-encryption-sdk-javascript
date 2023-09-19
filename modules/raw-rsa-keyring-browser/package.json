@@ -22,7 +22,7 @@
     "@aws-crypto/random-source-browser": "5.0.0",
     "@aws-crypto/raw-keyring": "file:../raw-keyring",
     "@aws-crypto/web-crypto-backend": "file:../web-crypto-backend",
-    "@aws-sdk/util-base64-browser": "3.1.0",
+    "@aws-sdk/util-base64-browser": "3.209.0",
     "tslib": "^2.2.0"
   },
   "sideEffects": false,
