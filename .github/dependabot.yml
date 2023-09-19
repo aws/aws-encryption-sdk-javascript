@@ -7,3 +7,12 @@ updates:
     time: '13:00'
   open-pull-requests-limit: 10
   versioning-strategy: increase-if-necessary
+  groups:
+    production-dependencies:
+      dependency-type: "production"
+      patterns:
+        - "*"
+    development-dependencies:
+      dependency-type: "development"
+      patterns:
+        - "*"
