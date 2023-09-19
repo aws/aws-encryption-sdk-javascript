@@ -10,5 +10,9 @@ updates:
   groups:
   production-dependencies:
     dependency-type: "production"
+      patterns:
+        - "*"
   development-dependencies:
     dependency-type: "development"
+      patterns:
+        - "*"
