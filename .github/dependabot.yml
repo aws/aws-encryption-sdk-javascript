@@ -8,11 +8,11 @@ updates:
   open-pull-requests-limit: 10
   versioning-strategy: increase-if-necessary
   groups:
-  production-dependencies:
-    dependency-type: "production"
-    patterns:
-      - "*"
-  development-dependencies:
-    dependency-type: "development"
-    patterns:
-      - "*"
+    production-dependencies:
+      dependency-type: "production"
+      patterns:
+        - "*"
+    development-dependencies:
+      dependency-type: "development"
+      patterns:
+        - "*"
