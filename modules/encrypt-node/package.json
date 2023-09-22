@@ -21,7 +21,7 @@
     "@aws-crypto/serialize": "file:../serialize",
     "@types/duplexify": "^3.6.0",
     "duplexify": "^4.1.1",
-    "readable-stream": "^3.6.0",
+    "readable-stream": "^4.4.2",
     "tslib": "^2.2.0"
   },
   "sideEffects": false,
