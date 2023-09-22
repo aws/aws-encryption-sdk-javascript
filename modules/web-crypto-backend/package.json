@@ -19,9 +19,9 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-crypto/ie11-detection": "1.0.0",
-    "@aws-crypto/supports-web-crypto": "5.0.0",
-    "@aws-sdk/util-locate-window": "3.37.0",
+    "@aws-crypto/ie11-detection": "4.0.0",
+    "@aws-crypto/supports-web-crypto": "5.1.0",
+    "@aws-sdk/util-locate-window": "3.310.0",
     "tslib": "^2.2.0"
   },
   "sideEffects": false,
