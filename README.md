@@ -54,7 +54,7 @@ which caches cryptographic materials provided by another CMM.
 
 ### Keyrings
 
-Keyrings use wrapping keys to to generate, encrypt, and decrypt data keys.
+Keyrings use wrapping keys to generate, encrypt, and decrypt data keys.
 The keyring that you use determines the source of the unique data keys that protect each message,
 and the wrapping keys that encrypt that data key.
 An example of a keyring is the `KmsKeyringNode`.
