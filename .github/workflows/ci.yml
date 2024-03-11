@@ -1,0 +1,29 @@
+name: AWS CodeBuild CI
+
+on:
+    pull_request:
+
+permissions:
+    id-token: write
+    contents: read
+
+jobs:
+  CI:
+    name: CI
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::587316601012:role/ESDKCiCdInfrastructure-CodeBuildRole-10W9UOXMRVOOO
+          aws-region: us-west-2
+          role-duration-seconds: 3600
+      - name: Run CI
+        uses: aws-actions/aws-codebuild-run-build@v1
+        timeout-minutes: 60
+        with:
+          project-name: JavaScriptESDK
+          compute-type-override: BUILD_GENERAL1_LARGE
