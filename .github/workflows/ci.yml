@@ -23,26 +23,46 @@ jobs:
           role-to-assume: arn:aws:iam::587316601012:role/ESDKCiCdInfrastructure-CodeBuildRole-10W9UOXMRVOOO
           aws-region: us-west-2
           role-duration-seconds: 3600
-      - name: Run Tests
-        uses: aws-actions/aws-codebuild-run-build@v1
-        timeout-minutes: 60
-        with:
-          project-name: JavaScriptESDK
-          compute-type-override: BUILD_GENERAL1_LARGE
-          buildspec-override: codebuild/nodejs${{matrix.node-version}}.yml
+      # - name: Run Tests
+      #   uses: aws-actions/aws-codebuild-run-build@v1
+      #   timeout-minutes: 60
+      #   with:
+      #     project-name: JavaScriptESDK
+      #     compute-type-override: BUILD_GENERAL1_LARGE
+      #     buildspec-override: codebuild/nodejs${{matrix.node-version}}.yml
       # - name: Run Browser Tests 
       #   uses: aws-actions/aws-codebuild-run-build@v1
       #   timeout-minutes: 60
       #   with:
       #     project-name: JavaScriptESDK
       #     compute-type-override: BUILD_GENERAL1_LARGE
-      #     buildspec-override: codebuild/nodejs${{matrix.node-version}}
-      #     env-vars-for-codebuild: JAVA_ENV_VERSION
-      # - name: Run Compliance
-      #   uses: aws-actions/aws-codebuild-run-build@v1
-      #   timeout-minutes: 60
-      #   with:
-      #     project-name: JavaScriptESDK
-      #     compute-type-override: BUILD_GENERAL1_LARGE
-      #     buildspec-override: codebuild/nodejs${{matrix.node-version}}
-      #     env-vars-for-codebuild: JAVA_ENV_VERSION
+      #     buildspec-override: codebuild/browser18.yml
+      - name: Run Compliance
+        uses: aws-actions/aws-codebuild-run-build@v1
+        timeout-minutes: 60
+        with:
+          project-name: JavaScriptESDK
+          compute-type-override: BUILD_GENERAL1_LARGE
+          buildspec-override: codebuild/compliance.yml
+      - name: Run TestVectors 
+        uses: aws-actions/aws-codebuild-run-build@v1
+        timeout-minutes: 60
+        with:
+          project-name: JavaScriptESDK
+          compute-type-override: BUILD_GENERAL1_LARGE
+          buildspec-override: codebuild/test_vectors/nodejs${{matrix.node-version}}.yml
+          env-vars-for-codebuild: PUBLISH_LOCAL
+        env:
+          PUBLISH_LOCAL: "true" 
+      - name: Run TestVectorsBrowser
+        uses: aws-actions/aws-codebuild-run-build@v1
+        timeout-minutes: 60
+        with:
+          project-name: JavaScriptESDK
+          compute-type-override: BUILD_GENERAL1_LARGE
+          buildspec-override: codebuild/browser18.yml
+          env-vars-for-codebuild: PUBLISH_LOCAL
+        env:
+          PUBLISH_LOCAL: "true"
+
+      
