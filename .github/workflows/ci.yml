@@ -29,6 +29,7 @@ jobs:
         with:
           project-name: JavaScriptESDK
           compute-type-override: BUILD_GENERAL1_LARGE
+          buildspec-override: codebuild/nodejs${{matrix.node-version}}.yml
       # - name: Run Browser Tests 
       #   uses: aws-actions/aws-codebuild-run-build@v1
       #   timeout-minutes: 60
