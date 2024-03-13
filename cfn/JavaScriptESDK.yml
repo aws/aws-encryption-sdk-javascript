@@ -48,6 +48,16 @@ Resources:
                 Effect: Allow
                 Resource:
                   - '*'
+              - Action:
+                  - 'codebuild:StartBuild'
+                  - 'codebuild:StopBuild'
+                  - 'codebuild:RetryBuild'
+                  - 'codebuild:BatchGetBuilds'
+                Effect: Allow
+                Resource:
+                  - 'arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/JavaScriptESDK'
+
+                  
           PolicyName: !Sub '${AWS::StackName}CloudWatchLogsPolicy'
     Type: 'AWS::IAM::Role'
   ExampleWaitHandle:
@@ -59,14 +69,22 @@ Resources:
         Type: NO_ARTIFACTS
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: 'aws/codebuild/standard:2.0'
+        Image: 'aws/codebuild/standard:5.0'
         Type: LINUX_CONTAINER
       LogsConfig:
         S3Logs:
           Location: !Sub '${LogBucket}/JavaScriptESDK'
           Status: ENABLED
       Name: JavaScriptESDK
-      ServiceRole: !Ref CodeBuildRole
+      BuildBatchConfig:
+        ServiceRole: !GetAtt CodeBuildRole.Arn
+        Restrictions:
+          MaximumBuildsAllowed: 100
+          ComputeTypesAllowed:
+            - BUILD_GENERAL1_SMALL
+            - BUILD_GENERAL1_MEDIUM
+            - BUILD_GENERAL1_LARGE
+        TimeoutInMins: 480
       Source:
         Location: 'https://github.com/aws/aws-encryption-sdk-javascript'
         ReportBuildStatus: 'true'
