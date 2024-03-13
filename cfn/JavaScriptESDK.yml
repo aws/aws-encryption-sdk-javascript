@@ -39,6 +39,7 @@ Resources:
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
+                  - 'logs:GetLogEvents'
                 Effect: Allow
                 Resource:
                   - '*'
