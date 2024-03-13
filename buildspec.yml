@@ -47,3 +47,7 @@ batch:
         variables:
           PUBLISH_LOCAL: "true"
         image: aws/codebuild/standard:5.0
+phases:
+  install:
+    runtime-versions:
+      nodejs: latest
