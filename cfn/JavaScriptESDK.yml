@@ -20,6 +20,12 @@ Parameters:
     Type: String
     Description: The regionalized bucket to read the artifact from.
     Default: 'placeholder'
+  NumberOfBuildsInBatch:
+    Type: Number
+    MaxValue: 100
+    MinValue: 1
+    Default: 16
+    Description: The number of builds you expect to run in a batch
     
 Resources:
   CodeBuildRole:
@@ -79,7 +85,7 @@ Resources:
       BuildBatchConfig:
         ServiceRole: !GetAtt CodeBuildRole.Arn
         Restrictions:
-          MaximumBuildsAllowed: 100
+          MaximumBuildsAllowed: !Ref NumberOfBuildsInBatch
           ComputeTypesAllowed:
             - BUILD_GENERAL1_SMALL
             - BUILD_GENERAL1_MEDIUM
