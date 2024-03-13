@@ -61,9 +61,7 @@ Resources:
                   - 'codebuild:BatchGetBuilds'
                 Effect: Allow
                 Resource:
-                  - 'arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/JavaScriptESDK'
-
-                  
+                  - !Sub 'arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/JavaScriptESDK'
           PolicyName: !Sub '${AWS::StackName}CloudWatchLogsPolicy'
     Type: 'AWS::IAM::Role'
   ExampleWaitHandle:
@@ -82,6 +80,7 @@ Resources:
           Location: !Sub '${LogBucket}/JavaScriptESDK'
           Status: ENABLED
       Name: JavaScriptESDK
+      ServiceRole: !GetAtt CodeBuildRole.Arn
       BuildBatchConfig:
         ServiceRole: !GetAtt CodeBuildRole.Arn
         Restrictions:
