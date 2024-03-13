@@ -68,7 +68,7 @@ Resources:
       Name: JavaScriptESDK
       ServiceRole: !Ref CodeBuildRole
       Source:
-        Location: 'https://github.com/awslabs/aws-encryption-sdk-javascript'
+        Location: 'https://github.com/aws/aws-encryption-sdk-javascript'
         ReportBuildStatus: 'true'
         Type: GITHUB
     Type: 'AWS::CodeBuild::Project'
