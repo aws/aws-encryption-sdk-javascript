@@ -1,6 +1,9 @@
 version: 0.2
 
 batch:
+    runtime-versions:
+      node: node-latest
+
   fast-fail: false
   build-list:
     - identifier: testNodejs20

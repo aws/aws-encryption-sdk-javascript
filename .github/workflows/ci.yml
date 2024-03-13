@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      matrix:
+        node-version: [16, 18, 20]
     
     steps:
       - name: Configure AWS Credentials
@@ -21,9 +23,25 @@ jobs:
           role-to-assume: arn:aws:iam::587316601012:role/ESDKCiCdInfrastructure-CodeBuildRole-10W9UOXMRVOOO
           aws-region: us-west-2
           role-duration-seconds: 3600
-      - name: Run CI
+      - name: Run Tests
         uses: aws-actions/aws-codebuild-run-build@v1
         timeout-minutes: 60
         with:
           project-name: JavaScriptESDK
           compute-type-override: BUILD_GENERAL1_LARGE
+      # - name: Run Browser Tests 
+      #   uses: aws-actions/aws-codebuild-run-build@v1
+      #   timeout-minutes: 60
+      #   with:
+      #     project-name: JavaScriptESDK
+      #     compute-type-override: BUILD_GENERAL1_LARGE
+      #     buildspec-override: codebuild/nodejs${{matrix.node-version}}
+      #     env-vars-for-codebuild: JAVA_ENV_VERSION
+      # - name: Run Compliance
+      #   uses: aws-actions/aws-codebuild-run-build@v1
+      #   timeout-minutes: 60
+      #   with:
+      #     project-name: JavaScriptESDK
+      #     compute-type-override: BUILD_GENERAL1_LARGE
+      #     buildspec-override: codebuild/nodejs${{matrix.node-version}}
+      #     env-vars-for-codebuild: JAVA_ENV_VERSION
