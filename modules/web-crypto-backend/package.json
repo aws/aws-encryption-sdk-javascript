@@ -21,7 +21,7 @@
   "dependencies": {
     "@aws-crypto/ie11-detection": "4.0.0",
     "@aws-crypto/supports-web-crypto": "5.2.0",
-    "@aws-sdk/util-locate-window": "3.310.0",
+    "@aws-sdk/util-locate-window": "3.535.0",
     "tslib": "^2.2.0"
   },
   "sideEffects": false,
