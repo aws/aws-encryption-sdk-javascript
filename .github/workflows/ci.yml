@@ -1,7 +1,7 @@
 # This workflow performs tests in Java.
 name: ESDK JavaScript CI Tests 
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   testCI:
