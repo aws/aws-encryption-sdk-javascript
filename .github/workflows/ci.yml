@@ -1,0 +1,60 @@
+# This workflow performs tests in Java.
+name: Library Java tests
+
+on: [push, pull_request]
+
+jobs:
+  testCI:
+    strategy:
+      matrix:
+          node: [16, 18, 20]
+      fail-fast: false
+    runs-on: codebuild-AWS-ESDK-JS-Release-${{ github.run_id }}-${{ github.run_attempt }}-ubuntu-5.0-large
+    permissions:
+      id-token: write
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{matrix.node}}
+      - name: Test Node ${{matrix.node}}
+        env: 
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: |
+          - npm ci --unsafe-perm
+          - npm run build
+          - npm run coverage-node
+      - name: Test compliance
+        if: ${{ matrix.node == 18 }}
+        env: 
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: |
+          - npm ci --unsafe-perm
+          - npm run lint
+          - npm run test_conditions
+      - name: Run Test Vectors Node ${{matrix.node}}
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          NPM_CONFIG_UNSAFE_PERM: true
+          PUBLISH_LOCAL: true
+        run: |
+          - npm ci --unsafe-perm
+          - npm run build
+          - npm run verdaccio-publish
+          - npm run verdaccio-node-decrypt
+          - npm run verdaccio-node-encrypt
+      - name: Run Test Vectors Browser Node 18
+        if: ${{ matrix.node == 18 }}
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          NPM_CONFIG_UNSAFE_PERM: true
+          PUBLISH_LOCAL: true
+        run: |
+          - npm ci --unsafe-perm
+          - npm run build
+          - npm run verdaccio-publish
+          - npm run verdaccio-browser-decrypt
+          - npm run verdaccio-browser-encrypt
