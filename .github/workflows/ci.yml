@@ -1,5 +1,5 @@
 # This workflow performs tests in Java.
-name: Library Java tests
+name: ESDK JavaScript CI Tests 
 
 on: [push, pull_request]
 
@@ -24,28 +24,28 @@ jobs:
         env: 
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
-          - npm ci --unsafe-perm
-          - npm run build
-          - npm run coverage-node
+          npm ci --unsafe-perm
+          npm run build
+          npm run coverage-node
       - name: Test compliance
         if: ${{ matrix.node == 18 }}
         env: 
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
-          - npm ci --unsafe-perm
-          - npm run lint
-          - npm run test_conditions
+          npm ci --unsafe-perm
+          npm run lint
+          npm run test_conditions
       - name: Run Test Vectors Node ${{matrix.node}}
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
           NPM_CONFIG_UNSAFE_PERM: true
           PUBLISH_LOCAL: true
         run: |
-          - npm ci --unsafe-perm
-          - npm run build
-          - npm run verdaccio-publish
-          - npm run verdaccio-node-decrypt
-          - npm run verdaccio-node-encrypt
+          npm ci --unsafe-perm
+          npm run build
+          npm run verdaccio-publish
+          npm run verdaccio-node-decrypt
+          npm run verdaccio-node-encrypt
       - name: Run Test Vectors Browser Node 18
         if: ${{ matrix.node == 18 }}
         env:
@@ -53,8 +53,8 @@ jobs:
           NPM_CONFIG_UNSAFE_PERM: true
           PUBLISH_LOCAL: true
         run: |
-          - npm ci --unsafe-perm
-          - npm run build
-          - npm run verdaccio-publish
-          - npm run verdaccio-browser-decrypt
-          - npm run verdaccio-browser-encrypt
+          npm ci --unsafe-perm
+          npm run build
+          npm run verdaccio-publish
+          npm run verdaccio-browser-decrypt
+          npm run verdaccio-browser-encrypt
