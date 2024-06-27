@@ -33,14 +33,13 @@ jobs:
         env: 
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
-          npm ci --unsafe-perm
+          npm ci
           npm run build
           npm run coverage-node
       - name: Test compliance
         env: 
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
-          npm ci
           npm run lint
           npm run test_conditions
       - name: Run Test Vectors Node ${{matrix.node}}
@@ -49,7 +48,6 @@ jobs:
           NPM_CONFIG_UNSAFE_PERM: true
           PUBLISH_LOCAL: true
         run: |
-          npm ci
           npm run verdaccio-publish
           npm run verdaccio-node-decrypt
           npm run verdaccio-node-encrypt
