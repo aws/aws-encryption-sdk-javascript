@@ -37,7 +37,6 @@ jobs:
           npm run build
           npm run coverage-node
       - name: Test compliance
-        if: ${{ startsWith('18', matrix.node)}}
         env: 
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
@@ -55,8 +54,7 @@ jobs:
           npm run verdaccio-publish
           npm run verdaccio-node-decrypt
           npm run verdaccio-node-encrypt
-      - name: Run Test Vectors Browser Node 18
-        if: ${{ startsWith('18', matrix.node)}}
+      - name: Run Test Vectors Browser node ${{matrix.node}} 
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
           NPM_CONFIG_UNSAFE_PERM: true
