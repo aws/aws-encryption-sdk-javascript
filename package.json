@@ -96,6 +96,7 @@
     "modules/*"
   ],
   "devDependencies": {
+    "aws-sdk": "^2.1409.0",
     "@aws-sdk/credential-provider-node": "^3.362.0",
     "@aws-sdk/karma-credential-loader": "^3.38.0",
     "@aws-sdk/util-base64-browser": "^3.209.0",
@@ -108,7 +109,6 @@
     "@types/node": "^16.9.1",
     "@typescript-eslint/eslint-plugin": "^4.31.1",
     "@typescript-eslint/parser": "^4.31.1",
-    "aws-sdk": "^2.1409.0",
     "buffer": "^6.0.3",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
@@ -124,7 +124,7 @@
     "karma-mocha": "^2.0.1",
     "karma-parallel": "^0.3.1",
     "karma-webpack": "^5.0.0",
-    "lerna": "^8.1.5",
+    "lerna": "^7.3.0",
     "lint-staged": "^14.0.1",
     "mocha": "^9.0.1",
     "npm-run-all": "^4.1.5",
@@ -138,8 +138,5 @@
     "verdaccio": "^5.13.1",
     "webpack": "^5.41.1",
     "webpack-cli": "^4.7.2"
-  },
-  "resolutions": {
-    "duplexify": "^4.1.3"
   }
 }
