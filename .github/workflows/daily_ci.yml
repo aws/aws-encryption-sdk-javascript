@@ -1,0 +1,12 @@
+# This workflow runs every weekday at 15:00 UTC (8AM PDT)
+name: Daily CI
+
+on:
+  schedule:
+    - cron: "00 15 * * 1-5"
+
+jobs:
+  DAILY_CI:
+    # Don't run the cron builds on forks
+    if: github.event_name != 'schedule' || github.repository_owner == 'aws'
+    uses: ./.github/workflows/ci.yml
