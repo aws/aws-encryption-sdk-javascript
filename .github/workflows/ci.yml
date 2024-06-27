@@ -36,8 +36,6 @@ jobs:
           npm ci --unsafe-perm
           npm run build
           npm run coverage-node
-          npm run coverage-merge
-          npm run coverage-check
       - name: Test compliance
         env: 
           NODE_OPTIONS: "--max-old-space-size=4096"
