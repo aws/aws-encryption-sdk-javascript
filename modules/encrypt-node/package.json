@@ -20,7 +20,7 @@
     "@aws-crypto/material-management-node": "file:../material-management-node",
     "@aws-crypto/serialize": "file:../serialize",
     "@types/duplexify": "^3.6.0",
-    "duplexify": "^4.1.1",
+    "duplexify": "^4.1.3",
     "readable-stream": "^3.6.0",
     "tslib": "^2.2.0"
   },
