@@ -33,10 +33,9 @@ jobs:
         env: 
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
-          openssl --version
           npm ci
           npm run build
-          npm run coverage-node --security-revert=CVE-2023-46809
+          npm run coverage-node
       - name: Test compliance
         env: 
           NODE_OPTIONS: "--max-old-space-size=4096"
@@ -50,8 +49,8 @@ jobs:
           PUBLISH_LOCAL: true
         run: |
           npm run verdaccio-publish
-          npm run verdaccio-node-decrypt --security-revert=CVE-2023-46809
-          npm run verdaccio-node-encrypt --security-revert=CVE-2023-46809
+          npm run verdaccio-node-decrypt
+          npm run verdaccio-node-encrypt
       - name: Run Test Vectors Browser node ${{matrix.node}} 
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
@@ -59,5 +58,5 @@ jobs:
           PUBLISH_LOCAL: true
         run: |
           npm run verdaccio-publish
-          npm run verdaccio-browser-decrypt --security-revert=CVE-2023-46809
-          npm run verdaccio-browser-encrypt --security-revert=CVE-2023-46809
+          npm run verdaccio-browser-decrypt
+          npm run verdaccio-browser-encrypt
