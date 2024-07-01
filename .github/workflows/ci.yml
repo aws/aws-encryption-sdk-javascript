@@ -31,32 +31,32 @@ jobs:
           role-session-name: JavaScriptTests 
       - name: Test Node ${{matrix.node}}
         env: 
-          NODE_OPTIONS: "--max-old-space-size=4096 --security-revert=CVE-2023-46809"
+          NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
           npm ci
           npm run build
-          npm run coverage-node
+          npm run coverage-node --security-revert=CVE-2023-46809
       - name: Test compliance
         env: 
-          NODE_OPTIONS: "--max-old-space-size=4096 --security-revert=CVE-2023-46809"
+          NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
           npm run lint
           npm run test_conditions
       - name: Run Test Vectors Node ${{matrix.node}}
         env:
-          NODE_OPTIONS: "--max-old-space-size=4096 --security-revert=CVE-2023-46809"
+          NODE_OPTIONS: "--max-old-space-size=4096"
           NPM_CONFIG_UNSAFE_PERM: true
           PUBLISH_LOCAL: true
         run: |
           npm run verdaccio-publish
-          npm run verdaccio-node-decrypt
-          npm run verdaccio-node-encrypt
+          npm run verdaccio-node-decrypt --security-revert=CVE-2023-46809
+          npm run verdaccio-node-encrypt --security-revert=CVE-2023-46809
       - name: Run Test Vectors Browser node ${{matrix.node}} 
         env:
-          NODE_OPTIONS: "--max-old-space-size=4096 --security-revert=CVE-2023-46809"
+          NODE_OPTIONS: "--max-old-space-size=4096"
           NPM_CONFIG_UNSAFE_PERM: true
           PUBLISH_LOCAL: true
         run: |
           npm run verdaccio-publish
-          npm run verdaccio-browser-decrypt
-          npm run verdaccio-browser-encrypt
+          npm run verdaccio-browser-decrypt --security-revert=CVE-2023-46809
+          npm run verdaccio-browser-encrypt --security-revert=CVE-2023-46809
