@@ -38,6 +38,7 @@
     "integration-browser-encrypt": "npm run build; integration-browser encrypt -m $npm_package_config_encryptManifestList -k $npm_package_config_encryptKeyManifest -o $npm_package_config_decryptOracle --karma -c cpu",
     "browser-integration": "run-s integration-browser-*",
     "integration-node-decrypt": "npm run build; integration-node decrypt -v $npm_package_config_localTestVectors -c cpu",
+    "integration-node-decrypt-legacy": "node --security-revert=CVE-2023-46809 ./modules/integration-node/build/main/src/cli.js decrypt -v $npm_package_config_localTestVectors -c cpu --CVE-2023-46809",
     "integration-node-encrypt": "npm run build; integration-node encrypt -m $npm_package_config_encryptManifestList -k $npm_package_config_encryptKeyManifest -o $npm_package_config_decryptOracle -c cpu",
     "node-integration": "run-s integration-node-*",
     "integration": "run-s integration-*",
