@@ -13,19 +13,20 @@ import {
 const cli = yargs
   .command('decrypt', 'verify decrypt vectors', (y) =>
     y
-  .option('vectorFile', {
-      alias: 'v',
-      describe: 'a vector zip file from aws-encryption-sdk-test-vectors',
-      demandOption: true,
-      type: 'string',
-    })
-    .option('CVE-2023-46809', {
-      alias: 'C',
-      describe: 'Attempt RSA_PKCS1_OAEP_PADDING decrypt vectors, requires node process started with --security-revert=CVE-2023-46809',
-      default: false,
-      demandOption: false,
-      type: 'boolean',
-    })
+      .option('vectorFile', {
+        alias: 'v',
+        describe: 'a vector zip file from aws-encryption-sdk-test-vectors',
+        demandOption: true,
+        type: 'string',
+      })
+      .option('CVE-2023-46809', {
+        alias: 'C',
+        describe:
+          'Attempt RSA_PKCS1_OAEP_PADDING decrypt vectors, requires node process started with --security-revert=CVE-2023-46809',
+        default: false,
+        demandOption: false,
+        type: 'boolean',
+      })
   )
   .command('encrypt', 'verify encrypt manifest', (y) =>
     y
@@ -87,7 +88,7 @@ const cli = yargs
     _: [command],
     tolerateFailures,
     testName,
-    ['CVE-2023-46809']:CVE202346809,
+    ['CVE-2023-46809']: CVE202346809,
     concurrency,
   } = await argv
   /* I set the result to 1 so that if I fall through the exit condition is a failure */

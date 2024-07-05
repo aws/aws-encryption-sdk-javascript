@@ -177,7 +177,7 @@ export async function integrationDecryptTestVectors(
     }
 
     if (
-      !CVE202346809 && 
+      !CVE202346809 &&
       test.keysInfo.some(
         ([info, _]) =>
           info.type == 'raw' && info['padding-algorithm'] == 'pkcs1'
