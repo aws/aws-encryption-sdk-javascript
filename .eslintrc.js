@@ -80,6 +80,9 @@ module.exports = {
     '@typescript-eslint/ban-ts-comment': ['error', { 'ts-ignore': false }],
     // This rule fights with Prettier and no-semi
     '@typescript-eslint/no-extra-semi': 'off',
+    // Added in later versions of @typescript-eslint
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-unused-vars': 'off',
   },
   // This is a good rule,
   // but in many tests,

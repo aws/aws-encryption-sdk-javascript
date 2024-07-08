@@ -8,14 +8,18 @@ const compilerOptions = Object.assign({
 })
 
 module.exports = function (wallaby) {
+  var path = require('path');
+  process.env.NODE_PATH += path.delimiter + path.join(wallaby.localProjectDir, 'core', 'node_modules');
+
   return {
     files: [
       'modules/**/src/**/*.ts',
       'modules/**/fixtures.ts',
-      '!modules/**/test/**/*.test.ts',
-      '!modules/**/node_modules/**',
-      '!modules/**/build/**',
-      '!modules/*-+(browser|backend)/**/*.ts'
+      { pattern: 'modules/**/test/**/*.test.ts', ignore: true},
+      { pattern: 'modules/**/node_modules/**', ignore: true},
+      { pattern: 'modules/**/build/**', ignore: true},
+      { pattern: 'modules/*-browser/**/*.ts', ignore: true},
+      { pattern: 'modules/*-backend/**/*.ts', ignore: true},
     ],
     tests: [
       'modules/**/test/**/*test.ts',
@@ -32,26 +36,5 @@ module.exports = function (wallaby) {
     },
     env: { type: 'node' },
     debug: true,
-    setup: w => {
-      const { projectCacheDir } = w
-      const path = require('path')
-      const { Module } = require('module')
-      const fs = require('fs')
-      if (!Module._originalRequire) {
-        const modulePrototype = Module.prototype
-        Module._originalRequire = modulePrototype.require
-        modulePrototype.require = function (filePath) {
-          if (!filePath.startsWith('@aws-crypto')) {
-            return Module._originalRequire.call(this, filePath)
-          }
-          const [, _module] = filePath.split('/')
-          const _filePath = path.join(projectCacheDir, 'modules', _module, 'src', 'index.js')
-          if (!fs.existsSync(_filePath)) {
-            return Module._originalRequire.call(this, filePath)
-          }
-          return Module._originalRequire.call(this, _filePath)
-        }
-      }
-    }
   }
 }
