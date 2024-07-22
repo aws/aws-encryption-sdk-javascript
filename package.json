@@ -97,10 +97,9 @@
     "modules/*"
   ],
   "devDependencies": {
-    "aws-sdk": "^2.1409.0",
     "@aws-sdk/credential-provider-node": "^3.362.0",
     "@aws-sdk/karma-credential-loader": "^3.38.0",
-    "@aws-sdk/util-base64-browser": "^3.209.0",
+    "@aws-sdk/util-base64": "^3.374.0",
     "@jsdevtools/coverage-istanbul-loader": "^3.0.5",
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.2.12",
@@ -110,6 +109,7 @@
     "@types/node": "^16.9.1",
     "@typescript-eslint/eslint-plugin": "^4.31.1",
     "@typescript-eslint/parser": "^4.31.1",
+    "aws-sdk": "^2.1409.0",
     "buffer": "^6.0.3",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
@@ -132,7 +132,7 @@
     "null-loader": "^4.0.1",
     "nyc": "^15.1.0",
     "prettier": "^2.0.4",
-    "rimraf": "^3.0.2",
+    "rimraf": "^6.0.1",
     "source-map-support": "^0.5.19",
     "tslib": "^2.3.0",
     "typescript": "^4.4.3",
