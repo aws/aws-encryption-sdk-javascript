@@ -29,13 +29,18 @@ jobs:
           aws-region: us-west-2
           role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
           role-session-name: JavaScriptTests 
-      - name: Test Node ${{matrix.node}}
+      - name: Test Coverage Node ${{matrix.node}}
         env: 
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
           npm ci
           npm run build
           npm run coverage-node
+      - name: Test Coverage Browser ${{matrix.node}}
+        env: 
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: |
+          npm run coverage-browser
       - name: Test compliance
         env: 
           NODE_OPTIONS: "--max-old-space-size=4096"
