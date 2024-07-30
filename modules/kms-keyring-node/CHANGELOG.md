@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.0.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.0.0...v4.0.1) (2024-07-30)
+
+**Note:** Version bump only for package @aws-crypto/kms-keyring-node
+
 # [4.0.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v3.2.2...v4.0.0) (2023-07-17)
 
 - feat!: Remove AWS SDK V2 Dependency (#1180) ([1d74248](https://github.com/aws/aws-encryption-sdk-javascript/commit/1d742489b436748a656ecc2abce00e99353d1d62)), closes [#1180](https://github.com/aws/aws-encryption-sdk-javascript/issues/1180)
