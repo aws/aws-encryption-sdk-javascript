@@ -3,6 +3,8 @@
 
 // Karma configuration
 const { readFileSync } = require('fs')
+const credentialsPromise =
+  require('@aws-sdk/credential-provider-node').defaultProvider()()
 const webpack = require('webpack')
 
 module.exports = function (config) {
@@ -66,8 +68,10 @@ module.exports = function (config) {
       },
     },
     plugins: [
+      {
+        'preprocessor:credentials': ['factory', createCredentialPreprocessor],
+      },
       'karma-parallel',
-      '@aws-sdk/karma-credential-loader',
       'karma-webpack',
       'karma-json-fixtures-preprocessor',
       'karma-chrome-launcher',
@@ -98,4 +102,31 @@ module.exports = function (config) {
       executors: concurrency,
     },
   })
+}
+
+function createCredentialPreprocessor() {
+  return async function (content, file, done) {
+    // strip the extension from the file since it won't match the preprocessor pattern
+    const fileName = file.originalPath
+    // add region and credentials to each file
+    const region = process.env.AWS_SMOKE_TEST_REGION || ''
+    const credentials = await credentialsPromise
+    // This will affect the generated (ES5) JS
+    const regionCode = `var defaultRegion = '${region}';`
+    const credentialsCode = `var credentials = ${JSON.stringify(credentials)};`
+    // See: https://github.com/aws/aws-sdk-js-v3/issues/5890
+    const expirationNeedsToBeDate = `credentials.expiration = new Date(credentials.expiration);`
+    const isBrowser = `var isBrowser = true;`
+    const contents = content.split('\n')
+    let idx = -1
+    for (let i = 0; i < contents.length; i++) {
+      const line = contents[i]
+      if (line.indexOf(fileName) !== -1) {
+        idx = i
+        break
+      }
+    }
+    contents.splice(idx + 1, 0, regionCode, credentialsCode, expirationNeedsToBeDate, isBrowser)
+    done(contents.join('\n'))
+  }
 }

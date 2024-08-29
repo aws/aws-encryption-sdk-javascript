@@ -162,6 +162,7 @@ export async function integrationDecryptTestVectors(
   vectorFile: string,
   tolerateFailures = 0,
   testName?: string,
+  CVE202346809?: boolean,
   concurrency = 1
 ): Promise<number> {
   const tests = await parseIntegrationTestVectorsToTestVectorIterator(
@@ -174,6 +175,17 @@ export async function integrationDecryptTestVectors(
     if (testName) {
       if (test.name !== testName) return true
     }
+
+    if (
+      !CVE202346809 &&
+      test.keysInfo.some(
+        ([info, _]) =>
+          info.type == 'raw' && info['padding-algorithm'] == 'pkcs1'
+      )
+    ) {
+      return true
+    }
+
     return handleTestResults(
       await testDecryptVector(test),
       notSupportedDecryptMessages

@@ -1,0 +1,67 @@
+# This workflow performs tests in JavaScript.
+name: ESDK JavaScript CI Tests 
+
+on: [pull_request, workflow_call]
+
+jobs:
+  CI:
+    strategy:
+      matrix:
+          node: [16, 18.x, 20.x, 22.x, latest]
+      fail-fast: false
+    runs-on: codebuild-AWS-ESDK-JS-Release-${{ github.run_id }}-${{ github.run_attempt }}-ubuntu-5.0-large
+    permissions:
+      id-token: write
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{matrix.node}}
+      - name: Configure AWS Credentials for Tests
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
+          role-session-name: JavaScriptTests 
+      - name: Test Coverage Node ${{matrix.node}}
+        env: 
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: |
+          npm ci
+          npm run build
+          npm run coverage-node
+      - name: Test Coverage Browser ${{matrix.node}}
+        env: 
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: |
+          npm run coverage-browser
+      - name: Test compliance
+        env: 
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: |
+          npm run lint
+          npm run test_conditions
+      - name: Run Test Vectors Node ${{matrix.node}}
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          NPM_CONFIG_UNSAFE_PERM: true
+          PUBLISH_LOCAL: true
+        run: |
+          npm run verdaccio-publish
+          npm run verdaccio-node-decrypt
+          npm run verdaccio-node-encrypt
+      - name: Run Test Vectors Browser node ${{matrix.node}} 
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          NPM_CONFIG_UNSAFE_PERM: true
+          PUBLISH_LOCAL: true
+        run: |
+          npm run verdaccio-publish
+          npm run verdaccio-browser-decrypt
+          npm run verdaccio-browser-encrypt
