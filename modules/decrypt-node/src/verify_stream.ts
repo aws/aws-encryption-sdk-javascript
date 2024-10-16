@@ -129,7 +129,16 @@ export class VerifyStream extends PortableTransformWithType {
     const { currentFrame } = state
     if (!currentFrame) {
       const { buffer } = state
-      const frameBuffer = Buffer.concat([buffer, chunk])
+      
+      // Buffer.concat can be expensive.
+      // If buffer is empty, just use the chunk.
+      let frameBuffer;
+      if (buffer.length > 0) {
+        frameBuffer = Buffer.concat([buffer, chunk]);
+      } else {
+        frameBuffer = chunk;
+      }
+
       const frameHeader = decodeBodyHeader(frameBuffer, this._headerInfo, 0)
       if (!frameHeader) {
         // Need more data
