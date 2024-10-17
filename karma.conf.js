@@ -127,6 +127,8 @@ function createCredentialPreprocessor() {
     // This will affect the generated (ES5) JS
     const regionCode = `var defaultRegion = '${region}';`
     const credentialsCode = `var credentials = ${JSON.stringify(credentials)};`
+    // See: https://github.com/aws/aws-sdk-js-v3/issues/5890
+    const expirationNeedsToBeDate = `credentials.expiration = new Date(credentials.expiration);`
     const isBrowser = `var isBrowser = true;`
     const contents = content.split('\n')
     let idx = -1
@@ -137,7 +139,7 @@ function createCredentialPreprocessor() {
         break
       }
     }
-    contents.splice(idx + 1, 0, regionCode, credentialsCode, isBrowser)
+    contents.splice(idx + 1, 0, regionCode, credentialsCode, expirationNeedsToBeDate, isBrowser)
     done(contents.join('\n'))
   }
 }

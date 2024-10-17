@@ -112,6 +112,7 @@ export interface AwsEsdkKeyObject {
   export(options?: { format: 'jwk' }): AwsEsdkJsonWebKey
   symmetricSize?: number
   type: AwsEsdkKeyObjectType
+  equals(otherKeyObject: AwsEsdkKeyObject): boolean
 }
 export type AwsEsdkCreateSecretKey = (key: Uint8Array) => AwsEsdkKeyObject
 

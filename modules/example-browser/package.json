@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/example-browser",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -26,7 +26,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-crypto/client-browser": "file:../client-browser",
-    "@aws-sdk/util-base64-browser": "3.209.0",
+    "@aws-sdk/util-base64": "^3.374.0",
     "@types/chai": "^4.2.11",
     "chai": "^4.2.0",
     "karma": "^6.3.17",

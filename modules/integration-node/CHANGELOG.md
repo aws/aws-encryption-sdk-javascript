@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.0.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.0.0...v4.0.1) (2024-07-30)
+
+### Bug Fixes
+
+- Add CVE-2023-46809 option to integration node ([#1424](https://github.com/aws/aws-encryption-sdk-javascript/issues/1424)) ([84a7034](https://github.com/aws/aws-encryption-sdk-javascript/commit/84a703440aa7313ad0c779e50b7c052aa8dd5e7b))
+
 # [4.0.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v3.2.2...v4.0.0) (2023-07-17)
 
 **Note:** Version bump only for package @aws-crypto/integration-node

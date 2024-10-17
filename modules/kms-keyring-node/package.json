@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/kms-keyring-node",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "scripts": {
     "prepublishOnly": "npm run generate-version.ts; npm run build",
     "generate-version.ts": "npx genversion --es6  src/version.ts",
