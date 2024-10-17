@@ -196,13 +196,18 @@ export class VerifyStream extends PortableTransformWithType {
     if (chunk.length && tagLengthBytes > authTagBuffer.length) {
       const left = tagLengthBytes - authTagBuffer.length
       if (left > chunk.length) {
-        state.authTagBuffer = Buffer.concat([authTagBuffer, chunk])
+        // Buffer.concat can be expensive. If buffer is empty, just use the chunk.
+        state.authTagBuffer =
+          authTagBuffer.length > 0
+            ? Buffer.concat([authTagBuffer, chunk])
+            : chunk
         return callback()
       } else {
-        const finalAuthTagBuffer = Buffer.concat(
-          [authTagBuffer, chunk],
-          tagLengthBytes
-        )
+        // Buffer.concat can be expensive. If buffer is empty, just use the chunk.
+        const finalAuthTagBuffer =
+          authTagBuffer.length > 0
+            ? Buffer.concat([authTagBuffer, chunk], tagLengthBytes)
+            : chunk.slice(0, tagLengthBytes)
         if (this._verify) {
           this._verify.update(finalAuthTagBuffer)
         }
