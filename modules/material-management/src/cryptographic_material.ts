@@ -17,6 +17,7 @@ import { KeyringTrace, KeyringTraceFlag } from './keyring_trace'
 import { NodeAlgorithmSuite } from './node_algorithms'
 import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 import { needs } from './needs'
+import { validate, version } from 'uuid'
 
 /* KeyObject were introduced in v11.
  * They protect the data key better than a Buffer.
@@ -114,6 +115,106 @@ export interface CryptographicMaterial<T extends CryptographicMaterial<T>> {
   keyringTrace: KeyringTrace[]
   encryptionContext: Readonly<EncryptionContext>
 }
+
+//= aws-encryption-sdk-specification/framework/structures.md#structure-3
+//# This structure MUST include all of the following fields:
+//#
+//# - [Branch Key](#branch-key)
+//# - [Branch Key Id](#branch-key-id)
+//# - [Branch Key Version](#branch-key-version)
+//# - [Encryption Context](#encryption-context-3)
+// structure is based on https://github.com/aws/aws-cryptographic-material-providers-library/blob/main/AwsCryptographicMaterialProviders/dafny/AwsCryptographyKeyStore/Model/KeyStore.smithy#L323
+export interface BranchKeyMaterial {
+  branchKey(): Readonly<Buffer>
+  branchKeyIdentifier: string
+  branchKeyVersion: Readonly<Buffer>
+  encryptionContext: Readonly<EncryptionContext>
+}
+
+export class NodeBranchKeyMaterial implements BranchKeyMaterial {
+  // all attributes are readonly so they are accessible outside the class but
+  // they cannot be modified
+
+  // since all fields are objects, keep them immutable from external changes via
+  // shared memory
+
+  // we want the branch key to be mutable within the class but immutable outside
+  // the class
+  private _branchKey: Buffer
+  declare readonly branchKeyIdentifier: string
+  declare readonly branchKeyVersion: Readonly<Buffer>
+  declare readonly encryptionContext: Readonly<EncryptionContext>
+
+  constructor(
+    branchKey: Buffer,
+    branchKeyIdentifier: string,
+    branchKeyVersion: string,
+    encryptionContext: EncryptionContext
+  ) {
+    /* Precondition: Branch key must be a Buffer */
+    needs(branchKey instanceof Buffer, 'Branch key must be a Buffer')
+
+    /* Precondition: Branch key id must be a string */
+    needs(
+      typeof branchKeyIdentifier === 'string',
+      'Branch key id must be a string'
+    )
+
+    /* Precondition: Branch key version must be a string */
+    needs(
+      typeof branchKeyVersion === 'string',
+      'Branch key version must be a string'
+    )
+
+    /* Precondition: encryptionContext must be an object, even if it is empty */
+    needs(
+      encryptionContext && typeof encryptionContext === 'object',
+      'Encryption context must be an object'
+    )
+
+    /* Precondition: branchKey must be a 32 byte-long buffer */
+    needs(branchKey.length === 32, 'Branch key must be 32 bytes long')
+
+    /* Precondition: branch key ID is required */
+    needs(branchKeyIdentifier, 'Empty branch key ID')
+
+    /* Precondition: branch key version must be valid version 4 uuid */
+    needs(
+      validate(branchKeyVersion) && version(branchKeyVersion) === 4,
+      'Branch key version must be valid version 4 uuid'
+    )
+
+    /* Postcondition: branch key is immutable */
+    this._branchKey = Buffer.from(branchKey)
+
+    /* Postconditon: encryption context is immutable */
+    this.encryptionContext = Object.freeze({ ...encryptionContext })
+
+    this.branchKeyIdentifier = branchKeyIdentifier
+
+    this.branchKeyVersion = Buffer.from(branchKeyVersion, 'utf-8')
+
+    Object.setPrototypeOf(this, NodeBranchKeyMaterial.prototype)
+    /* Postcondition: instance is frozen */
+    // preventing any modifications to its properties or methods.
+    Object.freeze(this)
+  }
+
+  // makes the branch key public to users wrapped in immutable access
+  branchKey(): Readonly<Buffer> {
+    return this._branchKey
+  }
+
+  // this capability is not required of branch key materials according to the
+  // specification. Using this is a good security practice so that the data
+  // key's bytes are not preserved even in free memory
+  zeroUnencryptedDataKey(): BranchKeyMaterial {
+    this._branchKey.fill(0)
+    return this
+  }
+}
+// make the class immutable
+frozenClass(NodeBranchKeyMaterial)
 
 export interface EncryptionMaterial<T extends CryptographicMaterial<T>>
   extends CryptographicMaterial<T> {
@@ -370,6 +471,10 @@ export function isDecryptionMaterial(
     obj instanceof WebCryptoDecryptionMaterial ||
     obj instanceof NodeDecryptionMaterial
   )
+}
+
+export function isBranchKeyMaterial(obj: any): obj is NodeBranchKeyMaterial {
+  return obj instanceof NodeBranchKeyMaterial
 }
 
 export function decorateCryptographicMaterial<

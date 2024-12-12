@@ -1,0 +1,101 @@
+// Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+import { BranchKeyRecord } from '../src/branch_keystore_structures'
+import { EncryptedHierarchicalKey, BranchKeyVersionType } from '../src/types'
+import {
+  BRANCH_KEY_ACTIVE_TYPE,
+  BRANCH_KEY_ACTIVE_VERSION_FIELD,
+  BRANCH_KEY_FIELD,
+  BRANCH_KEY_IDENTIFIER_FIELD,
+  HIERARCHY_VERSION_FIELD,
+  KEY_CREATE_TIME_FIELD,
+  KMS_FIELD,
+  TYPE_FIELD,
+  TABLE_FIELD,
+} from '../src/constants'
+
+export const DDB_TABLE_NAME = 'KeyStoreDdbTable'
+export const LOGICAL_KEYSTORE_NAME = DDB_TABLE_NAME
+export const BRANCH_KEY_ID = '75789115-1deb-4fe3-a2ec-be9e885d1945'
+export const BRANCH_KEY_ACTIVE_VERSION = 'fed7ad33-0774-4f97-aa5e-6c766fc8af9f'
+export const BRANCH_KEY_ID_WITH_EC = '4bb57643-07c1-419e-92ad-0df0df149d7c'
+export const BRANCH_KEY_ACTIVE_VERSION_UTF8_BYTES = Buffer.from(
+  BRANCH_KEY_ACTIVE_VERSION,
+  'utf-8'
+)
+export const KEY_ARN =
+  'arn:aws:kms:us-west-2:370957321024:key/9d989aa2-2f9c-438c-a745-cc57d3ad0126'
+export const KEY_ID = '9d989aa2-2f9c-438c-a745-cc57d3ad0126'
+export const POSTAL_HORN_BRANCH_KEY_ID = '682dfba7-4c35-491d-8d6a-5a9c56194061'
+export const KMS_KEY_ALIAS =
+  'arn:aws:kms:us-west-2:370957321024:alias/postalHorn'
+export const INCORRECT_LOGICAL_NAME = 'MySuperAwesomeTableName'
+export const POSTAL_HORN_KEY_ARN =
+  'arn:aws:kms:us-west-2:370957321024:key/bc127593-f7da-452c-a1f3-cd34c46f81f8'
+export const LYING_BRANCH_KEY_ID = 'kms-arn-attribute-is-lying'
+export const LYING_BRANCH_KEY_DECRYPT_ONLY_VERSION =
+  '129c5c87-308a-41c9-8b9d-a27f66e915f4'
+
+// may not be active currently, but serves structural purpose
+const ENCRYPTED_ACTIVE_BRANCH_KEY_CIPHERTEXT_BASE64 =
+  'AQICAHhTIzkciiF5TDB8qaCjctFmv6Dx+AQICAHhTIzkciiF5TDB8qaCjctFmv6Dx+4yjarauOA4MtH0jwgFHXGFS6janEEbpRnd0qbBJAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMQLI9FLotey+qbs/CAgEQgDtqHnL1epEEpixeJCOG16V4cozeww9wMc82h7SSvXHP9PHTycAScLYZi2YICMka+QnZmPj4qP/9mb1xWQ==/7VWpSPAgEQgDuxKdGTboqxDhxBV1FQUVia8OFaQsLlPkuhwgc82tMhH9T2vAvsHGZPyPoK8zCG2xEjo3KIos8N1YK7mA=='
+const ENCRYPTED_ACTIVE_BRANCH_KEY_CIPHERTEXT = new Uint8Array(
+  // @ts-ignore
+  Buffer.from(ENCRYPTED_ACTIVE_BRANCH_KEY_CIPHERTEXT_BASE64, 'base64')
+)
+
+export const ENCRYPTED_ACTIVE_BRANCH_KEY = new EncryptedHierarchicalKey(
+  {
+    [BRANCH_KEY_IDENTIFIER_FIELD]: BRANCH_KEY_ID,
+    [TYPE_FIELD]: BRANCH_KEY_ACTIVE_TYPE,
+    [BRANCH_KEY_ACTIVE_VERSION_FIELD]:
+      `branch:version:${BRANCH_KEY_ACTIVE_VERSION}` as BranchKeyVersionType,
+    [KEY_CREATE_TIME_FIELD]: '2023-07-12T17:34:06:000290Z',
+    [HIERARCHY_VERSION_FIELD]: '1',
+    [KMS_FIELD]: KEY_ARN,
+    [TABLE_FIELD]: LOGICAL_KEYSTORE_NAME,
+  },
+  ENCRYPTED_ACTIVE_BRANCH_KEY_CIPHERTEXT
+)
+
+const ENCRYPTED_VERSION_BRANCH_KEY_CIPHERTEXT_BASE64 =
+  'AQIBAHhTIzkciiF5TDB8qaCjctFmv6Dx+4yjarauOA4MtH0jwgFcb8VH4blkX0w7e59l8tl4AAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM2tJUaqT5i07TTV9FAgEQgDsWBTM/N+rN+N7A1Js6TXVxbb64vt8eQ+G2LUs5yy98l11pXe78HZKnD+/YoUevUY1YDskV3ATRE+x2+g=='
+const ENCRYPTED_VERSION_BRANCH_KEY_CIPHERTEXT = new Uint8Array(
+  // @ts-ignore
+  Buffer.from(ENCRYPTED_VERSION_BRANCH_KEY_CIPHERTEXT_BASE64, 'base64')
+)
+
+export const ENCRYPTED_VERSION_BRANCH_KEY = new EncryptedHierarchicalKey(
+  {
+    [BRANCH_KEY_IDENTIFIER_FIELD]: BRANCH_KEY_ID,
+    [TYPE_FIELD]:
+      `branch:version:${BRANCH_KEY_ACTIVE_VERSION}` as BranchKeyVersionType,
+    [KEY_CREATE_TIME_FIELD]: '2023-07-12T17:34:06:000290Z',
+    [HIERARCHY_VERSION_FIELD]: '1',
+    [KMS_FIELD]: KEY_ARN,
+    [TABLE_FIELD]: LOGICAL_KEYSTORE_NAME,
+  },
+  ENCRYPTED_VERSION_BRANCH_KEY_CIPHERTEXT
+)
+
+export const ACTIVE_BRANCH_KEY: BranchKeyRecord = {
+  [BRANCH_KEY_IDENTIFIER_FIELD]: BRANCH_KEY_ID,
+  [TYPE_FIELD]: BRANCH_KEY_ACTIVE_TYPE,
+  [BRANCH_KEY_ACTIVE_VERSION_FIELD]:
+    `branch:version:${BRANCH_KEY_ACTIVE_VERSION}` as BranchKeyVersionType,
+  [KEY_CREATE_TIME_FIELD]: '2023-07-12T17:34:06:000290Z',
+  [HIERARCHY_VERSION_FIELD]: 1,
+  [KMS_FIELD]: KEY_ARN,
+  [BRANCH_KEY_FIELD]: ENCRYPTED_ACTIVE_BRANCH_KEY_CIPHERTEXT,
+}
+
+export const VERSION_BRANCH_KEY: BranchKeyRecord = {
+  [BRANCH_KEY_IDENTIFIER_FIELD]: BRANCH_KEY_ID,
+  [TYPE_FIELD]:
+    `branch:version:${BRANCH_KEY_ACTIVE_VERSION}` as BranchKeyVersionType,
+  [KEY_CREATE_TIME_FIELD]: '2023-07-12T17:34:06:000290Z',
+  [HIERARCHY_VERSION_FIELD]: 1,
+  [KMS_FIELD]: KEY_ARN,
+  [BRANCH_KEY_FIELD]: ENCRYPTED_VERSION_BRANCH_KEY_CIPHERTEXT,
+}
