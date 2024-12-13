@@ -22,8 +22,7 @@
     "@aws-crypto/serialize": "file:../serialize",
     "@types/lru-cache": "^5.1.0",
     "lru-cache": "^6.0.0",
-    "tslib": "^2.2.0",
-    "util": "^0.12.5"
+    "tslib": "^2.2.0"
   },
   "sideEffects": false,
   "main": "./build/main/src/index.js",
