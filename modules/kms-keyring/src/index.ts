@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './kms_client_supplier'
-export { getRegionFromIdentifier, parseAwsKmsKeyArn } from './arn_parsing'
+export {
+  getRegionFromIdentifier,
+  parseAwsKmsKeyArn,
+  constructArnInOtherRegion,
+  mrkAwareAwsKmsKeyIdCompare,
+  ParsedAwsKmsKeyArn,
+} from './arn_parsing'
 export * from './kms_keyring'
 export * from './kms_mrk_keyring'
 export * from './kms_mrk_discovery_keyring'

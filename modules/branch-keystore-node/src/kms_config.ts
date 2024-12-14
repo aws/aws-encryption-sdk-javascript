@@ -9,7 +9,7 @@ import {
   constructArnInOtherRegion,
   mrkAwareAwsKmsKeyIdCompare,
   ParsedAwsKmsKeyArn,
-} from '@aws-crypto/kms-keyring/src/arn_parsing'
+} from '@aws-crypto/kms-keyring'
 import { needs, readOnlyProperty } from '@aws-crypto/material-management'
 
 //= aws-encryption-sdk-specification/framework/branch-key-store.md#aws-kms-configuration
