@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+  isMultiRegionAwsKmsArn,
   // getRegionFromIdentifier,
   parseAwsKmsKeyArn,
 } from '@aws-crypto/kms-keyring'
@@ -78,13 +79,16 @@ export class KmsKeyConfig implements RegionalKmsConfig {
   //# that is a KMS ARN.
   constructor(config: KmsConfig) {
     readOnlyProperty(this, '_config', config)
+    /* Precondition: config must be a string or object */
+    const configType = typeof config
+    needs(!!config && (configType === 'object' || 'string'), 'Config must be a `discovery` or an object.')
     if (config === 'discovery') {
       // Nothing to set
     } else if ('identifier' in config || 'mrkIdentifier' in config) {
       const arn =
         'identifier' in config ? config.identifier : config.mrkIdentifier
       /* Precondition: ARN must be a string */
-      needs(arn || typeof arn === 'string', 'ARN must be a string')
+      needs(typeof arn === 'string', 'ARN must be a string')
 
       //= aws-encryption-sdk-specification/framework/branch-key-store.md#aws-kms-configuration
       //# To be clear, an KMS ARN for a Multi-Region Key MAY be provided to the `KMS Key ARN` configuration,
@@ -101,6 +105,7 @@ export class KmsKeyConfig implements RegionalKmsConfig {
       )
 
       readOnlyProperty(this, '_parsedArn', parsedArn)
+      readOnlyProperty(this, '_arn', arn)
     } else if ('region' in config) {
       readOnlyProperty(this, '_mrkRegion', config.region)
     } else {
@@ -170,7 +175,7 @@ export class KmsKeyConfig implements RegionalKmsConfig {
       //# For two ARNs to be compatible:
       //# If the [AWS KMS Configuration](#aws-kms-configuration) designates single region ARN compatibility,
       //# then two ARNs are compatible if they are exactly equal.
-      return this._arn == otherArn
+      return this._arn === otherArn
     } else if ('mrkIdentifier' in this._config) {
       //= aws-encryption-sdk-specification/framework/branch-key-store.md#aws-key-arn-compatibility
       //# If the [AWS KMS Configuration](#aws-kms-configuration) designates MRK ARN compatibility,
@@ -207,7 +212,7 @@ export class KmsKeyConfig implements RegionalKmsConfig {
       //# If the KMS Configuration is MRDiscovery, `KeyId` MUST be the `kms-arn` attribute value of the AWS DDB response item, with the region replaced by the configured region.
       const parsedArn = parseAwsKmsKeyArn(otherArn)
       needs(parsedArn, 'KMS ARN from the keystore is not an ARN:' + otherArn)
-      return constructArnInOtherRegion(parsedArn, this._mrkRegion)
+      return isMultiRegionAwsKmsArn(parsedArn) ? constructArnInOtherRegion(parsedArn, this._mrkRegion) : otherArn
     } else if (
       'identifier' in this._config ||
       'mrkIdentifier' in this._config

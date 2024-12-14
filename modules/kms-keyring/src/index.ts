@@ -7,6 +7,7 @@ export {
   parseAwsKmsKeyArn,
   constructArnInOtherRegion,
   mrkAwareAwsKmsKeyIdCompare,
+  isMultiRegionAwsKmsArn,
   ParsedAwsKmsKeyArn,
 } from './arn_parsing'
 export * from './kms_keyring'

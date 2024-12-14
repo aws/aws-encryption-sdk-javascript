@@ -2,11 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { expect } from 'chai'
-import {
-  KmsKeyConfig,
-  RegionalKmsConfig,
-  KmsConfig,
-} from '../src/kms_config'
+import { KmsKeyConfig, RegionalKmsConfig, KmsConfig } from '../src/kms_config'
 
 function supplySrkKmsConfig(config: KmsConfig): KmsKeyConfig {
   return new KmsKeyConfig(config)
@@ -29,9 +25,20 @@ export const WELL_FORMED_MRK_ALIAS_ARN =
   'arn:aws:kms:us-west-2:123456789012:alias/mrk/my-mrk-alias'
 
 describe('Test KmsKeyConfig class', () => {
+
+  it('Precondition: config must be a string or object', () => {
+    for (const config of [null, undefined, 0]) {
+      expect(() => supplySrkKmsConfig(config as any)).to.throw(
+        'Config must be a `discovery` or an object.'
+      )
+    }
+  })
   it('Precondition: ARN must be a string', () => {
     for (const arn of [null, undefined, 0, {}]) {
-      expect(() => supplySrkKmsConfig(arn as any)).to.throw(
+      expect(() => supplySrkKmsConfig({identifier: arn} as any)).to.throw(
+        'ARN must be a string'
+      )
+      expect(() => supplySrkKmsConfig({mrkIdentifier: arn} as any)).to.throw(
         'ARN must be a string'
       )
     }
@@ -67,20 +74,20 @@ describe('Test KmsKeyConfig class', () => {
     })
 
     describe('Test getCompatibleArnArn', () => {
-
       it('Returns the SRK', () => {
-        expect(config.getCompatibleArnArn(WELL_FORMED_SRK_ARN)).to.equal(WELL_FORMED_SRK_ARN)
+        expect(config.getCompatibleArnArn(WELL_FORMED_SRK_ARN)).to.equal(
+          WELL_FORMED_SRK_ARN
+        )
       })
 
       it('Throws for a non compatible value', () => {
         expect(() => config.getCompatibleArnArn(WELL_FORMED_MRK_ARN)).to.throw()
       })
-
     })
   })
 
   describe('Given a well formed MRK arn', () => {
-    const config = supplySrkKmsConfig({ identifier: WELL_FORMED_MRK_ARN })
+    const config = supplySrkKmsConfig({ mrkIdentifier: WELL_FORMED_MRK_ARN })
 
     it('Test getRegion', () => {
       expect((config as RegionalKmsConfig).getRegion()).equals('us-west-2')
@@ -115,35 +122,33 @@ describe('Test KmsKeyConfig class', () => {
     })
 
     describe('Test getCompatibleArnArn', () => {
-
       it('Returns the MRK', () => {
-        expect(config.getCompatibleArnArn(WELL_FORMED_MRK_ARN)).to.equal(WELL_FORMED_MRK_ARN)
+        expect(config.getCompatibleArnArn(WELL_FORMED_MRK_ARN)).to.equal(
+          WELL_FORMED_MRK_ARN
+        )
       })
 
       it('Returns the configured MRK because it is the right region', () => {
-        expect(config.getCompatibleArnArn(WELL_FORMED_MRK_ARN_DIFFERENT_REGION)).to.equal(WELL_FORMED_MRK_ARN)
+        expect(
+          config.getCompatibleArnArn(WELL_FORMED_MRK_ARN_DIFFERENT_REGION)
+        ).to.equal(WELL_FORMED_MRK_ARN)
       })
 
       it('Throws for a non compatible value', () => {
         expect(() => config.getCompatibleArnArn(WELL_FORMED_SRK_ARN)).to.throw()
       })
-
     })
   })
 
   describe('Given discovery configurations', () => {
-
     it('Discovery is compatible with ARNs', () => {
       const config = supplySrkKmsConfig('discovery')
-      expect(config.isCompatibleWithArn(ONE_PART_ARN)).to.equal(true)
       expect(config.isCompatibleWithArn(WELL_FORMED_SRK_ARN)).to.equal(true)
       expect(config.isCompatibleWithArn(WELL_FORMED_MRK_ARN)).to.equal(true)
     })
 
-
     it('MRDiscovery is compatible with ARNs', () => {
-      const config = supplySrkKmsConfig({region: 'us-west-2'})
-      expect(config.isCompatibleWithArn(ONE_PART_ARN)).to.equal(true)
+      const config = supplySrkKmsConfig({ region: 'us-west-2' })
       expect(config.isCompatibleWithArn(WELL_FORMED_SRK_ARN)).to.equal(true)
       expect(config.isCompatibleWithArn(WELL_FORMED_MRK_ARN)).to.equal(true)
     })
@@ -151,60 +156,76 @@ describe('Test KmsKeyConfig class', () => {
     it('Discovery MUST be an ARN', () => {
       const config = supplySrkKmsConfig('discovery')
       expect(() => config.isCompatibleWithArn(MALFORMED_ARN)).to.throw()
-      expect(() => config.isCompatibleWithArn(WELL_FORMED_SRK_ALIAS_ARN)).to.throw()
-      expect(() => config.isCompatibleWithArn(WELL_FORMED_MRK_ALIAS_ARN)).to.throw()
+      expect(() =>
+        config.isCompatibleWithArn(WELL_FORMED_SRK_ALIAS_ARN)
+      ).to.throw()
+      expect(() =>
+        config.isCompatibleWithArn(WELL_FORMED_MRK_ALIAS_ARN)
+      ).to.throw()
     })
 
-
     it('MRDiscovery MUST be an ARN', () => {
-      const config = supplySrkKmsConfig({region: 'us-west-2'})
+      const config = supplySrkKmsConfig({ region: 'us-west-2' })
       expect(() => config.isCompatibleWithArn(MALFORMED_ARN)).to.throw()
-      expect(() => config.isCompatibleWithArn(WELL_FORMED_SRK_ALIAS_ARN)).to.throw()
-      expect(() => config.isCompatibleWithArn(WELL_FORMED_MRK_ALIAS_ARN)).to.throw()
+      expect(() =>
+        config.isCompatibleWithArn(WELL_FORMED_SRK_ALIAS_ARN)
+      ).to.throw()
+      expect(() =>
+        config.isCompatibleWithArn(WELL_FORMED_MRK_ALIAS_ARN)
+      ).to.throw()
     })
 
     describe('Test getCompatibleArnArn for discovery', () => {
       const config = supplySrkKmsConfig('discovery')
 
       it('Returns the SRK', () => {
-        expect(config.getCompatibleArnArn(WELL_FORMED_SRK_ARN)).to.equal(WELL_FORMED_SRK_ARN)
+        expect(config.getCompatibleArnArn(WELL_FORMED_SRK_ARN)).to.equal(
+          WELL_FORMED_SRK_ARN
+        )
       })
 
       it('Returns the MRK', () => {
-        expect(config.getCompatibleArnArn(WELL_FORMED_MRK_ARN)).to.equal(WELL_FORMED_MRK_ARN)
+        expect(config.getCompatibleArnArn(WELL_FORMED_MRK_ARN)).to.equal(
+          WELL_FORMED_MRK_ARN
+        )
       })
 
       it('Returns the configured MRK because it is the right region', () => {
-        expect(config.getCompatibleArnArn(WELL_FORMED_MRK_ARN_DIFFERENT_REGION)).to.equal(WELL_FORMED_MRK_ARN_DIFFERENT_REGION)
+        expect(
+          config.getCompatibleArnArn(WELL_FORMED_MRK_ARN_DIFFERENT_REGION)
+        ).to.equal(WELL_FORMED_MRK_ARN_DIFFERENT_REGION)
       })
 
       it('Throws for a non compatible value', () => {
-        expect(() => config.getCompatibleArnArn(WELL_FORMED_SRK_ARN)).to.throw()
+        expect(() => config.getCompatibleArnArn(ONE_PART_ARN)).to.throw()
       })
-
     })
 
     describe('Test getCompatibleArnArn for MRDiscovery', () => {
-      const config = supplySrkKmsConfig({region: 'us-east-1'})
+      const config = supplySrkKmsConfig({ region: 'us-east-1' })
 
       it('Returns the SRK', () => {
-        expect(config.getCompatibleArnArn(WELL_FORMED_SRK_ARN)).to.equal(WELL_FORMED_SRK_ARN)
+        expect(config.getCompatibleArnArn(WELL_FORMED_SRK_ARN)).to.equal(
+          WELL_FORMED_SRK_ARN
+        )
       })
 
       it('Returns the MRK', () => {
-        expect(config.getCompatibleArnArn(WELL_FORMED_MRK_ARN)).to.equal(WELL_FORMED_MRK_ARN_DIFFERENT_REGION)
+        expect(config.getCompatibleArnArn(WELL_FORMED_MRK_ARN)).to.equal(
+          WELL_FORMED_MRK_ARN_DIFFERENT_REGION
+        )
       })
 
       it('Returns the configured MRK because it is the right region', () => {
-        expect(config.getCompatibleArnArn(WELL_FORMED_MRK_ARN_DIFFERENT_REGION)).to.equal(WELL_FORMED_MRK_ARN_DIFFERENT_REGION)
+        expect(
+          config.getCompatibleArnArn(WELL_FORMED_MRK_ARN_DIFFERENT_REGION)
+        ).to.equal(WELL_FORMED_MRK_ARN_DIFFERENT_REGION)
       })
 
       it('Throws for a non compatible value', () => {
-        expect(() => config.getCompatibleArnArn(WELL_FORMED_SRK_ARN)).to.throw()
+        expect(() => config.getCompatibleArnArn(ONE_PART_ARN)).to.throw()
       })
-
     })
-
   })
 
   //= aws-encryption-sdk-specification/framework/branch-key-store.md#aws-kms-configuration
