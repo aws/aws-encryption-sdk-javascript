@@ -93,11 +93,8 @@ describe('Test Branch keystore', () => {
       }
     })
 
-    it('Precondition: KMS Configuration must be SRK', () => {
-      // all types of values
-      const badVals = [...falseyValues, ...truthyValues]
-
-      for (const kmsConfiguration of badVals) {
+    it('Precondition: KMS Configuration must be provided.', () => {
+      for (const kmsConfiguration of [...falseyValues, ...truthyValues]) {
         expect(
           () =>
             new BranchKeyStoreNode({
@@ -105,7 +102,7 @@ describe('Test Branch keystore', () => {
               logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
               kmsConfiguration: kmsConfiguration as any,
             })
-        ).to.throw('KMS Configuration must be SRK')
+        ).to.throw(/Unexpected config shape|Config must be a `discovery` or an object./)
       }
     })
 
@@ -193,11 +190,10 @@ describe('Test Branch keystore', () => {
       const kmsClient = new KMSClient({})
       const ddbClient = new DynamoDBClient({})
       expect(() => {
-        const kmsConfig = { identifier: KEY_ID }
         return new BranchKeyStoreNode({
           storage: { ddbTableName: DDB_TABLE_NAME, ddbClient },
           logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
-          kmsConfiguration: kmsConfig,
+          kmsConfiguration: { identifier: KEY_ID},
           keyManagement: { kmsClient },
         })
       }).to.throw(
@@ -224,7 +220,7 @@ describe('Test Branch keystore', () => {
     it('Valid config', () => {
       const kmsClient = new KMSClient({})
       const ddbClient = new DynamoDBClient({})
-      const kmsConfig = { identifier: KEY_ID }
+      const kmsConfig = { identifier: KEY_ARN }
       const keyStore = new BranchKeyStoreNode({
         storage: { ddbTableName: DDB_TABLE_NAME, ddbClient },
         logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
@@ -236,13 +232,13 @@ describe('Test Branch keystore', () => {
         validate(keyStore.keyStoreId) && version(keyStore.keyStoreId) === 4
       ).equals(true)
       // expect(keyStore.ddbTableName).equals(DDB_TABLE_NAME)
-      expect(keyStore.kmsConfiguration).equals(kmsConfig)
+      expect(keyStore.kmsConfiguration._config).equals(kmsConfig)
     })
 
     it('Test valid config with no clients', () => {
       const kmsClient = new KMSClient({})
       const ddbClient = new DynamoDBClient({})
-      const kmsConfig = { identifier: KEY_ID }
+      const kmsConfig = { identifier: KEY_ARN }
 
       // test with no kms client supplied
       expect(
@@ -390,7 +386,7 @@ describe('Test Branch keystore', () => {
           DDB_TABLE_NAME
         )
         expect(test.logicalKeyStoreName).to.equal(LOGICAL_KEYSTORE_NAME)
-        expect(test.kmsConfiguration).to.equal(KMS_CONFIGURATION)
+        expect(test.kmsConfiguration._config).to.equal(KMS_CONFIGURATION)
         expect(test.kmsClient).to.equal(kmsClient)
         expect((test.storage as DynamoDBKeyStorage).ddbClient).to.equal(
           ddbClient
@@ -407,7 +403,7 @@ describe('Test Branch keystore', () => {
   it('Test get active key', async () => {
     const kmsClient = new KMSClient({})
     const ddbClient = new DynamoDBClient({})
-    const kmsConfig = { identifier: KEY_ID }
+    const kmsConfig = { identifier: KEY_ARN }
     const keyStore = new BranchKeyStoreNode({
       kmsConfiguration: kmsConfig,
       storage: { ddbTableName: DDB_TABLE_NAME, ddbClient: ddbClient },
@@ -443,7 +439,7 @@ describe('Test Branch keystore', () => {
   it('Test get branch key version', async () => {
     const kmsClient = new KMSClient({})
     const ddbClient = new DynamoDBClient({})
-    const kmsConfig = { identifier: KEY_ID }
+    const kmsConfig = { identifier: KEY_ARN }
 
     const keyStore = new BranchKeyStoreNode({
       kmsConfiguration: kmsConfig,
@@ -493,7 +489,7 @@ describe('Test Branch keystore', () => {
   it('Test get active key with incorrect kms key arn', async () => {
     const kmsClient = new KMSClient({})
     const ddbClient = new DynamoDBClient({})
-    const kmsConfig = { identifier: KEY_ID }
+    const kmsConfig = { identifier: KEY_ARN }
 
     const keyStore = new BranchKeyStoreNode({
       kmsConfiguration: kmsConfig,
@@ -513,7 +509,7 @@ describe('Test Branch keystore', () => {
   it('Test get active key with wrong logical keystore name', async () => {
     const kmsClient = new KMSClient({})
     const ddbClient = new DynamoDBClient({})
-    const kmsConfig = { identifier: KEY_ID }
+    const kmsConfig = { identifier: KEY_ARN }
 
     const keyStore = new BranchKeyStoreNode({
       kmsConfiguration: kmsConfig,
@@ -531,7 +527,7 @@ describe('Test Branch keystore', () => {
   it('Test get active key does not exist fails', async () => {
     const kmsClient = new KMSClient({})
     const ddbClient = new DynamoDBClient({})
-    const kmsConfig = { identifier: KEY_ID }
+    const kmsConfig = { identifier: KEY_ARN }
 
     const keyStore = new BranchKeyStoreNode({
       kmsConfiguration: kmsConfig,
@@ -549,7 +545,7 @@ describe('Test Branch keystore', () => {
   })
 
   it('Test get active key with no clients', async () => {
-    const kmsConfig = { identifier: KEY_ID }
+    const kmsConfig = { identifier: KEY_ARN }
     const keyStore = new BranchKeyStoreNode({
       kmsConfiguration: kmsConfig,
       logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,

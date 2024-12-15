@@ -82,7 +82,7 @@ export class BranchKeyStoreNode implements IBranchKeyStoreNode {
       'Logical keystore name must be a string'
     )
 
-    needs(kmsConfiguration, 'AWS KMS Configuration required')
+    /* Precondition: KMS Configuration must be provided. */
     readOnlyProperty(
       this,
       'kmsConfiguration',

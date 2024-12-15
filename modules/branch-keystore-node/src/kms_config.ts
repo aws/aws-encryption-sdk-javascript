@@ -81,9 +81,10 @@ export class KmsKeyConfig implements RegionalKmsConfig {
     readOnlyProperty(this, '_config', config)
     /* Precondition: config must be a string or object */
     const configType = typeof config
-    needs(!!config && (configType === 'object' || 'string'), 'Config must be a `discovery` or an object.')
-    if (config === 'discovery') {
-      // Nothing to set
+    needs(!!config && (configType === 'object' || configType === 'string'), 'Config must be a `discovery` or an object.')
+    if (configType === 'string') {
+      /* Precondition: Only `discovery` is a valid string value */
+      needs(config === 'discovery', 'Unexpected config shape')
     } else if ('identifier' in config || 'mrkIdentifier' in config) {
       const arn =
         'identifier' in config ? config.identifier : config.mrkIdentifier
