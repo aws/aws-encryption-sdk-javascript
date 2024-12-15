@@ -85,7 +85,6 @@ export class KmsKeyConfig implements RegionalKmsConfig {
       !!config && (configType === 'object' || configType === 'string'),
       'Config must be a `discovery` or an object.'
     )
-    const asdf = config
 
     if (configType === 'string') {
       /* Precondition: Only `discovery` is a valid string value */
