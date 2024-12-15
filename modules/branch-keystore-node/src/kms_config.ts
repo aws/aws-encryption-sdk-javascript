@@ -81,13 +81,23 @@ export class KmsKeyConfig implements RegionalKmsConfig {
     readOnlyProperty(this, '_config', config)
     /* Precondition: config must be a string or object */
     const configType = typeof config
-    needs(!!config && (configType === 'object' || configType === 'string'), 'Config must be a `discovery` or an object.')
+    needs(
+      !!config && (configType === 'object' || configType === 'string'),
+      'Config must be a `discovery` or an object.'
+    )
+    const asdf = config
+
     if (configType === 'string') {
       /* Precondition: Only `discovery` is a valid string value */
       needs(config === 'discovery', 'Unexpected config shape')
-    } else if ('identifier' in config || 'mrkIdentifier' in config) {
+    } else if (
+      'identifier' in (config as any) ||
+      'mrkIdentifier' in (config as any)
+    ) {
       const arn =
-        'identifier' in config ? config.identifier : config.mrkIdentifier
+        'identifier' in (config as any)
+          ? (config as any).identifier
+          : (config as any).mrkIdentifier
       /* Precondition: ARN must be a string */
       needs(typeof arn === 'string', 'ARN must be a string')
 
@@ -107,8 +117,8 @@ export class KmsKeyConfig implements RegionalKmsConfig {
 
       readOnlyProperty(this, '_parsedArn', parsedArn)
       readOnlyProperty(this, '_arn', arn)
-    } else if ('region' in config) {
-      readOnlyProperty(this, '_mrkRegion', config.region)
+    } else if ('region' in (config as any)) {
+      readOnlyProperty(this, '_mrkRegion', (config as any).region)
     } else {
       needs(false, 'Unexpected config shape')
     }
@@ -213,7 +223,9 @@ export class KmsKeyConfig implements RegionalKmsConfig {
       //# If the KMS Configuration is MRDiscovery, `KeyId` MUST be the `kms-arn` attribute value of the AWS DDB response item, with the region replaced by the configured region.
       const parsedArn = parseAwsKmsKeyArn(otherArn)
       needs(parsedArn, 'KMS ARN from the keystore is not an ARN:' + otherArn)
-      return isMultiRegionAwsKmsArn(parsedArn) ? constructArnInOtherRegion(parsedArn, this._mrkRegion) : otherArn
+      return isMultiRegionAwsKmsArn(parsedArn)
+        ? constructArnInOtherRegion(parsedArn, this._mrkRegion)
+        : otherArn
     } else if (
       'identifier' in this._config ||
       'mrkIdentifier' in this._config
