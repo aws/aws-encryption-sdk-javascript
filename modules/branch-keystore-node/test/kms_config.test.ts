@@ -25,7 +25,6 @@ export const WELL_FORMED_MRK_ALIAS_ARN =
   'arn:aws:kms:us-west-2:123456789012:alias/mrk/my-mrk-alias'
 
 describe('Test KmsKeyConfig class', () => {
-
   it('Precondition: config must be a string or object', () => {
     for (const config of [null, undefined, 0]) {
       expect(() => supplySrkKmsConfig(config as any)).to.throw(
@@ -35,10 +34,10 @@ describe('Test KmsKeyConfig class', () => {
   })
   it('Precondition: ARN must be a string', () => {
     for (const arn of [null, undefined, 0, {}]) {
-      expect(() => supplySrkKmsConfig({identifier: arn} as any)).to.throw(
+      expect(() => supplySrkKmsConfig({ identifier: arn } as any)).to.throw(
         'ARN must be a string'
       )
-      expect(() => supplySrkKmsConfig({mrkIdentifier: arn} as any)).to.throw(
+      expect(() => supplySrkKmsConfig({ mrkIdentifier: arn } as any)).to.throw(
         'ARN must be a string'
       )
     }

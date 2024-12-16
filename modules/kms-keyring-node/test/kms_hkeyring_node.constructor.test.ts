@@ -1,9 +1,7 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-  BranchKeyStoreNode,
-} from '@aws-crypto/branch-keystore-node'
+import { BranchKeyStoreNode } from '@aws-crypto/branch-keystore-node'
 import {
   DDB_TABLE_NAME,
   LOGICAL_KEYSTORE_NAME,
@@ -26,7 +24,7 @@ const branchKeyId = BRANCH_KEY_ID
 const cacheLimitTtl = TTL
 const maxCacheSize = 1000
 const keyStore = new BranchKeyStoreNode({
-  storage: {ddbTableName: DDB_TABLE_NAME},
+  storage: { ddbTableName: DDB_TABLE_NAME },
   logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
   kmsConfiguration: { identifier: KEY_ARN },
 })

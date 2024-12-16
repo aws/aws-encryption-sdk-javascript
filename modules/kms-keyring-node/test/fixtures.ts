@@ -1,9 +1,7 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-  BranchKeyStoreNode,
-} from '@aws-crypto/branch-keystore-node'
+import { BranchKeyStoreNode } from '@aws-crypto/branch-keystore-node'
 import {
   AlgorithmSuiteIdentifier,
   EncryptionContext,
@@ -26,7 +24,7 @@ export const TEST_ESDK_ALG_SUITE = new NodeAlgorithmSuite(
 )
 export const TTL = 1 * 60000 * 10
 export const KEYSTORE = new BranchKeyStoreNode({
-  storage: {ddbTableName: DDB_TABLE_NAME},
+  storage: { ddbTableName: DDB_TABLE_NAME },
   logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
   kmsConfiguration: { identifier: KEY_ARN },
 })

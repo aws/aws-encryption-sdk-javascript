@@ -393,7 +393,7 @@ export class BranchKeyStoreNode implements IBranchKeyStoreNode {
       //# by calling [GetKeyStorageInfo](./key-store/key-storage.md#getkeystorageinfo).
       keystoreTableName: this.storage.getKeyStorageInfo().name,
       logicalKeyStoreName: this.logicalKeyStoreName,
-      grantTokens: !!this.grantTokens ? this.grantTokens.slice() : [],
+      grantTokens: this.grantTokens ? this.grantTokens.slice() : [],
       kmsConfiguration: this.kmsConfiguration._config,
     }
   }

@@ -34,7 +34,10 @@ import { expect } from 'chai'
 import Sinon from 'sinon'
 import { KMSClient } from '@aws-sdk/client-kms'
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import { BranchKeyStoreNode, KeyStoreInfoOutput } from '@aws-crypto/branch-keystore-node'
+import {
+  BranchKeyStoreNode,
+  KeyStoreInfoOutput,
+} from '@aws-crypto/branch-keystore-node'
 
 const branchKeyIdA = BRANCH_KEY_ID_A
 const branchKeyIdB = BRANCH_KEY_ID_B
@@ -130,14 +133,14 @@ describe('KmsHierarchicalKeyRingNode: onDecrypt', () => {
       }
     })
 
-    keyStore.getKeyStoreInfo.callsFake(function(): KeyStoreInfoOutput {
+    keyStore.getKeyStoreInfo.callsFake(function (): KeyStoreInfoOutput {
       return {
-        keystoreId: "keyStoreId",
-        keystoreTableName: "keystoreTableName",
-        logicalKeyStoreName: "logicalKeyStoreName",
+        keystoreId: 'keyStoreId',
+        keystoreTableName: 'keystoreTableName',
+        logicalKeyStoreName: 'logicalKeyStoreName',
         grantTokens: [],
         // This is not used by any tests
-        kmsConfiguration: null as any
+        kmsConfiguration: null as any,
       }
     })
   })
@@ -595,7 +598,7 @@ describe('KmsHierarchicalKeyRingNode: onDecrypt', () => {
 
     it('CMC evictions occur due to capacity', async () => {
       const maxCacheSize = 1
-      
+
       const hkr = new KmsHierarchicalKeyRingNode({
         branchKeyIdSupplier,
         keyStore,

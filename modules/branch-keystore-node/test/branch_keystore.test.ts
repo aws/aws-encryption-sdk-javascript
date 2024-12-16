@@ -102,7 +102,9 @@ describe('Test Branch keystore', () => {
               logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
               kmsConfiguration: kmsConfiguration as any,
             })
-        ).to.throw(/Unexpected config shape|Config must be a `discovery` or an object./)
+        ).to.throw(
+          /Unexpected config shape|Config must be a `discovery` or an object./
+        )
       }
     })
 
@@ -193,7 +195,7 @@ describe('Test Branch keystore', () => {
         return new BranchKeyStoreNode({
           storage: { ddbTableName: DDB_TABLE_NAME, ddbClient },
           logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
-          kmsConfiguration: { identifier: KEY_ID},
+          kmsConfiguration: { identifier: KEY_ID },
           keyManagement: { kmsClient },
         })
       }).to.throw(

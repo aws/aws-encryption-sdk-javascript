@@ -35,7 +35,10 @@ import {
   testOnDecryptError,
   testOnEncrypt,
 } from './kms_hkeyring_node.test'
-import { BranchKeyStoreNode, KeyStoreInfoOutput } from '@aws-crypto/branch-keystore-node'
+import {
+  BranchKeyStoreNode,
+  KeyStoreInfoOutput,
+} from '@aws-crypto/branch-keystore-node'
 chai.use(chaiAsPromised)
 
 // an edk that can't even be destructured according to any alg suite
@@ -146,14 +149,14 @@ describe('KmsHierarchicalKeyRingNode: decrypt EDK order', () => {
       }
     })
 
-    keyStore.getKeyStoreInfo.callsFake(function(): KeyStoreInfoOutput {
+    keyStore.getKeyStoreInfo.callsFake(function (): KeyStoreInfoOutput {
       return {
-        keystoreId: "keyStoreId",
-        keystoreTableName: "keystoreTableName",
-        logicalKeyStoreName: "logicalKeyStoreName",
+        keystoreId: 'keyStoreId',
+        keystoreTableName: 'keystoreTableName',
+        logicalKeyStoreName: 'logicalKeyStoreName',
         grantTokens: [],
         // This is not used by any tests
-        kmsConfiguration: null as any
+        kmsConfiguration: null as any,
       }
     })
   })

@@ -86,14 +86,14 @@ export function getCacheEntryId(
   // get branch key id as a byte array
   const branchKeyIdAsBytes = stringToUtf8Bytes(branchKeyId)
 
-  var entryInfo
+  let entryInfo
   //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#resource-suffix
   //# The aforementioned 4 definitions ([Resource Identifier](#resource-identifier),
   //# [Scope Identifier](#scope-identifier), [Partition ID](#partition-id-1), and
   //# [Resource Suffix](#resource-suffix)) MUST be appended together with the null byte, 0x00,
   //# and the SHA384 of the result should be taken as the final cache identifier.
 
-  if (!!versionAsBytes) {
+  if (versionAsBytes) {
     //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#decryption-materials
     //# When the hierarchical keyring receives an OnDecrypt request,
     //# it MUST calculate the cache entry identifier as the

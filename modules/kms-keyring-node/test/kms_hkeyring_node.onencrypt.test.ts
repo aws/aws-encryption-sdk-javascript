@@ -28,7 +28,10 @@ import {
   testOnEncrypt,
   testOnEncryptError,
 } from './kms_hkeyring_node.test'
-import { BranchKeyStoreNode, KeyStoreInfoOutput } from '@aws-crypto/branch-keystore-node'
+import {
+  BranchKeyStoreNode,
+  KeyStoreInfoOutput,
+} from '@aws-crypto/branch-keystore-node'
 chai.use(chaiAsPromised)
 
 const branchKeyIdA = BRANCH_KEY_ID_A
@@ -85,14 +88,14 @@ describe('KmsHierarchicalKeyRingNode: onEncrypt', () => {
       }
     })
 
-    keyStore.getKeyStoreInfo.callsFake(function(): KeyStoreInfoOutput {
+    keyStore.getKeyStoreInfo.callsFake(function (): KeyStoreInfoOutput {
       return {
-        keystoreId: "keyStoreId",
-        keystoreTableName: "keystoreTableName",
-        logicalKeyStoreName: "logicalKeyStoreName",
+        keystoreId: 'keyStoreId',
+        keystoreTableName: 'keystoreTableName',
+        logicalKeyStoreName: 'logicalKeyStoreName',
         grantTokens: [],
         // This is not used by any tests
-        kmsConfiguration: null as any
+        kmsConfiguration: null as any,
       }
     })
   })
