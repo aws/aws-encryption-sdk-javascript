@@ -9,6 +9,8 @@ import {
   needs,
   isEncryptionMaterial,
   isDecryptionMaterial,
+  BranchKeyMaterial,
+  isBranchKeyMaterial,
 } from '@aws-crypto/material-management'
 
 import {
@@ -16,7 +18,14 @@ import {
   Entry,
   EncryptionMaterialEntry,
   DecryptionMaterialEntry,
+  BranchKeyMaterialEntry,
 } from './cryptographic_materials_cache'
+
+// define a broader type for local CMC entries that encompass BranchKeyMaterial
+// entries as well
+type LocalCmcEntry<S extends SupportedAlgorithmSuites> =
+  | BranchKeyMaterialEntry
+  | Entry<S>
 
 export function getLocalCryptographicMaterialsCache<
   S extends SupportedAlgorithmSuites
@@ -24,7 +33,7 @@ export function getLocalCryptographicMaterialsCache<
   capacity: number,
   proactiveFrequency: number = 1000 * 60
 ): CryptographicMaterialsCache<S> {
-  const cache = new LRU<string, Entry<S>>({
+  const cache = new LRU<string, LocalCmcEntry<S>>({
     max: capacity,
     dispose(_key, value) {
       /* Zero out the unencrypted dataKey, when the material is removed from the cache. */
@@ -82,6 +91,7 @@ export function getLocalCryptographicMaterialsCache<
 
       cache.set(key, entry, maxAge)
     },
+
     putDecryptionMaterial(
       key: string,
       material: DecryptionMaterial<S>,
@@ -100,6 +110,23 @@ export function getLocalCryptographicMaterialsCache<
 
       cache.set(key, entry, maxAge)
     },
+
+    putBranchKeyMaterial(
+      key: string,
+      material: BranchKeyMaterial,
+      maxAge?: number
+    ): void {
+      /* Precondition: Only cache BranchKeyMaterial */
+      needs(isBranchKeyMaterial(material), 'Malformed response.')
+
+      const entry = Object.seal({
+        response: material,
+        now: Date.now(),
+      })
+
+      cache.set(key, entry, maxAge)
+    },
+
     getEncryptionMaterial(key: string, plaintextLength: number) {
       /* Precondition: plaintextLength can not be negative. */
       needs(plaintextLength >= 0, 'Malformed plaintextLength')
@@ -109,11 +136,13 @@ export function getLocalCryptographicMaterialsCache<
       /* Postcondition: Only return EncryptionMaterial. */
       needs(isEncryptionMaterial(entry.response), 'Malformed response.')
 
-      entry.bytesEncrypted += plaintextLength
-      entry.messagesEncrypted += 1
+      const encryptionMaterialEntry = entry as EncryptionMaterialEntry<S>
+      encryptionMaterialEntry.bytesEncrypted += plaintextLength
+      encryptionMaterialEntry.messagesEncrypted += 1
 
       return entry as EncryptionMaterialEntry<S>
     },
+
     getDecryptionMaterial(key: string) {
       const entry = cache.get(key)
       /* Check for early return (Postcondition): If this key does not have a DecryptionMaterial, return false. */
@@ -123,6 +152,18 @@ export function getLocalCryptographicMaterialsCache<
 
       return entry as DecryptionMaterialEntry<S>
     },
+
+    getBranchKeyMaterial(key: string): BranchKeyMaterialEntry | false {
+      const entry = cache.get(key)
+
+      /* Postcondition: If this key does not have a BranchKeyMaterial, return false */
+      if (!entry) return false
+
+      /* Postcondition: Only return BranchKeyMaterial */
+      needs(isBranchKeyMaterial(entry.response), 'Malformed response.')
+      return entry as BranchKeyMaterialEntry
+    },
+
     del(key: string) {
       cache.del(key)
     },

@@ -14,5 +14,7 @@
     { "path": "../kms-keyring-node" },
     { "path": "../raw-rsa-keyring-node" },
     { "path": "../raw-aes-keyring-node" },
+    { "path": "../branch-keystore-node" },
+    { "path": "../kms-keyring" }
   ]
 }

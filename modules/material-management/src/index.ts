@@ -41,6 +41,7 @@ export * from './materials_manager'
 export {
   NodeEncryptionMaterial,
   NodeDecryptionMaterial,
+  NodeBranchKeyMaterial,
 } from './cryptographic_material'
 export {
   isValidCryptoKey,
@@ -55,6 +56,7 @@ export {
 export {
   isEncryptionMaterial,
   isDecryptionMaterial,
+  isBranchKeyMaterial,
 } from './cryptographic_material'
 export {
   unwrapDataKey,

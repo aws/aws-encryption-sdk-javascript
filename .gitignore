@@ -47,3 +47,4 @@ package.json.decrypt
 # they track the package.json version
 /modules/kms-keyring-browser/src/version.ts
 /modules/kms-keyring-node/src/version.ts
+/modules/branch-keystore-node/src/version.ts

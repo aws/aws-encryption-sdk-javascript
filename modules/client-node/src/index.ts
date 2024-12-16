@@ -8,6 +8,8 @@ export * from '@aws-crypto/caching-materials-manager-node'
 export * from '@aws-crypto/kms-keyring-node'
 export * from '@aws-crypto/raw-aes-keyring-node'
 export * from '@aws-crypto/raw-rsa-keyring-node'
+export * from '@aws-crypto/branch-keystore-node'
+export { BranchKeyIdSupplier } from '@aws-crypto/kms-keyring'
 
 import {
   CommitmentPolicy,

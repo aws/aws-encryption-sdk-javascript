@@ -29,8 +29,9 @@ import {
   unwrapDataKey,
   wrapWithKeyObjectIfSupported,
   supportsKeyObject,
+  NodeBranchKeyMaterial,
 } from '../src/cryptographic_material'
-
+import { v1, v4, v3, v5 } from 'uuid'
 import { createSecretKey } from 'crypto'
 
 describe('decorateCryptographicMaterial', () => {
@@ -987,6 +988,191 @@ describe('decorateWebCryptoMaterial:Helpers', () => {
       }
       expect(isValidCryptoKey(key, material)).to.equal(false)
     })
+  })
+})
+
+describe('NodeBranchKeyMaterial', () => {
+  const branchKey = Buffer.alloc(32)
+  const branchKeyId = 'id'
+  const branchKeyVersion = v4()
+  const encryptionContext = {}
+  const test = new NodeBranchKeyMaterial(
+    branchKey,
+    branchKeyId,
+    branchKeyVersion,
+    encryptionContext
+  )
+
+  it('Precondition: Branch key must be a Buffer', () => {
+    for (const branchKey of [null, undefined, {}, 0, '']) {
+      expect(
+        () =>
+          new NodeBranchKeyMaterial(
+            branchKey as any,
+            branchKeyId,
+            branchKeyVersion,
+            encryptionContext
+          )
+      ).to.throw('Branch key must be a Buffer')
+    }
+  })
+
+  it('Precondition: Branch key id must be a string', () => {
+    for (const branchKeyId of [null, undefined, {}, 0]) {
+      expect(
+        () =>
+          new NodeBranchKeyMaterial(
+            branchKey,
+            branchKeyId as any,
+            branchKeyVersion,
+            encryptionContext
+          )
+      ).to.throw('Branch key id must be a string')
+    }
+  })
+
+  it('Precondition: Branch key version must be a string', () => {
+    for (const branchKeyVersion of [null, undefined, {}, 0]) {
+      expect(
+        () =>
+          new NodeBranchKeyMaterial(
+            branchKey,
+            branchKeyId,
+            branchKeyVersion as any,
+            encryptionContext
+          )
+      ).to.throw('Branch key version must be a string')
+    }
+  })
+
+  it('Precondition: encryptionContext must be an object, even if it is empty', () => {
+    for (const encryptionContext of [null, undefined, 0, '']) {
+      expect(
+        () =>
+          new NodeBranchKeyMaterial(
+            branchKey,
+            branchKeyId,
+            branchKeyVersion,
+            encryptionContext as any
+          )
+      ).to.throw('Encryption context must be an object')
+    }
+  })
+
+  it('Precondition: branchKey must be a 32 byte-long buffer', () => {
+    expect(
+      () =>
+        new NodeBranchKeyMaterial(
+          Buffer.alloc(10),
+          branchKeyId,
+          branchKeyVersion,
+          encryptionContext
+        )
+    ).to.throw('Branch key must be 32 bytes long')
+  })
+
+  it('Precondition: branch key ID is required', () => {
+    expect(
+      () =>
+        new NodeBranchKeyMaterial(
+          branchKey,
+          '',
+          branchKeyVersion,
+          encryptionContext
+        )
+    ).to.throw('Empty branch key ID')
+  })
+
+  it('Precondition: branch key version must be valid version 4 uuid', () => {
+    expect(
+      () =>
+        new NodeBranchKeyMaterial(branchKey, branchKeyId, '', encryptionContext)
+    ).to.throw('Branch key version must be valid version 4 uuid')
+
+    expect(
+      () =>
+        new NodeBranchKeyMaterial(
+          branchKey,
+          branchKeyId,
+          v1(),
+          encryptionContext
+        )
+    ).to.throw('Branch key version must be valid version 4 uuid')
+
+    const namespace = v4()
+    const name = 'example.com'
+    expect(
+      () =>
+        new NodeBranchKeyMaterial(
+          branchKey,
+          branchKeyId,
+          v3(name, namespace),
+          encryptionContext
+        )
+    ).to.throw('Branch key version must be valid version 4 uuid')
+    expect(
+      () =>
+        new NodeBranchKeyMaterial(
+          branchKey,
+          branchKeyId,
+          v5(name, namespace),
+          encryptionContext
+        )
+    ).to.throw('Branch key version must be valid version 4 uuid')
+
+    expect(() => {
+      new NodeBranchKeyMaterial(
+        branchKey,
+        branchKeyId,
+        v4().toUpperCase(),
+        encryptionContext
+      )
+    })
+  })
+
+  it('Postcondition: branch key is immutable', () => {
+    // attempt to modify the buffer used to initialize branchKey of the
+    // materials. The materials' branch key should remain unaffected because
+    // it's a deep copy
+    branchKey[0] = 0xff // some non-zero value
+    // the branch key was initialized to be a completely zeroed out buffer.
+    // Let's ensure it's still zeroed out
+    expect(test.branchKey()[0]).to.equal(0x00)
+  })
+
+  it('Postconditon: encryption context is immutable', () => {
+    expect(Object.isFrozen(test.encryptionContext)).to.be.true
+  })
+
+  it('Postcondition: instance is frozen', () => {
+    expect(Object.isFrozen(test)).to.equal(true)
+  })
+
+  it('Class is frozen', () => {
+    expect(Object.isFrozen(NodeBranchKeyMaterial)).to.equal(true)
+    expect(Object.isFrozen(NodeBranchKeyMaterial.prototype)).to.equal(true)
+  })
+
+  //= aws-encryption-sdk-specification/framework/structures.md#structure-3
+  //= type=test
+  //# This structure MUST include all of the following fields:
+  //#
+  //# - [Branch Key](#branch-key)
+  //# - [Branch Key Id](#branch-key-id)
+  //# - [Branch Key Version](#branch-key-version)
+  //# - [Encryption Context](#encryption-context-3)
+  it('All attributes are initialized properly', () => {
+    expect(test.branchKey()).to.deep.equals(Buffer.alloc(32))
+    expect(test.branchKeyIdentifier).to.equal(branchKeyId)
+    expect(test.branchKeyVersion.toString('utf-8')).to.equal(branchKeyVersion)
+    expect(Object.keys(test.encryptionContext).length === 0).to.equal(
+      Object.keys(encryptionContext).length === 0
+    )
+  })
+
+  it('Zero the branch key', () => {
+    const zeroedMaterial = test.zeroUnencryptedDataKey()
+    expect(zeroedMaterial.branchKey().every((byte) => byte === 0)).to.be.true
   })
 })
 

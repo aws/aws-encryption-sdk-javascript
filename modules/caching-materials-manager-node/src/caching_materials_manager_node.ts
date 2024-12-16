@@ -67,3 +67,7 @@ export class NodeCachingMaterialsManager
   _cacheEntryHasExceededLimits =
     cacheEntryHasExceededLimits<NodeAlgorithmSuite>()
 }
+//= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#appendix-a-cache-entry-identifier-formulas
+//# When accessing the underlying cryptographic materials cache,
+//# the hierarchical keyring MUST use the formulas specified in this appendix
+//# in order to compute the [cache entry identifier](../cryptographic-materials-cache.md#cache-identifier).

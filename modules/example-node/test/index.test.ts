@@ -3,7 +3,7 @@
 
 /* eslint-env mocha */
 
-import { expect } from 'chai'
+import chai, { expect } from 'chai'
 import { rsaTest } from '../src/rsa_simple'
 import { kmsSimpleTest } from '../src/kms_simple'
 import { kmsStreamTest } from '../src/kms_stream'
@@ -18,8 +18,58 @@ import {
 import { kmsMultiRegionSimpleTest } from '../src/kms_multi_region_simple'
 import { kmsMultiRegionDiscoveryTest } from '../src/kms_multi_region_discovery'
 import { readFileSync } from 'fs'
+import { hKeyringSimpleTest } from '../src/kms-hierarchical-keyring/simple'
+import { hKeyringMultiTenancy } from '../src/kms-hierarchical-keyring/multi_tenancy'
+import { hKeyringCachingCMMNodeSimpleTest } from '../src/kms-hierarchical-keyring/caching_cmm'
+import chaiAsPromised from 'chai-as-promised'
+import { hKeyringDisableCommitmentTest } from '../src/kms-hierarchical-keyring/disable_commitment'
+import { hKeyringStreamTest } from '../src/kms-hierarchical-keyring/stream'
+import { hierarchicalAesMultiKeyringTest } from '../src/kms-hierarchical-keyring/multi_keyring'
 
+chai.use(chaiAsPromised)
 describe('test', () => {
+  describe('AWS KMS Hierarchical Keyring', () => {
+    it('Simple', async () => {
+      const { cleartext, plaintext } = await hKeyringSimpleTest()
+
+      expect(plaintext.toString()).to.equal(cleartext)
+    })
+
+    it('Multi-tenancy', async () => {
+      const { decryptsFailed, cleartext, plaintextA, plaintextB } =
+        await hKeyringMultiTenancy()
+
+      expect(decryptsFailed).to.be.true
+      expect(plaintextA.toString()).to.equal(cleartext)
+      expect(plaintextB.toString()).to.equal(cleartext)
+    })
+
+    it('Caching CMM node', async () => {
+      const { cleartext, plaintext } = await hKeyringCachingCMMNodeSimpleTest()
+
+      expect(plaintext.toString()).to.equal(cleartext)
+    })
+
+    it('disableCommitmentTest', async () => {
+      const { cleartext, plaintext } = await hKeyringDisableCommitmentTest()
+
+      expect(plaintext.toString()).to.equal(cleartext)
+    })
+
+    it('Stream', async () => {
+      const test = await hKeyringStreamTest(__filename)
+      const clearFile = readFileSync(__filename)
+
+      expect(test).to.deep.equal(clearFile)
+    })
+
+    it('Multi Keyring', async () => {
+      const { cleartext, plaintext } = await hierarchicalAesMultiKeyringTest()
+
+      expect(plaintext.toString()).to.equal(cleartext)
+    })
+  })
+
   it('rsa', async () => {
     const { cleartext, plaintext } = await rsaTest()
 

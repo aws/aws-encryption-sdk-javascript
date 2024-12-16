@@ -10,22 +10,66 @@ import {
   NodeEncryptionMaterial,
   NodeDecryptionMaterial,
   AlgorithmSuiteIdentifier,
+  NodeBranchKeyMaterial,
 } from '@aws-crypto/material-management'
+import { v4 } from 'uuid'
 
 const nodeSuite = new NodeAlgorithmSuite(
   AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
 )
 const encryptionMaterial = new NodeEncryptionMaterial(nodeSuite, {})
 const decryptionMaterial = new NodeDecryptionMaterial(nodeSuite, {})
+const branchKeyMaterial = new NodeBranchKeyMaterial(
+  Buffer.alloc(32),
+  'id',
+  v4(),
+  {}
+)
 
 describe('getLocalCryptographicMaterialsCache', () => {
   const {
     getEncryptionMaterial,
     getDecryptionMaterial,
+    getBranchKeyMaterial,
     del,
     putEncryptionMaterial,
     putDecryptionMaterial,
+    putBranchKeyMaterial,
   } = getLocalCryptographicMaterialsCache(100)
+
+  it('putBranchKeyMaterial', () => {
+    const key = 'some encryption key'
+    const response: any = branchKeyMaterial
+
+    putBranchKeyMaterial(key, response)
+    const test = getBranchKeyMaterial(key)
+    if (!test) throw new Error('never')
+    expect(test.response === response).to.equal(true)
+    expect(Object.isFrozen(test.response)).to.equal(true)
+  })
+
+  it('Precondition: Only cache BranchKeyMaterial', () => {
+    const key = 'some decryption key'
+    const response: any = 'not material'
+
+    expect(() => putBranchKeyMaterial(key, response)).to.throw()
+  })
+
+  it('Postcondition: If this key does not have a BranchKeyMaterial, return false', () => {
+    const test = getBranchKeyMaterial('does-not-exist')
+    expect(test).to.equal(false)
+  })
+
+  it('Postcondition: Only return BranchKeyMaterial', () => {
+    putDecryptionMaterial('key1', decryptionMaterial)
+    putEncryptionMaterial('key2', encryptionMaterial, 1)
+
+    expect(() => getBranchKeyMaterial('key1')).to.throw()
+    expect(() => getBranchKeyMaterial('key2')).to.throw()
+
+    putBranchKeyMaterial('key3', branchKeyMaterial)
+    expect(() => getBranchKeyMaterial('key3'))
+  })
 
   it('putEncryptionMaterial', () => {
     const key = 'some encryption key'
@@ -151,6 +195,52 @@ describe('getLocalCryptographicMaterialsCache', () => {
 })
 
 describe('cache eviction', () => {
+  it('putBranchKeyMaterial can exceed capacity', () => {
+    const { getBranchKeyMaterial, putBranchKeyMaterial } =
+      getLocalCryptographicMaterialsCache(1)
+
+    const key1 = 'key lost'
+    const key2 = 'key replace'
+    const response: any = branchKeyMaterial
+
+    putBranchKeyMaterial(key1, response)
+    putBranchKeyMaterial(key2, response)
+    const lost = getBranchKeyMaterial(key1)
+    const found = getBranchKeyMaterial(key2)
+    expect(lost).to.equal(false)
+    expect(found).to.not.equal(false)
+  })
+
+  it('putBranchKeyMaterial can be deleted', () => {
+    const { getBranchKeyMaterial, putBranchKeyMaterial, del } =
+      getLocalCryptographicMaterialsCache(1)
+
+    const key = 'key deleted'
+    const response: any = branchKeyMaterial
+
+    putBranchKeyMaterial(key, response)
+    del(key)
+    const lost = getBranchKeyMaterial(key)
+    expect(lost).to.equal(false)
+  })
+
+  it('putBranchKeyMaterial can be garbage collected', async () => {
+    const { getBranchKeyMaterial, putBranchKeyMaterial } =
+      // set TTL to 10 ms so that our branch key material entry is evicted between the
+      // put and get operation (which have a 20 ms gap). This will simulate a
+      // case where we try to query our branch key material but it was already
+      // garbage collected
+      getLocalCryptographicMaterialsCache(1, 10)
+
+    const key = 'key lost'
+    const response: any = branchKeyMaterial
+
+    putBranchKeyMaterial(key, response, 1)
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    const lost = getBranchKeyMaterial(key)
+    expect(lost).to.equal(false)
+  })
+
   it('putDecryptionMaterial can exceed capacity', () => {
     const { getDecryptionMaterial, putDecryptionMaterial } =
       getLocalCryptographicMaterialsCache(1)
