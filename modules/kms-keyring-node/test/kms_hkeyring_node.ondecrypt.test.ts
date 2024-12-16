@@ -353,6 +353,7 @@ describe('KmsHierarchicalKeyRingNode: onDecrypt', () => {
   //# If a cache entry is found and the entry's TTL has not expired, the hierarchical keyring MUST use those branch key materials for key unwrapping.
 
   //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#ondecrypt
+  //= type=test
   //# If a cache entry is not found or the cache entry is expired, the hierarchical keyring
   //# MUST attempt to obtain the branch key materials by calling the backing branch key
   //# store specified in the [retrieve OnDecrypt branch key materials](#getitem-branch-keystore-ondecrypt) section.
