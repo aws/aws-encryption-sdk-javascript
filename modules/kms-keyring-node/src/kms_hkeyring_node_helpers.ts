@@ -260,8 +260,10 @@ export async function getBranchKeyMaterials(
     //# OnDecrypt MUST call the Keystore's [GetBranchKeyVersion](../branch-key-store.md#getbranchkeyversion) operation with the following inputs:
     branchKeyMaterials = branchKeyVersion
       ? await keyStore.getBranchKeyVersion(branchKeyId, branchKeyVersion)
-      : //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
+      : // The complice needs a line
+        //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
         //# OnEncrypt MUST call the Keystore's [GetActiveBranchKey](../branch-key-store.md#getactivebranchkey) operation with the following inputs:
+        //# - the `branchKeyId` used in this operation
         await keyStore.getActiveBranchKey(branchKeyId)
 
     //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt

@@ -292,15 +292,14 @@ describe('KmsHierarchicalKeyRingNode: onEncrypt', () => {
 
     //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
     //= type=test
-    //# The branch keystore persists [branch keys](#definitions) that are reused to derive unique data keys for envelope encryption to
-    //# reduce the number of calls to AWS KMS through the use of the
-    //# [cryptographic materials cache](../cryptographic-materials-cache.md).
     //# OnEncrypt MUST call the Keystore's [GetActiveBranchKey](../branch-key-store.md#getactivebranchkey) operation with the following inputs:
     //# - the `branchKeyId` used in this operation
+    
+    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
+    //= type=test
     //# If the Keystore's GetActiveBranchKey operation succeeds
     //# the keyring MUST put the returned branch key materials in the cache using the
     //# formula defined in [Appendix A](#appendix-a-cache-entry-identifier-formulas).
-    //# Otherwise, OnEncrypt MUST fail.
     it('Material X already in CMC, request for Material X', async () => {
       const hkr = new KmsHierarchicalKeyRingNode({
         branchKeyId: branchKeyIdA,

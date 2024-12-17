@@ -54,7 +54,9 @@ export class ActiveHierarchicalSymmetricVersion {
 
   constructor(activeVersion: BranchKeyVersionType) {
     //= aws-encryption-sdk-specification/framework/branch-key-store.md#branch-key-materials-from-authenticated-encryption-context
-    //# If the `type` attribute start with `"branch:version:"` then the version string MUST be equal to this value.
+    //# If the `type` attribute is equal to `"branch:ACTIVE"`
+    //# then the authenticated encryption context MUST have a `version` attribute
+    //# and the version string is this value.
     needs(
       activeVersion.startsWith(BRANCH_KEY_TYPE_PREFIX),
       'Unexpected branch key type.'
@@ -78,7 +80,12 @@ export class HierarchicalSymmetricVersion {
   public declare readonly version: string
 
   constructor(type_field: BranchKeyVersionType) {
-    needs(type_field.startsWith(BRANCH_KEY_TYPE_PREFIX), '')
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#branch-key-materials-from-authenticated-encryption-context
+    //# If the `type` attribute start with `"branch:version:"` then the version string MUST be equal to this value.
+    needs(
+      type_field.startsWith(BRANCH_KEY_TYPE_PREFIX),
+      'Type does not start with `branch:version:`'
+    )
     readOnlyProperty(
       this,
       'version',
@@ -142,10 +149,6 @@ export class EncryptedHierarchicalKey {
       'type',
       encryptionContext[TYPE_FIELD] == BRANCH_KEY_ACTIVE_TYPE
         ? new ActiveHierarchicalSymmetricVersion(
-            //= aws-encryption-sdk-specification/framework/branch-key-store.md#branch-key-materials-from-authenticated-encryption-context
-            //# If the `type` attribute is equal to `"branch:ACTIVE"`
-            //# then the authenticated encryption context MUST have a `version` attribute
-            //# and the version string is this value.
             encryptionContext[BRANCH_KEY_ACTIVE_VERSION_FIELD]
           )
         : new HierarchicalSymmetricVersion(encryptionContext[TYPE_FIELD])

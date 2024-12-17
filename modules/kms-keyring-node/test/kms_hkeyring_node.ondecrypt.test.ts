@@ -348,16 +348,6 @@ describe('KmsHierarchicalKeyRingNode: onDecrypt', () => {
     })
   })
 
-  //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#ondecrypt
-  //= type=test
-  //# If a cache entry is found and the entry's TTL has not expired, the hierarchical keyring MUST use those branch key materials for key unwrapping.
-
-  //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#ondecrypt
-  //= type=test
-  //# If a cache entry is not found or the cache entry is expired, the hierarchical keyring
-  //# MUST attempt to obtain the branch key materials by calling the backing branch key
-  //# store specified in the [retrieve OnDecrypt branch key materials](#getitem-branch-keystore-ondecrypt) section.
-  //# If the keyring is not able to retrieve `branch key materials` from the backing keystore then OnDecrypt MUST fail.
   describe('Getting the branch key material', () => {
     it('Material X not already in the CMC or keystore, request material X', async () => {
       let hkr = new KmsHierarchicalKeyRingNode({
@@ -439,22 +429,6 @@ describe('KmsHierarchicalKeyRingNode: onDecrypt', () => {
       expect(kmsSendSpy.callCount).equals(1)
     })
 
-    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#getitem-branch-keystore-ondecrypt
-    //= type=test
-    //# The branch keystore persists [branch keys](#definitions) that are reused to derive unique data keys for key wrapping to
-    //# reduce the number of calls to AWS KMS through the use of the
-    //# [cryptographic materials cache](../cryptographic-materials-cache.md).
-    //# OnDecrypt MUST calculate the following values:
-    //# - Deserialize the UTF8-Decoded `branch-key-id` from the [key provider info](../structures.md#key-provider-information) of the [encrypted data key](../structures.md#encrypted-data-key)
-    //#   and verify this is equal to the configured or supplied `branch-key-id`.
-    //# - Deserialize the UUID string representation of the `version` from the [encrypted data key](../structures.md#encrypted-data-key) [ciphertext](#ciphertext).
-    //# OnDecrypt MUST call the Keystore's [GetBranchKeyVersion](../branch-key-store.md#getbranchkeyversion) operation with the following inputs:
-    //# - The deserialized, UTF8-Decoded `branch-key-id`
-    //# - The deserialized UUID string representation of the `version`
-    //# If the Keystore's GetBranchKeyVersion operation succeeds
-    //# the keyring MUST put the returned branch key materials in the cache using the
-    //# formula defined in [Appendix A](#appendix-a-cache-entry-identifier-formulas).
-    //# Otherwise, OnDecrypt MUST fail.
     it('Material X already in CMC, request for Material X', async () => {
       const hkr = new KmsHierarchicalKeyRingNode({
         branchKeyId: branchKeyIdA,

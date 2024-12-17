@@ -342,9 +342,12 @@ describe('Test Branch keystore', () => {
     //= type=test
     //# This name is cryptographically bound to all data stored in this table,
     //# and logically separates data between different tables.
+    //#
     //# The logical keystore name MUST be bound to every created key.
+    //#
     //# There needs to be a one to one mapping between DynamoDB Table Names and the Logical KeyStore Name.
     //# This value can be set to the DynamoDB table name itself, but does not need to.
+    //#
     //# Controlling this value independently enables restoring from DDB table backups
     //# even when the table name after restoration is not exactly the same.
     it('Null logical keystore name provided', () => {
@@ -417,6 +420,7 @@ describe('Test Branch keystore', () => {
     //= aws-encryption-sdk-specification/framework/branch-key-store.md#getactivebranchkey
     //= type=test
     //# On invocation, the caller:
+    //#
     //# - MUST supply a `branch-key-id`
     await expect(keyStore.getActiveBranchKey('')).to.be.rejectedWith(
       'MUST supply a string branch key id'
@@ -454,6 +458,7 @@ describe('Test Branch keystore', () => {
     //= aws-encryption-sdk-specification/framework/branch-key-store.md#getbranchkeyversion
     //= type=test
     //# On invocation, the caller:
+    //#
     //# - MUST supply a `branch-key-id`
     //# - MUST supply a `branchKeyVersion`
     await expect(

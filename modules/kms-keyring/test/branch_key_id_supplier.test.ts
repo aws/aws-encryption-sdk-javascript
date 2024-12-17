@@ -8,9 +8,9 @@ import { expect } from 'chai'
 describe('Branch key id supplier', () => {
   //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#branch-key-supplier
   //= type=test
-  //# The Branch Key Supplier is an interface containing the GetBranchKeyId
-  //# operation. This operation MUST take in an encryption context as input, and
-  //# return a branch key id (string) as output.
+  //# The Branch Key Supplier is an interface containing the `GetBranchKeyId` operation.
+  //# This operation MUST take in an encryption context as input,
+  //# and return a branch key id (string) as output.
   it('Can implement the interface', () => {
     class Example implements BranchKeyIdSupplier {
       getBranchKeyId(encryptionContext: EncryptionContext): string {

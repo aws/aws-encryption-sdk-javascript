@@ -183,6 +183,7 @@ export class KmsKeyConfig implements RegionalKmsConfig {
     } else if ('identifier' in this._config) {
       //= aws-encryption-sdk-specification/framework/branch-key-store.md#aws-key-arn-compatibility
       //# For two ARNs to be compatible:
+      //#
       //# If the [AWS KMS Configuration](#aws-kms-configuration) designates single region ARN compatibility,
       //# then two ARNs are compatible if they are exactly equal.
       return this._arn === otherArn
