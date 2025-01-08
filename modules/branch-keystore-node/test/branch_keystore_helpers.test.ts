@@ -574,24 +574,24 @@ describe('Test keystore helpers', () => {
       expect(versionedBranchKey).deep.equals(expectedVersionedBranchKey)
     })
   })
-    //= aws-encryption-sdk-specification/framework/branch-key-store.md#branch-key-materials-from-authenticated-encryption-context
-    //= type=test
-    //# - [Branch Key](./structures.md#branch-key) MUST be the [decrypted branch key material](#aws-kms-branch-key-decryption)
+  //= aws-encryption-sdk-specification/framework/branch-key-store.md#branch-key-materials-from-authenticated-encryption-context
+  //= type=test
+  //# - [Branch Key](./structures.md#branch-key) MUST be the [decrypted branch key material](#aws-kms-branch-key-decryption)
 
-    //= aws-encryption-sdk-specification/framework/branch-key-store.md#branch-key-materials-from-authenticated-encryption-context
-    //= type=test
-    //# - [Branch Key Id](./structures.md#branch-key-id) MUST be the `branch-key-id`
+  //= aws-encryption-sdk-specification/framework/branch-key-store.md#branch-key-materials-from-authenticated-encryption-context
+  //= type=test
+  //# - [Branch Key Id](./structures.md#branch-key-id) MUST be the `branch-key-id`
 
-    //= aws-encryption-sdk-specification/framework/branch-key-store.md#branch-key-materials-from-authenticated-encryption-context
-    //= type=test
-    //# - [Branch Key Version](./structures.md#branch-key-version)
-    //# The version string MUST start with `branch:version:`.
-    //# The remaining string encoded as UTF8 bytes MUST be the Branch Key version.
+  //= aws-encryption-sdk-specification/framework/branch-key-store.md#branch-key-materials-from-authenticated-encryption-context
+  //= type=test
+  //# - [Branch Key Version](./structures.md#branch-key-version)
+  //# The version string MUST start with `branch:version:`.
+  //# The remaining string encoded as UTF8 bytes MUST be the Branch Key version.
 
-    //= aws-encryption-sdk-specification/framework/branch-key-store.md#branch-key-materials-from-authenticated-encryption-context
-    //= type=test
-    //# - [Encryption Context](./structures.md#encryption-context-3) MUST be constructed by
-    //# [Custom Encryption Context From Authenticated Encryption Context](#custom-encryption-context-from-authenticated-encryption-context)
+  //= aws-encryption-sdk-specification/framework/branch-key-store.md#branch-key-materials-from-authenticated-encryption-context
+  //= type=test
+  //# - [Encryption Context](./structures.md#encryption-context-3) MUST be constructed by
+  //# [Custom Encryption Context From Authenticated Encryption Context](#custom-encryption-context-from-authenticated-encryption-context)
   describe('Test constructBranchKeyMaterials', () => {
     const branchKey = Buffer.alloc(32)
 
