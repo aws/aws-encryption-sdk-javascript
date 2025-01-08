@@ -266,7 +266,7 @@ describe('KmsHierarchicalKeyRingNode: constructor', () => {
   //= type=test
   //# If no max cache size is provided, the cryptographic materials cache MUST be configured to a
   //# max cache size of 1000.
-  it('Postcondition: The max cache size is initialized', () => {
+  it('The max cache size is initialized', () => {
     expect(
       new KmsHierarchicalKeyRingNode({
         branchKeyId,

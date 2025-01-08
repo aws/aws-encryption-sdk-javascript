@@ -291,7 +291,17 @@ describe('Test Branch keystore', () => {
       }
     })
 
-    it('Postcondition: If unprovided, the DDB client is configured', async () => {
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#initialization
+    //= type=test
+    //# If a DDB client needs to be constructed and the AWS KMS Configuration is KMS Key ARN or KMS MRKey ARN,
+    //# a new DynamoDb client MUST be created with the region of the supplied KMS ARN.
+    //#
+    //# If a DDB client needs to be constructed and the AWS KMS Configuration is Discovery,
+    //# a new DynamoDb client MUST be created with the default configuration.
+    //#
+    //# If a DDB client needs to be constructed and the AWS KMS Configuration is MRDiscovery,
+    //# a new DynamoDb client MUST be created with the region configured in the MRDiscovery.
+    it('If unprovided, the DDB client is configured', async () => {
       for (const ddbClient of falseyValues) {
         const { storage } = new BranchKeyStoreNode({
           storage: {
@@ -307,6 +317,40 @@ describe('Test Branch keystore', () => {
           await (storage as DynamoDBKeyStorage).ddbClient.config.region()
         ).to.equal(getRegionFromIdentifier(KEY_ARN))
       }
+
+      const mrkDiscovery = new BranchKeyStoreNode({
+        storage: {
+          ddbTableName: DDB_TABLE_NAME
+        },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        kmsConfiguration: { region: 'foo' },
+      })
+
+      expect(
+        await (mrkDiscovery.storage as DynamoDBKeyStorage).ddbClient.config.region()
+      ).to.equal('foo') 
+
+      const discovery = new BranchKeyStoreNode({
+        storage: {
+          ddbTableName: DDB_TABLE_NAME
+        },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        kmsConfiguration: 'discovery',
+      })
+
+      expect(
+        await (discovery.storage as DynamoDBKeyStorage).ddbClient.config.region()
+      ).to.equal('foo')
+    })
+
+    it('Precondition: Only `discovery` is a valid string value', async () => {
+      expect(() => new BranchKeyStoreNode({
+        storage: {
+          ddbTableName: DDB_TABLE_NAME
+        },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        kmsConfiguration: 'not discovery' as any,
+      })).to.throw('Unexpected config shape')
     })
 
     it('Postcondition: If unprovided, the KMS client is configured', async () => {
