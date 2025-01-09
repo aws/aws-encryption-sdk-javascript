@@ -14,12 +14,10 @@ import { uInt32BE } from '@aws-crypto/serialize'
 const SEPARATION_INDICATOR = Buffer.from([0x00])
 const COUNTER_START_VALUE = 1
 export const INT32_MAX_LIMIT = 2147483647
-const SUPPORTED_IKM_LENGTHS = [32]
-const SUPPORTED_NONCE_LENGTHS = [16]
 const SUPPORTED_DERIVED_KEY_LENGTHS = [32]
-const SUPPORTED_DIGEST_ALGORITHMS = ['sha256']
+const SUPPORTED_DIGEST_ALGORITHMS = ['sha256', 'sha384']
 
-export type SupportedDigestAlgorithms = 'sha256'
+export type SupportedDigestAlgorithms = 'sha256' | 'sha384'
 export type SupportedDerivedKeyLengths = 32
 
 interface KdfCtrInput {
@@ -37,18 +35,8 @@ export function kdfCounterMode({
   purpose,
   expectedLength,
 }: KdfCtrInput): Buffer {
-  /* Precondition: the ikm must be 32 bytes long */
-  needs(
-    SUPPORTED_IKM_LENGTHS.includes(ikm.length),
-    `Unsupported IKM length ${ikm.length}`
-  )
   /* Precondition: the nonce is required */
   needs(nonce, 'The nonce must be provided')
-  /* Precondition: the nonce must be 16 bytes long */
-  needs(
-    SUPPORTED_NONCE_LENGTHS.includes(nonce.length),
-    `Unsupported nonce length ${nonce.length}`
-  )
   /* Precondition: the expected length must be 32 bytes */
   /* Precondition: the expected length * 8 must be under the max 32-bit signed integer */
   needs(

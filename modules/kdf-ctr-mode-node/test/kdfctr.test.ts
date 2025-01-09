@@ -10,7 +10,7 @@ import {
   SupportedDigestAlgorithms,
   SupportedDerivedKeyLengths,
 } from '../src/kdfctr'
-import { rawTestVectors, testVectors } from './testvectors'
+import { rawTestVectors, testVectors } from './fixtures'
 import { createHash } from 'crypto'
 
 describe('KDF Ctr Mode', () => {
@@ -41,52 +41,6 @@ describe('KDF Ctr Mode', () => {
         expectedLength,
       })
     ).to.throw('The nonce must be provided')
-  })
-
-  it('Precondition: the ikm must be 32 bytes long', () => {
-    const invalidIkm = Buffer.alloc(31)
-    expect(() =>
-      kdfCounterMode({
-        digestAlgorithm,
-        ikm: invalidIkm,
-        nonce,
-        purpose,
-        expectedLength,
-      })
-    ).to.throw(`Unsupported IKM length ${invalidIkm.length}`)
-
-    expect(() =>
-      kdfCounterMode({
-        digestAlgorithm,
-        ikm: Buffer.alloc(32),
-        nonce,
-        purpose,
-        expectedLength,
-      })
-    ).to.not.throw()
-  })
-
-  it('Precondition: the nonce must be 16 bytes long', () => {
-    const invalidNonce = Buffer.alloc(17)
-    expect(() =>
-      kdfCounterMode({
-        digestAlgorithm,
-        ikm,
-        nonce: invalidNonce,
-        purpose,
-        expectedLength,
-      })
-    ).to.throw(`Unsupported nonce length ${invalidNonce.length}`)
-
-    expect(() =>
-      kdfCounterMode({
-        digestAlgorithm,
-        ikm,
-        nonce: Buffer.alloc(16),
-        purpose,
-        expectedLength,
-      })
-    ).to.not.throw()
   })
 
   it('Precondition: the expected length must be 32 bytes', () => {
@@ -296,15 +250,14 @@ describe('KDF Ctr Mode', () => {
     for (const testVector of testVectors) {
       const { name, hash, ikm, info, L, okm, purpose } = testVector
       it(name, () => {
-        expect(
-          kdfCounterMode({
-            digestAlgorithm: hash,
-            ikm,
-            nonce: info,
-            purpose,
-            expectedLength: L,
-          })
-        ).to.deep.equals(okm)
+        const test = kdfCounterMode({
+          digestAlgorithm: hash,
+          ikm,
+          nonce: info,
+          purpose,
+          expectedLength: L,
+        })
+        expect(test).to.deep.equals(okm)
       })
     }
   })
