@@ -56,7 +56,7 @@ export interface RegionalKmsConfig {
    * this method tells the user the config's region
    * @returns the region
    */
-  getRegion(): string
+  getRegion(): string | undefined
 
   /**
    * this method tells the user if the config is compatible with an arn
@@ -125,7 +125,7 @@ export class KmsKeyConfig implements RegionalKmsConfig {
     Object.freeze(this)
   }
 
-  getRegion(): string {
+  getRegion(): string | undefined {
     if (this._config === 'discovery') {
       //= aws-encryption-sdk-specification/framework/branch-key-store.md#initialization
       //# If a DDB client needs to be constructed and the AWS KMS Configuration is Discovery,
@@ -134,7 +134,7 @@ export class KmsKeyConfig implements RegionalKmsConfig {
       //= aws-encryption-sdk-specification/framework/branch-key-store.md#initialization
       //# If AWS KMS client needs to be constructed and the AWS KMS Configuration is Discovery,
       //# a new AWS KMS client MUST be created with the default configuration.
-      return ''
+      return undefined
     } else if (
       'identifier' in this._config ||
       'mrkIdentifier' in this._config

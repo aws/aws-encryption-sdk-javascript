@@ -33,6 +33,7 @@ import {
 } from './fixtures'
 import {
   BRANCH_KEY_ACTIVE_TYPE,
+  KMS_CLIENT_USER_AGENT,
   PARTITION_KEY,
   SORT_KEY,
 } from '../src/constants'
@@ -233,7 +234,6 @@ describe('Test Branch keystore', () => {
       expect(
         validate(keyStore.keyStoreId) && version(keyStore.keyStoreId) === 4
       ).equals(true)
-      // expect(keyStore.ddbTableName).equals(DDB_TABLE_NAME)
       expect(keyStore.kmsConfiguration._config).equals(kmsConfig)
     })
 
@@ -313,48 +313,97 @@ describe('Test Branch keystore', () => {
         })
 
         expect(storage instanceof DynamoDBKeyStorage).to.equals(true)
+        //= aws-encryption-sdk-specification/framework/branch-key-store.md#initialization
+        //= type=test
+        //# This constructed [default key storage](./key-store/default-key-storage.md#initialization)
+        //# MUST be configured with either the [Table Name](#table-name) or the [DynamoDBTable](#dynamodbtable) table name
+        //# depending on which one is configured.
+        expect((storage as DynamoDBKeyStorage).ddbTableName).to.equal(
+          DDB_TABLE_NAME
+        )
+
+        //= aws-encryption-sdk-specification/framework/branch-key-store.md#initialization
+        //= type=test
+        //# This constructed [default key storage](./key-store/default-key-storage.md#initialization)
+        //# MUST be configured with either the [DynamoDb Client](#dynamodb-client), the DDB client in the [DynamoDBTable](#dynamodbtable)
+        //# or a constructed DDB client depending on what is configured.
+        expect((storage as DynamoDBKeyStorage).logicalKeyStoreName).to.equal(
+          LOGICAL_KEYSTORE_NAME
+        )
+
+        //= aws-encryption-sdk-specification/framework/branch-key-store.md#initialization
+        //= type=test
+        //# This constructed [default key storage](./key-store/default-key-storage.md#initialization)
+        //# MUST be configured with either the [DynamoDb Client](#dynamodb-client), the DDB client in the [DynamoDBTable](#dynamodbtable)
+        //# or a constructed DDB client depending on what is configured.
+        expect(
+          (storage as DynamoDBKeyStorage).ddbClient instanceof DynamoDBClient
+        ).to.equal(true)
+
         expect(
           await (storage as DynamoDBKeyStorage).ddbClient.config.region()
         ).to.equal(getRegionFromIdentifier(KEY_ARN))
+
+        expect(storage instanceof DynamoDBKeyStorage).to.equals(true)
       }
 
       const mrkDiscovery = new BranchKeyStoreNode({
         storage: {
-          ddbTableName: DDB_TABLE_NAME
+          ddbTableName: DDB_TABLE_NAME,
         },
         logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
         kmsConfiguration: { region: 'foo' },
       })
 
       expect(
-        await (mrkDiscovery.storage as DynamoDBKeyStorage).ddbClient.config.region()
-      ).to.equal('foo') 
+        await (
+          mrkDiscovery.storage as DynamoDBKeyStorage
+        ).ddbClient.config.region()
+      ).to.equal('foo')
 
       const discovery = new BranchKeyStoreNode({
         storage: {
-          ddbTableName: DDB_TABLE_NAME
+          ddbTableName: DDB_TABLE_NAME,
         },
         logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
         kmsConfiguration: 'discovery',
       })
 
       expect(
-        await (discovery.storage as DynamoDBKeyStorage).ddbClient.config.region()
-      ).to.equal('foo')
+        await (
+          discovery.storage as DynamoDBKeyStorage
+        ).ddbClient.config.region()
+      ).to.not.equal('')
     })
 
     it('Precondition: Only `discovery` is a valid string value', async () => {
-      expect(() => new BranchKeyStoreNode({
-        storage: {
-          ddbTableName: DDB_TABLE_NAME
-        },
-        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
-        kmsConfiguration: 'not discovery' as any,
-      })).to.throw('Unexpected config shape')
+      expect(
+        () =>
+          new BranchKeyStoreNode({
+            storage: {
+              ddbTableName: DDB_TABLE_NAME,
+            },
+            logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+            kmsConfiguration: 'not discovery' as any,
+          })
+      ).to.throw('Unexpected config shape')
     })
 
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#initialization
+    //= type=test
+    //# If a DDB client needs to be constructed and the AWS KMS Configuration is KMS Key ARN or KMS MRKey ARN,
+    //# a new DynamoDb client MUST be created with the region of the supplied KMS ARN.
+    //#
+    //# If a DDB client needs to be constructed and the AWS KMS Configuration is Discovery,
+    //# a new DynamoDb client MUST be created with the default configuration.
+    //#
+    //# If a DDB client needs to be constructed and the AWS KMS Configuration is MRDiscovery,
+    //# a new DynamoDb client MUST be created with the region configured in the MRDiscovery.
     it('Postcondition: If unprovided, the KMS client is configured', async () => {
       for (const kmsClient of falseyValues) {
+        //= aws-encryption-sdk-specification/framework/branch-key-store.md#initialization
+        //= type=test
+        //# If no AWS KMS client is provided one MUST be constructed.
         const { kmsClient: client } = new BranchKeyStoreNode({
           storage: { ddbTableName: DDB_TABLE_NAME },
           logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
@@ -365,7 +414,36 @@ describe('Test Branch keystore', () => {
         expect(await client.config.region()).to.equal(
           getRegionFromIdentifier(KEY_ARN)
         )
+
+        //= aws-encryption-sdk-specification/framework/branch-key-store.md#initialization
+        //= type=test
+        //# On initialization the KeyStore SHOULD
+        //# append a user agent string to the AWS KMS SDK Client with
+        //# the value `aws-kms-hierarchy`.
+        expect(client.config.customUserAgent).to.deep.equal([
+          [KMS_CLIENT_USER_AGENT],
+        ])
       }
+
+      const mrkDiscovery = new BranchKeyStoreNode({
+        storage: {
+          ddbTableName: DDB_TABLE_NAME,
+        },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        kmsConfiguration: { region: 'foo' },
+      })
+
+      expect(await mrkDiscovery.kmsClient.config.region()).to.equal('foo')
+
+      const discovery = new BranchKeyStoreNode({
+        storage: {
+          ddbTableName: DDB_TABLE_NAME,
+        },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        kmsConfiguration: 'discovery',
+      })
+
+      expect(await discovery.kmsClient.config.region()).to.not.equal('')
     })
 
     //= aws-encryption-sdk-specification/framework/branch-key-store.md#table-name
@@ -414,6 +492,10 @@ describe('Test Branch keystore', () => {
         expect(Object.isFrozen(BRANCH_KEYSTORE)).equals(true)
       })
 
+      it('Storage is immutable', () => {
+        expect(Object.isFrozen(BRANCH_KEYSTORE.storage)).equals(true)
+      })
+
       it('Attributes are correct', () => {
         const kmsClient = new KMSClient({
           region: getRegionFromIdentifier(KEY_ARN),
@@ -434,6 +516,19 @@ describe('Test Branch keystore', () => {
         expect((test.storage as DynamoDBKeyStorage).ddbTableName).to.equal(
           DDB_TABLE_NAME
         )
+
+        //= aws-encryption-sdk-specification/framework/branch-key-store.md#logical-keystore-name
+        //= type=test
+        //# This name is cryptographically bound to all data stored in this table,
+        //# and logically separates data between different tables.
+        //#
+        //# The logical keystore name MUST be bound to every created key.
+        //#
+        //# There needs to be a one to one mapping between DynamoDB Table Names and the Logical KeyStore Name.
+        //# This value can be set to the DynamoDB table name itself, but does not need to.
+        //#
+        //# Controlling this value independently enables restoring from DDB table backups
+        //# even when the table name after restoration is not exactly the same.
         expect(test.logicalKeyStoreName).to.equal(LOGICAL_KEYSTORE_NAME)
         expect(test.kmsConfiguration._config).to.equal(KMS_CONFIGURATION)
         expect(test.kmsClient).to.equal(kmsClient)
@@ -479,10 +574,20 @@ describe('Test Branch keystore', () => {
     )
 
     const branchKeyMaterials = await keyStore.getActiveBranchKey(BRANCH_KEY_ID)
-    // expect(branchKeyMaterials.branchKeyIdentifier).equals(BRANCH_KEY_ID)
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#getactivebranchkey
+    //= type=test
+    //# GetActiveBranchKey MUST verify that the returned EncryptedHierarchicalKey MUST have the requested `branch-key-id`.
+    expect(branchKeyMaterials.branchKeyIdentifier).equals(BRANCH_KEY_ID)
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#getactivebranchkey
+    //= type=test
+    //# GetActiveBranchKey MUST verify that the returned EncryptedHierarchicalKey is an ActiveHierarchicalSymmetricVersion.
     expect(branchKeyMaterials.branchKeyVersion).deep.equals(
       BRANCH_KEY_ACTIVE_VERSION_UTF8_BYTES
     )
+
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#getactivebranchkey
+    //= type=test
+    //# This operation MUST return the constructed [branch key materials](./structures.md#branch-key-materials).
     expect(branchKeyMaterials.branchKey().length).equals(32)
   })
 

@@ -31,15 +31,18 @@ import { DynamoDBKeyStorage } from './dynamodb_key_storage'
 
 interface IBranchKeyStoreNode {
   //= aws-encryption-sdk-specification/framework/branch-key-store.md#operations
+  //= type=implication
   //# - [GetActiveBranchKey](#getactivebranchkey)
   getActiveBranchKey(branchKeyId: string): Promise<NodeBranchKeyMaterial>
   //= aws-encryption-sdk-specification/framework/branch-key-store.md#operations
+  //= type=implication
   //# - [GetBranchKeyVersion](#getbranchkeyversion)
   getBranchKeyVersion(
     branchKeyId: string,
     branchKeyVersion: string
   ): Promise<NodeBranchKeyMaterial>
   //= aws-encryption-sdk-specification/framework/branch-key-store.md#operations
+  //= type=implication
   //# - [GetKeyStoreInfo](#getkeystoreinfo)
   getKeyStoreInfo(): KeyStoreInfoOutput
 }
@@ -106,7 +109,7 @@ export class BranchKeyStoreNode implements IBranchKeyStoreNode {
       //= aws-encryption-sdk-specification/framework/branch-key-store.md#initialization
       //# If [Storage](#storage) is configured with [KeyStorage](#keystorage)
       //# then this MUST be the configured [KeyStorage interface](./key-store/key-storage.md#interface).
-      this.storage
+      this.storage = storage
     } else {
       //= aws-encryption-sdk-specification/framework/branch-key-store.md#initialization
       //# If [Storage](#storage) is not configured with [KeyStorage](#keystorage)
