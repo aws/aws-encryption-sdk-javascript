@@ -294,7 +294,7 @@ describe('KmsHierarchicalKeyRingNode: onEncrypt', () => {
     //= type=test
     //# OnEncrypt MUST call the Keystore's [GetActiveBranchKey](../branch-key-store.md#getactivebranchkey) operation with the following inputs:
     //# - the `branchKeyId` used in this operation
-    
+
     //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
     //= type=test
     //# If the Keystore's GetActiveBranchKey operation succeeds
