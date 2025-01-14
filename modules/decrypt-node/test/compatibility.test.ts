@@ -31,13 +31,6 @@ import {
 } from '@aws-crypto/kms-keyring-node'
 import { BranchKeyStoreNode } from '@aws-crypto/branch-keystore-node'
 
-import { deserializeFactory } from '@aws-crypto/serialize'
-import { NodeAlgorithmSuite } from '@aws-crypto/material-management-node'
-import { readFileSync, writeFileSync } from 'fs'
-const toUtf8 = (input: Uint8Array) =>
-  Buffer.from(input.buffer, input.byteOffset, input.byteLength).toString('utf8')
-const deserialize = deserializeFactory(toUtf8, NodeAlgorithmSuite)
-
 const { decrypt } = buildDecrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
 const { encrypt } = buildEncrypt(CommitmentPolicy.REQUIRE_ENCRYPT_ALLOW_DECRYPT)
 
@@ -81,7 +74,9 @@ describe('committing algorithm test', () => {
       needs(status, 'Unexpected Status')
       needs(plaintextBase64, 'Nothing to encrypt')
 
-      const suiteId = AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY
+      const suiteId = once
+        ? AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY
+        : AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA512_COMMIT_KEY_ECDSA_P384
       once = true
 
       const encryptOutput = await encrypt(keyring, plaintextBase64, {
@@ -128,14 +123,16 @@ describe('committing algorithm test', () => {
       case 'aws-kms':
         return new KmsKeyringNode({ discovery: true })
       case 'static':
-        const dataKey = Buffer.alloc(32, test['decrypted-dek'], 'base64')
-
         return new (class TestKeyring extends KeyringNode {
           async _onEncrypt(): Promise<NodeEncryptionMaterial> {
             throw new Error('I should never see this error')
           }
           async _onDecrypt(material: NodeDecryptionMaterial) {
-            const unencryptedDataKey = dataKey
+            const unencryptedDataKey = Buffer.alloc(
+              32,
+              test['decrypted-dek'],
+              'base64'
+            )
             const trace = {
               keyNamespace: 'k',
               keyName: 'k',
@@ -150,79 +147,77 @@ describe('committing algorithm test', () => {
         // This is *NOT* recommended.
         // The proper extension point for the KeyStore is _only_ the Storage interface!
         // However, this does let us do some quick test vector testing.
-        // At this time this is overly perscriptive,
-        // but the expectation is to be able to depracate this
+        // At this time this is overly prescriptive,
+        // but the expectation is to be able to deprecate this
         // in favor of the test vectors project (integration-node)
-        const keyStore = {
-          __proto__: BranchKeyStoreNode.prototype,
-          kmsConfiguration: {
-            getRegion() {
-              return null
-            },
-          },
-
-          getKeyStoreInfo() {
-            return {
-              logicalKeyStoreName: 'logicalKeyStoreName',
-            }
-          },
-
-          async getBranchKeyVersion(
-            branchKeyId: string,
-            branchKeyVersion: string
-          ): Promise<NodeBranchKeyMaterial> {
-            needs(
-              branchKeyId == 'bd3842ff-3076-4092-9918-4395730050b8',
-              branchKeyId
-            )
-            needs(
-              branchKeyVersion == 'e9ce18a3-edb5-4272-9f86-1cacb7997ff6',
-              branchKeyVersion
-            )
-
-            return new NodeBranchKeyMaterial(
-              Buffer.from(
-                'tJwf65epYvUt5HMiQsl/6jlvLxS0tgdjIuvFy2BLIwg=',
-                'base64'
-              ),
-              branchKeyId,
-              branchKeyVersion,
-              {}
-            )
-          },
-          async getActiveBranchKey(
-            branchKeyId: string
-          ): Promise<NodeBranchKeyMaterial> {
-            needs(
-              branchKeyId == 'bd3842ff-3076-4092-9918-4395730050b8',
-              branchKeyId
-            )
-
-            return new NodeBranchKeyMaterial(
-              Buffer.from(
-                'tJwf65epYvUt5HMiQsl/6jlvLxS0tgdjIuvFy2BLIwg=',
-                'base64'
-              ),
-              branchKeyId,
-              'e9ce18a3-edb5-4272-9f86-1cacb7997ff6',
-              {}
-            )
-          },
-
-          storage: {
-            _config: {},
-            getKeyStorageInfo() {
-              return {
-                logicalName: 'logicalKeyStoreName',
-              }
-            },
-          },
-        } as any
-
         return new KmsHierarchicalKeyRingNode({
           branchKeyId: 'bd3842ff-3076-4092-9918-4395730050b8',
-          keyStore,
           cacheLimitTtl: 1,
+          keyStore: {
+            __proto__: BranchKeyStoreNode.prototype,
+            kmsConfiguration: {
+              getRegion() {
+                return null
+              },
+            },
+
+            getKeyStoreInfo() {
+              return {
+                logicalKeyStoreName: 'logicalKeyStoreName',
+              }
+            },
+
+            async getBranchKeyVersion(
+              branchKeyId: string,
+              branchKeyVersion: string
+            ): Promise<NodeBranchKeyMaterial> {
+              needs(
+                branchKeyId == 'bd3842ff-3076-4092-9918-4395730050b8',
+                branchKeyId
+              )
+              needs(
+                branchKeyVersion == 'e9ce18a3-edb5-4272-9f86-1cacb7997ff6',
+                branchKeyVersion
+              )
+
+              return new NodeBranchKeyMaterial(
+                Buffer.from(
+                  'tJwf65epYvUt5HMiQsl/6jlvLxS0tgdjIuvFy2BLIwg=',
+                  'base64'
+                ),
+                branchKeyId,
+                branchKeyVersion,
+                {}
+              )
+            },
+            async getActiveBranchKey(
+              branchKeyId: string
+            ): Promise<NodeBranchKeyMaterial> {
+              needs(
+                branchKeyId == 'bd3842ff-3076-4092-9918-4395730050b8',
+                branchKeyId
+              )
+
+              return new NodeBranchKeyMaterial(
+                Buffer.from(
+                  'tJwf65epYvUt5HMiQsl/6jlvLxS0tgdjIuvFy2BLIwg=',
+                  'base64'
+                ),
+                branchKeyId,
+                'e9ce18a3-edb5-4272-9f86-1cacb7997ff6',
+                {}
+              )
+            },
+
+            storage: {
+              _config: {},
+              getKeyStorageInfo() {
+                return {
+                  logicalName: 'logicalKeyStoreName',
+                }
+              },
+            },
+          } as any,
         })
     }
 
