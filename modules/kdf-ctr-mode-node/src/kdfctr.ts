@@ -14,11 +14,13 @@ import { uInt32BE } from '@aws-crypto/serialize'
 const SEPARATION_INDICATOR = Buffer.from([0x00])
 const COUNTER_START_VALUE = 1
 export const INT32_MAX_LIMIT = 2147483647
-const SUPPORTED_DERIVED_KEY_LENGTHS = [32]
+const SUPPORTED_IKM_LENGTHS = [32, 48, 66]
+const SUPPORTED_NONCE_LENGTHS = [16, 32]
+const SUPPORTED_DERIVED_KEY_LENGTHS = [32, 64]
 const SUPPORTED_DIGEST_ALGORITHMS = ['sha256', 'sha384']
 
 export type SupportedDigestAlgorithms = 'sha256' | 'sha384'
-export type SupportedDerivedKeyLengths = 32
+export type SupportedDerivedKeyLengths = 32 | 64
 
 interface KdfCtrInput {
   digestAlgorithm: SupportedDigestAlgorithms
@@ -35,9 +37,20 @@ export function kdfCounterMode({
   purpose,
   expectedLength,
 }: KdfCtrInput): Buffer {
+
+  /* Precondition: the ikm must be 32, 48, 66 bytes long */
+  needs(
+    SUPPORTED_IKM_LENGTHS.includes(ikm.length),
+    `Unsupported IKM length ${ikm.length}`
+  )
   /* Precondition: the nonce is required */
   needs(nonce, 'The nonce must be provided')
-  /* Precondition: the expected length must be 32 bytes */
+  /* Precondition: the nonce must be 16, 32 bytes long */
+  needs(
+    SUPPORTED_NONCE_LENGTHS.includes(nonce.length),
+    `Unsupported nonce length ${nonce.length}`
+  )
+  /* Precondition: the expected length must be 32, 64 bytes */
   /* Precondition: the expected length * 8 must be under the max 32-bit signed integer */
   needs(
     SUPPORTED_DERIVED_KEY_LENGTHS.includes(expectedLength) &&
@@ -47,7 +60,7 @@ export function kdfCounterMode({
   )
 
   const label = purpose || Buffer.alloc(0)
-  const info = nonce || Buffer.alloc(0)
+  const info = nonce
   const internalLength = 8 + SEPARATION_INDICATOR.length
 
   /* Precondition: the input length must be under the max 32-bit signed integer */
@@ -102,11 +115,12 @@ export function rawDerive(
   )
 
   // number of iterations calculated in accordance with SP800-108
-  const iterations = Math.ceil(length / h)
+  const iterations = Math.floor((length + h - 1) / h)
+
   let buffer = Buffer.alloc(0)
   let i = Buffer.from(uInt32BE(COUNTER_START_VALUE))
 
-  for (let iteration = 1; iteration <= iterations + 1; iteration++) {
+  for (let iteration = 1; iteration <= iterations; iteration++) {
     const digest = createHmac(digestAlgorithm, ikm)
       .update(i)
       .update(explicitInfo)

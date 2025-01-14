@@ -10,7 +10,7 @@ import {
   SupportedDigestAlgorithms,
   SupportedDerivedKeyLengths,
 } from '../src/kdfctr'
-import { rawTestVectors, testVectors } from './fixtures'
+import { rawTestVectors, testVectors, TestVector } from './fixtures'
 import { createHash } from 'crypto'
 
 describe('KDF Ctr Mode', () => {
@@ -43,7 +43,85 @@ describe('KDF Ctr Mode', () => {
     ).to.throw('The nonce must be provided')
   })
 
-  it('Precondition: the expected length must be 32 bytes', () => {
+
+
+  it('Precondition: the ikm must be 32, 48, 66 bytes long', () => {
+    const invalidIkm = Buffer.alloc(31)
+    expect(() =>
+      kdfCounterMode({
+        digestAlgorithm,
+        ikm: invalidIkm,
+        nonce,
+        purpose,
+        expectedLength,
+      })
+    ).to.throw(`Unsupported IKM length ${invalidIkm.length}`)
+
+    expect(() =>
+      kdfCounterMode({
+        digestAlgorithm,
+        ikm: Buffer.alloc(32),
+        nonce,
+        purpose,
+        expectedLength,
+      })
+    ).to.not.throw()
+
+    expect(() =>
+      kdfCounterMode({
+        digestAlgorithm,
+        ikm: Buffer.alloc(48),
+        nonce,
+        purpose,
+        expectedLength,
+      })
+    ).to.not.throw()
+
+    expect(() =>
+      kdfCounterMode({
+        digestAlgorithm,
+        ikm: Buffer.alloc(66),
+        nonce,
+        purpose,
+        expectedLength,
+      })
+    ).to.not.throw()
+  })
+
+  it('Precondition: the nonce must be 16, 32 bytes long', () => {
+    const invalidNonce = Buffer.alloc(17)
+    expect(() =>
+      kdfCounterMode({
+        digestAlgorithm,
+        ikm,
+        nonce: invalidNonce,
+        purpose,
+        expectedLength,
+      })
+    ).to.throw(`Unsupported nonce length ${invalidNonce.length}`)
+
+    expect(() =>
+      kdfCounterMode({
+        digestAlgorithm,
+        ikm,
+        nonce: Buffer.alloc(16),
+        purpose,
+        expectedLength,
+      })
+    ).to.not.throw()
+
+    expect(() =>
+      kdfCounterMode({
+        digestAlgorithm,
+        ikm,
+        nonce: Buffer.alloc(32),
+        purpose,
+        expectedLength,
+      })
+    ).to.not.throw()
+  })
+
+  it('Precondition: the expected length must be 32, 64 bytes', () => {
     const invalidExpectedLength = 31 as SupportedDerivedKeyLengths
     expect(() =>
       kdfCounterMode({
@@ -62,6 +140,16 @@ describe('KDF Ctr Mode', () => {
         nonce,
         purpose,
         expectedLength: 32,
+      })
+    ).to.not.throw()
+
+    expect(() =>
+      kdfCounterMode({
+        digestAlgorithm,
+        ikm,
+        nonce,
+        purpose,
+        expectedLength: 64,
       })
     ).to.not.throw()
   })
@@ -248,17 +336,19 @@ describe('KDF Ctr Mode', () => {
     })
 
     for (const testVector of testVectors) {
-      const { name, hash, ikm, info, L, okm, purpose } = testVector
-      it(name, () => {
-        const test = kdfCounterMode({
-          digestAlgorithm: hash,
-          ikm,
-          nonce: info,
-          purpose,
-          expectedLength: L,
-        })
-        expect(test).to.deep.equals(okm)
-      })
+      const { name } = testVector
+      it(name, () => CheckTestVector(testVector))
     }
   })
 })
+
+function CheckTestVector({ hash, ikm, info, L, okm, purpose }: TestVector) {
+  const test = kdfCounterMode({
+    digestAlgorithm: hash,
+    ikm,
+    nonce: info,
+    purpose,
+    expectedLength: L,
+  })
+  expect(test).to.deep.equals(okm)
+}
