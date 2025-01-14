@@ -42,9 +42,6 @@ import {
 import { DynamoDBKeyStorage } from '../src/dynamodb_key_storage'
 import {
   EncryptedHierarchicalKey,
-  // ActiveKeyEncryptionContext,
-  // VersionKeyEncryptionContext,
-  // BranchKeyVersionType,
 } from '../src/types'
 
 const VALID_CUSTOM_ENCRYPTION_CONTEXT_KV_PAIRS = {

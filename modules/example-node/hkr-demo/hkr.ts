@@ -18,7 +18,7 @@ const { encrypt, decrypt } = buildClient(
 const MAX_INPUT_LENGTH = 20
 const MIN_INPUT_LENGTH = 15
 const PURPLE_LOG = '\x1b[35m%s\x1b[0m'
-const YELLO_LOG = '\x1b[33m%s\x1b[0m'
+const YELLOW_LOG = '\x1b[33m%s\x1b[0m'
 const GREEN_LOG = '\x1b[32m%s\x1b[0m'
 const RED_LOG = '\x1b[31m%s\x1b[0m'
 

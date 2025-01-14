@@ -11,7 +11,6 @@ import {
 import { unmarshall } from '@aws-sdk/util-dynamodb'
 import { BranchKeyItem, BranchKeyRecord } from './branch_keystore_structures'
 import { EncryptedHierarchicalKey, BranchKeyEncryptionContext } from './types'
-// import { IBranchKeyStoreNode } from './branch_keystore'
 import { DecryptCommand } from '@aws-sdk/client-kms'
 import { KmsKeyConfig } from './kms_config'
 import {
@@ -71,7 +70,7 @@ export async function getBranchKeyItem(
   // error out if there is not Item field (record not found)
   needs(
     responseItem,
-    `A branch key record with ${PARTITION_KEY}=${partitionValue} and ${SORT_KEY}=${sortValue} was not found in DynamoDB`
+    `A branch key record with ${PARTITION_KEY}=${partitionValue} and ${SORT_KEY}=${sortValue} was not found in the DynamoDB table ${ddbTableName}.`
   )
   // at this point, we got back a record so convert the DDB response item into
   // a more JS-friendly object

@@ -19,13 +19,10 @@ import {
   createHash,
   randomBytes,
 } from 'crypto'
-// import { uInt32BE } from '@aws-crypto/serialize'
 import { CryptographicMaterialsCache } from '@aws-crypto/cache-material'
 import { kdfCounterMode } from '@aws-crypto/kdf-ctr-mode-node'
 import {
-  // ACTIVE_AS_BYTES,
   CACHE_ENTRY_ID_DIGEST_ALGORITHM,
-  // CACHE_ENTRY_ID_LENGTH,
   CIPHERTEXT_STRUCTURE,
   DECRYPT_FLAGS,
   DERIVED_BRANCH_KEY_LENGTH,
@@ -50,8 +47,6 @@ export const { uuidv4ToCompressedBytes, decompressBytesToUuidv4 } =
   uuidv4Factory(stringToHexBytes, hexBytesToString)
 export const { serializeEncryptionContext } =
   serializeFactory(stringToUtf8Bytes)
-// const stringToAsciiBytes = (input: string): Buffer =>
-//   Buffer.from(input, 'ascii')
 
 export function getBranchKeyId(
   { branchKeyId, branchKeyIdSupplier }: IKmsHierarchicalKeyRingNode,
@@ -185,33 +180,8 @@ export function getCacheEntryId(
     ])
   }
 
-  // const entryInfo = versionAsBytes
-  //   ? Buffer.concat([
-  //       RESOURCE_ID,
-  //       NULL_BYTE,
-  //       DECRYPTION_SCOPE,
-  //       NULL_BYTE,
-  //       partitionId,
-  //       NULL_BYTE,
-  //       logicalKeyStoreName,
-  //       NULL_BYTE,
-  //       branchKeyIdAsBytes,
-  //       NULL_BYTE,
-  //       versionAsBytes,
-  //     ])
-  //   : Buffer.concat([
-  //       RESOURCE_ID,
-  //       NULL_BYTE,
-  //       ENCRYPTION_SCOPE,
-  //       NULL_BYTE,
-  //       partitionId,
-  //       NULL_BYTE,
-  //       logicalKeyStoreName,
-  //       NULL_BYTE,
-  //       branchKeyIdAsBytes,
-  //     ])
 
-  // encrypt the branch key id buffer with sha512
+  // hash the branch key id buffer with sha512
   return createHash(CACHE_ENTRY_ID_DIGEST_ALGORITHM)
     .update(entryInfo)
     .digest()
