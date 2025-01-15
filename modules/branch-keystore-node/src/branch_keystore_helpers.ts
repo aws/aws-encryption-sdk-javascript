@@ -28,7 +28,6 @@ import {
   BRANCH_KEY_TYPE_PREFIX,
   BRANCH_KEY_ACTIVE_TYPE,
   BEACON_KEY_TYPE_VALUE,
-  POTENTIAL_BRANCH_KEY_RECORD_FIELDS,
 } from './constants'
 
 /**
@@ -164,7 +163,6 @@ export function validateBranchKeyRecord(item: BranchKeyItem): BranchKeyRecord {
       typeof item[HIERARCHY_VERSION_FIELD] === 'number',
     `Branch keystore record does not contain ${HIERARCHY_VERSION_FIELD} field of type number`
   )
-
 
   // This requirement is around the construction of the encryption context.
   // It is possible that customers will have constructed their own branch keys
