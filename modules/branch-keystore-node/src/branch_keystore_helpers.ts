@@ -165,17 +165,18 @@ export function validateBranchKeyRecord(item: BranchKeyItem): BranchKeyRecord {
     `Branch keystore record does not contain ${HIERARCHY_VERSION_FIELD} field of type number`
   )
 
+
+  // This requirement is around the construction of the encryption context.
+  // It is possible that customers will have constructed their own branch keys
+  // with a custom creation method.
+  // In this case encryption context may not be prefixed.
+  // The Dafny version of this code does not enforce
+  // that additional encryption context keys MUST be prefixed,
+  // therefore the JS release does not as well.
+
   //= aws-encryption-sdk-specification/framework/key-store/dynamodb-key-storage.md#record-format
   //# A branch key record MAY include [custom encryption context](../branch-key-store.md#custom-encryption-context) key-value pairs.
   //# These attributes should be prefixed with `aws-crypto-ec:` the same way they are for [AWS KMS encryption context](../branch-key-store.md#encryption-context).
-  for (const field in item) {
-    if (!POTENTIAL_BRANCH_KEY_RECORD_FIELDS.includes(field)) {
-      needs(
-        field.startsWith(CUSTOM_ENCRYPTION_CONTEXT_FIELD_PREFIX),
-        `Custom encryption context key ${field} should be prefixed with ${CUSTOM_ENCRYPTION_CONTEXT_FIELD_PREFIX}`
-      )
-    }
-  }
 
   // serialize the DDB response item as a more well-defined and validated branch
   // key record object

@@ -333,26 +333,18 @@ describe('Test keystore helpers', () => {
       })
     })
 
-    it('Active & versioned items have additional fields prefixed improperly', () => {
+    it('Active & versioned items may have additional fields that are not prefixed', () => {
       const activeItem = {
         ...ACTIVE_BRANCH_KEY,
         ...INVALID_CUSTOM_ENCRYPTION_CONTEXT_KV_PAIRS,
       }
-      expect(() => validateBranchKeyRecord(activeItem)).to.throw(
-        `Custom encryption context key ${
-          Object.keys(INVALID_CUSTOM_ENCRYPTION_CONTEXT_KV_PAIRS)[0]
-        } should be prefixed with ${CUSTOM_ENCRYPTION_CONTEXT_FIELD_PREFIX}`
-      )
+      expect(() => validateBranchKeyRecord(activeItem)).to.not.throw()
 
       const versionedItem = {
         ...VERSION_BRANCH_KEY,
         ...INVALID_CUSTOM_ENCRYPTION_CONTEXT_KV_PAIRS,
       }
-      expect(() => validateBranchKeyRecord(versionedItem)).to.throw(
-        `Custom encryption context key ${
-          Object.keys(INVALID_CUSTOM_ENCRYPTION_CONTEXT_KV_PAIRS)[0]
-        } should be prefixed with ${CUSTOM_ENCRYPTION_CONTEXT_FIELD_PREFIX}`
-      )
+      expect(() => validateBranchKeyRecord(versionedItem)).to.not.throw()
     })
   })
 
