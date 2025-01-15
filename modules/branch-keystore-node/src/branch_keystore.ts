@@ -274,7 +274,7 @@ export class BranchKeyStoreNode implements IBranchKeyStoreNode {
     needs(
       activeEncryptedBranchKey.type instanceof
         ActiveHierarchicalSymmetricVersion,
-      'Unexpected type. Not an version record.'
+      'Unexpected type. Not a version record.'
     )
 
     //= aws-encryption-sdk-specification/framework/branch-key-store.md#getactivebranchkey
@@ -282,7 +282,7 @@ export class BranchKeyStoreNode implements IBranchKeyStoreNode {
     needs(
       activeEncryptedBranchKey.encryptionContext[TABLE_FIELD] ==
         this.logicalKeyStoreName,
-      'Unexpected logical table name.'
+      'Unexpected logical table name. Expected ${this.logicalKeyStoreName}, found ${activeEncryptedBranchKey.encryptionContext[TABLE_FIELD]}.'
     )
 
     //= aws-encryption-sdk-specification/framework/branch-key-store.md#getactivebranchkey
@@ -319,7 +319,7 @@ export class BranchKeyStoreNode implements IBranchKeyStoreNode {
       'MUST supply a string branch key id'
     )
     needs(
-      branchKeyId && branchKeyVersion,
+      branchKeyVersion && typeof branchKeyVersion === 'string,
       'MUST supply a string branch key version'
     )
 
@@ -352,7 +352,7 @@ export class BranchKeyStoreNode implements IBranchKeyStoreNode {
     //# GetActiveBranchKey MUST verify that the returned EncryptedHierarchicalKey is an HierarchicalSymmetricVersion.
     needs(
       encryptedBranchKey.type instanceof HierarchicalSymmetricVersion,
-      'Unexpected type. Not an version record.'
+      'Unexpected type. Not a version record.'
     )
 
     //= aws-encryption-sdk-specification/framework/branch-key-store.md#getbranchkeyversion
@@ -360,7 +360,7 @@ export class BranchKeyStoreNode implements IBranchKeyStoreNode {
     needs(
       encryptedBranchKey.encryptionContext[TABLE_FIELD] ==
         this.logicalKeyStoreName,
-      'Unexpected logical table name.'
+      'Unexpected logical table name. Expected ${this.logicalKeyStoreName}, found ${encryptedBranchKey.encryptionContext[TABLE_FIELD}.'
     )
 
     //= aws-encryption-sdk-specification/framework/branch-key-store.md#getbranchkeyversion
