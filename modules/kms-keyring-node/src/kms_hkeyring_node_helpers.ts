@@ -180,7 +180,6 @@ export function getCacheEntryId(
     ])
   }
 
-
   // hash the branch key id buffer with sha512
   return createHash(CACHE_ENTRY_ID_DIGEST_ALGORITHM)
     .update(entryInfo)

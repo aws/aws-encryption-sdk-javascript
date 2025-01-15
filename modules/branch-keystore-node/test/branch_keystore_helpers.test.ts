@@ -40,9 +40,7 @@ import {
   SORT_KEY,
 } from '../src/constants'
 import { DynamoDBKeyStorage } from '../src/dynamodb_key_storage'
-import {
-  EncryptedHierarchicalKey,
-} from '../src/types'
+import { EncryptedHierarchicalKey } from '../src/types'
 
 const VALID_CUSTOM_ENCRYPTION_CONTEXT_KV_PAIRS = {
   'aws-crypto-ec:key1': 'value 1',
@@ -116,7 +114,7 @@ describe('Test keystore helpers', () => {
           BRANCH_KEY_ACTIVE_TYPE
         )
       ).to.rejectedWith(
-        `A branch key record with ${PARTITION_KEY}=${nonexistentBranchKeyId} and ${SORT_KEY}=${BRANCH_KEY_ACTIVE_TYPE} was not found in DynamoDB`
+        `A branch key record with ${PARTITION_KEY}=${nonexistentBranchKeyId} and ${SORT_KEY}=${BRANCH_KEY_ACTIVE_TYPE} was not found in the DynamoDB table ${DDB_TABLE_NAME}.`
       ))
 
       void (await expect(
@@ -126,7 +124,7 @@ describe('Test keystore helpers', () => {
           VERSION_BRANCH_KEY[TYPE_FIELD]
         )
       ).to.be.rejectedWith(
-        `A branch key record with ${PARTITION_KEY}=${nonexistentBranchKeyId} and ${SORT_KEY}=${VERSION_BRANCH_KEY[TYPE_FIELD]} was not found in DynamoDB`
+        `A branch key record with ${PARTITION_KEY}=${nonexistentBranchKeyId} and ${SORT_KEY}=${VERSION_BRANCH_KEY[TYPE_FIELD]} was not found in the DynamoDB table ${DDB_TABLE_NAME}.`
       ))
     })
 
@@ -137,7 +135,7 @@ describe('Test keystore helpers', () => {
       void (await expect(
         getBranchKeyItem(BRANCH_KEY_STORAGE, BRANCH_KEY_ID, nonexistentType)
       ).to.be.rejectedWith(
-        `A branch key record with ${PARTITION_KEY}=${BRANCH_KEY_ID} and ${SORT_KEY}=${nonexistentType} was not found in DynamoDB`
+        `A branch key record with ${PARTITION_KEY}=${BRANCH_KEY_ID} and ${SORT_KEY}=${nonexistentType} was not found in the DynamoDB table ${DDB_TABLE_NAME}.`
       ))
     })
   })

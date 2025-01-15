@@ -60,7 +60,7 @@ export class DynamoDBKeyStorage implements IBranchKeyStorage {
       typeof logicalKeyStoreName === 'string',
       'Logical Key Store name must be a string'
     )
-needs(logicalKeyStoreName, 'Logical Key Store name required')
+    needs(logicalKeyStoreName, 'Logical Key Store name required')
     /* Precondition: DDB client must be a DynamoDBClient */
     needs(
       ddbClient instanceof DynamoDBClient,
@@ -155,9 +155,9 @@ needs(logicalKeyStoreName, 'Logical Key Store name required')
     //= aws-encryption-sdk-specification/framework/key-store/dynamodb-key-storage.md#getencryptedbranchkeyversion
     //# The returned EncryptedHierarchicalKey MUST have the same identifier as the input.
     needs(
-       encrypted.branchKeyId == branchKeyId,
-       'Unexpected branch key id. Expected ${branchKeyId}, found ${encrypted.branchKeyId}'
-   )
+      encrypted.branchKeyId == branchKeyId,
+      'Unexpected branch key id. Expected ${branchKeyId}, found ${encrypted.branchKeyId}'
+    )
 
     //= aws-encryption-sdk-specification/framework/key-store/dynamodb-key-storage.md#getencryptedbranchkeyversion
     //# The returned EncryptedHierarchicalKey MUST have the same version as the input.

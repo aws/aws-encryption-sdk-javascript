@@ -480,7 +480,7 @@ describe('Test Branch keystore', () => {
             logicalKeyStoreName: '',
             kmsConfiguration: KMS_CONFIGURATION,
           })
-      ).to.throw('Logical Keystore name required')
+      ).to.throw('Logical Key Store name required')
     })
 
     describe('Test proper init', () => {
@@ -696,7 +696,7 @@ describe('Test Branch keystore', () => {
     void (await expect(
       keyStore.getActiveBranchKey('Robbie')
     ).to.be.rejectedWith(
-      `A branch key record with ${PARTITION_KEY}=Robbie and ${SORT_KEY}=${BRANCH_KEY_ACTIVE_TYPE} was not found in DynamoDB`
+      `A branch key record with ${PARTITION_KEY}=Robbie and ${SORT_KEY}=${BRANCH_KEY_ACTIVE_TYPE} was not found in the DynamoDB table ${DDB_TABLE_NAME}.`
     ))
   })
 

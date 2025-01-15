@@ -37,7 +37,6 @@ export function kdfCounterMode({
   purpose,
   expectedLength,
 }: KdfCtrInput): Buffer {
-
   /* Precondition: the ikm must be 32, 48, 66 bytes long */
   needs(
     SUPPORTED_IKM_LENGTHS.includes(ikm.length),

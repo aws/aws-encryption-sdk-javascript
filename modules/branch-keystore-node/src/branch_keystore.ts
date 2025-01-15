@@ -319,7 +319,7 @@ export class BranchKeyStoreNode implements IBranchKeyStoreNode {
       'MUST supply a string branch key id'
     )
     needs(
-      branchKeyVersion && typeof branchKeyVersion === 'string,
+      branchKeyVersion && typeof branchKeyVersion === 'string',
       'MUST supply a string branch key version'
     )
 

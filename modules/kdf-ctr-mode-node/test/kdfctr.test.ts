@@ -43,8 +43,6 @@ describe('KDF Ctr Mode', () => {
     ).to.throw('The nonce must be provided')
   })
 
-
-
   it('Precondition: the ikm must be 32, 48, 66 bytes long', () => {
     const invalidIkm = Buffer.alloc(31)
     expect(() =>
