@@ -131,7 +131,6 @@ describe('AwsKmsMrkAwareSymmetricDiscoveryKeyringNode can encrypt/decrypt with A
       NumberOfBytes: suite.keyLengthBytes,
       EncryptionContext: encryptionContext,
     })
-    console.log(CiphertextBlob)
     needs(CiphertextBlob instanceof Uint8Array, 'never')
     const edk = new EncryptedDataKey({
       providerId: 'aws-kms',

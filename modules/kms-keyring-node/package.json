@@ -19,8 +19,13 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@aws-crypto/branch-keystore-node": "file:../branch-keystore-node",
+    "@aws-crypto/cache-material": "file:../cache-material",
+    "@aws-crypto/kdf-ctr-mode-node": "file:../kdf-ctr-mode-node",
     "@aws-crypto/kms-keyring": "file:../kms-keyring",
     "@aws-crypto/material-management-node": "file:../material-management-node",
+    "@aws-crypto/serialize": "file:../serialize",
+    "@aws-sdk/client-dynamodb": "^3.621.0",
     "@aws-sdk/client-kms": "^3.362.0",
     "tslib": "^2.2.0"
   },

@@ -8,6 +8,10 @@
   "exclude": ["node_modules/**"],
   "references": [
     { "path": "../material-management" },
-    { "path": "../kms-keyring" }
+    { "path": "../kms-keyring" },
+    { "path": "../branch-keystore-node" },
+    { "path": "../kdf-ctr-mode-node" },
+    { "path": "../serialize" },
+    { "path": "../cache-material" }
   ]
 }

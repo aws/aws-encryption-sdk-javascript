@@ -5,6 +5,7 @@ import { NodeAlgorithmSuite } from './node_algorithms'
 import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 import { EncryptedDataKey } from './encrypted_data_key'
 import {
+  NodeBranchKeyMaterial,
   NodeDecryptionMaterial,
   NodeEncryptionMaterial,
   WebCryptoDecryptionMaterial,
@@ -78,6 +79,8 @@ export type DecryptionMaterial<Suite> = Suite extends NodeAlgorithmSuite
   : Suite extends WebCryptoAlgorithmSuite
   ? WebCryptoDecryptionMaterial
   : never
+
+export type BranchKeyMaterial = NodeBranchKeyMaterial
 
 /* These are copies of the v12 Node.js types.
  * I copied them here to avoid exporting v12 types
