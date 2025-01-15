@@ -17,10 +17,21 @@ npm install @aws-crypto/kdf-ctr-mode-node
 ## use
 
 ```javascript
-const HKDF = require('@aws-crypto/hkdf-node')
-const expand = HKDF('sha256')('some key', 'some salt')
-const info = { some: 'info', message_id: 123 }
-const key = expand(32, Buffer.from(JSON.stringify(info)))
+
+const digestAlgorithm = 'sha256'
+const initialKeyMaterial = gottenFromSomewhereSecure()
+const nonce = freshRandomData()
+const purpose = Buffer.from('What this derived key is for.', 'utf-8')
+const expectedLength = 32
+
+const KDF = require('@aws-crypto/kdf-ctr-mode-node')
+const derivedKey = KDF.kdfCounterMode({
+        digestAlgorithm,
+        ikm: initialKeyMaterial,
+        nonce,
+        purpose,
+        expectedLength,
+      })
 ```
 
 ## test
