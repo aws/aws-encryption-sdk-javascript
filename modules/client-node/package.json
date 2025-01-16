@@ -9,7 +9,7 @@
     "CSE",
     "aws"
   ],
-  "version": "4.0.2",
+  "version": "4.1.0",
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "lint": "run-s lint-*",
@@ -23,15 +23,15 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@aws-crypto/branch-keystore-node": "file:../branch-keystore-node",
     "@aws-crypto/caching-materials-manager-node": "file:../caching-materials-manager-node",
     "@aws-crypto/decrypt-node": "file:../decrypt-node",
     "@aws-crypto/encrypt-node": "file:../encrypt-node",
+    "@aws-crypto/kms-keyring": "file:../kms-keyring",
     "@aws-crypto/kms-keyring-node": "file:../kms-keyring-node",
     "@aws-crypto/material-management-node": "file:../material-management-node",
     "@aws-crypto/raw-aes-keyring-node": "file:../raw-aes-keyring-node",
     "@aws-crypto/raw-rsa-keyring-node": "file:../raw-rsa-keyring-node",
-    "@aws-crypto/branch-keystore-node": "file:../branch-keystore-node",
-    "@aws-crypto/kms-keyring": "file:../kms-keyring",
     "tslib": "^2.2.0"
   },
   "sideEffects": false,
