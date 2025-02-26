@@ -15,6 +15,10 @@ import { URL } from 'url'
 import { readFileSync } from 'fs'
 import got from 'got'
 import { ZipFile } from 'yazl'
+import {
+  KEYS_MANIFEST_NAME_FILENAME,
+  MANIFEST_PLAINTEXT_PATH,
+} from './constants'
 
 export async function getEncryptTestVectorIterator(
   manifestFile: string,
@@ -40,7 +44,7 @@ export function _getEncryptTestVectorIterator(
     // has all the keys required for decrypt.
     manifestZip.addBuffer(
       Buffer.from(JSON.stringify(keysManifest)),
-      `keys.json`
+      `${KEYS_MANIFEST_NAME_FILENAME}`
     )
   }
   const { keys } = keysManifest
@@ -50,7 +54,10 @@ export function _getEncryptTestVectorIterator(
     plaintextBytes[name] = randomBytes(plaintexts[name])
 
     if (manifestZip) {
-      manifestZip.addBuffer(plaintextBytes[name], `plaintexts/${name}`)
+      manifestZip.addBuffer(
+        plaintextBytes[name],
+        `${MANIFEST_PLAINTEXT_PATH}${name}`
+      )
     }
   })
 

@@ -23,6 +23,7 @@ import {
   needs,
   DecryptOutput,
 } from '@aws-crypto/client-node'
+import { version } from './version'
 import { URL } from 'url'
 import got from 'got'
 import streamToPromise from 'stream-to-promise'
@@ -34,6 +35,15 @@ import { createWriteStream } from 'fs'
 import { v4 } from 'uuid'
 import * as stream from 'stream'
 import * as util from 'util'
+import {
+  DECRYPT_MANIFEST_CLIENT_NAME,
+  DECRYPT_MANIFEST_TYPE,
+  KEYS_MANIFEST_NAME_FILENAME,
+  MANIFEST_CIPHERTEXT_PATH,
+  MANIFEST_NAME_FILENAME,
+  MANIFEST_PLAINTEXT_PATH,
+  MANIFEST_URI_PREFIX,
+} from './constants'
 const pipeline = util.promisify(stream.pipeline)
 
 const notSupportedEncryptMessages = [
@@ -231,15 +241,14 @@ function decryptionManifestEncryptResults(
   const manifestZip = new ZipFile()
   const manifest: DecryptManifestList = {
     manifest: {
-      type: 'awses-decrypt',
-      version: 1,
+      type: `${DECRYPT_MANIFEST_TYPE}`,
+      version: 2,
     },
     client: {
-      name: 'aws/aws-encryption-sdk-javascript',
-      //Get the right version
-      version: '2.2.0',
+      name: `${DECRYPT_MANIFEST_CLIENT_NAME}`,
+      version,
     },
-    keys: 'file://keys.json',
+    keys: `${MANIFEST_URI_PREFIX}${KEYS_MANIFEST_NAME_FILENAME}`,
     tests: {},
   }
   manifestZip.outputStream.pipe(createWriteStream(manifestPath))
@@ -252,7 +261,7 @@ function decryptionManifestEncryptResults(
       // as close the zip file.
       manifestZip.addBuffer(
         Buffer.from(JSON.stringify(manifest)),
-        `manifest.json`
+        `${MANIFEST_NAME_FILENAME}`
       )
       manifestZip.end()
     },
@@ -265,15 +274,18 @@ function decryptionManifestEncryptResults(
   ): Promise<boolean> {
     const testName = v4()
 
-    manifestZip.addBuffer(encryptResult, `ciphertexts/${testName}`)
+    manifestZip.addBuffer(
+      encryptResult,
+      `${MANIFEST_CIPHERTEXT_PATH}${testName}`
+    )
 
     manifest.tests[testName] = {
       description: `Decrypt vector from ${info.name}`,
-      ciphertext: `file://ciphertexts/${testName}`,
+      ciphertext: `${MANIFEST_URI_PREFIX}${MANIFEST_CIPHERTEXT_PATH}${testName}`,
       'master-keys': info.keysInfo.map((info) => info[0]),
       result: {
         output: {
-          plaintext: `file://plaintexts/${info.plaintextName}`,
+          plaintext: `${MANIFEST_URI_PREFIX}${MANIFEST_PLAINTEXT_PATH}${info.plaintextName}`,
         },
       },
     }
