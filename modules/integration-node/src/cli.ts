@@ -109,12 +109,13 @@ const cli = yargs
       concurrency
     )
   } else if (command === 'encrypt') {
-    const { manifestFile, keyFile, decryptOracle, decryptManifest } = argv as unknown as {
-      manifestFile: string
-      keyFile: string
-      decryptOracle?: string,
-      decryptManifest?: string,
-    }
+    const { manifestFile, keyFile, decryptOracle, decryptManifest } =
+      argv as unknown as {
+        manifestFile: string
+        keyFile: string
+        decryptOracle?: string
+        decryptManifest?: string
+      }
     result = await integrationEncryptTestVectors(
       manifestFile,
       keyFile,

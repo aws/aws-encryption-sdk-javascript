@@ -183,9 +183,9 @@ function composeEncryptResults(
       },
       manifestZip: manifest.manifestZip,
     }
-  } else if (!!decryptOracle) {
+  } else if (decryptOracle) {
     return decryptOracleEncryptResults(decryptOracle)
-  } else if (!!decryptManifest) {
+  } else if (decryptManifest) {
     return decryptionManifestEncryptResults(decryptManifest)
   }
   needs(false, 'unsupported')
@@ -199,7 +199,9 @@ function decryptOracleEncryptResults(
     handleEncryptResult,
     // There is nothing to do when the oracle is done
     // since nothing is saved.
-    done: () => {},
+    done: () => {
+      return null
+    },
   }
 
   async function handleEncryptResult(
@@ -412,8 +414,10 @@ async function parallelTests<
     if (!value && done) {
       // We are done enqueueing work,
       // but we need to wait until all that work is done
-      Promise.all([...queue]).then(() => _resolve(failureCount))
-      return 
+      Promise.all([...queue])
+        .then(() => _resolve(failureCount))
+        .catch(console.log)
+      return
     }
     /* I need to define the work to be enqueue
      * and a way to dequeue this work when complete.

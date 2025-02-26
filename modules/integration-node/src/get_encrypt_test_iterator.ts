@@ -19,7 +19,7 @@ import { ZipFile } from 'yazl'
 export async function getEncryptTestVectorIterator(
   manifestFile: string,
   keyFile: string,
-  manifestZip?: ZipFile,
+  manifestZip?: ZipFile
 ) {
   const [manifest, keys]: [EncryptManifestList, KeyList] = await Promise.all([
     getParsedJSON(manifestFile),
@@ -33,13 +33,15 @@ export async function getEncryptTestVectorIterator(
 export function _getEncryptTestVectorIterator(
   { tests, plaintexts }: EncryptManifestList,
   keysManifest: KeyList,
-  manifestZip?: ZipFile,
+  manifestZip?: ZipFile
 ) {
-
   if (manifestZip) {
     // We assume that the keys manifest given for encrypt
     // has all the keys required for decrypt.
-    manifestZip.addBuffer(Buffer.from(JSON.stringify(keysManifest)), `keys.json`)
+    manifestZip.addBuffer(
+      Buffer.from(JSON.stringify(keysManifest)),
+      `keys.json`
+    )
   }
   const { keys } = keysManifest
   const plaintextBytes: { [name: string]: Buffer } = {}
