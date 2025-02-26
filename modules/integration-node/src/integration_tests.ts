@@ -6,6 +6,7 @@ import {
   TestVectorResult,
   parseIntegrationTestVectorsToTestVectorIterator,
   PositiveTestVectorInfo,
+  DecryptManifestList,
 } from '@aws-crypto/integration-vectors'
 import {
   EncryptTestVectorInfo,
@@ -28,6 +29,9 @@ import streamToPromise from 'stream-to-promise'
 const { encrypt, decrypt, decryptUnsignedMessageStream } = buildClient(
   CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
 )
+import { ZipFile } from 'yazl'
+import { createWriteStream } from 'fs'
+import { v4 } from 'uuid'
 import * as stream from 'stream'
 import * as util from 'util'
 const pipeline = util.promisify(stream.pipeline)
@@ -111,11 +115,28 @@ async function testPositiveDecryptVector(
   }
 }
 
-// This is only viable for small streams, if we start get get larger streams, an stream equality should get written
+interface ProcessEncryptResults {
+  handleEncryptResult: HandleEncryptResult
+  // We need to have a done step to close the ZipFile.
+  done(): void
+  // The handleEncryptResult needs the ZipFile
+  // so that it can add ciphertexts and tests.
+  // But when we set up the encrypt manifest,
+  // we create plaintext files and have the keys manifest.
+  // This is a quick and dirty way to share the ZipFile
+  // between these two places.
+  manifestZip?: ZipFile
+}
+
+interface HandleEncryptResult {
+  (encryptResult: Buffer, info: EncryptTestVectorInfo): Promise<boolean>
+}
+
 export async function testEncryptVector(
-  { name, keysInfo, encryptOp, plainTextData }: EncryptTestVectorInfo,
-  decryptOracle: string
+  info: EncryptTestVectorInfo,
+  handleEncryptResult: HandleEncryptResult
 ): Promise<TestVectorResult> {
+  const { name, keysInfo, encryptOp, plainTextData } = info
   try {
     const cmm = encryptMaterialsManagerNode(keysInfo)
     const { result: encryptResult } = await encrypt(
@@ -124,7 +145,68 @@ export async function testEncryptVector(
       encryptOp
     )
 
-    const decryptResponse = await got.post(decryptOracle, {
+    const result = await handleEncryptResult(encryptResult, info)
+    return { result, name }
+  } catch (err) {
+    return { result: false, name, err }
+  }
+}
+
+// This isolates the logic on how to do both.
+// Right now we only have 2 ways to handle results
+// so this seems reasonable.
+function composeEncryptResults(
+  decryptOracle?: string,
+  decryptManifest?: string
+): ProcessEncryptResults {
+  if (!!decryptOracle && !!decryptManifest) {
+    const oracle = decryptOracleEncryptResults(decryptOracle)
+    const manifest = decryptionManifestEncryptResults(decryptManifest)
+
+    return {
+      done() {
+        manifest.done()
+        oracle.done()
+      },
+
+      async handleEncryptResult(
+        encryptResult: Buffer,
+        info: EncryptTestVectorInfo
+      ): Promise<boolean> {
+        return Promise.all([
+          oracle.handleEncryptResult(encryptResult, info),
+          manifest.handleEncryptResult(encryptResult, info),
+        ]).then((results) => {
+          const [oracleResult, manifestResult] = results
+          return oracleResult && manifestResult
+        })
+      },
+      manifestZip: manifest.manifestZip,
+    }
+  } else if (!!decryptOracle) {
+    return decryptOracleEncryptResults(decryptOracle)
+  } else if (!!decryptManifest) {
+    return decryptionManifestEncryptResults(decryptManifest)
+  }
+  needs(false, 'unsupported')
+}
+
+function decryptOracleEncryptResults(
+  decryptOracle: string
+): ProcessEncryptResults {
+  const decryptOracleUrl = new URL(decryptOracle).toString()
+  return {
+    handleEncryptResult,
+    // There is nothing to do when the oracle is done
+    // since nothing is saved.
+    done: () => {},
+  }
+
+  async function handleEncryptResult(
+    encryptResult: Buffer,
+    info: EncryptTestVectorInfo
+  ): Promise<boolean> {
+    const decryptResponse = await got.post(decryptOracleUrl, {
       headers: {
         'Content-Type': 'application/octet-stream',
         Accept: 'application/octet-stream',
@@ -134,10 +216,69 @@ export async function testEncryptVector(
     })
     needs(decryptResponse.statusCode === 200, 'decrypt failure')
     const { body } = decryptResponse
-    const result = plainTextData.equals(body)
-    return { result, name }
-  } catch (err) {
-    return { result: false, name, err }
+    // This is only viable for small streams,
+    // if we start get get larger streams,
+    // a stream equality should get written
+    return info.plainTextData.equals(body)
+  }
+}
+
+function decryptionManifestEncryptResults(
+  manifestPath: string
+): ProcessEncryptResults {
+  const manifestZip = new ZipFile()
+  const manifest: DecryptManifestList = {
+    manifest: {
+      type: 'awses-decrypt',
+      version: 1,
+    },
+    client: {
+      name: 'aws/aws-encryption-sdk-javascript',
+      //Get the right version
+      version: '2.2.0',
+    },
+    keys: 'file://keys.json',
+    tests: {},
+  }
+  manifestZip.outputStream.pipe(createWriteStream(manifestPath))
+
+  return {
+    handleEncryptResult,
+    done: () => {
+      // All the tests have completed,
+      // so we write the manifest,
+      // as close the zip file.
+      manifestZip.addBuffer(
+        Buffer.from(JSON.stringify(manifest)),
+        `manifest.json`
+      )
+      manifestZip.end()
+    },
+    manifestZip,
+  }
+
+  async function handleEncryptResult(
+    encryptResult: Buffer,
+    info: EncryptTestVectorInfo
+  ): Promise<boolean> {
+    const testName = v4()
+
+    manifestZip.addBuffer(encryptResult, `ciphertexts/${testName}`)
+
+    manifest.tests[testName] = {
+      description: `Decrypt vector from ${info.name}`,
+      ciphertext: `file://ciphertexts/${testName}`,
+      'master-keys': info.keysInfo.map((info) => info[0]),
+      result: {
+        output: {
+          plaintext: `file://plaintexts/${info.plaintextName}`,
+        },
+      },
+    }
+
+    // These files are tested on decrypt
+    // so there is nothing to test at this point.
+    return true
   }
 }
 
@@ -196,22 +337,42 @@ export async function integrationDecryptTestVectors(
 export async function integrationEncryptTestVectors(
   manifestFile: string,
   keyFile: string,
-  decryptOracle: string,
+  decryptOracle?: string,
+  decryptManifest?: string,
   tolerateFailures = 0,
   testName?: string,
   concurrency = 1
 ): Promise<number> {
-  const decryptOracleUrl = new URL(decryptOracle).toString()
-  const tests = await getEncryptTestVectorIterator(manifestFile, keyFile)
+  needs(
+    !!decryptOracle || !!decryptManifest,
+    'Need to pass an oracle or manifest path.'
+  )
 
-  return parallelTests(concurrency, tolerateFailures, runTest, tests)
+  const { done, handleEncryptResult, manifestZip } = composeEncryptResults(
+    decryptOracle,
+    decryptManifest
+  )
+
+  const tests = await getEncryptTestVectorIterator(
+    manifestFile,
+    keyFile,
+    manifestZip
+  )
+
+  return parallelTests(concurrency, tolerateFailures, runTest, tests).then(
+    (num) => {
+      // Do the output processing here
+      done()
+      return num
+    }
+  )
 
   async function runTest(test: EncryptTestVectorInfo): Promise<boolean> {
     if (testName) {
       if (test.name !== testName) return true
     }
     return handleTestResults(
-      await testEncryptVector(test, decryptOracleUrl),
+      await testEncryptVector(test, handleEncryptResult),
       notSupportedEncryptMessages
     )
   }
@@ -248,8 +409,12 @@ async function parallelTests<
      * we just process the value and ask for another.
      * Which will return done as true again.
      */
-    if (!value && done) return _resolve(failureCount)
-
+    if (!value && done) {
+      // We are done enqueueing work,
+      // but we need to wait until all that work is done
+      Promise.all([...queue]).then(() => _resolve(failureCount))
+      return 
+    }
     /* I need to define the work to be enqueue
      * and a way to dequeue this work when complete.
      * A Set of promises works nicely.

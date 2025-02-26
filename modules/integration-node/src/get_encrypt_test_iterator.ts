@@ -14,28 +14,42 @@ import {
 import { URL } from 'url'
 import { readFileSync } from 'fs'
 import got from 'got'
+import { ZipFile } from 'yazl'
 
 export async function getEncryptTestVectorIterator(
   manifestFile: string,
-  keyFile: string
+  keyFile: string,
+  manifestZip?: ZipFile,
 ) {
   const [manifest, keys]: [EncryptManifestList, KeyList] = await Promise.all([
     getParsedJSON(manifestFile),
     getParsedJSON(keyFile),
   ])
 
-  return _getEncryptTestVectorIterator(manifest, keys)
+  return _getEncryptTestVectorIterator(manifest, keys, manifestZip)
 }
 
 /* Just a simple more testable function */
 export function _getEncryptTestVectorIterator(
   { tests, plaintexts }: EncryptManifestList,
-  { keys }: KeyList
+  keysManifest: KeyList,
+  manifestZip?: ZipFile,
 ) {
+
+  if (manifestZip) {
+    // We assume that the keys manifest given for encrypt
+    // has all the keys required for decrypt.
+    manifestZip.addBuffer(Buffer.from(JSON.stringify(keysManifest)), `keys.json`)
+  }
+  const { keys } = keysManifest
   const plaintextBytes: { [name: string]: Buffer } = {}
 
   Object.keys(plaintexts).forEach((name) => {
     plaintextBytes[name] = randomBytes(plaintexts[name])
+
+    if (manifestZip) {
+      manifestZip.addBuffer(plaintextBytes[name], `plaintexts/${name}`)
+    }
   })
 
   return (function* nextTest(): IterableIterator<EncryptTestVectorInfo> {
@@ -60,6 +74,7 @@ export function _getEncryptTestVectorIterator(
         name,
         keysInfo,
         plainTextData: plaintextBytes[plaintext],
+        plaintextName: plaintext,
         encryptOp: { suiteId, frameLength, encryptionContext },
       }
     }
@@ -70,6 +85,7 @@ export interface EncryptTestVectorInfo {
   name: string
   keysInfo: KeyInfoTuple[]
   plainTextData: Buffer
+  plaintextName: string
   encryptOp: {
     suiteId: AlgorithmSuiteIdentifier
     frameLength: number
