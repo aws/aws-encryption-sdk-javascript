@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.2.0](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.1.0...v4.2.0) (2025-02-27)
+
+### Bug Fixes
+
+- include uuid as a dependency in material-management ([#1564](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1564)) ([dee213b](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/dee213bc91dd0cde8dd177da52b739e10129f514))
+
+### Features
+
+- integration-node can produce decrypt manifests ([#1580](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1580)) ([95f0fa1](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/95f0fa10b7d94ccc142fc2e89b2ffa49620285c9))
+
 # [4.1.0](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.0.2...v4.1.0) (2025-01-16)
 
 ### Features
