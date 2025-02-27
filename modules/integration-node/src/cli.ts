@@ -47,7 +47,13 @@ const cli = yargs
       .option('decryptOracle', {
         alias: 'o',
         describe: 'a url to the decrypt oracle',
-        demandOption: true,
+        demandOption: false,
+        type: 'string',
+      })
+      .option('decryptManifest', {
+        alias: 'd',
+        describe: 'a file path for to create a decrypt manifest zip file',
+        demandOption: false,
         type: 'string',
       })
   )
@@ -103,15 +109,18 @@ const cli = yargs
       concurrency
     )
   } else if (command === 'encrypt') {
-    const { manifestFile, keyFile, decryptOracle } = argv as unknown as {
-      manifestFile: string
-      keyFile: string
-      decryptOracle: string
-    }
+    const { manifestFile, keyFile, decryptOracle, decryptManifest } =
+      argv as unknown as {
+        manifestFile: string
+        keyFile: string
+        decryptOracle?: string
+        decryptManifest?: string
+      }
     result = await integrationEncryptTestVectors(
       manifestFile,
       keyFile,
       decryptOracle,
+      decryptManifest,
       tolerateFailures,
       testName,
       concurrency
