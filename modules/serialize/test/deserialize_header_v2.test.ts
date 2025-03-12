@@ -141,7 +141,7 @@ describe('serializeMessageHeaderV2', () => {
   })
 
   const { buildMessageHeader, serializeMessageHeader } =
-    serializeFactory(fromUtf8)
+    serializeFactory(fromUtf8, {utf8Sorting: false})
 
   /* There is a compatibility bug in JS for encodeEncryptionContext.
    * The encryption context is sorted lexically.

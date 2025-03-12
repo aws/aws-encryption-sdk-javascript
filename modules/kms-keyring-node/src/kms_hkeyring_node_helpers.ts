@@ -33,7 +33,7 @@ import {
   PROVIDER_ID_HIERARCHY_AS_BYTES,
 } from './constants'
 import { BranchKeyIdSupplier } from '@aws-crypto/kms-keyring'
-import { serializeFactory, uuidv4Factory } from '@aws-crypto/serialize'
+import { serializeFactory, SerializeOptions, uuidv4Factory } from '@aws-crypto/serialize'
 
 export const stringToUtf8Bytes = (input: string): Buffer =>
   Buffer.from(input, 'utf-8')
@@ -45,8 +45,9 @@ const hexBytesToString = (input: Uint8Array): string =>
   Buffer.from(input).toString('hex')
 export const { uuidv4ToCompressedBytes, decompressBytesToUuidv4 } =
   uuidv4Factory(stringToHexBytes, hexBytesToString)
+export const utf8Sorting: SerializeOptions = {utf8Sorting: false}
 export const { serializeEncryptionContext } =
-  serializeFactory(stringToUtf8Bytes)
+  serializeFactory(stringToUtf8Bytes, utf8Sorting)
 
 export function getBranchKeyId(
   { branchKeyId, branchKeyIdSupplier }: IKmsHierarchicalKeyRingNode,
@@ -372,7 +373,7 @@ export function wrapAad(
    * So, I just slice off the length.
    */
   const aad = Buffer.from(
-    serializeEncryptionContext(encryptionContext).slice(2)
+    serializeEncryptionContext(encryptionContext, utf8Sorting).slice(2)
   )
 
   return Buffer.concat([

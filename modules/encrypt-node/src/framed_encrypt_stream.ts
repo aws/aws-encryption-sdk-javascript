@@ -18,8 +18,6 @@ import {
 } from '@aws-crypto/material-management-node'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
-const serialize = serializeFactory(fromUtf8)
-const { finalFrameHeader, frameHeader } = serialize
 const aadUtility = aadFactory(fromUtf8)
 
 interface AccumulatingFrame {
@@ -47,6 +45,7 @@ export function getFramedEncryptStream(
   getCipher: GetCipher,
   messageHeader: MessageHeader,
   dispose: () => void,
+  utf8Sorting: boolean,
   {
     plaintextLength,
     suite,
@@ -107,6 +106,7 @@ export function getFramedEncryptStream(
         getCipher,
         isFinalFrame: false,
         suite,
+        utf8Sorting
       })
 
       // Reset frame state for next frame
@@ -129,6 +129,7 @@ export function getFramedEncryptStream(
         getCipher,
         isFinalFrame: true,
         suite,
+        utf8Sorting
       })
 
       this._flushEncryptFrame(encryptFrame)
@@ -205,10 +206,11 @@ type EncryptFrameInput = {
   getCipher: GetCipher
   isFinalFrame: boolean
   suite: NodeAlgorithmSuite
+  utf8Sorting: boolean
 }
 
 export function getEncryptFrame(input: EncryptFrameInput): EncryptFrame {
-  const { pendingFrame, messageHeader, getCipher, isFinalFrame, suite } = input
+  const { pendingFrame, messageHeader, getCipher, isFinalFrame, suite, utf8Sorting } = input
   const { sequenceNumber, contentLength, content } = pendingFrame
   const { frameLength, contentType, messageId } = messageHeader
   /* Precondition: The content length MUST correlate with the frameLength.
@@ -226,6 +228,9 @@ export function getEncryptFrame(input: EncryptFrameInput): EncryptFrame {
       isFinalFrame,
     })}`
   )
+  const serialize = serializeFactory(fromUtf8, {utf8Sorting})
+  const { finalFrameHeader, frameHeader } = serialize
+  
   const frameIv = serialize.frameIv(suite.ivLength, sequenceNumber)
   const bodyHeader = Buffer.from(
     isFinalFrame

@@ -33,8 +33,6 @@ import { pipeline } from 'readable-stream'
 import { Duplex } from 'stream'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
-const { serializeMessageHeader, headerAuthIv, buildMessageHeader } =
-  serializeFactory(fromUtf8)
 
 export interface EncryptStreamInput {
   suiteId?: AlgorithmSuiteIdentifier
@@ -53,7 +51,7 @@ export interface EncryptStreamInput {
  * @param op EncryptStreamInput
  */
 export function _encryptStream(
-  { commitmentPolicy, maxEncryptedDataKeys }: ClientOptions,
+  { commitmentPolicy, maxEncryptedDataKeys, utf8Sorting }: ClientOptions,
   cmm: KeyringNode | NodeMaterialsManager,
   op: EncryptStreamInput = {}
 ): Duplex {
@@ -111,8 +109,9 @@ export function _encryptStream(
         'maxEncryptedDataKeys exceeded.'
       )
 
+      const maybeUtf8Sorting = utf8Sorting ?? false;
       const { getCipher, messageHeader, rawHeader, dispose, getSigner } =
-        getEncryptionInfo(material, frameLength)
+        getEncryptionInfo(material, frameLength, maybeUtf8Sorting)
 
       wrappingStream.emit('MessageHeader', messageHeader)
 
@@ -120,6 +119,7 @@ export function _encryptStream(
         getCipher,
         messageHeader,
         dispose,
+        maybeUtf8Sorting,
         { plaintextLength, suite: material.suite }
       )
       const signatureStream = new SignatureStream(getSigner)
@@ -140,9 +140,12 @@ export function _encryptStream(
 
 export function getEncryptionInfo(
   material: NodeEncryptionMaterial,
-  frameLength: number
+  frameLength: number,
+  utf8Sorting: boolean
 ) {
   const { getCipherInfo, dispose, getSigner } = getEncryptHelper(material)
+  const { serializeMessageHeader, headerAuthIv, buildMessageHeader } =
+    serializeFactory(fromUtf8, {utf8Sorting})
   const { suite, encryptionContext, encryptedDataKeys } = material
   const { ivLength, messageFormat } = material.suite
 

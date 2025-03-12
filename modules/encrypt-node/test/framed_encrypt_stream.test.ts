@@ -28,6 +28,7 @@ describe('getFramedEncryptStream', () => {
       getCipher,
       {} as any,
       () => {},
+      false,
       {} as any
     )
     expect(test._transform).is.a('function')
@@ -36,13 +37,13 @@ describe('getFramedEncryptStream', () => {
   it('Precondition: plaintextLength must be within bounds.', () => {
     const getCipher: any = () => {}
     expect(() =>
-      getFramedEncryptStream(getCipher, {} as any, () => {}, {
+      getFramedEncryptStream(getCipher, {} as any, () => {}, false, {
         plaintextLength: -1,
         suite,
       })
     ).to.throw(Error, 'plaintextLength out of bounds.')
     expect(() =>
-      getFramedEncryptStream(getCipher, {} as any, () => {}, {
+      getFramedEncryptStream(getCipher, {} as any, () => {}, false, {
         plaintextLength: Number.MAX_SAFE_INTEGER + 1,
         suite,
       })
@@ -52,7 +53,7 @@ describe('getFramedEncryptStream', () => {
      * I want to make sure that I don't have an errant off by 1 error.
      */
     expect(() =>
-      getFramedEncryptStream(getCipher, {} as any, () => {}, {
+      getFramedEncryptStream(getCipher, {} as any, () => {}, false, {
         plaintextLength: Number.MAX_SAFE_INTEGER,
         suite,
       })
@@ -61,7 +62,7 @@ describe('getFramedEncryptStream', () => {
 
   it('Precondition: Must not process more than plaintextLength.', () => {
     const getCipher: any = () => {}
-    const test = getFramedEncryptStream(getCipher, {} as any, () => {}, {
+    const test = getFramedEncryptStream(getCipher, {} as any, () => {}, false, {
       plaintextLength: 8,
       suite,
     })
@@ -78,6 +79,7 @@ describe('getFramedEncryptStream', () => {
       getCipher,
       { frameLength } as any,
       () => {},
+      false,
       {} as any
     )
 
@@ -112,6 +114,7 @@ describe('getEncryptFrame', () => {
         encryptedDataKeys: [],
       },
       suite,
+      utf8Sorting: false,
     }
     const test1 = getEncryptFrame(input)
     expect(test1.content).to.equal(input.pendingFrame.content)
@@ -146,6 +149,7 @@ describe('getEncryptFrame', () => {
         encryptedDataKeys: [],
       },
       suite,
+      utf8Sorting: false
     }
 
     expect(() => getEncryptFrame(inputFinalFrameToLarge)).to.throw(
@@ -172,6 +176,7 @@ describe('getEncryptFrame', () => {
         encryptedDataKeys: [],
       },
       suite,
+      utf8Sorting: false
     }
 
     // Make sure that it must be equal as long as we are here...

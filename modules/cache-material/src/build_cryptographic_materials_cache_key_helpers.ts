@@ -22,7 +22,7 @@ export function buildCryptographicMaterialsCacheKeyHelpers<
   sha512: (...data: (Uint8Array | string)[]) => Promise<Uint8Array>
 ): CryptographicMaterialsCacheKeyHelpersInterface<S> {
   const { serializeEncryptionContext, serializeEncryptedDataKey } =
-    serializeFactory(fromUtf8)
+    serializeFactory(fromUtf8, {utf8Sorting: false})
 
   return {
     buildEncryptionMaterialCacheKey,
@@ -80,7 +80,7 @@ export function buildCryptographicMaterialsCacheKeyHelpers<
      * However, the RAW Keyring wants _only_ the ADD.
      * So, I just slice off the length.
      */
-    const serializedContext = serializeEncryptionContext(context).slice(2)
+    const serializedContext = serializeEncryptionContext(context, {utf8Sorting: false}).slice(2)
     return sha512(serializedContext)
   }
 }

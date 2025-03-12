@@ -26,9 +26,12 @@ import {
   SerializationVersion,
 } from './identifiers'
 import { uInt16BE, uInt8, uInt32BE } from './uint_util'
-import { MessageHeader, MessageHeaderV1, MessageHeaderV2 } from './types'
+import { MessageHeader, MessageHeaderV1, MessageHeaderV2, SerializeOptions } from './types'
 
-export function serializeFactory(fromUtf8: (input: any) => Uint8Array) {
+export function serializeFactory(
+  fromUtf8: (input: any) => Uint8Array,
+  utf8Sorting: SerializeOptions
+) {
   return {
     frameIv,
     nonFramedBodyIv,
@@ -86,26 +89,66 @@ export function serializeFactory(fromUtf8: (input: any) => Uint8Array) {
   }
 
   function encodeEncryptionContext(
-    encryptionContext: EncryptionContext
+    encryptionContext: EncryptionContext,
+    serializeOptions: SerializeOptions
   ): Uint8Array[] {
-    return (
-      Object.entries(encryptionContext)
-        /* Precondition: The serialized encryption context entries must be sorted by UTF-8 key value. */
-        .sort(([aKey], [bKey]) => aKey.localeCompare(bKey))
-        .map((entries) => entries.map(fromUtf8))
-        .map(([key, value]) =>
-          concatBuffers(
-            uInt16BE(key.byteLength),
-            key,
-            uInt16BE(value.byteLength),
-            value
+    const {utf8Sorting} = serializeOptions
+    if (utf8Sorting) {
+      return (
+        Object.entries(encryptionContext)
+          .map((entries) => entries.map(fromUtf8))
+          .sort(([aKey], [bKey]) =>  compare(aKey,bKey))
+          .map(([key, value]) =>
+            concatBuffers(
+              uInt16BE(key.byteLength),
+              key,
+              uInt16BE(value.byteLength),
+              value
+            )
           )
-        )
-    )
+      )
+    } else {
+      return (
+        Object.entries(encryptionContext)
+          /* Precondition: The serialized encryption context entries must be sorted by UTF-8 key value. */
+          .sort(([aKey], [bKey]) => aKey.localeCompare(bKey))
+          .map((entries) => entries.map(fromUtf8))
+          .map(([key, value]) =>
+            concatBuffers(
+              uInt16BE(key.byteLength),
+              key,
+              uInt16BE(value.byteLength),
+              value
+            )
+          )
+      )
+    }
   }
 
-  function serializeEncryptionContext(encryptionContext: EncryptionContext) {
-    const encryptionContextElements = encodeEncryptionContext(encryptionContext)
+  function compare(a: Uint8Array, b: Uint8Array): number {
+    for (let i = 0; i < a.byteLength; i++) {
+      if (a[i] < b[i]) {
+        return -1
+      }
+  
+      if (a[i] > b[i]) {
+        return 1
+      }
+    }
+    if (a.byteLength > b.byteLength) {
+      return 1
+    }
+    if (a.byteLength < b.byteLength) {
+      return -1
+    }
+    return 0
+  }
+
+  function serializeEncryptionContext(
+    encryptionContext: EncryptionContext,
+    serializeOptions: SerializeOptions
+  ) {
+    const encryptionContextElements = encodeEncryptionContext(encryptionContext, serializeOptions)
 
     /* Check for early return (Postcondition): If there is no context then the length of the _whole_ serialized portion is 0.
      * This is part of the specification of the AWS Encryption SDK Message Format.
@@ -163,7 +206,7 @@ export function serializeFactory(fromUtf8: (input: any) => Uint8Array) {
       uInt8(messageHeader.type),
       uInt16BE(messageHeader.suiteId),
       messageHeader.messageId,
-      serializeEncryptionContext(messageHeader.encryptionContext),
+      serializeEncryptionContext(messageHeader.encryptionContext, utf8Sorting),
       serializeEncryptedDataKeys(messageHeader.encryptedDataKeys),
       new Uint8Array([messageHeader.contentType]),
       new Uint8Array([0, 0, 0, 0]),
@@ -177,7 +220,7 @@ export function serializeFactory(fromUtf8: (input: any) => Uint8Array) {
       uInt8(messageHeader.version),
       uInt16BE(messageHeader.suiteId),
       messageHeader.messageId,
-      serializeEncryptionContext(messageHeader.encryptionContext),
+      serializeEncryptionContext(messageHeader.encryptionContext, utf8Sorting),
       serializeEncryptedDataKeys(messageHeader.encryptedDataKeys),
       new Uint8Array([messageHeader.contentType]),
       uInt32BE(messageHeader.frameLength),

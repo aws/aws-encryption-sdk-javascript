@@ -6,6 +6,7 @@ import {
   wrapAad,
   destructureCiphertext,
   serializeEncryptionContext,
+  utf8Sorting,
   unwrapEncryptedDataKey,
   wrapPlaintextDataKey,
 } from '../src/kms_hkeyring_node_helpers'
@@ -156,7 +157,7 @@ describe('KmsHierarchicalKeyRingNode: helpers', () => {
       ).to.deep.equal(branchKeyVersionAsBytes)
 
       startIdx += branchKeyVersionAsBytes.length
-      const expectedAad = serializeEncryptionContext(encryptionContext).slice(2)
+      const expectedAad = serializeEncryptionContext(encryptionContext, utf8Sorting).slice(2)
       expect(wrappedAad.subarray(startIdx)).to.deep.equal(expectedAad)
     })
   })
