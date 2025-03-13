@@ -149,7 +149,7 @@ describe('getEncryptFrame', () => {
         encryptedDataKeys: [],
       },
       suite,
-      utf8Sorting: false
+      utf8Sorting: false,
     }
 
     expect(() => getEncryptFrame(inputFinalFrameToLarge)).to.throw(
@@ -176,7 +176,7 @@ describe('getEncryptFrame', () => {
         encryptedDataKeys: [],
       },
       suite,
-      utf8Sorting: false
+      utf8Sorting: false,
     }
 
     // Make sure that it must be equal as long as we are here...

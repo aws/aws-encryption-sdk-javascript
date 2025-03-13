@@ -109,7 +109,7 @@ export function _encryptStream(
         'maxEncryptedDataKeys exceeded.'
       )
 
-      const maybeUtf8Sorting = utf8Sorting ?? false;
+      const maybeUtf8Sorting = utf8Sorting ?? false
       const { getCipher, messageHeader, rawHeader, dispose, getSigner } =
         getEncryptionInfo(material, frameLength, maybeUtf8Sorting)
 
@@ -145,7 +145,7 @@ export function getEncryptionInfo(
 ) {
   const { getCipherInfo, dispose, getSigner } = getEncryptHelper(material)
   const { serializeMessageHeader, headerAuthIv, buildMessageHeader } =
-    serializeFactory(fromUtf8, {utf8Sorting})
+    serializeFactory(fromUtf8, { utf8Sorting })
   const { suite, encryptionContext, encryptedDataKeys } = material
   const { ivLength, messageFormat } = material.suite
 

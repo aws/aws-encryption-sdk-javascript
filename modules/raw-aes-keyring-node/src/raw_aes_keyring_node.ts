@@ -14,7 +14,11 @@ import {
   NodeAlgorithmSuite,
 } from '@aws-crypto/material-management-node'
 import { randomBytes, createCipheriv, createDecipheriv } from 'crypto'
-import { serializeFactory, concatBuffers, SerializeOptions} from '@aws-crypto/serialize'
+import {
+  serializeFactory,
+  concatBuffers,
+  SerializeOptions,
+} from '@aws-crypto/serialize'
 import {
   _onEncrypt,
   _onDecrypt,
@@ -28,7 +32,9 @@ import {
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const toUtf8 = (input: Uint8Array) =>
   Buffer.from(input.buffer, input.byteOffset, input.byteLength).toString('utf8')
-const { serializeEncryptionContext } = serializeFactory(fromUtf8, {utf8Sorting: false})
+const { serializeEncryptionContext } = serializeFactory(fromUtf8, {
+  utf8Sorting: false,
+})
 const { rawAesEncryptedDataKey } = rawAesEncryptedDataKeyFactory(
   toUtf8,
   fromUtf8
@@ -67,7 +73,7 @@ export class RawAesKeyringNode extends KeyringNode {
       })
 
     // default will be false for the first release and then flipped to true
-    const serializeOptions: SerializeOptions= {utf8Sorting: false}
+    const serializeOptions: SerializeOptions = { utf8Sorting: false }
     const _wrapKey = async (material: NodeEncryptionMaterial) => {
       /* The AAD section is uInt16BE(length) + AAD
        * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
@@ -75,7 +81,8 @@ export class RawAesKeyringNode extends KeyringNode {
        * So, I just slice off the length.
        */
       const { buffer, byteOffset, byteLength } = serializeEncryptionContext(
-        material.encryptionContext, serializeOptions
+        material.encryptionContext,
+        serializeOptions
       ).slice(2)
       const aad = Buffer.from(buffer, byteOffset, byteLength)
       const { keyNamespace, keyName } = this

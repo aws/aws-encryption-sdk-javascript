@@ -121,10 +121,12 @@ export async function _encrypt(
 
   const { getSubtleEncrypt, keyCommitment } = await getEncryptInfo(messageId)
 
-  const maybeUtf8Sorting = utf8Sorting ?? false;
-  
-  const serialize = serializeFactory(fromUtf8, {utf8Sorting: maybeUtf8Sorting})
-  
+  const maybeUtf8Sorting = utf8Sorting ?? false
+
+  const serialize = serializeFactory(fromUtf8, {
+    utf8Sorting: maybeUtf8Sorting,
+  })
+
   const messageHeader = serialize.buildMessageHeader({
     suite: material.suite,
     encryptedDataKeys: material.encryptedDataKeys,

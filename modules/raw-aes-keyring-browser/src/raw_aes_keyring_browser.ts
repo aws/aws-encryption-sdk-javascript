@@ -18,7 +18,11 @@ import {
   importForWebCryptoDecryptionMaterial,
   AwsEsdkJsCryptoKey,
 } from '@aws-crypto/material-management-browser'
-import { serializeFactory, concatBuffers, SerializeOptions } from '@aws-crypto/serialize'
+import {
+  serializeFactory,
+  concatBuffers,
+  SerializeOptions,
+} from '@aws-crypto/serialize'
 import {
   _onEncrypt,
   _onDecrypt,
@@ -76,18 +80,22 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
         keyName,
         flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
       })
-    
-    const serializeOptions: SerializeOptions= {utf8Sorting: false}
-    const { serializeEncryptionContext } = serializeFactory(fromUtf8, serializeOptions)
+
+    const serializeOptions: SerializeOptions = { utf8Sorting: false }
+    const { serializeEncryptionContext } = serializeFactory(
+      fromUtf8,
+      serializeOptions
+    )
     const _wrapKey = async (material: WebCryptoEncryptionMaterial) => {
       /* The AAD section is uInt16BE(length) + AAD
        * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
        * However, the RAW Keyring wants _only_ the ADD.
        * So, I just slice off the length.
        */
-      const aad = serializeEncryptionContext(material.encryptionContext, serializeOptions).slice(
-        2
-      )
+      const aad = serializeEncryptionContext(
+        material.encryptionContext,
+        serializeOptions
+      ).slice(2)
       const { keyNamespace, keyName } = this
 
       return aesGcmWrapKey(
@@ -108,9 +116,10 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
        * However, the RAW Keyring wants _only_ the ADD.
        * So, I just slice off the length.
        */
-      const aad = serializeEncryptionContext(material.encryptionContext, serializeOptions).slice(
-        2
-      )
+      const aad = serializeEncryptionContext(
+        material.encryptionContext,
+        serializeOptions
+      ).slice(2)
       const { keyNamespace, keyName } = this
 
       return aesGcmUnwrapKey(

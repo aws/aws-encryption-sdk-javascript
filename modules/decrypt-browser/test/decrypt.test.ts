@@ -46,7 +46,7 @@ describe('decrypt', () => {
   it('Precondition: _decrypt needs a valid commitmentPolicy.', async () => {
     await expect(
       _decrypt(
-        { commitmentPolicy: 'fake_policy' as any, maxEncryptedDataKeys: false},
+        { commitmentPolicy: 'fake_policy' as any, maxEncryptedDataKeys: false },
         {} as any,
         {} as any
       )

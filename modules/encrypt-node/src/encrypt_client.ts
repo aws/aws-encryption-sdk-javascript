@@ -27,7 +27,7 @@ export function buildEncrypt(
   const {
     commitmentPolicy = CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
     maxEncryptedDataKeys = false,
-    utf8Sorting = false
+    utf8Sorting = false,
   } = typeof options === 'string' ? { commitmentPolicy: options } : options
 
   /* Precondition: node buildEncrypt needs a valid commitmentPolicy. */
@@ -41,7 +41,7 @@ export function buildEncrypt(
   const clientOptions: ClientOptions = {
     commitmentPolicy,
     maxEncryptedDataKeys,
-    utf8Sorting
+    utf8Sorting,
   }
   return {
     encryptStream: _encryptStream.bind({}, clientOptions),

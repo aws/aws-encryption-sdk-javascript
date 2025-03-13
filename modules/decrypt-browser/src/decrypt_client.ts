@@ -22,7 +22,7 @@ export function buildDecrypt(
 } {
   const {
     commitmentPolicy = CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
-    maxEncryptedDataKeys = false
+    maxEncryptedDataKeys = false,
   } = typeof options === 'string' ? { commitmentPolicy: options } : options
 
   /* Precondition: browser buildDecrypt needs a valid commitmentPolicy. */
@@ -35,7 +35,7 @@ export function buildDecrypt(
 
   const clientOptions: ClientOptions = {
     commitmentPolicy,
-    maxEncryptedDataKeys
+    maxEncryptedDataKeys,
   }
   return {
     decrypt: _decrypt.bind({}, clientOptions),

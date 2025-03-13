@@ -26,7 +26,12 @@ import {
   SerializationVersion,
 } from './identifiers'
 import { uInt16BE, uInt8, uInt32BE } from './uint_util'
-import { MessageHeader, MessageHeaderV1, MessageHeaderV2, SerializeOptions } from './types'
+import {
+  MessageHeader,
+  MessageHeaderV1,
+  MessageHeaderV2,
+  SerializeOptions,
+} from './types'
 
 export function serializeFactory(
   fromUtf8: (input: any) => Uint8Array,
@@ -92,21 +97,19 @@ export function serializeFactory(
     encryptionContext: EncryptionContext,
     serializeOptions: SerializeOptions
   ): Uint8Array[] {
-    const {utf8Sorting} = serializeOptions
+    const { utf8Sorting } = serializeOptions
     if (utf8Sorting) {
-      return (
-        Object.entries(encryptionContext)
-          .map((entries) => entries.map(fromUtf8))
-          .sort(([aKey], [bKey]) =>  compare(aKey,bKey))
-          .map(([key, value]) =>
-            concatBuffers(
-              uInt16BE(key.byteLength),
-              key,
-              uInt16BE(value.byteLength),
-              value
-            )
+      return Object.entries(encryptionContext)
+        .map((entries) => entries.map(fromUtf8))
+        .sort(([aKey], [bKey]) => compare(aKey, bKey))
+        .map(([key, value]) =>
+          concatBuffers(
+            uInt16BE(key.byteLength),
+            key,
+            uInt16BE(value.byteLength),
+            value
           )
-      )
+        )
     } else {
       return (
         Object.entries(encryptionContext)
@@ -130,7 +133,7 @@ export function serializeFactory(
       if (a[i] < b[i]) {
         return -1
       }
-  
+
       if (a[i] > b[i]) {
         return 1
       }
@@ -148,7 +151,10 @@ export function serializeFactory(
     encryptionContext: EncryptionContext,
     serializeOptions: SerializeOptions
   ) {
-    const encryptionContextElements = encodeEncryptionContext(encryptionContext, serializeOptions)
+    const encryptionContextElements = encodeEncryptionContext(
+      encryptionContext,
+      serializeOptions
+    )
 
     /* Check for early return (Postcondition): If there is no context then the length of the _whole_ serialized portion is 0.
      * This is part of the specification of the AWS Encryption SDK Message Format.
