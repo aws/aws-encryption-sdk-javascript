@@ -35,7 +35,7 @@ import {
 
 export function serializeFactory(
   fromUtf8: (input: any) => Uint8Array,
-  utf8Sorting: SerializeOptions
+  sorting: SerializeOptions
 ) {
   return {
     frameIv,
@@ -94,10 +94,10 @@ export function serializeFactory(
   }
 
   function encodeEncryptionContext(
-    encryptionContext: EncryptionContext,
-    serializeOptions: SerializeOptions
+    encryptionContext: EncryptionContext
   ): Uint8Array[] {
-    const { utf8Sorting } = serializeOptions
+    // use closure value from the serializeFactory
+    const { utf8Sorting } = sorting
     if (utf8Sorting) {
       return Object.entries(encryptionContext)
         .map((entries) => entries.map(fromUtf8))
@@ -147,14 +147,8 @@ export function serializeFactory(
     return 0
   }
 
-  function serializeEncryptionContext(
-    encryptionContext: EncryptionContext,
-    serializeOptions: SerializeOptions
-  ) {
-    const encryptionContextElements = encodeEncryptionContext(
-      encryptionContext,
-      serializeOptions
-    )
+  function serializeEncryptionContext(encryptionContext: EncryptionContext) {
+    const encryptionContextElements = encodeEncryptionContext(encryptionContext)
 
     /* Check for early return (Postcondition): If there is no context then the length of the _whole_ serialized portion is 0.
      * This is part of the specification of the AWS Encryption SDK Message Format.
@@ -212,7 +206,7 @@ export function serializeFactory(
       uInt8(messageHeader.type),
       uInt16BE(messageHeader.suiteId),
       messageHeader.messageId,
-      serializeEncryptionContext(messageHeader.encryptionContext, utf8Sorting),
+      serializeEncryptionContext(messageHeader.encryptionContext),
       serializeEncryptedDataKeys(messageHeader.encryptedDataKeys),
       new Uint8Array([messageHeader.contentType]),
       new Uint8Array([0, 0, 0, 0]),
@@ -226,7 +220,7 @@ export function serializeFactory(
       uInt8(messageHeader.version),
       uInt16BE(messageHeader.suiteId),
       messageHeader.messageId,
-      serializeEncryptionContext(messageHeader.encryptionContext, utf8Sorting),
+      serializeEncryptionContext(messageHeader.encryptionContext),
       serializeEncryptedDataKeys(messageHeader.encryptedDataKeys),
       new Uint8Array([messageHeader.contentType]),
       uInt32BE(messageHeader.frameLength),

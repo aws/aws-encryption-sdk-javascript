@@ -105,13 +105,10 @@ describe('serializeFactory:encodeEncryptionContext', () => {
     const { encodeEncryptionContext } = serializeFactory(fromUtf8, {
       utf8Sorting: false,
     })
-    const test = encodeEncryptionContext(
-      {
-        information: '\u00bd + \u00bc = \u00be',
-        some: 'public',
-      },
-      { utf8Sorting: false }
-    )
+    const test = encodeEncryptionContext({
+      information: '\u00bd + \u00bc = \u00be',
+      some: 'public',
+    })
     expect(test).to.be.instanceof(Array)
     expect(test.length).to.eql(2)
     expect(test[0]).to.be.instanceof(Uint8Array)
@@ -134,13 +131,10 @@ describe('serializeFactory:encodeEncryptionContext', () => {
     const { encodeEncryptionContext } = serializeFactory(fromUtf8, {
       utf8Sorting: false,
     })
-    const test = encodeEncryptionContext(
-      {
-        some: 'public',
-        information: '\u00bd + \u00bc = \u00be',
-      },
-      { utf8Sorting: false }
-    )
+    const test = encodeEncryptionContext({
+      some: 'public',
+      information: '\u00bd + \u00bc = \u00be',
+    })
     expect(test[0]).to.deep.equal(
       new Uint8Array([
         0, 11, 105, 110, 102, 111, 114, 109, 97, 116, 105, 111, 110, 0, 12, 194,
@@ -161,17 +155,111 @@ describe('serializeFactory:serializeEncryptionContext', () => {
     const { serializeEncryptionContext } = serializeFactory(fromUtf8, {
       utf8Sorting: false,
     })
-    const test = serializeEncryptionContext(
-      {
-        some: 'public',
-        information: '\u00bd + \u00bc = \u00be',
-      },
-      { utf8Sorting: false }
-    )
+    const test = serializeEncryptionContext({
+      some: 'public',
+      information: '\u00bd + \u00bc = \u00be',
+    })
 
     expect(test).to.be.instanceof(Uint8Array)
     expect(test.byteLength).to.eql(45)
     expect(test).to.deep.equal(fixtures.basicEncryptionContext())
+  })
+
+  describe('serializeFactory:serializeEncryptionContext utf8Sorting', () => {
+    it('should return rational context bytes', () => {
+      const fromUtf8 = (input: string) => Buffer.from(input)
+      const { serializeEncryptionContext: serializeWithUtf8Sorting } =
+        serializeFactory(fromUtf8, {
+          utf8Sorting: true,
+        })
+      const { serializeEncryptionContext: serializeWithoutUtf8Sorting } =
+        serializeFactory(fromUtf8, {
+          utf8Sorting: false,
+        })
+      // same test as serializeFactory:serializeEncryptionContext to show that with simple ec
+      // we still have the same serialized encryption context.
+      const test = serializeWithUtf8Sorting({
+        some: 'public',
+        information: '\u00bd + \u00bc = \u00be',
+      })
+      const test2 = serializeWithoutUtf8Sorting({
+        some: 'public',
+        information: '\u00bd + \u00bc = \u00be',
+      })
+
+      expect(test).to.be.instanceof(Uint8Array)
+      expect(test.byteLength).to.eql(45)
+      expect(test).to.deep.equal(fixtures.basicEncryptionContext())
+      expect(test).to.deep.equal(test2)
+    })
+  })
+
+  it('test utf8 serialization with high utf8 codepoints', () => {
+    const fromUtf8 = (input: string) => Buffer.from(input)
+    const { serializeEncryptionContext: serializeWithUtf8Sorting } =
+      serializeFactory(fromUtf8, {
+        utf8Sorting: true,
+      })
+    const { serializeEncryptionContext: serializeWithoutUtf8Sorting } =
+      serializeFactory(fromUtf8, {
+        utf8Sorting: false,
+      })
+    // same test as serializeFactory:serializeEncryptionContext to show that with simple ec
+    // we still have the same serialized encryption context.
+    const test = serializeWithUtf8Sorting({
+      some: 'public',
+      '𝄢': 'a',
+    })
+    const test2 = serializeWithoutUtf8Sorting({
+      some: 'public',
+      '𝄢': 'a',
+    })
+
+    expect(test).to.be.instanceof(Uint8Array)
+    expect(test.byteLength).to.eql(27)
+    expect(test).to.deep.equal(
+      fixtures.encryptionContextWithHighUtf8CodePoint()
+    )
+
+    expect(test2).to.be.instanceof(Uint8Array)
+    expect(test2.byteLength).to.eql(27)
+
+    expect(test2).to.not.deep.equal(
+      fixtures.encryptionContextWithHighUtf8CodePoint()
+    )
+    expect(test).to.not.deep.equal(test2)
+  })
+
+  it('test utf8 serialization with high utf8 codepoints and reserved ec keyword', () => {
+    const fromUtf8 = (input: string) => Buffer.from(input)
+    const { serializeEncryptionContext: serializeWithUtf8Sorting } =
+      serializeFactory(fromUtf8, {
+        utf8Sorting: true,
+      })
+    const { serializeEncryptionContext: serializeWithoutUtf8Sorting } =
+      serializeFactory(fromUtf8, {
+        utf8Sorting: false,
+      })
+    // same test as serializeFactory:serializeEncryptionContext to show that with simple ec
+    // we still have the same serialized encryption context.
+    const utf8SortedTest = serializeWithUtf8Sorting({
+      'aws-crypto-public-key': 'public',
+      '𝄢': 'a',
+    })
+    const stringSortedTest = serializeWithoutUtf8Sorting({
+      'aws-crypto-public-key': 'public',
+      '𝄢': 'a',
+    })
+
+    expect(utf8SortedTest).to.be.instanceof(Uint8Array)
+    expect(utf8SortedTest.byteLength).to.eql(44)
+    expect(utf8SortedTest).to.deep.equal(
+      fixtures.encryptionContextWithHighUtf8CodePointWithReservedKeyword()
+    )
+
+    expect(stringSortedTest).to.be.instanceof(Uint8Array)
+    expect(stringSortedTest.byteLength).to.eql(44)
+    expect(utf8SortedTest).to.not.deep.equal(stringSortedTest)
   })
 
   it('Check for early return (Postcondition): If there is no context then the length of the _whole_ serialized portion is 0.', () => {
@@ -179,7 +267,7 @@ describe('serializeFactory:serializeEncryptionContext', () => {
     const { serializeEncryptionContext } = serializeFactory(fromUtf8, {
       utf8Sorting: false,
     })
-    const test = serializeEncryptionContext({}, { utf8Sorting: false })
+    const test = serializeEncryptionContext({})
 
     expect(test).to.be.instanceof(Uint8Array)
     expect(test.byteLength).to.eql(2)

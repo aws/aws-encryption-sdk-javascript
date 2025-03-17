@@ -56,6 +56,7 @@ export type RawAesKeyringWebCryptoInput = {
   keyName: string
   masterKey: AwsEsdkJsCryptoKey
   wrappingSuite: WrappingSuiteIdentifier
+  utf8Sorting?: boolean | true
 }
 
 export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
@@ -66,7 +67,8 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
 
   constructor(input: RawAesKeyringWebCryptoInput) {
     super()
-    const { keyName, keyNamespace, masterKey, wrappingSuite } = input
+    const { keyName, keyNamespace, masterKey, wrappingSuite, utf8Sorting } =
+      input
     /* Precondition: AesKeyringWebCrypto needs identifying information for encrypt and decrypt. */
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
     /* Precondition: RawAesKeyringWebCrypto requires a wrappingSuite to be a valid RawAesWrappingSuite. */
@@ -81,7 +83,8 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
         flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
       })
 
-    const serializeOptions: SerializeOptions = { utf8Sorting: false }
+    const maybeUtf8Sorting = utf8Sorting ?? true
+    const serializeOptions: SerializeOptions = { utf8Sorting: maybeUtf8Sorting }
     const { serializeEncryptionContext } = serializeFactory(
       fromUtf8,
       serializeOptions
@@ -92,10 +95,9 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
        * However, the RAW Keyring wants _only_ the ADD.
        * So, I just slice off the length.
        */
-      const aad = serializeEncryptionContext(
-        material.encryptionContext,
-        serializeOptions
-      ).slice(2)
+      const aad = serializeEncryptionContext(material.encryptionContext).slice(
+        2
+      )
       const { keyNamespace, keyName } = this
 
       return aesGcmWrapKey(
@@ -116,10 +118,9 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
        * However, the RAW Keyring wants _only_ the ADD.
        * So, I just slice off the length.
        */
-      const aad = serializeEncryptionContext(
-        material.encryptionContext,
-        serializeOptions
-      ).slice(2)
+      const aad = serializeEncryptionContext(material.encryptionContext).slice(
+        2
+      )
       const { keyNamespace, keyName } = this
 
       return aesGcmUnwrapKey(

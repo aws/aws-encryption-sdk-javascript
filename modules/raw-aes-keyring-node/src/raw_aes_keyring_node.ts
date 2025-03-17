@@ -32,9 +32,6 @@ import {
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const toUtf8 = (input: Uint8Array) =>
   Buffer.from(input.buffer, input.byteOffset, input.byteLength).toString('utf8')
-const { serializeEncryptionContext } = serializeFactory(fromUtf8, {
-  utf8Sorting: false,
-})
 const { rawAesEncryptedDataKey } = rawAesEncryptedDataKeyFactory(
   toUtf8,
   fromUtf8
@@ -46,6 +43,7 @@ export type RawAesKeyringNodeInput = {
   keyName: string
   unencryptedMasterKey: Uint8Array
   wrappingSuite: WrappingSuiteIdentifier
+  utf8Sorting?: boolean | true
 }
 
 export class RawAesKeyringNode extends KeyringNode {
@@ -57,7 +55,13 @@ export class RawAesKeyringNode extends KeyringNode {
   constructor(input: RawAesKeyringNodeInput) {
     super()
 
-    const { keyName, keyNamespace, unencryptedMasterKey, wrappingSuite } = input
+    const {
+      keyName,
+      keyNamespace,
+      unencryptedMasterKey,
+      wrappingSuite,
+      utf8Sorting,
+    } = input
     /* Precondition: AesKeyringNode needs identifying information for encrypt and decrypt. */
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
     /* Precondition: RawAesKeyringNode requires wrappingSuite to be a valid RawAesWrappingSuite. */
@@ -72,8 +76,13 @@ export class RawAesKeyringNode extends KeyringNode {
         flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
       })
 
-    // default will be false for the first release and then flipped to true
-    const serializeOptions: SerializeOptions = { utf8Sorting: false }
+    const maybeUtf8Sorting = utf8Sorting ?? true
+    // default will be true
+    const serializeOptions: SerializeOptions = { utf8Sorting: maybeUtf8Sorting }
+    const { serializeEncryptionContext } = serializeFactory(
+      fromUtf8,
+      serializeOptions
+    )
     const _wrapKey = async (material: NodeEncryptionMaterial) => {
       /* The AAD section is uInt16BE(length) + AAD
        * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
@@ -81,8 +90,7 @@ export class RawAesKeyringNode extends KeyringNode {
        * So, I just slice off the length.
        */
       const { buffer, byteOffset, byteLength } = serializeEncryptionContext(
-        material.encryptionContext,
-        serializeOptions
+        material.encryptionContext
       ).slice(2)
       const aad = Buffer.from(buffer, byteOffset, byteLength)
       const { keyNamespace, keyName } = this
@@ -107,8 +115,7 @@ export class RawAesKeyringNode extends KeyringNode {
        * So, I just slice off the length.
        */
       const { buffer, byteOffset, byteLength } = serializeEncryptionContext(
-        material.encryptionContext,
-        serializeOptions
+        material.encryptionContext
       ).slice(2)
       const aad = Buffer.from(buffer, byteOffset, byteLength)
       // const aad = Buffer.concat(encodeEncryptionContext(context || {}))

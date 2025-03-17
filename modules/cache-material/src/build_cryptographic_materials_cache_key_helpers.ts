@@ -8,7 +8,11 @@ import {
   EncryptedDataKey,
   EncryptionContext,
 } from '@aws-crypto/material-management'
-import { serializeFactory, uInt16BE } from '@aws-crypto/serialize'
+import {
+  serializeFactory,
+  uInt16BE,
+  SerializeOptions,
+} from '@aws-crypto/serialize'
 import { compare } from './portable_compare'
 
 //  512 bits of 0 for padding between hashes in decryption materials cache ID generation.
@@ -21,8 +25,9 @@ export function buildCryptographicMaterialsCacheKeyHelpers<
   toUtf8: (input: Uint8Array) => string,
   sha512: (...data: (Uint8Array | string)[]) => Promise<Uint8Array>
 ): CryptographicMaterialsCacheKeyHelpersInterface<S> {
+  const sorting: SerializeOptions = { utf8Sorting: true }
   const { serializeEncryptionContext, serializeEncryptedDataKey } =
-    serializeFactory(fromUtf8, { utf8Sorting: false })
+    serializeFactory(fromUtf8, sorting)
 
   return {
     buildEncryptionMaterialCacheKey,
@@ -80,9 +85,7 @@ export function buildCryptographicMaterialsCacheKeyHelpers<
      * However, the RAW Keyring wants _only_ the ADD.
      * So, I just slice off the length.
      */
-    const serializedContext = serializeEncryptionContext(context, {
-      utf8Sorting: false,
-    }).slice(2)
+    const serializedContext = serializeEncryptionContext(context).slice(2)
     return sha512(serializedContext)
   }
 }

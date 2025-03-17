@@ -33,11 +33,7 @@ import {
   PROVIDER_ID_HIERARCHY_AS_BYTES,
 } from './constants'
 import { BranchKeyIdSupplier } from '@aws-crypto/kms-keyring'
-import {
-  serializeFactory,
-  SerializeOptions,
-  uuidv4Factory,
-} from '@aws-crypto/serialize'
+import { serializeFactory, uuidv4Factory } from '@aws-crypto/serialize'
 
 export const stringToUtf8Bytes = (input: string): Buffer =>
   Buffer.from(input, 'utf-8')
@@ -49,11 +45,6 @@ const hexBytesToString = (input: Uint8Array): string =>
   Buffer.from(input).toString('hex')
 export const { uuidv4ToCompressedBytes, decompressBytesToUuidv4 } =
   uuidv4Factory(stringToHexBytes, hexBytesToString)
-export const utf8Sorting: SerializeOptions = { utf8Sorting: false }
-export const { serializeEncryptionContext } = serializeFactory(
-  stringToUtf8Bytes,
-  utf8Sorting
-)
 
 export function getBranchKeyId(
   { branchKeyId, branchKeyIdSupplier }: IKmsHierarchicalKeyRingNode,
@@ -297,7 +288,8 @@ export function getPlaintextDataKey(material: NodeEncryptionMaterial) {
 export function wrapPlaintextDataKey(
   pdk: Uint8Array,
   branchKeyMaterials: NodeBranchKeyMaterial,
-  { encryptionContext }: NodeEncryptionMaterial
+  { encryptionContext }: NodeEncryptionMaterial,
+  utf8Sorting: boolean
 ): Uint8Array {
   // get what we need from branch key material to wrap the pdk
   const branchKey = branchKeyMaterials.branchKey()
@@ -326,7 +318,8 @@ export function wrapPlaintextDataKey(
   const wrappedAad = wrapAad(
     branchKeyIdAsBytes,
     branchKeyVersionAsBytesCompressed,
-    encryptionContext
+    encryptionContext,
+    utf8Sorting
   )
 
   // encrypt the pdk into an edk
@@ -368,10 +361,14 @@ export function wrapPlaintextDataKey(
 export function wrapAad(
   branchKeyIdAsBytes: Buffer,
   version: Buffer,
-  encryptionContext: EncryptionContext
+  encryptionContext: EncryptionContext,
+  utf8Sorting: boolean
 ) {
   /* Precondition: Branch key version must be 16 bytes */
   needs(version.length === 16, 'Branch key version must be 16 bytes')
+  const { serializeEncryptionContext } = serializeFactory(stringToUtf8Bytes, {
+    utf8Sorting: utf8Sorting,
+  })
 
   /* The AAD section is uInt16BE(length) + AAD
    * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
@@ -379,7 +376,7 @@ export function wrapAad(
    * So, I just slice off the length.
    */
   const aad = Buffer.from(
-    serializeEncryptionContext(encryptionContext, utf8Sorting).slice(2)
+    serializeEncryptionContext(encryptionContext).slice(2)
   )
 
   return Buffer.concat([
@@ -535,7 +532,8 @@ export function destructureCiphertext(
 export function unwrapEncryptedDataKey(
   ciphertext: Uint8Array,
   branchKeyMaterials: NodeBranchKeyMaterial,
-  { encryptionContext, suite }: NodeDecryptionMaterial
+  { encryptionContext, suite }: NodeDecryptionMaterial,
+  utf8Sorting: boolean
 ) {
   // get what we need from the branch key materials to unwrap the edk
   const branchKey = branchKeyMaterials.branchKey()
@@ -564,7 +562,8 @@ export function unwrapEncryptedDataKey(
   const wrappedAad = wrapAad(
     branchKeyIdAsBytes,
     branchKeyVersionAsBytesCompressed,
-    encryptionContext
+    encryptionContext,
+    utf8Sorting
   )
 
   // decipher the edk to get the udk/pdk
