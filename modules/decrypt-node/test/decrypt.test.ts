@@ -219,7 +219,6 @@ describe('decrypt', () => {
     const { decrypt } = buildDecrypt({
       commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
       maxEncryptedDataKeys: 3,
-      utf8Sorting: false,
     })
     const hkeyring = fixtures.hKeyring(false)
     const ciphertext = fixtures.hierarchyMessageWithHighUtf8CodePoints()
@@ -235,7 +234,6 @@ describe('decrypt', () => {
     const { decrypt } = buildDecrypt({
       commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
       maxEncryptedDataKeys: 3,
-      utf8Sorting: false,
     })
     const hkeyring = fixtures.hKeyring(true)
     const ciphertext = fixtures.hierarchyMessageWithHighUtf8CodePoints()
@@ -249,7 +247,6 @@ describe('decrypt', () => {
     const { decrypt } = buildDecrypt({
       commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
       maxEncryptedDataKeys: 3,
-      utf8Sorting: false,
     })
     const hkeyringUtf8 = fixtures.hKeyring(true)
     const hkeyringNoUtf8 = fixtures.hKeyring(false)
