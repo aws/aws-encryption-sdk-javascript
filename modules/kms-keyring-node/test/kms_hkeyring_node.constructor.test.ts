@@ -280,6 +280,38 @@ describe('KmsHierarchicalKeyRingNode: constructor', () => {
     expect(Object.isFrozen(hkr)).equals(true)
   })
 
+  it('utf8Sorting default value is set correctly', () => {
+    expect(
+      new KmsHierarchicalKeyRingNode({
+        branchKeyId,
+        keyStore,
+        cacheLimitTtl,
+      })._utf8Sorting
+    ).to.equal(true)
+  })
+
+  it('utf8Sorting value is set correctly', () => {
+    expect(
+      new KmsHierarchicalKeyRingNode({
+        branchKeyId,
+        keyStore,
+        cacheLimitTtl,
+        utf8Sorting: false,
+      })._utf8Sorting
+    ).to.equal(false)
+  })
+
+  it('utf8Sorting value is set correctly', () => {
+    expect(
+      new KmsHierarchicalKeyRingNode({
+        branchKeyId,
+        keyStore,
+        cacheLimitTtl,
+        utf8Sorting: true,
+      })._utf8Sorting
+    ).to.equal(true)
+  })
+
   it('All attributes initialized correctly', () => {
     expect(hkr.branchKeyId).to.equal(branchKeyId)
     expect(hkr.branchKeyIdSupplier).to.equal(branchKeyIdSupplier)

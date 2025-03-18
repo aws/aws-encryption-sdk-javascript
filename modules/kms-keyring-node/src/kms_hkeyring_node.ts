@@ -74,7 +74,7 @@ export interface KmsHierarchicalKeyRingNodeInput {
   //= type=implication
   //# - MAY provide a [Partition ID](#partition-id)
   partitionId?: string
-  utf8Sorting?: boolean | true
+  utf8Sorting?: boolean
 }
 
 export interface IKmsHierarchicalKeyRingNode extends KeyringNode {
@@ -105,7 +105,7 @@ export class KmsHierarchicalKeyRingNode
   public declare maxCacheSize?: number
   public declare _cmc: CryptographicMaterialsCache<NodeAlgorithmSuite>
   declare readonly _partition: Buffer
-  public declare utf8Sorting: boolean | true
+  public declare _utf8Sorting: boolean
 
   constructor({
     branchKeyId,
@@ -259,16 +259,10 @@ export class KmsHierarchicalKeyRingNode
     readOnlyProperty(this, 'maxCacheSize', maxCacheSize)
     readOnlyProperty(this, '_cmc', cache)
 
-    if (utf8Sorting) {
-      needs(
-        typeof utf8Sorting === 'boolean',
-        'The branch key id must be a string'
-      )
-    } else {
+    if (utf8Sorting === undefined) {
       utf8Sorting = true
     }
-
-    readOnlyProperty(this, 'utf8Sorting', utf8Sorting)
+    readOnlyProperty(this, '_utf8Sorting', utf8Sorting)
 
     Object.freeze(this)
     /* Postcondition: The HKR object must be frozen */
@@ -314,7 +308,7 @@ export class KmsHierarchicalKeyRingNode
       pdk,
       branchKeyMaterials,
       encryptionMaterial,
-      this.utf8Sorting
+      this._utf8Sorting
     )
 
     // return the modified encryption material with the new edk and newly
@@ -444,7 +438,7 @@ export class KmsHierarchicalKeyRingNode
           ciphertext,
           branchKeyMaterials,
           decryptionMaterial,
-          this.utf8Sorting
+          this._utf8Sorting
         )
       } catch (e) {
         //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#ondecrypt

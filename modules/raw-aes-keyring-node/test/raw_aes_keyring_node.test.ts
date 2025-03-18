@@ -81,6 +81,41 @@ describe('RawAesKeyringNode::constructor', () => {
         })
     ).to.throw()
   })
+
+  it('utf8Sorting default value is set properly', () => {
+    expect(
+      new RawAesKeyringNode({
+        keyName,
+        keyNamespace,
+        unencryptedMasterKey,
+        wrappingSuite,
+      })._utf8Sorting
+    ).to.equal(true)
+  })
+
+  it('utf8Sorting value is set properly', () => {
+    expect(
+      new RawAesKeyringNode({
+        keyName,
+        keyNamespace,
+        unencryptedMasterKey,
+        wrappingSuite,
+        utf8Sorting: false,
+      })._utf8Sorting
+    ).to.equal(false)
+  })
+
+  it('utf8Sorting value is set properly', () => {
+    expect(
+      new RawAesKeyringNode({
+        keyName,
+        keyNamespace,
+        unencryptedMasterKey,
+        wrappingSuite,
+        utf8Sorting: true,
+      })._utf8Sorting
+    ).to.equal(true)
+  })
 })
 
 describe('RawAesKeyringNode::_filter', () => {

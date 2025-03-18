@@ -27,9 +27,10 @@ import { version } from './version'
 import { URL } from 'url'
 import got from 'got'
 import streamToPromise from 'stream-to-promise'
-const { encrypt, decrypt, decryptUnsignedMessageStream } = buildClient(
-  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
-)
+const { encrypt, decrypt, decryptUnsignedMessageStream } = buildClient({
+  commitmentPolicy: CommitmentPolicy.REQUIRE_ENCRYPT_ALLOW_DECRYPT,
+  maxEncryptedDataKeys: false,
+})
 import { ZipFile } from 'yazl'
 import { createWriteStream } from 'fs'
 import { v4 } from 'uuid'

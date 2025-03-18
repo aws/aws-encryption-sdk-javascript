@@ -31,6 +31,7 @@ import {
 import { fromUtf8 } from '@aws-sdk/util-utf8-browser'
 import { getWebCryptoBackend } from '@aws-crypto/web-crypto-backend'
 
+const serialize = serializeFactory(fromUtf8, { utf8Sorting: true })
 const { messageAADContentString, messageAAD } = aadFactory(fromUtf8)
 
 export interface EncryptInput {
@@ -46,7 +47,7 @@ export interface EncryptResult {
 }
 
 export async function _encrypt(
-  { commitmentPolicy, maxEncryptedDataKeys, utf8Sorting }: ClientOptions,
+  { commitmentPolicy, maxEncryptedDataKeys }: ClientOptions,
   cmm: KeyringWebCrypto | WebCryptoMaterialsManager,
   plaintext: Uint8Array,
   {
@@ -120,12 +121,6 @@ export async function _encrypt(
   const { ivLength } = material.suite
 
   const { getSubtleEncrypt, keyCommitment } = await getEncryptInfo(messageId)
-
-  const maybeUtf8Sorting = utf8Sorting ?? false
-
-  const serialize = serializeFactory(fromUtf8, {
-    utf8Sorting: maybeUtf8Sorting,
-  })
 
   const messageHeader = serialize.buildMessageHeader({
     suite: material.suite,

@@ -122,7 +122,6 @@ export type AwsEsdkCreateSecretKey = (key: Uint8Array) => AwsEsdkKeyObject
 export interface ClientOptions {
   commitmentPolicy: CommitmentPolicy
   maxEncryptedDataKeys: number | false
-  utf8Sorting?: boolean | false
 }
 
 export type Newable<T> = { new (...args: any[]): T }

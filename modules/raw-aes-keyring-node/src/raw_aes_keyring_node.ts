@@ -43,7 +43,7 @@ export type RawAesKeyringNodeInput = {
   keyName: string
   unencryptedMasterKey: Uint8Array
   wrappingSuite: WrappingSuiteIdentifier
-  utf8Sorting?: boolean | true
+  utf8Sorting?: boolean
 }
 
 export class RawAesKeyringNode extends KeyringNode {
@@ -51,6 +51,7 @@ export class RawAesKeyringNode extends KeyringNode {
   public declare keyName: string
   declare _wrapKey: WrapKey<NodeAlgorithmSuite>
   declare _unwrapKey: UnwrapKey<NodeAlgorithmSuite>
+  public declare _utf8Sorting: boolean
 
   constructor(input: RawAesKeyringNodeInput) {
     super()
@@ -76,9 +77,15 @@ export class RawAesKeyringNode extends KeyringNode {
         flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
       })
 
-    const maybeUtf8Sorting = utf8Sorting ?? true
+    if (utf8Sorting === undefined) {
+      readOnlyProperty(this, '_utf8Sorting', true)
+    } else {
+      readOnlyProperty(this, '_utf8Sorting', utf8Sorting)
+    }
     // default will be true
-    const serializeOptions: SerializeOptions = { utf8Sorting: maybeUtf8Sorting }
+    const serializeOptions: SerializeOptions = {
+      utf8Sorting: this._utf8Sorting,
+    }
     const { serializeEncryptionContext } = serializeFactory(
       fromUtf8,
       serializeOptions

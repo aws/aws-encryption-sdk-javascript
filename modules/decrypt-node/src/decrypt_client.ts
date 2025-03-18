@@ -31,7 +31,6 @@ export function buildDecrypt(
   const {
     commitmentPolicy = CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT,
     maxEncryptedDataKeys = false,
-    utf8Sorting = false,
   } = typeof options === 'string' ? { commitmentPolicy: options } : options
 
   /* Precondition: node buildDecrypt needs a valid commitmentPolicy. */
@@ -45,7 +44,6 @@ export function buildDecrypt(
   const clientOptions: ClientOptions = {
     commitmentPolicy,
     maxEncryptedDataKeys,
-    utf8Sorting,
   }
   return {
     decryptUnsignedMessageStream: _decryptStream.bind(
