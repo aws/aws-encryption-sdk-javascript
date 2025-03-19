@@ -90,7 +90,7 @@ describe('RawAesKeyringNode::constructor', () => {
         unencryptedMasterKey,
         wrappingSuite,
       })._utf8Sorting
-    ).to.equal(true)
+    ).to.equal(false)
   })
 
   it('utf8Sorting value is set properly', () => {
@@ -209,15 +209,15 @@ describe('RawAesKeyringNode High utf8 code points inn encryption context', () =>
   const unencryptedMasterKey = new Uint8Array(128 / 8)
   const keyNamespace = 'keyNamespace'
   const keyName = 'keyName'
-  const noUtf8SortingKeyring = new RawAesKeyringNode({
+  const utf8SortingKeyring = new RawAesKeyringNode({
     keyName,
     keyNamespace,
     unencryptedMasterKey,
     wrappingSuite,
-    utf8Sorting: false,
+    utf8Sorting: true,
   })
-  // the default is to utf8 sort
-  const utf8SortingKeyring = new RawAesKeyringNode({
+  // the default is not to utf8 sort
+  const noUtf8SortingKeyring = new RawAesKeyringNode({
     keyName,
     keyNamespace,
     unencryptedMasterKey,
