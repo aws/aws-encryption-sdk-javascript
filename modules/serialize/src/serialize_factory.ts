@@ -97,6 +97,15 @@ export function serializeFactory(
     encryptionContext: EncryptionContext
   ): Uint8Array[] {
     // use closure value from the serializeFactory
+    // If the encryption context contains high order
+    // utf8 code points the "old" implementation would sort these values
+    // based on their values, see the false branch of this function.
+    // This led to different sorting if using these high order utf8 code points,
+    // which led to decryption failures from other ESDK language implementations
+    // that correctly sorted the encryption context by sorting based on the utf8
+    // values as opposed to the string value.
+    // See, https://github.com/aws/aws-encryption-sdk-javascript/issues/428
+    // for mote details
     const { utf8Sorting } = sorting
     if (utf8Sorting) {
       return Object.entries(encryptionContext)

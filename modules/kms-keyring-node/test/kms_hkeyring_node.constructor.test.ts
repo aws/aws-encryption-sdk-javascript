@@ -287,7 +287,7 @@ describe('KmsHierarchicalKeyRingNode: constructor', () => {
         keyStore,
         cacheLimitTtl,
       })._utf8Sorting
-    ).to.equal(true)
+    ).to.equal(false)
   })
 
   it('utf8Sorting value is set correctly', () => {

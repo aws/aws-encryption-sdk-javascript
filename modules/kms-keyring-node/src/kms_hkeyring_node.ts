@@ -260,9 +260,10 @@ export class KmsHierarchicalKeyRingNode
     readOnlyProperty(this, '_cmc', cache)
 
     if (utf8Sorting === undefined) {
-      utf8Sorting = true
+      readOnlyProperty(this, '_utf8Sorting', false)
+    } else {
+      readOnlyProperty(this, '_utf8Sorting', utf8Sorting)
     }
-    readOnlyProperty(this, '_utf8Sorting', utf8Sorting)
 
     Object.freeze(this)
     /* Postcondition: The HKR object must be frozen */

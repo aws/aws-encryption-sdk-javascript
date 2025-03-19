@@ -18,11 +18,7 @@ import {
   importForWebCryptoDecryptionMaterial,
   AwsEsdkJsCryptoKey,
 } from '@aws-crypto/material-management-browser'
-import {
-  serializeFactory,
-  concatBuffers,
-  SerializeOptions,
-} from '@aws-crypto/serialize'
+import { serializeFactory, concatBuffers } from '@aws-crypto/serialize'
 import {
   _onEncrypt,
   _onDecrypt,
@@ -56,7 +52,7 @@ export type RawAesKeyringWebCryptoInput = {
   keyName: string
   masterKey: AwsEsdkJsCryptoKey
   wrappingSuite: WrappingSuiteIdentifier
-  utf8Sorting?: boolean | true
+  utf8Sorting?: boolean
 }
 
 export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
@@ -64,6 +60,7 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
   public declare keyName: string
   declare _wrapKey: WrapKey<WebCryptoAlgorithmSuite>
   declare _unwrapKey: UnwrapKey<WebCryptoAlgorithmSuite>
+  public declare _utf8Sorting: boolean
 
   constructor(input: RawAesKeyringWebCryptoInput) {
     super()
@@ -83,12 +80,15 @@ export class RawAesKeyringWebCrypto extends KeyringWebCrypto {
         flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
       })
 
-    const maybeUtf8Sorting = utf8Sorting ?? true
-    const serializeOptions: SerializeOptions = { utf8Sorting: maybeUtf8Sorting }
-    const { serializeEncryptionContext } = serializeFactory(
-      fromUtf8,
-      serializeOptions
-    )
+    if (utf8Sorting === undefined) {
+      readOnlyProperty(this, '_utf8Sorting', false)
+    } else {
+      readOnlyProperty(this, '_utf8Sorting', utf8Sorting)
+    }
+    // default will be false
+    const { serializeEncryptionContext } = serializeFactory(fromUtf8, {
+      utf8Sorting: this._utf8Sorting,
+    })
     const _wrapKey = async (material: WebCryptoEncryptionMaterial) => {
       /* The AAD section is uInt16BE(length) + AAD
        * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad

@@ -14,11 +14,7 @@ import {
   NodeAlgorithmSuite,
 } from '@aws-crypto/material-management-node'
 import { randomBytes, createCipheriv, createDecipheriv } from 'crypto'
-import {
-  serializeFactory,
-  concatBuffers,
-  SerializeOptions,
-} from '@aws-crypto/serialize'
+import { serializeFactory, concatBuffers } from '@aws-crypto/serialize'
 import {
   _onEncrypt,
   _onDecrypt,
@@ -78,18 +74,14 @@ export class RawAesKeyringNode extends KeyringNode {
       })
 
     if (utf8Sorting === undefined) {
-      readOnlyProperty(this, '_utf8Sorting', true)
+      readOnlyProperty(this, '_utf8Sorting', false)
     } else {
       readOnlyProperty(this, '_utf8Sorting', utf8Sorting)
     }
-    // default will be true
-    const serializeOptions: SerializeOptions = {
+    // default will be false
+    const { serializeEncryptionContext } = serializeFactory(fromUtf8, {
       utf8Sorting: this._utf8Sorting,
-    }
-    const { serializeEncryptionContext } = serializeFactory(
-      fromUtf8,
-      serializeOptions
-    )
+    })
     const _wrapKey = async (material: NodeEncryptionMaterial) => {
       /* The AAD section is uInt16BE(length) + AAD
        * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad
