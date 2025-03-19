@@ -22,15 +22,12 @@ import {
   MessageHeader,
   needs,
   DecryptOutput,
+  getCompatibleCommitmentPolicy,
 } from '@aws-crypto/client-node'
 import { version } from './version'
 import { URL } from 'url'
 import got from 'got'
 import streamToPromise from 'stream-to-promise'
-const { encrypt, decrypt, decryptUnsignedMessageStream } = buildClient({
-  commitmentPolicy: CommitmentPolicy.REQUIRE_ENCRYPT_ALLOW_DECRYPT,
-  maxEncryptedDataKeys: false,
-})
 import { ZipFile } from 'yazl'
 import { createWriteStream } from 'fs'
 import { v4 } from 'uuid'
@@ -59,6 +56,9 @@ async function runDecryption(
   testVectorInfo: TestVectorInfo
 ): Promise<DecryptOutput> {
   const cmm = decryptMaterialsManagerNode(testVectorInfo.keysInfo)
+  const { decrypt, decryptUnsignedMessageStream } = buildClient(
+    CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+  )
   if (testVectorInfo.decryptionMethod == 'streaming-unsigned-only') {
     const plaintext: Buffer[] = []
     let messageHeader: MessageHeader | false = false
@@ -148,6 +148,8 @@ export async function testEncryptVector(
   handleEncryptResult: HandleEncryptResult
 ): Promise<TestVectorResult> {
   const { name, keysInfo, encryptOp, plainTextData } = info
+  const commitmentPolicy = getCompatibleCommitmentPolicy(encryptOp.suiteId)
+  const { encrypt } = buildClient(commitmentPolicy)
   try {
     const cmm = encryptMaterialsManagerNode(keysInfo)
     const { result: encryptResult } = await encrypt(
