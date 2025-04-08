@@ -17,8 +17,8 @@ import {
 
 export const DDB_TABLE_NAME = 'KeyStoreDdbTable'
 export const LOGICAL_KEYSTORE_NAME = DDB_TABLE_NAME
-export const BRANCH_KEY_ID = '75789115-1deb-4fe3-a2ec-be9e885d1945'
-export const BRANCH_KEY_ACTIVE_VERSION = 'fed7ad33-0774-4f97-aa5e-6c766fc8af9f'
+export const BRANCH_KEY_ID = '3f43a9af-08c5-4317-b694-3d3e883dcaef'
+export const BRANCH_KEY_ACTIVE_VERSION = 'a4905627-4b7f-4272-a847-f50dae245737'
 export const BRANCH_KEY_ID_WITH_EC = '4bb57643-07c1-419e-92ad-0df0df149d7c'
 export const BRANCH_KEY_ACTIVE_VERSION_UTF8_BYTES = Buffer.from(
   BRANCH_KEY_ACTIVE_VERSION,
