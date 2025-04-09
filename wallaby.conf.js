@@ -35,6 +35,9 @@ module.exports = function (wallaby) {
     },
     env: {
       type: 'node',
+      AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+      AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+      AWS_SESSION_TOKEN: process.env.AWS_SESSION_TOKEN,
       params: {
         env: 'AWS_REGION=us-west-2;AWS_CONTAINER_CREDENTIALS_FULL_URI=http://127.0.0.1:9911'
       },

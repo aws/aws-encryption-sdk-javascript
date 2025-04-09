@@ -21,7 +21,7 @@ describe('serializeFactory:frameIv', () => {
     const fromUtf8 = () => {
       throw new Error('not used')
     }
-    const { frameIv } = serializeFactory(fromUtf8)
+    const { frameIv } = serializeFactory(fromUtf8, { utf8Sorting: false })
     const test = frameIv(12, 1)
     expect(test).to.be.instanceof(Uint8Array)
     expect(test.byteLength).to.eql(12)
@@ -32,7 +32,7 @@ describe('serializeFactory:frameIv', () => {
     const fromUtf8 = () => {
       throw new Error('not used')
     }
-    const { frameIv } = serializeFactory(fromUtf8)
+    const { frameIv } = serializeFactory(fromUtf8, { utf8Sorting: false })
     expect(() => frameIv(12, 0)).to.throw()
   })
 })
@@ -42,7 +42,9 @@ describe('serializeFactory:nonFramedBodyIv', () => {
     const fromUtf8 = () => {
       throw new Error('not used')
     }
-    const { nonFramedBodyIv } = serializeFactory(fromUtf8)
+    const { nonFramedBodyIv } = serializeFactory(fromUtf8, {
+      utf8Sorting: false,
+    })
     const test = nonFramedBodyIv(12)
     expect(test).to.be.instanceof(Uint8Array)
     expect(test.byteLength).to.eql(12)
@@ -55,7 +57,7 @@ describe('serializeFactory:headerAuthIv', () => {
     const fromUtf8 = () => {
       throw new Error('not used')
     }
-    const { headerAuthIv } = serializeFactory(fromUtf8)
+    const { headerAuthIv } = serializeFactory(fromUtf8, { utf8Sorting: false })
     const test = headerAuthIv(12)
     expect(test).to.be.instanceof(Uint8Array)
     expect(test.byteLength).to.eql(12)
@@ -68,7 +70,9 @@ describe('serializeFactory:frameHeader', () => {
     const fromUtf8 = () => {
       throw new Error('not used')
     }
-    const { frameHeader, frameIv } = serializeFactory(fromUtf8)
+    const { frameHeader, frameIv } = serializeFactory(fromUtf8, {
+      utf8Sorting: false,
+    })
     const sequenceNumber = 1
     const iv = frameIv(12, sequenceNumber)
     const test = frameHeader(sequenceNumber, iv)
@@ -83,7 +87,9 @@ describe('serializeFactory:finalFrameHeader', () => {
     const fromUtf8 = () => {
       throw new Error('not used')
     }
-    const { finalFrameHeader, frameIv } = serializeFactory(fromUtf8)
+    const { finalFrameHeader, frameIv } = serializeFactory(fromUtf8, {
+      utf8Sorting: false,
+    })
     const sequenceNumber = 1
     const iv = frameIv(12, sequenceNumber)
     const test = finalFrameHeader(sequenceNumber, iv, 999)
@@ -96,7 +102,9 @@ describe('serializeFactory:finalFrameHeader', () => {
 describe('serializeFactory:encodeEncryptionContext', () => {
   it('should return rational byte array', () => {
     const fromUtf8 = (input: string) => Buffer.from(input)
-    const { encodeEncryptionContext } = serializeFactory(fromUtf8)
+    const { encodeEncryptionContext } = serializeFactory(fromUtf8, {
+      utf8Sorting: false,
+    })
     const test = encodeEncryptionContext({
       information: '\u00bd + \u00bc = \u00be',
       some: 'public',
@@ -120,7 +128,9 @@ describe('serializeFactory:encodeEncryptionContext', () => {
 
   it('Precondition: The serialized encryption context entries must be sorted by UTF-8 key value.', () => {
     const fromUtf8 = (input: string) => Buffer.from(input)
-    const { encodeEncryptionContext } = serializeFactory(fromUtf8)
+    const { encodeEncryptionContext } = serializeFactory(fromUtf8, {
+      utf8Sorting: false,
+    })
     const test = encodeEncryptionContext({
       some: 'public',
       information: '\u00bd + \u00bc = \u00be',
@@ -142,7 +152,9 @@ describe('serializeFactory:encodeEncryptionContext', () => {
 describe('serializeFactory:serializeEncryptionContext', () => {
   it('should return rational context bytes', () => {
     const fromUtf8 = (input: string) => Buffer.from(input)
-    const { serializeEncryptionContext } = serializeFactory(fromUtf8)
+    const { serializeEncryptionContext } = serializeFactory(fromUtf8, {
+      utf8Sorting: false,
+    })
     const test = serializeEncryptionContext({
       some: 'public',
       information: '\u00bd + \u00bc = \u00be',
@@ -153,9 +165,108 @@ describe('serializeFactory:serializeEncryptionContext', () => {
     expect(test).to.deep.equal(fixtures.basicEncryptionContext())
   })
 
+  describe('serializeFactory:serializeEncryptionContext utf8Sorting', () => {
+    it('should return rational context bytes', () => {
+      const fromUtf8 = (input: string) => Buffer.from(input)
+      const { serializeEncryptionContext: serializeWithUtf8Sorting } =
+        serializeFactory(fromUtf8, {
+          utf8Sorting: true,
+        })
+      const { serializeEncryptionContext: serializeWithoutUtf8Sorting } =
+        serializeFactory(fromUtf8, {
+          utf8Sorting: false,
+        })
+      // same test as serializeFactory:serializeEncryptionContext to show that with simple ec
+      // we still have the same serialized encryption context.
+      const test = serializeWithUtf8Sorting({
+        some: 'public',
+        information: '\u00bd + \u00bc = \u00be',
+      })
+      const test2 = serializeWithoutUtf8Sorting({
+        some: 'public',
+        information: '\u00bd + \u00bc = \u00be',
+      })
+
+      expect(test).to.be.instanceof(Uint8Array)
+      expect(test.byteLength).to.eql(45)
+      expect(test).to.deep.equal(fixtures.basicEncryptionContext())
+      expect(test).to.deep.equal(test2)
+    })
+  })
+
+  it('test utf8 serialization with high utf8 codepoints', () => {
+    const fromUtf8 = (input: string) => Buffer.from(input)
+    const { serializeEncryptionContext: serializeWithUtf8Sorting } =
+      serializeFactory(fromUtf8, {
+        utf8Sorting: true,
+      })
+    const { serializeEncryptionContext: serializeWithoutUtf8Sorting } =
+      serializeFactory(fromUtf8, {
+        utf8Sorting: false,
+      })
+    // same test as serializeFactory:serializeEncryptionContext to show that with simple ec
+    // we still have the same serialized encryption context.
+    const test = serializeWithUtf8Sorting({
+      some: 'public',
+      '𝄢': 'a',
+    })
+    const test2 = serializeWithoutUtf8Sorting({
+      some: 'public',
+      '𝄢': 'a',
+    })
+
+    expect(test).to.be.instanceof(Uint8Array)
+    expect(test.byteLength).to.eql(27)
+    expect(test).to.deep.equal(
+      fixtures.encryptionContextWithHighUtf8CodePoint()
+    )
+
+    expect(test2).to.be.instanceof(Uint8Array)
+    expect(test2.byteLength).to.eql(27)
+
+    expect(test2).to.not.deep.equal(
+      fixtures.encryptionContextWithHighUtf8CodePoint()
+    )
+    expect(test).to.not.deep.equal(test2)
+  })
+
+  it('test utf8 serialization with high utf8 codepoints and reserved ec keyword', () => {
+    const fromUtf8 = (input: string) => Buffer.from(input)
+    const { serializeEncryptionContext: serializeWithUtf8Sorting } =
+      serializeFactory(fromUtf8, {
+        utf8Sorting: true,
+      })
+    const { serializeEncryptionContext: serializeWithoutUtf8Sorting } =
+      serializeFactory(fromUtf8, {
+        utf8Sorting: false,
+      })
+    // same test as serializeFactory:serializeEncryptionContext to show that with simple ec
+    // we still have the same serialized encryption context.
+    const utf8SortedTest = serializeWithUtf8Sorting({
+      'aws-crypto-public-key': 'public',
+      '𝄢': 'a',
+    })
+    const stringSortedTest = serializeWithoutUtf8Sorting({
+      'aws-crypto-public-key': 'public',
+      '𝄢': 'a',
+    })
+
+    expect(utf8SortedTest).to.be.instanceof(Uint8Array)
+    expect(utf8SortedTest.byteLength).to.eql(44)
+    expect(utf8SortedTest).to.deep.equal(
+      fixtures.encryptionContextWithHighUtf8CodePointWithReservedKeyword()
+    )
+
+    expect(stringSortedTest).to.be.instanceof(Uint8Array)
+    expect(stringSortedTest.byteLength).to.eql(44)
+    expect(utf8SortedTest).to.not.deep.equal(stringSortedTest)
+  })
+
   it('Check for early return (Postcondition): If there is no context then the length of the _whole_ serialized portion is 0.', () => {
     const fromUtf8 = (input: string) => Buffer.from(input)
-    const { serializeEncryptionContext } = serializeFactory(fromUtf8)
+    const { serializeEncryptionContext } = serializeFactory(fromUtf8, {
+      utf8Sorting: false,
+    })
     const test = serializeEncryptionContext({})
 
     expect(test).to.be.instanceof(Uint8Array)
@@ -166,7 +277,9 @@ describe('serializeFactory:serializeEncryptionContext', () => {
 describe('serializeFactory:serializeEncryptedDataKeys', () => {
   it('should return a rational data key section', () => {
     const fromUtf8 = (input: string) => Buffer.from(input)
-    const { serializeEncryptedDataKeys } = serializeFactory(fromUtf8)
+    const { serializeEncryptedDataKeys } = serializeFactory(fromUtf8, {
+      utf8Sorting: false,
+    })
     const test = serializeEncryptedDataKeys([
       {
         providerInfo: 'firstKey',
@@ -189,7 +302,9 @@ describe('serializeFactory:serializeEncryptedDataKeys', () => {
 describe('serializeFactory:serializeMessageHeader', () => {
   it('should return a rational raw header', () => {
     const fromUtf8 = (input: string) => Buffer.from(input)
-    const { serializeMessageHeader } = serializeFactory(fromUtf8)
+    const { serializeMessageHeader } = serializeFactory(fromUtf8, {
+      utf8Sorting: false,
+    })
     const test = serializeMessageHeader({
       version: SerializationVersion.V1,
       type: ObjectType.CUSTOMER_AE_DATA,
@@ -225,7 +340,9 @@ describe('serializeFactory:serializeMessageHeader', () => {
 
   it('should return a header with 0,0 for context length and _not_ 0,0 for element count', () => {
     const fromUtf8 = (input: string) => Buffer.from(input)
-    const { serializeMessageHeader } = serializeFactory(fromUtf8)
+    const { serializeMessageHeader } = serializeFactory(fromUtf8, {
+      utf8Sorting: false,
+    })
     const test = serializeMessageHeader({
       version: SerializationVersion.V1,
       type: ObjectType.CUSTOMER_AE_DATA,
@@ -260,7 +377,9 @@ describe('serializeFactory:serializeMessageHeader', () => {
 
   it('Precondition: Must be a version that can be serialized.', () => {
     const fromUtf8 = (input: string) => Buffer.from(input)
-    const { serializeMessageHeader } = serializeFactory(fromUtf8)
+    const { serializeMessageHeader } = serializeFactory(fromUtf8, {
+      utf8Sorting: false,
+    })
     expect(() => serializeMessageHeader({ version: -1 } as any)).to.throw(
       'Unsupported version.'
     )

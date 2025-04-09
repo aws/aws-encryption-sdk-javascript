@@ -26,9 +26,17 @@ import {
   SerializationVersion,
 } from './identifiers'
 import { uInt16BE, uInt8, uInt32BE } from './uint_util'
-import { MessageHeader, MessageHeaderV1, MessageHeaderV2 } from './types'
+import {
+  MessageHeader,
+  MessageHeaderV1,
+  MessageHeaderV2,
+  SerializeOptions,
+} from './types'
 
-export function serializeFactory(fromUtf8: (input: any) => Uint8Array) {
+export function serializeFactory(
+  fromUtf8: (input: any) => Uint8Array,
+  sorting: SerializeOptions
+) {
   return {
     frameIv,
     nonFramedBodyIv,
@@ -88,11 +96,21 @@ export function serializeFactory(fromUtf8: (input: any) => Uint8Array) {
   function encodeEncryptionContext(
     encryptionContext: EncryptionContext
   ): Uint8Array[] {
-    return (
-      Object.entries(encryptionContext)
-        /* Precondition: The serialized encryption context entries must be sorted by UTF-8 key value. */
-        .sort(([aKey], [bKey]) => aKey.localeCompare(bKey))
+    // use closure value from the serializeFactory
+    // If the encryption context contains high order
+    // utf8 code points the "old" implementation would sort these values
+    // based on their values, see the false branch of this function.
+    // This led to different sorting if using these high order utf8 code points,
+    // which led to decryption failures from other ESDK language implementations
+    // that correctly sorted the encryption context by sorting based on the utf8
+    // values as opposed to the string value.
+    // See, https://github.com/aws/aws-encryption-sdk-javascript/issues/428
+    // for mote details
+    const { utf8Sorting } = sorting
+    if (utf8Sorting) {
+      return Object.entries(encryptionContext)
         .map((entries) => entries.map(fromUtf8))
+        .sort(([aKey], [bKey]) => compare(aKey, bKey))
         .map(([key, value]) =>
           concatBuffers(
             uInt16BE(key.byteLength),
@@ -101,7 +119,41 @@ export function serializeFactory(fromUtf8: (input: any) => Uint8Array) {
             value
           )
         )
-    )
+    } else {
+      return (
+        Object.entries(encryptionContext)
+          /* Precondition: The serialized encryption context entries must be sorted by UTF-8 key value. */
+          .sort(([aKey], [bKey]) => aKey.localeCompare(bKey))
+          .map((entries) => entries.map(fromUtf8))
+          .map(([key, value]) =>
+            concatBuffers(
+              uInt16BE(key.byteLength),
+              key,
+              uInt16BE(value.byteLength),
+              value
+            )
+          )
+      )
+    }
+  }
+
+  function compare(a: Uint8Array, b: Uint8Array): number {
+    for (let i = 0; i < a.byteLength; i++) {
+      if (a[i] < b[i]) {
+        return -1
+      }
+
+      if (a[i] > b[i]) {
+        return 1
+      }
+    }
+    if (a.byteLength > b.byteLength) {
+      return 1
+    }
+    if (a.byteLength < b.byteLength) {
+      return -1
+    }
+    return 0
   }
 
   function serializeEncryptionContext(encryptionContext: EncryptionContext) {

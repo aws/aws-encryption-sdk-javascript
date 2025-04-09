@@ -24,6 +24,7 @@ export {
   MessageFormat,
   NonCommittingAlgorithmSuiteIdentifier,
   CommittingAlgorithmSuiteIdentifier,
+  getCompatibleCommitmentPolicy,
 } from './algorithm_suites'
 
 export { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'

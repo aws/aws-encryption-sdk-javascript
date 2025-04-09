@@ -13,11 +13,22 @@ import {
   NonSigningAlgorithmSuiteIdentifier,
   SignaturePolicy,
   SignaturePolicySuites,
+  getCompatibleCommitmentPolicy,
 } from '../src/algorithm_suites'
 
 describe('AlgorithmSuiteIdentifier', () => {
   it('should be frozen', () => {
     expect(Object.isFrozen(AlgorithmSuiteIdentifier)).to.eql(true)
+  })
+  it('get compatible commitment policy', () => {
+    // 0x0014 is a non-commiting algorithm suite
+    expect(getCompatibleCommitmentPolicy(0x0014)).to.eql(
+      CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+    )
+    // 0x0478 is a commiting algorithm suite
+    expect(getCompatibleCommitmentPolicy(0x0478)).to.eql(
+      CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
+    )
   })
 })
 

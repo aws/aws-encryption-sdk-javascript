@@ -5,7 +5,6 @@ import { randomBytes } from 'crypto'
 import {
   wrapAad,
   destructureCiphertext,
-  serializeEncryptionContext,
   unwrapEncryptedDataKey,
   wrapPlaintextDataKey,
 } from '../src/kms_hkeyring_node_helpers'
@@ -17,6 +16,7 @@ import {
   NodeDecryptionMaterial,
   NodeEncryptionMaterial,
 } from '@aws-crypto/material-management'
+import { serializeFactory, SerializeOptions } from '@aws-crypto/serialize'
 import { v4 } from 'uuid'
 
 describe('KmsHierarchicalKeyRingNode: helpers', () => {
@@ -109,11 +109,23 @@ describe('KmsHierarchicalKeyRingNode: helpers', () => {
     const encryptionContext = {
       key: 'value',
     }
+    const utf8Sorting: SerializeOptions = { utf8Sorting: false }
+    const stringToUtf8Bytes = (input: string): Buffer =>
+      Buffer.from(input, 'utf-8')
+    const { serializeEncryptionContext } = serializeFactory(
+      stringToUtf8Bytes,
+      utf8Sorting
+    )
 
     it('Precondition: Branch key version must be 16 bytes ', () => {
       const badVersion = randomBytes(15)
       expect(() =>
-        wrapAad(branchKeyIdAsBytes, badVersion, encryptionContext)
+        wrapAad(
+          branchKeyIdAsBytes,
+          badVersion,
+          encryptionContext,
+          utf8Sorting.utf8Sorting
+        )
       ).to.throw('Branch key version must be 16 bytes')
     })
 
@@ -128,7 +140,8 @@ describe('KmsHierarchicalKeyRingNode: helpers', () => {
         wrapAad(
           branchKeyIdAsBytes,
           branchKeyVersionAsBytes,
-          unserializeableEc as any
+          unserializeableEc as any,
+          utf8Sorting.utf8Sorting
         )
       ).to.throw()
     })
@@ -137,7 +150,8 @@ describe('KmsHierarchicalKeyRingNode: helpers', () => {
       const wrappedAad = wrapAad(
         branchKeyIdAsBytes,
         branchKeyVersionAsBytes,
-        encryptionContext
+        encryptionContext,
+        utf8Sorting.utf8Sorting
       )
 
       let startIdx = 0
@@ -200,15 +214,18 @@ describe('KmsHierarchicalKeyRingNode: helpers', () => {
           algSuite,
           encryptionContext
         )
+        const utf8Sorting: SerializeOptions = { utf8Sorting: false }
 
         const actualPdk = unwrapEncryptedDataKey(
           wrapPlaintextDataKey(
             expectedPdk,
             branchKeyMaterial,
-            encryptionMaterial
+            encryptionMaterial,
+            utf8Sorting.utf8Sorting
           ),
           branchKeyMaterial,
-          decryptionMaterial
+          decryptionMaterial,
+          utf8Sorting.utf8Sorting
         )
         expect(actualPdk).to.deep.equal(expectedPdk)
       }
@@ -255,12 +272,14 @@ describe('KmsHierarchicalKeyRingNode: helpers', () => {
           algSuite,
           encryptionContext
         )
+        const utf8Sorting: SerializeOptions = { utf8Sorting: false }
 
         expect(() =>
           unwrapEncryptedDataKey(
             ciphertext,
             branchKeyMaterial,
-            decryptionMaterial
+            decryptionMaterial,
+            utf8Sorting.utf8Sorting
           )
         ).to.throw('Unsupported state or unable to authenticate data')
       }
