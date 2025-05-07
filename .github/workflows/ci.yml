@@ -7,7 +7,7 @@ jobs:
   CI:
     strategy:
       matrix:
-          node: [16, 18.x, 20.x, 22.x, latest]
+          node: [18.x, 20.x, 22.x, latest]
       fail-fast: false
     runs-on: codebuild-AWS-ESDK-JS-Release-${{ github.run_id }}-${{ github.run_attempt }}-ubuntu-5.0-large
     permissions:
