@@ -109,7 +109,7 @@
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.9.1",
     "@types/yazl": "^2.4.6",
-    "@typescript-eslint/eslint-plugin": "^4.31.1",
+    "@typescript-eslint/eslint-plugin": "^8.40.0",
     "@typescript-eslint/parser": "^4.31.1",
     "aws-sdk": "^2.1409.0",
     "buffer": "^6.0.3",
