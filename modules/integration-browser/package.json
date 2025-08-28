@@ -27,6 +27,7 @@
     "@types/stream-to-promise": "^2.2.0",
     "@types/yargs": "^17.0.1",
     "buffer": "^6.0.3",
+    "end-of-stream": "<=1.4.4",
     "got": "^11.8.0",
     "jasmine-core": "^3.5.0",
     "karma": "^6.3.4",
