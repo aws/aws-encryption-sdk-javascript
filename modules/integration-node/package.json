@@ -1,7 +1,9 @@
 {
   "name": "@aws-crypto/integration-node",
-  "version": "4.0.0",
+  "version": "4.2.1",
   "scripts": {
+    "prepublishOnly": "npm run generate-version.ts; npm run build",
+    "generate-version.ts": "npx genversion --es6  src/version.ts",
     "build": "tsc -b tsconfig.json",
     "lint": "run-s lint-*",
     "lint-eslint": "eslint src/*.ts test/*.ts",
@@ -24,7 +26,8 @@
     "got": "^11.8.0",
     "stream-to-promise": "^3.0.0",
     "tslib": "^2.3.0",
-    "yargs": "^17.0.1"
+    "yargs": "^17.0.1",
+    "yazl": "^3.3.1"
   },
   "sideEffects": false,
   "main": "./build/main/src/index.js",

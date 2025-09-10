@@ -1,0 +1,42 @@
+{
+  "name": "@aws-crypto/kdf-ctr-mode-node",
+  "version": "4.1.0",
+  "description": "nodejs kdf ctr mode crypto primitive",
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
+    "lint": "run-s lint-*",
+    "lint-eslint": "eslint src/*.ts test/**/*.ts",
+    "lint-prettier": "prettier -c src/*.ts test/**/*.ts",
+    "mocha": "mocha --require ts-node/register test/**/*test.ts",
+    "test": "npm run lint && npm run coverage",
+    "coverage": "nyc -e .ts npm run mocha"
+  },
+  "repository": "",
+  "author": {
+    "name": "AWS Crypto Tools Team",
+    "email": "aws-cryptools@amazon.com",
+    "url": "https://docs.aws.amazon.com/aws-crypto-tools/index.html?id=docs_gateway#lang/en_us"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "tslib": "^2.2.0"
+  },
+  "sideEffects": false,
+  "main": "./build/main/src/index.js",
+  "module": "./build/module/src/index.js",
+  "types": "./build/main/src/index.d.ts",
+  "files": [
+    "build/**/src/*"
+  ],
+  "standard": {
+    "fix": true,
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ]
+  },
+  "devDependencies": {
+    "@types/sinon": "^17.0.3"
+  }
+}

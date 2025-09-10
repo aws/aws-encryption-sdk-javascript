@@ -89,6 +89,7 @@ export function aesKeyring(keyInfo: AesKeyInfo, key: AESKey) {
     keyNamespace,
     unencryptedMasterKey,
     wrappingSuite,
+    utf8Sorting: true,
   })
 }
 

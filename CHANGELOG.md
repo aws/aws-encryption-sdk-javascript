@@ -3,6 +3,39 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.2.1](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.2.0...v4.2.1) (2025-04-10)
+
+### Bug Fixes
+
+- add serializationOptions flag for AAD UTF8 sorting ([#1581](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1581)) ([b80cad1](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/b80cad14df361b4384aeed5753efb57c69d77377))
+
+# [4.2.0](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.1.0...v4.2.0) (2025-02-27)
+
+### Bug Fixes
+
+- include uuid as a dependency in material-management ([#1564](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1564)) ([dee213b](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/dee213bc91dd0cde8dd177da52b739e10129f514))
+
+### Features
+
+- integration-node can produce decrypt manifests ([#1580](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1580)) ([95f0fa1](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/95f0fa10b7d94ccc142fc2e89b2ffa49620285c9))
+
+# [4.1.0](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.0.2...v4.1.0) (2025-01-16)
+
+### Features
+
+- Adding the hierarchical keyring ([#1537](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1537)) ([43dcb16](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/43dcb166d5ac76d744ea283808006f65915b9730))
+
+## [4.0.2](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.0.1...v4.0.2) (2024-10-21)
+
+**Note:** Version bump only for package aws-encryption-sdk-javascript
+
+## [4.0.1](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.0.0...v4.0.1) (2024-07-30)
+
+### Bug Fixes
+
+- Add CVE-2023-46809 option to integration node ([#1424](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1424)) ([84a7034](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/84a703440aa7313ad0c779e50b7c052aa8dd5e7b))
+- **CI:** npx_verdaccio ([#1190](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1190)) ([1051f19](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/1051f19578ba54bc476a30dedf5779576cf46d9f))
+
 # [4.0.0](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v3.2.2...v4.0.0) (2023-07-17)
 
 - feat!: Remove AWS SDK V2 Dependency (#1180) ([1d74248](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/1d742489b436748a656ecc2abce00e99353d1d62)), closes [#1180](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1180)

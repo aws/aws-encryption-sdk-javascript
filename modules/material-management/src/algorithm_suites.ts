@@ -250,6 +250,19 @@ export const CommitmentPolicySuites = Object.freeze({
   }),
 })
 
+export function getCompatibleCommitmentPolicy(
+  suiteId: AlgorithmSuiteIdentifier
+) {
+  // If it is a algorithm suite with no key commitment
+  // we use FORBID_ENCRYPT_ALLOW_DECRYPT
+  // otherwise we use REQUIRE_ENCRYPT_REQUIRE_DECRYPT
+  if (CommittingAlgorithmSuiteIdentifier[suiteId]) {
+    return CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
+  } else {
+    return CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+  }
+}
+
 export type AlgorithmSuiteName = keyof typeof AlgorithmSuiteIdentifier
 export type AlgorithmSuiteTypeNode = 'node'
 export type AlgorithmSuiteTypeWebCrypto = 'webCrypto'

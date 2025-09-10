@@ -98,6 +98,16 @@ export function basicEncryptionContext() {
   return new Uint8Array([0,43,0,2,0,11,105,110,102,111,114,109,97,116,105,111,110,0,12,194,189,32,43,32,194,188,32,61,32,194,190,0,4,115,111,109,101,0,6,112,117,98,108,105,99]);
 }
 
+export function encryptionContextWithHighUtf8CodePoint() {
+  // prettier-ignore
+  return new Uint8Array([0,25,0,2,0,4,115,111,109,101,0,6,112,117,98,108,105,99,0,4,240,157,132,162,0,1,97]);
+}
+
+export function encryptionContextWithHighUtf8CodePointWithReservedKeyword() {
+  // prettier-ignore
+  return new Uint8Array([0,42,0,2,0,21,97,119,115,45,99,114,121,112,116,111,45,112,117,98,108,105,99,45,107,101,121,0,6,112,117,98,108,105,99,0,4,240,157,132,162,0,1,97]);
+}
+
 export function missingDataEncryptionContext() {
   // prettier-ignore
   return new Uint8Array([0,43,0,2,0,11,105,110,102,111,114,109,97,116,105,111,110,0,12,194,189,32,43,32,194,188,32,61,32,194,190,0,4,115,111,109,101,0,6,112,117,98,108]);

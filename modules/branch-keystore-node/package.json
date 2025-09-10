@@ -1,0 +1,34 @@
+{
+  "name": "@aws-crypto/branch-keystore-node",
+  "version": "4.2.1",
+  "scripts": {
+    "prepublishOnly": "npm run generate-version.ts; npm run build",
+    "generate-version.ts": "npx genversion --es6  src/version.ts",
+    "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
+    "lint": "run-s lint-*",
+    "lint-eslint": "eslint src/*.ts test/**/*.ts",
+    "lint-prettier": "prettier -c src/*.ts test/**/*.ts",
+    "mocha": "mocha --require ts-node/register test/**/*test.ts",
+    "test": "npm run lint && npm run coverage",
+    "coverage": "nyc -e .ts npm run mocha"
+  },
+  "author": {
+    "name": "AWS Crypto Tools Team",
+    "email": "aws-crypto-tools-team@amazon.com",
+    "url": "https://github.com/aws/aws-encryption-sdk-javascript"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@aws-crypto/kms-keyring": "file:../kms-keyring",
+    "@aws-sdk/client-dynamodb": "^3.616.0",
+    "@aws-sdk/util-dynamodb": "^3.616.0",
+    "tslib": "^2.2.0"
+  },
+  "sideEffects": false,
+  "main": "./build/main/src/index.js",
+  "module": "./build/module/src/index.js",
+  "types": "./build/main/src/index.d.ts",
+  "files": [
+    "build/**/src/*"
+  ]
+}

@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.2.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.0...v4.2.1) (2025-04-10)
+
+### Bug Fixes
+
+- add serializationOptions flag for AAD UTF8 sorting ([#1581](https://github.com/aws/aws-encryption-sdk-javascript/issues/1581)) ([b80cad1](https://github.com/aws/aws-encryption-sdk-javascript/commit/b80cad14df361b4384aeed5753efb57c69d77377))
+
+# [4.2.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.1.0...v4.2.0) (2025-02-27)
+
+### Features
+
+- integration-node can produce decrypt manifests ([#1580](https://github.com/aws/aws-encryption-sdk-javascript/issues/1580)) ([95f0fa1](https://github.com/aws/aws-encryption-sdk-javascript/commit/95f0fa10b7d94ccc142fc2e89b2ffa49620285c9))
+
+# [4.1.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.0.2...v4.1.0) (2025-01-16)
+
+**Note:** Version bump only for package @aws-crypto/integration-node
+
+## [4.0.2](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.0.1...v4.0.2) (2024-10-21)
+
+**Note:** Version bump only for package @aws-crypto/integration-node
+
+## [4.0.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.0.0...v4.0.1) (2024-07-30)
+
+### Bug Fixes
+
+- Add CVE-2023-46809 option to integration node ([#1424](https://github.com/aws/aws-encryption-sdk-javascript/issues/1424)) ([84a7034](https://github.com/aws/aws-encryption-sdk-javascript/commit/84a703440aa7313ad0c779e50b7c052aa8dd5e7b))
+
 # [4.0.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v3.2.2...v4.0.0) (2023-07-17)
 
 **Note:** Version bump only for package @aws-crypto/integration-node

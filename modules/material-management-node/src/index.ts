@@ -39,4 +39,5 @@ export {
   MessageFormat,
   ClientOptions,
   Newable,
+  getCompatibleCommitmentPolicy,
 } from '@aws-crypto/material-management'
