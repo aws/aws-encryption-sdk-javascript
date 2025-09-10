@@ -34,7 +34,7 @@ import { Duplex } from 'stream'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const { serializeMessageHeader, headerAuthIv, buildMessageHeader } =
-  serializeFactory(fromUtf8)
+  serializeFactory(fromUtf8, { utf8Sorting: true })
 
 export interface EncryptStreamInput {
   suiteId?: AlgorithmSuiteIdentifier

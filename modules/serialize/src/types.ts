@@ -105,3 +105,7 @@ export interface AlgorithmSuiteConstructor<Suite extends AlgorithmSuite> {
 export interface DeserializeOptions {
   maxEncryptedDataKeys: number | false
 }
+
+export interface SerializeOptions {
+  utf8Sorting: boolean | false
+}

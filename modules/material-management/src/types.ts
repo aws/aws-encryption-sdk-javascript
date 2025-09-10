@@ -5,6 +5,7 @@ import { NodeAlgorithmSuite } from './node_algorithms'
 import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 import { EncryptedDataKey } from './encrypted_data_key'
 import {
+  NodeBranchKeyMaterial,
   NodeDecryptionMaterial,
   NodeEncryptionMaterial,
   WebCryptoDecryptionMaterial,
@@ -79,6 +80,8 @@ export type DecryptionMaterial<Suite> = Suite extends NodeAlgorithmSuite
   ? WebCryptoDecryptionMaterial
   : never
 
+export type BranchKeyMaterial = NodeBranchKeyMaterial
+
 /* These are copies of the v12 Node.js types.
  * I copied them here to avoid exporting v12 types
  * and forcing consumers to install/use v12 in their projects.
@@ -112,6 +115,7 @@ export interface AwsEsdkKeyObject {
   export(options?: { format: 'jwk' }): AwsEsdkJsonWebKey
   symmetricSize?: number
   type: AwsEsdkKeyObjectType
+  equals(otherKeyObject: AwsEsdkKeyObject): boolean
 }
 export type AwsEsdkCreateSecretKey = (key: Uint8Array) => AwsEsdkKeyObject
 

@@ -18,7 +18,7 @@ import {
 } from '@aws-crypto/material-management-node'
 
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
-const serialize = serializeFactory(fromUtf8)
+const serialize = serializeFactory(fromUtf8, { utf8Sorting: true })
 const { finalFrameHeader, frameHeader } = serialize
 const aadUtility = aadFactory(fromUtf8)
 

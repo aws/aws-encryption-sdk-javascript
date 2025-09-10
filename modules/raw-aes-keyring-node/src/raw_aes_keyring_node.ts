@@ -28,7 +28,6 @@ import {
 const fromUtf8 = (input: string) => Buffer.from(input, 'utf8')
 const toUtf8 = (input: Uint8Array) =>
   Buffer.from(input.buffer, input.byteOffset, input.byteLength).toString('utf8')
-const { serializeEncryptionContext } = serializeFactory(fromUtf8)
 const { rawAesEncryptedDataKey } = rawAesEncryptedDataKeyFactory(
   toUtf8,
   fromUtf8
@@ -40,6 +39,7 @@ export type RawAesKeyringNodeInput = {
   keyName: string
   unencryptedMasterKey: Uint8Array
   wrappingSuite: WrappingSuiteIdentifier
+  utf8Sorting?: boolean
 }
 
 export class RawAesKeyringNode extends KeyringNode {
@@ -47,11 +47,18 @@ export class RawAesKeyringNode extends KeyringNode {
   public declare keyName: string
   declare _wrapKey: WrapKey<NodeAlgorithmSuite>
   declare _unwrapKey: UnwrapKey<NodeAlgorithmSuite>
+  public declare _utf8Sorting: boolean
 
   constructor(input: RawAesKeyringNodeInput) {
     super()
 
-    const { keyName, keyNamespace, unencryptedMasterKey, wrappingSuite } = input
+    const {
+      keyName,
+      keyNamespace,
+      unencryptedMasterKey,
+      wrappingSuite,
+      utf8Sorting,
+    } = input
     /* Precondition: AesKeyringNode needs identifying information for encrypt and decrypt. */
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
     /* Precondition: RawAesKeyringNode requires wrappingSuite to be a valid RawAesWrappingSuite. */
@@ -66,6 +73,15 @@ export class RawAesKeyringNode extends KeyringNode {
         flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
       })
 
+    if (utf8Sorting === undefined) {
+      readOnlyProperty(this, '_utf8Sorting', false)
+    } else {
+      readOnlyProperty(this, '_utf8Sorting', utf8Sorting)
+    }
+    // default will be false
+    const { serializeEncryptionContext } = serializeFactory(fromUtf8, {
+      utf8Sorting: this._utf8Sorting,
+    })
     const _wrapKey = async (material: NodeEncryptionMaterial) => {
       /* The AAD section is uInt16BE(length) + AAD
        * see: https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html#header-aad

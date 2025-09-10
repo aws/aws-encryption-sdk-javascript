@@ -214,6 +214,50 @@ describe('decrypt', () => {
       })
     ).to.rejectedWith(Error, 'maxEncryptedDataKeys exceeded.')
   })
+
+  it('will fail to decrypt ciphertext with high utf8 codepoints and no utf8 sorting on keyring', async () => {
+    const { decrypt } = buildDecrypt({
+      commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      maxEncryptedDataKeys: 3,
+    })
+    const hkeyring = fixtures.hKeyring(false)
+    const ciphertext = fixtures.hierarchyMessageWithHighUtf8CodePoints()
+
+    await expect(
+      decrypt(hkeyring, ciphertext, {
+        encoding: 'base64',
+      })
+    ).to.rejectedWith(Error, 'Unsupported state or unable to authenticate data')
+  })
+
+  it('will decrypt ciphertext with high utf8 codepoints with a keyring configured to do utf8 sorting', async () => {
+    const { decrypt } = buildDecrypt({
+      commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      maxEncryptedDataKeys: 3,
+    })
+    const hkeyring = fixtures.hKeyring(true)
+    const ciphertext = fixtures.hierarchyMessageWithHighUtf8CodePoints()
+    const { plaintext } = await decrypt(hkeyring, ciphertext, {
+      encoding: 'base64',
+    })
+    expect(plaintext).to.deep.equal(Buffer.from('Hello World'))
+  })
+
+  it('will decrypt ciphertext with high utf8 codepoints with a multikeyring with both utf8 and no utf8 sorting', async () => {
+    const { decrypt } = buildDecrypt({
+      commitmentPolicy: CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT,
+      maxEncryptedDataKeys: 3,
+    })
+    const hkeyringUtf8 = fixtures.hKeyring(true)
+    const hkeyringNoUtf8 = fixtures.hKeyring(false)
+    const multikeyring = fixtures.multiKeyring(hkeyringUtf8, hkeyringNoUtf8)
+
+    const ciphertext = fixtures.hierarchyMessageWithHighUtf8CodePoints()
+    const { plaintext } = await decrypt(multikeyring, ciphertext, {
+      encoding: 'base64',
+    })
+    expect(plaintext).to.deep.equal(Buffer.from('Hello World'))
+  })
 })
 
 function chunkCipherTextStream(ciphertext: Buffer, { size }: { size: number }) {
