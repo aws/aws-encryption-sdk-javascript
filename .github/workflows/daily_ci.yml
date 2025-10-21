@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: "00 15 * * 1-5"
 
+permissions:
+  contents: read
+
 jobs:
   DAILY_CI:
     # Don't run the cron builds on forks
