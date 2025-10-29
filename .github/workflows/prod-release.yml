@@ -143,8 +143,6 @@ jobs:
           npm run build
 
       - name: Run integration tests with local publish
-        env:
-          PUBLISH_LOCAL: "true"
         run: |
           npm run verdaccio-publish
           npm run verdaccio-node-decrypt
@@ -181,8 +179,6 @@ jobs:
           npm run build
 
       - name: Run integration tests with local publish
-        env:
-          PUBLISH_LOCAL: "true"
         run: |
           npm run verdaccio-publish
           npm run verdaccio-browser-decrypt
@@ -260,8 +256,6 @@ jobs:
         run: npm ci --unsafe-perm
 
       - name: Validate published packages - Node.js
-        env:
-          PUBLISH_LOCAL: "false"
         run: |
           npm run verdaccio-node-decrypt
           npm run verdaccio-node-encrypt
@@ -297,8 +291,6 @@ jobs:
         run: npm ci --unsafe-perm
 
       - name: Validate published packages - Browser
-        env:
-          PUBLISH_LOCAL: "false"
         # This will fail until the publish step is run for the first time.
         # A dependency change broke the browser tests.
         # Commit fb10180dfb451ff5359ebc703c58eaf5393971ac fixes this.
