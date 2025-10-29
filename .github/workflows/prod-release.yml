@@ -301,6 +301,11 @@ jobs:
       - name: Validate published packages - Browser
         env:
           PUBLISH_LOCAL: "false"
+        # This will fail until the publish step is run for the first time.
+        # A dependency change broke the browser tests.
+        # Commit fb10180dfb451ff5359ebc703c58eaf5393971ac fixes this.
+        # The first publish step for v4.2.2+ should make this pass.
+        # TODO: Remove this comment block after first successful publish of v4.2.2+.
         run: |
           npm run verdaccio-browser-decrypt
           npm run verdaccio-browser-encrypt
