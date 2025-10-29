@@ -215,11 +215,15 @@ jobs:
         run: |
           git config --global user.name "aws-crypto-tools-ci-bot"
           git config --global user.email "no-reply@noemail.local"
-          git checkout $BRANCH
+          # TODO: Uncomment when adding publish step
+          # git checkout $BRANCH  # Commented out to test on current branch
 
-      - name: Version packages
+      - name: Version packages (dry run - no push)
         run: |
-          npx lerna version --conventional-commits --git-remote origin --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
+          # For testing: no push to avoid modifying master branch
+          npx lerna version --conventional-commits --no-push --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
+          # TODO: uncomment line below and remove line above when adding publish step
+          # npx lerna version --conventional-commits --git-remote origin --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
           git log -n 1
 
   # Once semantic versioning has run and bumped versions, publish to npm
@@ -227,4 +231,70 @@ jobs:
   # https://docs.npmjs.com/trusted-publishers
 
   # Once publishing is complete, validate that the published packages are useable
-  # TODO: Publish step based on CodeBuild jobs
+  validate-nodejs:
+    runs-on: ubuntu-latest
+    # TODO: Uncomment when adding publish step
+    # needs: [publish]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Configure AWS Credentials for Tests
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
+          role-session-name: JavaScriptTests
+
+      - name: Install dependencies
+        run: npm ci --unsafe-perm
+
+      - name: Validate published packages - Node.js
+        env:
+          PUBLISH_LOCAL: "false"
+        run: |
+          npm run verdaccio-node-decrypt
+          npm run verdaccio-node-encrypt
+
+  validate-browser:
+    runs-on: ubuntu-latest
+    # TODO: Uncomment when adding publish step
+    # needs: [publish]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Configure AWS Credentials for Tests
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
+          role-session-name: JavaScriptTests
+
+      - name: Install dependencies
+        run: npm ci --unsafe-perm
+
+      - name: Validate published packages - Browser
+        env:
+          PUBLISH_LOCAL: "false"
+        run: |
+          npm run verdaccio-browser-decrypt
+          npm run verdaccio-browser-encrypt
