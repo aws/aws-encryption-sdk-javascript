@@ -64,6 +64,13 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Configure AWS Credentials for Tests
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
+          role-session-name: JavaScriptTests
+
       - name: Install dependencies and build
         run: |
           npm ci --unsafe-perm
@@ -87,6 +94,13 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
+      - name: Configure AWS Credentials for Tests
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
+          role-session-name: JavaScriptTests
+
       - name: Install dependencies and build
         run: |
           npm ci --unsafe-perm
@@ -109,6 +123,13 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+
+      - name: Configure AWS Credentials for Tests
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
+          role-session-name: JavaScriptTests
 
       - name: Install dependencies and build
         run: |
@@ -137,6 +158,13 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
+
+      - name: Configure AWS Credentials for Tests
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
+          role-session-name: JavaScriptTests
 
       - name: Install dependencies and build
         run: |
