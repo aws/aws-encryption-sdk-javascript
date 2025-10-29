@@ -1,4 +1,6 @@
 name: Release
+permissions:
+  contents: read
 
 on:
   # TODO: remove pull_request once tested in PR
@@ -215,8 +217,7 @@ jobs:
         run: |
           git config --global user.name "aws-crypto-tools-ci-bot"
           git config --global user.email "no-reply@noemail.local"
-          # TODO: Uncomment when adding publish step
-          # git checkout $BRANCH  # Commented out to test on current branch
+          git checkout ${{ github.head_ref }}  # Use PR branch or current branch
 
       - name: Version packages (dry run - no push)
         run: |
