@@ -1,0 +1,178 @@
+name: Release
+
+on:
+  # TODO: remove pull_request once tested in PR
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        required: false
+        description: '[Optional] Override semantic versioning with explict version (allowed values: "patch", "minor", "major", or explicit version)'
+        default: ''
+      dist_tag:
+        description: 'NPM distribution tag'
+        required: false
+        default: 'latest'
+      branch:
+        description: 'The branch to release from'
+        required: false
+        default: 'master'
+
+env:
+  NODE_OPTIONS: "--max-old-space-size=4096"
+  NPM_CONFIG_UNSAFE_PERM: true
+
+jobs:
+  compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --unsafe-perm
+
+      - name: Run compliance checks
+        run: |
+          npm run lint
+          npm run test_conditions
+
+  test-nodejs20:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies and build
+        run: |
+          npm ci --unsafe-perm
+          npm run build
+
+      - name: Run Node.js tests
+        run: npm run coverage-node
+
+  test-browser18:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies and build
+        run: |
+          npm ci --unsafe-perm
+          npm run build
+
+      - name: Run browser tests
+        run: npm run coverage-browser
+
+  test-vectors-nodejs20:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies and build
+        run: |
+          npm ci --unsafe-perm
+          npm run build
+
+      - name: Run integration tests with local publish
+        env:
+          PUBLISH_LOCAL: "true"
+        run: |
+          npm run verdaccio-publish
+          npm run verdaccio-node-decrypt
+          npm run verdaccio-node-encrypt
+
+  test-vectors-browser18:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies and build
+        run: |
+          npm ci --unsafe-perm
+          npm run build
+
+      - name: Run integration tests with local publish
+        env:
+          PUBLISH_LOCAL: "true"
+        run: |
+          npm run verdaccio-publish
+          npm run verdaccio-browser-decrypt
+          npm run verdaccio-browser-encrypt
+
+  # Once all tests have passed, run semantic versioning
+  version:
+    runs-on: ubuntu-latest
+    needs: [compliance, test-nodejs20, test-browser18, test-vectors-nodejs20, test-vectors-browser18]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js 16
+        uses: actions/setup-node@v4
+        with:
+          node-version: '16'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --unsafe-perm
+
+      - name: Configure git
+        env:
+          BRANCH: ${{ github.event.inputs.branch }}
+          VERSION_BUMP: ${{ github.event.inputs.version_bump }}
+        run: |
+          git config --global user.name "aws-crypto-tools-ci-bot"
+          git config --global user.email "no-reply@noemail.local"
+          git checkout $BRANCH
+
+      - name: Version packages
+        run: |
+          npx lerna version --conventional-commits --git-remote origin --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
+          git log -n 1
+
+  # Once semantic versioning has run and bumped versions, publish to npm
+  # TODO: Publish step that doesn't use OTP but instead follows
+  # https://docs.npmjs.com/trusted-publishers
+
+  # Once publishing is complete, validate that the published packages are useable
+  # TODO: Publish step based on CodeBuild jobs
