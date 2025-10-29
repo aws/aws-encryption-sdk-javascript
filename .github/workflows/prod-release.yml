@@ -235,6 +235,9 @@ jobs:
     runs-on: ubuntu-latest
     # TODO: Uncomment when adding publish step
     # needs: [publish]
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -269,6 +272,9 @@ jobs:
     runs-on: ubuntu-latest
     # TODO: Uncomment when adding publish step
     # needs: [publish]
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
