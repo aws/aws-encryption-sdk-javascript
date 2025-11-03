@@ -54,7 +54,7 @@ jobs:
       contents: read
     strategy:
       matrix:
-        node-version: ['18', '20']
+        node-version: ['18', '20', '22']
         test-type: ['node', 'browser']
         test-category: ['coverage', 'vectors']
     name: test-${{ matrix.test-category }}-${{ matrix.test-type }}${{ matrix.node-version }}
