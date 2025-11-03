@@ -53,6 +53,7 @@ jobs:
       id-token: write
       contents: read
     strategy:
+      fail-fast: false
       matrix:
         node-version: ['18', '20', '22']
         test-type: ['node', 'browser']
@@ -146,6 +147,7 @@ jobs:
       id-token: write
       contents: read
     strategy:
+      fail-fast: false
       matrix:
         node-version: ['18', '20', '22']
         test-type: ['node', 'browser']
