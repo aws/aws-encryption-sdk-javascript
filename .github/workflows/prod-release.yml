@@ -3,7 +3,6 @@ permissions:
   contents: read
 
 on:
-  pull_request:
   workflow_dispatch:
     inputs:
       version_bump:
@@ -124,14 +123,13 @@ jobs:
         run: |
           git config --global user.name "aws-crypto-tools-ci-bot"
           git config --global user.email "no-reply@noemail.local"
-          git checkout ${{ github.head_ref }}  # Use PR branch or current branch
+          git checkout $BRANCH
 
       - name: Version packages (dry run - no push)
         run: |
-          # For testing: no push to avoid modifying master branch
-          npx lerna version --conventional-commits --no-push --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
-          # TODO: uncomment line below and remove line above when adding publish step
-          # npx lerna version --conventional-commits --git-remote origin --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
+          # Generate new version and CHANGELOG entry and push it
+          npx lerna version --conventional-commits --git-remote origin --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
+          # Log the commit for posterity
           git log -n 1
 
   # Once semantic versioning has run and bumped versions, publish to npm
