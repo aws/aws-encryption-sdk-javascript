@@ -3,6 +3,7 @@ permissions:
   contents: read
 
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       version_bump:
@@ -46,11 +47,17 @@ jobs:
           npm run lint
           npm run test_conditions
 
-  test-nodejs20:
+  test:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
+    strategy:
+      matrix:
+        node-version: ['18', '20']
+        test-type: ['node', 'browser']
+        test-category: ['coverage', 'vectors']
+    name: test-${{ matrix.test-category }}-${{ matrix.test-type }}${{ matrix.node-version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -58,10 +65,10 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
       - name: Configure AWS Credentials for Tests
@@ -76,118 +83,23 @@ jobs:
           npm ci --unsafe-perm
           npm run build
 
-      - name: Run Node.js tests
-        run: npm run coverage-node
-
-  test-browser18:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: true
-
-      - name: Setup Node.js 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Configure AWS Credentials for Tests
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: us-west-2
-          role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
-          role-session-name: JavaScriptTests
-
-      - name: Install dependencies and build
+      - name: Run ${{ matrix.test-category }} tests (${{ matrix.test-type }})
         run: |
-          npm ci --unsafe-perm
-          npm run build
-
-      - name: Run browser tests
-        run: npm run coverage-browser
-
-  test-vectors-nodejs20:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: true
-
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Configure AWS Credentials for Tests
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: us-west-2
-          role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
-          role-session-name: JavaScriptTests
-
-      - name: Install dependencies and build
-        run: |
-          npm ci --unsafe-perm
-          npm run build
-
-      - name: Run integration tests with local publish
-        run: |
-          npm run verdaccio-publish
-          npm run verdaccio-node-decrypt
-          npm run verdaccio-node-encrypt
-
-  test-vectors-browser18:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: true
-
-      - name: Setup Node.js 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Configure AWS Credentials for Tests
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: us-west-2
-          role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
-          role-session-name: JavaScriptTests
-
-      - name: Install dependencies and build
-        run: |
-          npm ci --unsafe-perm
-          npm run build
-
-      - name: Run integration tests with local publish
-        run: |
-          npm run verdaccio-publish
-          npm run verdaccio-browser-decrypt
-          npm run verdaccio-browser-encrypt
+          if [ "${{ matrix.test-category }}" = "coverage" ]; then
+            npm run coverage-${{ matrix.test-type }}
+          elif [ "${{ matrix.test-category }}" = "vectors" ]; then
+            npm run verdaccio-publish
+            npm run verdaccio-${{ matrix.test-type }}-decrypt
+            npm run verdaccio-${{ matrix.test-type }}-encrypt
+          else
+            echo "Error: Unrecognized test category '${{ matrix.test-category }}'"
+            exit 1
+          fi
 
   # Once all tests have passed, run semantic versioning
   version:
     runs-on: ubuntu-latest
-    needs: [compliance, test-nodejs20, test-browser18, test-vectors-nodejs20, test-vectors-browser18]
+    needs: [compliance, test]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -211,13 +123,14 @@ jobs:
         run: |
           git config --global user.name "aws-crypto-tools-ci-bot"
           git config --global user.email "no-reply@noemail.local"
-          git checkout $BRANCH
+          git checkout ${{ github.head_ref }}  # Use PR branch or current branch
 
       - name: Version packages (dry run - no push)
         run: |
-          # Generate new version and CHANGELOG entry and push it
-          npx lerna version --conventional-commits --git-remote origin --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
-          # Log the commit for posterity
+          # For testing: no push to avoid modifying master branch
+          npx lerna version --conventional-commits --no-push --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
+          # TODO: uncomment line below and remove line above when adding publish step
+          # npx lerna version --conventional-commits --git-remote origin --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
           git log -n 1
 
   # Once semantic versioning has run and bumped versions, publish to npm
@@ -225,13 +138,18 @@ jobs:
   # https://docs.npmjs.com/trusted-publishers
 
   # Once publishing is complete, validate that the published packages are useable
-  validate-nodejs:
+  validate:
     runs-on: ubuntu-latest
     # TODO: Uncomment when adding publish step
     # needs: [publish]
     permissions:
       id-token: write
       contents: read
+    strategy:
+      matrix:
+        node-version: ['18', '20']
+        test-type: ['node', 'browser']
+    name: validate-${{ matrix.test-type }}${{ matrix.node-version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -239,10 +157,10 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
       - name: Configure AWS Credentials for Tests
@@ -255,47 +173,12 @@ jobs:
       - name: Install dependencies
         run: npm ci --unsafe-perm
 
-      - name: Validate published packages - Node.js
-        run: |
-          npm run verdaccio-node-decrypt
-          npm run verdaccio-node-encrypt
-
-  validate-browser:
-    runs-on: ubuntu-latest
-    # TODO: Uncomment when adding publish step
-    # needs: [publish]
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: true
-
-      - name: Setup Node.js 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Configure AWS Credentials for Tests
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: us-west-2
-          role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
-          role-session-name: JavaScriptTests
-
-      - name: Install dependencies
-        run: npm ci --unsafe-perm
-
-      - name: Validate published packages - Browser
+      - name: Validate published packages - ${{ matrix.test-type }}
         # This will fail until the publish step is run for the first time.
         # A dependency change broke the browser tests.
         # Commit fb10180dfb451ff5359ebc703c58eaf5393971ac fixes this.
         # The first publish step for v4.2.2+ should make this pass.
         # TODO: Remove this comment block after first successful publish of v4.2.2+.
         run: |
-          npm run verdaccio-browser-decrypt
-          npm run verdaccio-browser-encrypt
+          npm run verdaccio-${{ matrix.test-type }}-decrypt
+          npm run verdaccio-${{ matrix.test-type }}-encrypt
