@@ -147,7 +147,7 @@ jobs:
       contents: read
     strategy:
       matrix:
-        node-version: ['18', '20']
+        node-version: ['18', '20', '22']
         test-type: ['node', 'browser']
     name: validate-${{ matrix.test-type }}${{ matrix.node-version }}
     steps:
