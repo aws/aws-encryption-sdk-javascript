@@ -2,6 +2,7 @@
 name: ESDK JavaScript CI Tests 
 permissions:
   contents: read
+  id-token: write
 
 on: [pull_request, workflow_call]
 
