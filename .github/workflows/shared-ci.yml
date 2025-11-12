@@ -14,33 +14,6 @@ env:
   NPM_CONFIG_UNSAFE_PERM: true
 
 jobs:
-  compliance:
-    # Don't lint or check Duvet annotations on already-published code
-    if: ${{ !inputs.test-published-packages }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: true
-
-      - name: Setup Node.js 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci --unsafe-perm
-
-      - name: Run compliance checks
-        run: |
-          npm run lint
-          npm run test_conditions
-
   test:
     runs-on: ubuntu-latest
     permissions:
@@ -49,9 +22,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ['18', '20', '22', 'latest']
+        node-version: ['18.x', '20.x', '22.x', 'latest']
         test-type: ['node', 'browser']
-        test-category: ['coverage', 'vectors']
+        test-category: ['coverage', 'vectors', 'compliance']
     name: test-${{ matrix.test-category }}-${{ matrix.test-type }}${{ matrix.node-version }}
     steps:
       - name: Checkout code
@@ -94,3 +67,10 @@ jobs:
         run: |
           npm run verdaccio-${{ matrix.test-type }}-decrypt
           npm run verdaccio-${{ matrix.test-type }}-encrypt
+
+      - name: Run compliance tests
+        # Don't run linting or check Duvet requirements for published packages
+        if: ${{ matrix.test-category == 'compliance' && !inputs.test-published-packages }}
+        run: |
+          npm run lint
+          npm run test_conditions
