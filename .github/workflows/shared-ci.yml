@@ -49,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ['18', '20', '22']
+        node-version: ['18', '20', '22', 'latest']
         test-type: ['node', 'browser']
         test-category: ['coverage', 'vectors']
     name: test-${{ matrix.test-category }}-${{ matrix.test-type }}${{ matrix.node-version }}
@@ -81,25 +81,16 @@ jobs:
         if: ${{ !inputs.test-published-packages }}
         run: npm run build
 
-      - name: Run ${{ matrix.test-category }} tests (${{ matrix.test-type }})
-        run: |
-          # Skip coverage tests when testing published packages
-          if [ "${{ inputs.test-published-packages }}" = "true" ] && [ "${{ matrix.test-category }}" = "coverage" ]; then
-            echo "Skipping coverage tests for published packages validation"
-            exit 0
-          fi
+      - name: Run coverage tests (${{ matrix.test-type }})
+        if: ${{ matrix.test-category == 'coverage' }}
+        run: npm run coverage-${{ matrix.test-type }}
 
-          # Run the appropriate test
-          if [ "${{ matrix.test-category }}" = "coverage" ]; then
-            npm run coverage-${{ matrix.test-type }}
-          elif [ "${{ matrix.test-category }}" = "vectors" ]; then
-            # Only publish locally when testing source code
-            if [ "${{ inputs.test-published-packages }}" != "true" ]; then
-              npm run verdaccio-publish
-            fi
-            npm run verdaccio-${{ matrix.test-type }}-decrypt
-            npm run verdaccio-${{ matrix.test-type }}-encrypt
-          else
-            echo "Error: Unrecognized test category '${{ matrix.test-category }}'"
-            exit 1
-          fi
+      - name: Publish locally for vector tests
+        if: ${{ matrix.test-category == 'vectors' && !inputs.test-published-packages }}
+        run: npm run verdaccio-publish
+
+      - name: Run vector tests (${{ matrix.test-type }})
+        if: ${{ matrix.test-category == 'vectors' }}
+        run: |
+          npm run verdaccio-${{ matrix.test-type }}-decrypt
+          npm run verdaccio-${{ matrix.test-type }}-encrypt
