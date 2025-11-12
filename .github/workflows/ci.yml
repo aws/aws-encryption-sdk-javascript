@@ -1,5 +1,7 @@
 # This workflow performs tests in JavaScript.
 name: ESDK JavaScript CI Tests 
+permissions:
+  contents: read
 
 on: [pull_request, workflow_call]
 
