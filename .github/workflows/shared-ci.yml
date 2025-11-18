@@ -25,7 +25,7 @@ jobs:
         node-version: ['18.x', '20.x', '22.x', 'latest']
         test-type: ['node', 'browser']
         # Determine test categories based on whether testing published packages or source code:
-        # - Testing published packages: only run vector tests
+        # - Testing published packages: only run vector tests (don't have build artifacts to test coverage or compliance)
         # - Testing source code: run coverage, vector, and compliance tests
         test-category: ${{ fromJSON(inputs['test-published-packages'] && '["vectors"]' || '["coverage", "vectors", "compliance"]') }}
     name: test-${{ matrix.test-category }}-${{ matrix.test-type }}-${{ matrix.node-version }}
