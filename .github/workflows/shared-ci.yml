@@ -24,8 +24,11 @@ jobs:
       matrix:
         node-version: ['18.x', '20.x', '22.x', 'latest']
         test-type: ['node', 'browser']
-        test-category: ['coverage', 'vectors', 'compliance']
-    name: test-${{ matrix.test-category }}-${{ matrix.test-type }}${{ matrix.node-version }}
+        # Determine test categories based on whether testing published packages or source code:
+        # - Testing published packages: only run vector tests
+        # - Testing source code: run coverage, vector, and compliance tests
+        test-category: ${{ fromJSON(inputs.test-published-packages == 'true' && '["vectors"]' || '["coverage", "vectors", "compliance"]') }}
+    name: test-${{ matrix.test-category }}-${{ matrix.test-type }}-${{ matrix.node-version }}
     steps:
       - name: Checkout code
         # Always need repo for test scripts and configuration, even when testing published packages
@@ -70,7 +73,7 @@ jobs:
 
       - name: Run compliance tests
         # Don't run linting or check Duvet requirements for published packages
-        if: ${{ matrix.test-category == 'compliance' && !inputs.test-published-packages }}
+        if: ${{ matrix.test-category == 'compliance'}}
         run: |
           npm run lint
           npm run test_conditions
