@@ -9,3 +9,13 @@ on: [pull_request, workflow_call]
 jobs:
   shared-ci:
     uses: ./.github/workflows/shared-ci.yml
+  pr-ci-all-required:
+    if: always()
+    needs:
+      - shared-ci
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Verify all required jobs passed
+        uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}
