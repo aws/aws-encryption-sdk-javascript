@@ -27,7 +27,7 @@ jobs:
         # Determine test categories based on whether testing published packages or source code:
         # - Testing published packages: only run vector tests
         # - Testing source code: run coverage, vector, and compliance tests
-        test-category: ${{ fromJSON(inputs.test-published-packages == 'true' && '["vectors"]' || '["coverage", "vectors", "compliance"]') }}
+        test-category: ${{ fromJSON(inputs['test-published-packages'] && '["vectors"]' || '["coverage", "vectors", "compliance"]') }}
     name: test-${{ matrix.test-category }}-${{ matrix.test-type }}-${{ matrix.node-version }}
     steps:
       - name: Checkout code
