@@ -63,14 +63,27 @@ jobs:
           # Log the commit for posterity
           git log -n 1
 
-  # Once semantic versioning has run and bumped versions, publish to npm
-  # TODO: Publish step that doesn't use OTP but instead follows
-  # https://docs.npmjs.com/trusted-publishers
+  publish:
+    runs-on: ubuntu-latest
+    needs: [pre-release-ci, version]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      # Ensure npm 11.5.1 or later is installed
+      - name: Update npm
+        run: npm install -g npm@latest
+      - run: npm ci --unsafe-perm
+      - run: npm run build --if-present
+      - run: npx lerna publish from-package --yes --dist-tag ${{ github.event.inputs.dist_tag }}
 
   # Once publishing is complete, validate that the published packages are useable
   validate:
     uses: ./.github/workflows/shared-ci.yml
-    # TODO: Uncomment when adding publish step
-    # needs: [publish]
+    needs: [publish]
     with:
       test-published-packages: true
