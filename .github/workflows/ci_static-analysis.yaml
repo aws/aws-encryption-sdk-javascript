@@ -3,6 +3,9 @@ name: static analysis
 
 on: ["pull_request", "push"]
 
+permissions:
+  contents: read
+
 jobs:
   not-grep:
     runs-on: ubuntu-latest
