@@ -1,0 +1,23 @@
+name: Issue Created Notification
+on:
+  issues:
+    types: [opened, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  notify-issue:
+    if: github.event_name == 'issues'
+    uses: aws/aws-cryptographic-material-providers-library/.github/workflows/slack-notification.yml@main
+    with:
+      message: "New github issue `${{ github.event.issue.title }}`. Link: ${{ github.event.issue.html_url }}"
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_GHI }}
+
+  notify-comment:
+    if: github.event_name == 'issue_comment' && !github.event.issue.pull_request
+    uses: aws/aws-cryptographic-material-providers-library/.github/workflows/slack-notification.yml@main
+    with:
+      message: "New comment on issue `${{ github.event.issue.title }}`. Link: ${{ github.event.comment.html_url }}"
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_GHI }}

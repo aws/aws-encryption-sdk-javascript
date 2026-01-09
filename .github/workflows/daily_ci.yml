@@ -10,3 +10,15 @@ jobs:
     # Don't run the cron builds on forks
     if: github.event_name != 'schedule' || github.repository_owner == 'aws'
     uses: ./.github/workflows/ci.yml
+
+  notify:
+    needs:
+      [
+        DAILY_CI,
+      ]
+    if: ${{ failure() }}
+    uses: aws/aws-cryptographic-material-providers-library/.github/workflows/slack-notification.yml@main
+    with:
+      message: "Daily CI failed on `${{ github.repository }}`. View run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_CI }}
