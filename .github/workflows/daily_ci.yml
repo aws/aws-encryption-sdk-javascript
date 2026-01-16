@@ -1,6 +1,10 @@
 # This workflow runs every weekday at 15:00 UTC (8AM PDT)
 name: Daily CI
 
+permissions:
+  id-token: write
+  contents: read
+  
 on:
   schedule:
     - cron: "00 15 * * 1-5"
