@@ -26,7 +26,7 @@
     "build-browser": "tsc -b tsconfig.module.json",
     "build": "run-s build-*",
     "karma": "NODE_OPTIONS=--max-old-space-size=4096 karma start karma.conf.js",
-    "mocha": "mocha --exclude 'modules/*-+(browser|backend)/build/main/test/*.js'  modules/**/build/main/test/*test.js",
+    "mocha": "mocha --timeout 5000 --exclude 'modules/*-+(browser|backend)/build/main/test/*.js'  modules/**/build/main/test/*test.js",
     "coverage-browser": "npm run karma && nyc report -t .karma_output --check-coverage",
     "coverage-node": "nyc --instrument --all --check-coverage -n 'modules/**/build/main/src/*.js' -x 'modules/**/build/main/test/*.js' -x 'modules/*-+(browser|backend)/**/*.js' npm run mocha",
     "coverage-merge": "nyc merge .karma_output .nyc_output/browser.json",

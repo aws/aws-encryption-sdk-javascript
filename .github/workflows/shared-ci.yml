@@ -1,0 +1,79 @@
+name: Shared CI Tests
+
+on:
+  workflow_call:
+    inputs:
+      test-published-packages:
+        description: 'Test against published packages instead of checked out code'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  NODE_OPTIONS: "--max-old-space-size=4096"
+  NPM_CONFIG_UNSAFE_PERM: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['18.x', '20.x', '22.x', 'latest']
+        test-type: ['node', 'browser']
+        # Determine test categories based on whether testing published packages or source code:
+        # - Testing published packages: only run vector tests (don't have build artifacts to test coverage or compliance)
+        # - Testing source code: run coverage, vector, and compliance tests
+        test-category: ${{ fromJSON(inputs['test-published-packages'] && '["vectors"]' || '["coverage", "vectors", "compliance"]') }}
+    name: test-${{ matrix.test-category }}-${{ matrix.test-type }}-${{ matrix.node-version }}
+    steps:
+      - name: Checkout code
+        # Always need repo for test scripts and configuration, even when testing published packages
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Configure AWS Credentials for Tests
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
+          role-session-name: JavaScriptTests
+
+      - name: Install dependencies
+        run: npm ci --unsafe-perm
+
+      - name: Build (for source code testing)
+        if: ${{ !inputs.test-published-packages }}
+        run: npm run build
+
+      - name: Run coverage tests (${{ matrix.test-type }})
+        if: ${{ matrix.test-category == 'coverage' }}
+        run: npm run coverage-${{ matrix.test-type }}
+
+      - name: Publish locally for vector tests
+        if: ${{ matrix.test-category == 'vectors' && !inputs.test-published-packages }}
+        run: npm run verdaccio-publish
+
+      - name: Run vector tests (${{ matrix.test-type }})
+        if: ${{ matrix.test-category == 'vectors' }}
+        run: |
+          npm run verdaccio-${{ matrix.test-type }}-decrypt
+          npm run verdaccio-${{ matrix.test-type }}-encrypt
+
+      - name: Run compliance tests
+        # Don't run linting or check Duvet requirements for published packages
+        if: ${{ matrix.test-category == 'compliance'}}
+        run: |
+          npm run lint
+          npm run test_conditions
