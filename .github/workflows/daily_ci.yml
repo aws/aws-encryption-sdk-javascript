@@ -22,7 +22,7 @@ jobs:
         DAILY_CI
       ]
     if: ${{ failure() && github.event_name == 'schedule'}}
-    uses: ./.github/workflows/slack-notification.yml
+    uses: ./.github/workflows/issue-notification.yml
     with:
       message: "Daily CI failed on `${{ github.repository }}`. View run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
     secrets:
