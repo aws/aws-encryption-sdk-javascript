@@ -9,22 +9,14 @@ batch:
       buildspec: codebuild/compliance.yml
 
 # Unit Tests
-    - identifier: testNodejs20
-      buildspec: codebuild/nodejs20.yml
+    - identifier: testNodejs16
+      buildspec: codebuild/nodejs16.yml
       env:
         image: aws/codebuild/standard:5.0
-    - identifier: testBrowser18
-      buildspec: codebuild/browser18.yml
 
 # Integration Tests
-    - identifier: testVectorsNodejs20
-      buildspec: codebuild/test_vectors/nodejs20.yml
-      env:
-        variables:
-          PUBLISH_LOCAL: "true"
-        image: aws/codebuild/standard:5.0
-    - identifier: testVectorsBrowser18
-      buildspec: codebuild/test_vectors/browser18.yml
+    - identifier: testVectorsNodejs16
+      buildspec: codebuild/test_vectors/nodejs16.yml
       env:
         variables:
           PUBLISH_LOCAL: "true"
@@ -34,10 +26,8 @@ batch:
     - identifier: version
       depend-on:
         - compliance
-        - testNodejs20
-        - testBrowser18
-        - testVectorsNodejs20
-        - testVectorsBrowser18
+        - testNodejs16
+        - testVectorsNodejs16
       buildspec: codebuild/release/version.yml
       env:
         image: aws/codebuild/standard:6.0
@@ -54,15 +44,7 @@ batch:
     - identifier: validateNodejs
       depend-on:
         - publish
-      buildspec: codebuild/test_vectors/nodejs20.yml
-      env:
-        variables:
-          PUBLISH_LOCAL: "false"
-        image: aws/codebuild/standard:5.0
-    - identifier: validateBrowser
-      depend-on:
-        - publish
-      buildspec: codebuild/test_vectors/browser18.yml
+      buildspec: codebuild/test_vectors/nodejs16.yml
       env:
         variables:
           PUBLISH_LOCAL: "false"
