@@ -11,10 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      # not-grep uses "pkg_resources" which is not supported by Python 3.14
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.13'
+      - name: Upgrade setuptools
+        run: python -m pip install --upgrade setuptools
       - name: not-grep
         uses: mattsb42-meta/not-grep@1.0.0
