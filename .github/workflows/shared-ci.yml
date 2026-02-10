@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ['22.x', 'latest']
+        node-version: ['22.x', '24.x', '26.x', 'latest']
         test-type: ['node', 'browser']
         # Determine test categories based on whether testing published packages or source code:
         # - Testing published packages: only run vector tests (don't have build artifacts to test coverage or compliance)
