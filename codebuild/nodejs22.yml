@@ -14,7 +14,7 @@ phases:
       - export AWS_SESSION_TOKEN=$(echo "${TMP_ROLE}" | jq -r '.Credentials.SessionToken')
       - aws sts get-caller-identity
       
-      - n 20
+      - n 22
       - node --version ; npm --version
       - npm ci --unsafe-perm
       - npm run build
