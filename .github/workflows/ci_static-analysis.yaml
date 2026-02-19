@@ -12,4 +12,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: not-grep
-        uses: mattsb42-meta/not-grep@1.0.0
+        uses: mattsb42-meta/not-grep@1.0.1
