@@ -19,7 +19,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "asn1.js": "^5.3.0",
-    "bn.js": "^5.1.1",
+    "bn.js": "^5.2.3",
     "tslib": "^2.2.0",
     "uuid": "^10.0.0"
   },
