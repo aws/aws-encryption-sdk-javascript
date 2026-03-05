@@ -47,6 +47,28 @@ jobs:
       - name: Install dependencies
         run: npm ci --unsafe-perm
 
+      - name: Configure AWS Credentials for Release
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::587316601012:role/GitHub-CI-CI-Bot-Credential-Access-Role-us-west-2
+          role-session-name: CI_Bot_Release
+
+      # Use AWS Secrets Manager GHA to retrieve CI Bot Creds
+      - name: Get CI Bot Creds Secret
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: Github/aws-crypto-tools-ci-bot
+          parse-json-secrets: true
+
+      # Log in as the CI Bot
+      - name: Log in as CI Bot
+        run: |
+          echo ${{ env.GITHUB_AWS_CRYPTO_TOOLS_CI_BOT_ESDK_RELEASE_TOKEN }} > token.txt
+          gh auth login --with-token < token.txt
+          rm token.txt
+          gh auth status
+
       - name: Configure git
         env:
           BRANCH: ${{ github.event.inputs.branch }}
