@@ -68,6 +68,7 @@ jobs:
           gh auth login --with-token < token.txt
           rm token.txt
           gh auth status
+          gh auth setup-git
 
       - name: Configure git
         env:
