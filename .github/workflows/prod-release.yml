@@ -79,6 +79,20 @@ jobs:
           git config --global user.email "no-reply@noemail.local"
           git checkout $BRANCH
 
+      - name: Verify git auth identity
+        run: |
+          echo "=== gh auth status ==="
+          gh auth status
+          echo ""
+          echo "=== Git credential helper config ==="
+          git config --global --get-regexp credential
+          echo ""
+          echo "=== Git remote URL ==="
+          git remote -v
+          echo ""
+          echo "=== Authenticated GitHub user ==="
+          gh api user --jq '.login'
+
       - name: Version packages (dry run - no push)
         run: |
           # Generate new version and CHANGELOG entry and push it
