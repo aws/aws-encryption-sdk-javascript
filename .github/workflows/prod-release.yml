@@ -122,12 +122,13 @@ jobs:
       # Generate OTP from the 2FA secret key, waiting for next TOTP window to maximize validity
       - name: Generate OTP and publish
         run: |
-          npm install otplib --no-save
+          npm install otplib@12 --no-save
           OTP=$(node -e "
-            const auth = require('otplib').authenticator;
-            setTimeout(() =>
-              console.log(auth.generate(process.env.OTP_SECRET_KEY)),
-              auth.timeRemaining() * 1000);
+            const { authenticator } = require('otplib');
+            const remaining = authenticator.timeRemaining();
+            setTimeout(() => {
+              console.log(authenticator.generate(process.env.OTP_SECRET_KEY));
+            }, remaining * 1000);
           ")
           npx lerna publish from-package --yes --otp $OTP --dist-tag ${{ github.event.inputs.dist_tag }}
         env:
