@@ -80,21 +80,7 @@ jobs:
           git config --global user.email "no-reply@noemail.local"
           git checkout $BRANCH
 
-      - name: Verify git auth identity
-        run: |
-          echo "=== gh auth status ==="
-          gh auth status
-          echo ""
-          echo "=== Git credential helper config ==="
-          git config --global --get-regexp credential
-          echo ""
-          echo "=== Git remote URL ==="
-          git remote -v
-          echo ""
-          echo "=== Authenticated GitHub user ==="
-          gh api user --jq '.login'
-
-      - name: Version packages (dry run - no push)
+      - name: Version packages
         run: |
           # Generate new version and CHANGELOG entry and push it
           npx lerna version --conventional-commits --git-remote origin --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
@@ -106,6 +92,8 @@ jobs:
     needs: [pre-release-ci, version]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
 
       - uses: actions/setup-node@v4
         with:
