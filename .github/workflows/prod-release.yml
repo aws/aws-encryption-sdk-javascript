@@ -100,12 +100,39 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Configure AWS Credentials for Publish
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::587316601012:role/GitHub-CI-CI-Bot-Credential-Access-Role-us-west-2
+          role-session-name: CI_Bot_Publish
+
+      - name: Get NPM Token
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: npm/aws-crypto-tools-ci-bot/2FA
+          parse-json-secrets: true
+
       # Ensure npm 11.5.1 or later is installed
       - name: Update npm
         run: npm install -g npm@latest
       - run: npm ci --unsafe-perm
       - run: npm run build --if-present
-      - run: npx lerna publish from-package --yes --dist-tag ${{ github.event.inputs.dist_tag }}
+
+      # Generate OTP from the 2FA secret key, waiting for next TOTP window to maximize validity
+      - name: Generate OTP and publish
+        run: |
+          npm install otplib --no-save
+          OTP=$(node -e "
+            const auth = require('otplib').authenticator;
+            setTimeout(() =>
+              console.log(auth.generate(process.env.OTP_SECRET_KEY)),
+              auth.timeRemaining() * 1000);
+          ")
+          npx lerna publish from-package --yes --otp $OTP --dist-tag ${{ github.event.inputs.dist_tag }}
+        env:
+          NODE_AUTH_TOKEN: ${{ env.NPM_AWS_CRYPTO_TOOLS_CI_BOT_2FA_NPM_TOKEN }}
+          OTP_SECRET_KEY: ${{ env.NPM_AWS_CRYPTO_TOOLS_CI_BOT_2FA_OTP_SECRET_KEY }}
 
   # Once publishing is complete, validate that the published packages are useable
   validate:
