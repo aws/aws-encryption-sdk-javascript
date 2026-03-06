@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.2.2](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.1...v4.2.2) (2026-03-05)
+
+### Bug Fixes
+
+- upgrade bn.js to 4.12.3/5.2.3 ([#1631](https://github.com/aws/aws-encryption-sdk-javascript/issues/1631)) ([ebbd60f](https://github.com/aws/aws-encryption-sdk-javascript/commit/ebbd60f2af27a14f41a7a2bfcca6095dc953df0c))
+
 ## [4.2.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.0...v4.2.1) (2025-04-10)
 
 ### Bug Fixes

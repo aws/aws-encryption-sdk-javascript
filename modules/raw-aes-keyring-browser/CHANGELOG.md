@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.2.2](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.1...v4.2.2) (2026-03-05)
+
+**Note:** Version bump only for package @aws-crypto/raw-aes-keyring-browser
+
 ## [4.2.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.0...v4.2.1) (2025-04-10)
 
 ### Bug Fixes
