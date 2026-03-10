@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.2.2](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.2.1...v4.2.2) (2026-03-05)
+
+### Bug Fixes
+
+- **ci-auth:** git release auth ([#1638](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1638)) ([04db819](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/04db819fca842432b714a45a92563045b241c14b))
+- **ci-debug:** log auth username ([#1637](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1637)) ([27003a7](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/27003a78383947c105b3160f329f6af5fc89f826))
+- **ci:** git auth ([#1636](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1636)) ([83d825d](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/83d825dcd15daf1736b27c4c906756ba8c685d52))
+- **ci:** release bot credentials ([#1635](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1635)) ([4870b2c](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/4870b2c4b9f0e51da39693c56b9065e62c7c06c8))
+- **deps:** add missing dependency ([#1629](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1629)) ([7329fb7](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/7329fb700cc09f116f4270d6343324d80d4d4820))
+- remove usage of Buffer from top-level ([#1621](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1621)) ([9556272](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/955627223af2bbbb96a2ee69f2fe64504593aaf2))
+- upgrade bn.js to 4.12.3/5.2.3 ([#1631](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1631)) ([ebbd60f](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/ebbd60f2af27a14f41a7a2bfcca6095dc953df0c))
+
+- feat!: Remove support for NodeJs v16 ([ef26b39](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/ef26b39eb8c8078fcbae3482eaf5ce1ec37e61ba))
+
+### Reverts
+
+- Revert "feat!: Drop IE11 (#1625)" ([7d6902e](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/7d6902e9f80e09434b2b901cf3317e056d872167)), closes [#1625](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1625)
+
+### BREAKING CHANGES
+
+- - no longer tests against nor supports NodeJS 16
+
 ## [4.2.1](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.2.0...v4.2.1) (2025-04-10)
 
 ### Bug Fixes

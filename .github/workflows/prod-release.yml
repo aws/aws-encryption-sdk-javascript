@@ -1,6 +1,6 @@
 name: Release
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 on:
@@ -37,6 +37,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
+          persist-credentials: false
 
       - name: Setup Node.js 16
         uses: actions/setup-node@v4
@@ -47,6 +48,29 @@ jobs:
       - name: Install dependencies
         run: npm ci --unsafe-perm
 
+      - name: Configure AWS Credentials for Release
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::587316601012:role/GitHub-CI-CI-Bot-Credential-Access-Role-us-west-2
+          role-session-name: CI_Bot_Release
+
+      # Use AWS Secrets Manager GHA to retrieve CI Bot Creds
+      - name: Get CI Bot Creds Secret
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: Github/aws-crypto-tools-ci-bot
+          parse-json-secrets: true
+
+      # Log in as the CI Bot
+      - name: Log in as CI Bot
+        run: |
+          echo ${{ env.GITHUB_AWS_CRYPTO_TOOLS_CI_BOT_ESDK_RELEASE_TOKEN }} > token.txt
+          gh auth login --with-token < token.txt
+          rm token.txt
+          gh auth status
+          gh auth setup-git
+
       - name: Configure git
         env:
           BRANCH: ${{ github.event.inputs.branch }}
@@ -56,7 +80,7 @@ jobs:
           git config --global user.email "no-reply@noemail.local"
           git checkout $BRANCH
 
-      - name: Version packages (dry run - no push)
+      - name: Version packages
         run: |
           # Generate new version and CHANGELOG entry and push it
           npx lerna version --conventional-commits --git-remote origin --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
@@ -68,18 +92,48 @@ jobs:
     needs: [pre-release-ci, version]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
 
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Configure AWS Credentials for Publish
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::587316601012:role/GitHub-CI-CI-Bot-Credential-Access-Role-us-west-2
+          role-session-name: CI_Bot_Publish
+
+      - name: Get NPM Token
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: npm/aws-crypto-tools-ci-bot/2FA
+          parse-json-secrets: true
+
       # Ensure npm 11.5.1 or later is installed
       - name: Update npm
         run: npm install -g npm@latest
       - run: npm ci --unsafe-perm
       - run: npm run build --if-present
-      - run: npx lerna publish from-package --yes --dist-tag ${{ github.event.inputs.dist_tag }}
+
+      # Generate OTP from the 2FA secret key, waiting for next TOTP window to maximize validity
+      - name: Generate OTP and publish
+        run: |
+          npm install otplib@12 --no-save
+          OTP=$(node -e "
+            const { authenticator } = require('otplib');
+            const remaining = authenticator.timeRemaining();
+            setTimeout(() => {
+              console.log(authenticator.generate(process.env.OTP_SECRET_KEY));
+            }, remaining * 1000);
+          ")
+          npx lerna publish from-package --yes --otp $OTP --dist-tag ${{ github.event.inputs.dist_tag }}
+        env:
+          NODE_AUTH_TOKEN: ${{ env.NPM_AWS_CRYPTO_TOOLS_CI_BOT_2FA_NPM_TOKEN }}
+          OTP_SECRET_KEY: ${{ env.NPM_AWS_CRYPTO_TOOLS_CI_BOT_2FA_OTP_SECRET_KEY }}
 
   # Once publishing is complete, validate that the published packages are useable
   validate:
