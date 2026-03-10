@@ -20,6 +20,7 @@ import {
   BRANCH_KEY_ACTIVE_VERSION,
   BRANCH_KEY_ACTIVE_VERSION_UTF8_BYTES,
   BRANCH_KEY_ID,
+  BRANCH_KEY_ID_WITH_EC,
   DDB_TABLE_NAME,
   INCORRECT_LOGICAL_NAME,
   KEY_ARN,
@@ -749,5 +750,125 @@ describe('Test Branch keystore', () => {
         LYING_BRANCH_KEY_DECRYPT_ONLY_VERSION
       )
     ).to.be.rejectedWith(IncorrectKeyException))
+  })
+
+  describe('VersionKey', () => {
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#versionkey
+    //= type=test
+    //# On invocation, the caller:
+    //# - MUST supply a `branch-key-id`
+    it('MUST fail if no branch-key-id is provided', async () => {
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: { identifier: KEY_ARN },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME },
+      })
+
+      await expect(
+        keyStore.versionKey({ branchKeyIdentifier: '' })
+      ).to.be.rejectedWith('MUST supply a branch-key-id')
+
+      await expect(
+        keyStore.versionKey({ branchKeyIdentifier: undefined as any })
+      ).to.be.rejectedWith('MUST supply a branch-key-id')
+
+      await expect(
+        keyStore.versionKey({ branchKeyIdentifier: null as any })
+      ).to.be.rejectedWith('MUST supply a branch-key-id')
+    })
+
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#versionkey
+    //= type=test
+    //# If the Keystore's KMS Configuration is `Discovery` or `MRDiscovery`,
+    //# this operation MUST immediately fail.
+    it('MUST fail with Discovery KMS Configuration', async () => {
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: 'discovery',
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME },
+      })
+
+      await expect(
+        keyStore.versionKey({ branchKeyIdentifier: BRANCH_KEY_ID })
+      ).to.be.rejectedWith(
+        'VersionKey is not supported with Discovery or MRDiscovery KMS Configuration'
+      )
+    })
+
+    it('MUST fail with MRDiscovery KMS Configuration', async () => {
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: { region: 'us-west-2' },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME },
+      })
+
+      await expect(
+        keyStore.versionKey({ branchKeyIdentifier: BRANCH_KEY_ID })
+      ).to.be.rejectedWith(
+        'VersionKey is not supported with Discovery or MRDiscovery KMS Configuration'
+      )
+    })
+
+    it('MUST fail if branch key does not exist', async () => {
+      const kmsClient = new KMSClient({})
+      const ddbClient = new DynamoDBClient({})
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: { identifier: KEY_ARN },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME, ddbClient },
+        keyManagement: { kmsClient },
+      })
+
+      await expect(
+        keyStore.versionKey({
+          branchKeyIdentifier: 'non-existent-branch-key-id',
+        })
+      ).to.be.rejectedWith('was not found')
+    })
+
+    it('Test version key for existing branch key', async () => {
+      const kmsClient = new KMSClient({})
+      const ddbClient = new DynamoDBClient({})
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: { identifier: KEY_ARN },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME, ddbClient },
+        keyManagement: { kmsClient },
+      })
+
+      // Get active key before versioning
+      const before = await keyStore.getActiveBranchKey(BRANCH_KEY_ID_WITH_EC)
+      const oldVersion = before.branchKeyVersion.toString('utf8')
+
+      // Version the key
+      await keyStore.versionKey({
+        branchKeyIdentifier: BRANCH_KEY_ID_WITH_EC, // Use BRANCH_KEY_ID_WITH_EC to avoid mutating the primary test fixture.
+      })
+
+      // Get active key after versioning
+      const after = await keyStore.getActiveBranchKey(BRANCH_KEY_ID_WITH_EC)
+      const newVersion = after.branchKeyVersion.toString('utf8')
+
+      // New version must differ from old
+      expect(newVersion).to.not.equal(oldVersion)
+
+      // New version must be a valid UUID
+      expect(validate(newVersion)).to.be.true
+      expect(version(newVersion)).to.equal(4)
+
+      // Branch key ID unchanged
+      expect(after.branchKeyIdentifier).to.equal(BRANCH_KEY_ID_WITH_EC)
+
+      // Decrypted key is 32 bytes
+      expect(after.branchKey().length).to.equal(32)
+
+      // Old version is still retrievable
+      const oldMaterial = await keyStore.getBranchKeyVersion(
+        BRANCH_KEY_ID_WITH_EC,
+        oldVersion
+      )
+      expect(oldMaterial.branchKey().length).to.equal(32)
+      expect(oldMaterial.branchKeyIdentifier).to.equal(BRANCH_KEY_ID_WITH_EC)
+    })
   })
 })

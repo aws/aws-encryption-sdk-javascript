@@ -219,6 +219,8 @@ export async function testOnDecryptError(
       //# and MUST NOT modify the [decryption materials](structures.md#decryption-materials).
       const errMsg = (error as Error).message
       for (const expectedError of errorMessages as string[]) {
+        console.log("this is error message")
+        console.log(errMsg)
         expect(errMsg.includes(expectedError)).to.be.true
       }
     }
