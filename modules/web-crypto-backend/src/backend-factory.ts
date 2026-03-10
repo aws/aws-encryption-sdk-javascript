@@ -1,14 +1,12 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { isMsWindow } from '@aws-crypto/ie11-detection'
 import {
   supportsWebCrypto,
   supportsSubtleCrypto,
   supportsZeroByteGCM,
 } from '@aws-crypto/supports-web-crypto'
 import { generateSynchronousRandomValues } from './synchronous_random_values'
-import promisifyMsSubtleCrypto from './promisify-ms-crypto'
 
 type MaybeSubtleCrypto = SubtleCrypto | false
 export type WebCryptoBackend =
@@ -140,7 +138,6 @@ export function pluckSubtleCrypto(window: Window): MaybeSubtleCrypto {
   // if needed webkitSubtle check should be added here
   // see: https://webkit.org/blog/7790/update-on-web-cryptography/
   if (supportsWebCrypto(window)) return window.crypto.subtle
-  if (isMsWindow(window)) return promisifyMsSubtleCrypto(window.msCrypto.subtle)
   return false
 }
 
