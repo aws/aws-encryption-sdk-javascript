@@ -978,11 +978,17 @@ describe('Test Branch keystore', () => {
       // Active key must be retrievable
       const material = await keyStore.getActiveBranchKey(customId)
       expect(material.branchKey().length).to.equal(32)
+
+      // Custom encryption context must be preserved
+      expect(material.encryptionContext).to.have.property(
+        'aws-crypto-ec:department',
+        'test'
+      )
     })
   })
 
   describe('CreateKey + VersionKey lifecycle', () => {
-    it('Create, retrieve, version, retrieve new, retrieve old', async () => {
+    it('Create with custom EC, retrieve, version, retrieve new, retrieve old', async () => {
       const kmsClient = new KMSClient({})
       const ddbClient = new DynamoDBClient({})
       const keyStore = new BranchKeyStoreNode({
@@ -992,30 +998,54 @@ describe('Test Branch keystore', () => {
         keyManagement: { kmsClient },
       })
 
-      // 1. Create a new branch key
-      const { branchKeyIdentifier } = await keyStore.createKey()
+      // 1. Create a new branch key with custom encryption context
+      const customEc = { department: 'engineering', project: 'lifecycle' }
+      const { branchKeyIdentifier } = await keyStore.createKey({
+        branchKeyIdentifier: v4(),
+        encryptionContext: customEc,
+      })
 
-      // 2. Retrieve the active key
+      // 2. Retrieve the active key and verify EC
       const v1 = await keyStore.getActiveBranchKey(branchKeyIdentifier)
       const v1Version = v1.branchKeyVersion.toString('utf8')
       expect(v1.branchKey().length).to.equal(32)
+      expect(v1.encryptionContext).to.have.property(
+        'aws-crypto-ec:department',
+        'engineering'
+      )
+      expect(v1.encryptionContext).to.have.property(
+        'aws-crypto-ec:project',
+        'lifecycle'
+      )
 
       // 3. Version the key
       await keyStore.versionKey({ branchKeyIdentifier })
 
-      // 4. Retrieve the new active key — must be different version
+      // 4. Retrieve the new active key — must be different version, EC preserved
       const v2 = await keyStore.getActiveBranchKey(branchKeyIdentifier)
       const v2Version = v2.branchKeyVersion.toString('utf8')
       expect(v2.branchKey().length).to.equal(32)
       expect(v2Version).to.not.equal(v1Version)
+      expect(v2.encryptionContext).to.have.property(
+        'aws-crypto-ec:department',
+        'engineering'
+      )
+      expect(v2.encryptionContext).to.have.property(
+        'aws-crypto-ec:project',
+        'lifecycle'
+      )
 
-      // 5. Old version is still retrievable
+      // 5. Old version is still retrievable with EC preserved
       const oldMaterial = await keyStore.getBranchKeyVersion(
         branchKeyIdentifier,
         v1Version
       )
       expect(oldMaterial.branchKey().length).to.equal(32)
       expect(oldMaterial.branchKeyIdentifier).to.equal(branchKeyIdentifier)
+      expect(oldMaterial.encryptionContext).to.have.property(
+        'aws-crypto-ec:department',
+        'engineering'
+      )
     })
   })
 })
