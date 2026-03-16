@@ -349,6 +349,8 @@ function constructCustomEncryptionContext(
   //# Also, the value in the [encryption context](./structures.md#encryption-context-3) for this key
   //# MUST equal the value in the authenticated encryption context
   //# for the constructed key.
+  // NOTE: The Dafny implementation strips the `aws-crypto-ec:` prefix
+  // from keys before returning (see ExtractCustomEncryptionContext in Structure.dfy).
   for (const [key, value] of Object.entries(authenticatedEncryptionContext)) {
     if (key.startsWith(CUSTOM_ENCRYPTION_CONTEXT_FIELD_PREFIX)) {
       customEncryptionContext[
