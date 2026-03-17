@@ -39,10 +39,10 @@ jobs:
           submodules: true
           persist-credentials: false
 
-      - name: Setup Node.js 16
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
