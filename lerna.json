@@ -7,5 +7,6 @@
     }
   },
   "hoist": true,
-  "nohoist": ["typedoc"]
+  "nohoist": ["typedoc"],
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json"
 }

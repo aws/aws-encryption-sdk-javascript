@@ -39,10 +39,10 @@ jobs:
           submodules: true
           persist-credentials: false
 
-      - name: Setup Node.js 16
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -97,7 +97,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Configure AWS Credentials for Publish
@@ -118,22 +118,7 @@ jobs:
         run: npm install -g npm@latest
       - run: npm ci --unsafe-perm
       - run: npm run build --if-present
-
-      # Generate OTP from the 2FA secret key, waiting for next TOTP window to maximize validity
-      - name: Generate OTP and publish
-        run: |
-          npm install otplib@12 --no-save
-          OTP=$(node -e "
-            const { authenticator } = require('otplib');
-            const remaining = authenticator.timeRemaining();
-            setTimeout(() => {
-              console.log(authenticator.generate(process.env.OTP_SECRET_KEY));
-            }, remaining * 1000);
-          ")
-          npx lerna publish from-package --yes --otp $OTP --dist-tag ${{ github.event.inputs.dist_tag }}
-        env:
-          NODE_AUTH_TOKEN: ${{ env.NPM_AWS_CRYPTO_TOOLS_CI_BOT_2FA_NPM_TOKEN }}
-          OTP_SECRET_KEY: ${{ env.NPM_AWS_CRYPTO_TOOLS_CI_BOT_2FA_OTP_SECRET_KEY }}
+      - run: npx lerna publish from-package --yes --dist-tag ${{ github.event.inputs.dist_tag }}
 
   # Once publishing is complete, validate that the published packages are useable
   validate:
