@@ -74,13 +74,14 @@ jobs:
       - name: Configure git
         env:
           BRANCH: ${{ github.event.inputs.branch }}
-          VERSION_BUMP: ${{ github.event.inputs.version_bump }}
         run: |
           git config --global user.name "aws-crypto-tools-ci-bot"
           git config --global user.email "no-reply@noemail.local"
           git checkout $BRANCH
 
       - name: Version packages
+        env:
+          VERSION_BUMP: ${{ github.event.inputs.version_bump }}
         run: |
           # Generate new version and CHANGELOG entry and push it
           npx lerna version --conventional-commits --git-remote origin --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
@@ -99,19 +100,6 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
-
-      - name: Configure AWS Credentials for Publish
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          aws-region: us-west-2
-          role-to-assume: arn:aws:iam::587316601012:role/GitHub-CI-CI-Bot-Credential-Access-Role-us-west-2
-          role-session-name: CI_Bot_Publish
-
-      - name: Get NPM Token
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: npm/aws-crypto-tools-ci-bot/2FA
-          parse-json-secrets: true
 
       # Ensure npm 11.5.1 or later is installed
       - name: Update npm
