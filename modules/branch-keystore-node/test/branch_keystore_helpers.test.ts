@@ -37,6 +37,7 @@ import {
   TYPE_FIELD,
   PARTITION_KEY,
   SORT_KEY,
+  CUSTOM_ENCRYPTION_CONTEXT_FIELD_PREFIX,
 } from '../src/constants'
 import { DynamoDBKeyStorage } from '../src/dynamodb_key_storage'
 import { EncryptedHierarchicalKey } from '../src/types'
@@ -50,6 +51,16 @@ const VALID_CUSTOM_ENCRYPTION_CONTEXT_KV_PAIRS = {
 const VALID_CUSTOM_ENCRYPTION_CONTEXT = Object.fromEntries(
   Object.entries({ ...VALID_CUSTOM_ENCRYPTION_CONTEXT_KV_PAIRS }).map(
     ([key, value]) => [key, value.toString()]
+  )
+)
+
+// Expected output after stripping the `aws-crypto-ec:` prefix
+const EXPECTED_CUSTOM_ENCRYPTION_CONTEXT = Object.fromEntries(
+  Object.entries({ ...VALID_CUSTOM_ENCRYPTION_CONTEXT_KV_PAIRS }).map(
+    ([key, value]) => [
+      key.slice(CUSTOM_ENCRYPTION_CONTEXT_FIELD_PREFIX.length),
+      value.toString(),
+    ]
   )
 )
 
@@ -650,7 +661,7 @@ describe('Test keystore helpers', () => {
         Buffer.from(ENCRYPTED_ACTIVE_BRANCH_KEY.type.version, 'utf-8')
       )
       expect(activeBranchKeyMaterials.encryptionContext).deep.equals(
-        VALID_CUSTOM_ENCRYPTION_CONTEXT
+        EXPECTED_CUSTOM_ENCRYPTION_CONTEXT
       )
 
       const versionedBranchKeyMaterials = constructBranchKeyMaterials(
@@ -671,7 +682,7 @@ describe('Test keystore helpers', () => {
         Buffer.from(ENCRYPTED_VERSION_BRANCH_KEY.type.version, 'utf-8')
       )
       expect(versionedBranchKeyMaterials.encryptionContext).deep.equals(
-        VALID_CUSTOM_ENCRYPTION_CONTEXT
+        EXPECTED_CUSTOM_ENCRYPTION_CONTEXT
       )
     })
   })

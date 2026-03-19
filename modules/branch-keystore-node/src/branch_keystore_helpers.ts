@@ -351,7 +351,9 @@ function constructCustomEncryptionContext(
   //# for the constructed key.
   for (const [key, value] of Object.entries(authenticatedEncryptionContext)) {
     if (key.startsWith(CUSTOM_ENCRYPTION_CONTEXT_FIELD_PREFIX)) {
-      customEncryptionContext[key] = value
+      customEncryptionContext[
+        key.slice(CUSTOM_ENCRYPTION_CONTEXT_FIELD_PREFIX.length)
+      ] = value
     }
   }
 
