@@ -980,12 +980,9 @@ describe('Test Branch keystore', () => {
       expect(material.branchKey().length).to.equal(32)
 
       // Custom encryption context must be preserved.
-      // NOTE: Unlike the Dafny implementation, the JS SDK currently returns
-      // keys with the `aws-crypto-ec:` prefix.
-      expect(material.encryptionContext).to.have.property(
-        'aws-crypto-ec:department',
-        'test'
-      )
+      // Custom encryption context is returned with the prefix stripped,
+      // matching the Dafny implementation behavior.
+      expect(material.encryptionContext).to.have.property('department', 'test')
     })
   })
 
@@ -1008,19 +1005,13 @@ describe('Test Branch keystore', () => {
       })
 
       // 2. Retrieve the active key and verify EC
-      // NOTE: Unlike the Dafny implementation, the JS SDK currently returns
-      // keys with the `aws-crypto-ec:` prefix.
+      // Custom encryption context is returned with the prefix stripped,
+      // matching the Dafny implementation behavior.
       const v1 = await keyStore.getActiveBranchKey(branchKeyIdentifier)
       const v1Version = v1.branchKeyVersion.toString('utf8')
       expect(v1.branchKey().length).to.equal(32)
-      expect(v1.encryptionContext).to.have.property(
-        'aws-crypto-ec:department',
-        'engineering'
-      )
-      expect(v1.encryptionContext).to.have.property(
-        'aws-crypto-ec:project',
-        'lifecycle'
-      )
+      expect(v1.encryptionContext).to.have.property('department', 'engineering')
+      expect(v1.encryptionContext).to.have.property('project', 'lifecycle')
 
       // 3. Version the key
       await keyStore.versionKey({ branchKeyIdentifier })
@@ -1030,16 +1021,10 @@ describe('Test Branch keystore', () => {
       const v2Version = v2.branchKeyVersion.toString('utf8')
       expect(v2.branchKey().length).to.equal(32)
       expect(v2Version).to.not.equal(v1Version)
-      // NOTE: Unlike the Dafny implementation, the JS SDK currently returns
-      // keys with the `aws-crypto-ec:` prefix.
-      expect(v2.encryptionContext).to.have.property(
-        'aws-crypto-ec:department',
-        'engineering'
-      )
-      expect(v2.encryptionContext).to.have.property(
-        'aws-crypto-ec:project',
-        'lifecycle'
-      )
+      // Custom encryption context is returned with the prefix stripped,
+      // matching the Dafny implementation behavior.
+      expect(v2.encryptionContext).to.have.property('department', 'engineering')
+      expect(v2.encryptionContext).to.have.property('project', 'lifecycle')
 
       // 5. Old version is still retrievable with EC preserved
       const oldMaterial = await keyStore.getBranchKeyVersion(
@@ -1048,14 +1033,14 @@ describe('Test Branch keystore', () => {
       )
       expect(oldMaterial.branchKey().length).to.equal(32)
       expect(oldMaterial.branchKeyIdentifier).to.equal(branchKeyIdentifier)
-      // NOTE: Unlike the Dafny implementation, the JS SDK currently returns
-      // keys with the `aws-crypto-ec:` prefix.
+      // Custom encryption context is returned with the prefix stripped,
+      // matching the Dafny implementation behavior.
       expect(oldMaterial.encryptionContext).to.have.property(
-        'aws-crypto-ec:department',
+        'department',
         'engineering'
       )
       expect(oldMaterial.encryptionContext).to.have.property(
-        'aws-crypto-ec:project',
+        'project',
         'lifecycle'
       )
     })
