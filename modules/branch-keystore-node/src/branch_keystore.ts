@@ -16,6 +16,10 @@ import {
   decryptBranchKey,
 } from './branch_keystore_helpers'
 import { KMS_CLIENT_USER_AGENT, TABLE_FIELD } from './constants'
+import {
+  createBranchAndBeaconKeys,
+  versionActiveBranchKey,
+} from './key_helpers'
 
 import {
   IBranchKeyStorage,
@@ -45,8 +49,15 @@ interface IBranchKeyStoreNode {
   //= type=implication
   //# - [GetKeyStoreInfo](#getkeystoreinfo)
   getKeyStoreInfo(): KeyStoreInfoOutput
+  //= aws-encryption-sdk-specification/framework/branch-key-store.md#operations
+  //= type=implication
+  //# - [VersionKey](#versionkey)
+  versionKey(input: VersionKeyInput): Promise<void>
+  //= aws-encryption-sdk-specification/framework/branch-key-store.md#operations
+  //= type=implication
+  //# - [CreateKey](#createkey)
+  createKey(input?: CreateKeyInput): Promise<CreateKeyOutput>
 }
-
 //= aws-encryption-sdk-specification/framework/branch-key-store.md#getkeystoreinfo
 //= type=implication
 //# This MUST include:
@@ -62,6 +73,19 @@ export interface KeyStoreInfoOutput {
   logicalKeyStoreName: string
   grantTokens: string[]
   kmsConfiguration: KmsConfig
+}
+
+export interface VersionKeyInput {
+  branchKeyIdentifier: string
+}
+
+export interface CreateKeyInput {
+  branchKeyIdentifier?: string
+  encryptionContext?: { [key: string]: string }
+}
+
+export interface CreateKeyOutput {
+  branchKeyIdentifier: string
 }
 
 export class BranchKeyStoreNode implements IBranchKeyStoreNode {
@@ -381,6 +405,83 @@ export class BranchKeyStoreNode implements IBranchKeyStoreNode {
     //= aws-encryption-sdk-specification/framework/branch-key-store.md#getbranchkeyversion
     //# This operation MUST return the constructed [branch key materials](./structures.md#branch-key-materials).
     return branchKeyMaterials
+  }
+
+  //= aws-encryption-sdk-specification/framework/branch-key-store.md#createkey
+  //# The CreateKey caller MUST provide:
+  //# - An optional branch key id
+  //# - An optional encryption context
+  async createKey(input?: CreateKeyInput): Promise<CreateKeyOutput> {
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#createkey
+    //# If the Keystore's KMS Configuration is `Discovery` or `MRDiscovery`,
+    //# this operation MUST fail.
+    needs(
+      typeof this.kmsConfiguration._config === 'object' &&
+        ('identifier' in this.kmsConfiguration._config ||
+          'mrkIdentifier' in this.kmsConfiguration._config),
+      'CreateKey is not supported with Discovery or MRDiscovery KMS Configuration'
+    )
+
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#createkey
+    //# If an optional branch key id is provided and no encryption context is provided
+    //# this operation MUST fail.
+    if (input?.branchKeyIdentifier) {
+      needs(
+        input.encryptionContext &&
+          Object.keys(input.encryptionContext).length > 0,
+        'If branch key identifier is provided, encryption context must also be provided'
+      )
+    }
+
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#createkey
+    //# If no branch key id is provided, then this operation MUST create a
+    //# version 4 UUID to be used as the branch key id.
+    const branchKeyIdentifier = input?.branchKeyIdentifier || v4()
+    const customEncryptionContext = input?.encryptionContext || {}
+
+    await createBranchAndBeaconKeys({
+      branchKeyIdentifier,
+      customEncryptionContext,
+      logicalKeyStoreName: this.logicalKeyStoreName,
+      kmsConfiguration: this.kmsConfiguration,
+      grantTokens: this.grantTokens,
+      kmsClient: this.kmsClient,
+      ddbClient: (this.storage as any).ddbClient,
+      ddbTableName: (this.storage as any).ddbTableName,
+    })
+
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#createkey
+    //# If writing to the keystore succeeds,
+    //# the operation MUST return the branch-key-id that maps to both the branch key and the beacon key.
+    return { branchKeyIdentifier }
+  }
+
+  //= aws-encryption-sdk-specification/framework/branch-key-store.md#versionkey
+  //# On invocation, the caller:
+  //# - MUST supply a `branch-key-id`
+  async versionKey(input: VersionKeyInput): Promise<void> {
+    needs(input.branchKeyIdentifier, 'MUST supply a branch-key-id')
+
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#versionkey
+    //# If the Keystore's KMS Configuration is `Discovery` or `MRDiscovery`,
+    //# this operation MUST immediately fail.
+    needs(
+      typeof this.kmsConfiguration._config === 'object' &&
+        ('identifier' in this.kmsConfiguration._config ||
+          'mrkIdentifier' in this.kmsConfiguration._config),
+      'VersionKey is not supported with Discovery or MRDiscovery KMS Configuration'
+    )
+
+    await versionActiveBranchKey({
+      branchKeyIdentifier: input.branchKeyIdentifier,
+      logicalKeyStoreName: this.logicalKeyStoreName,
+      kmsConfiguration: this.kmsConfiguration,
+      grantTokens: this.grantTokens,
+      kmsClient: this.kmsClient,
+      ddbClient: (this.storage as any).ddbClient,
+      ddbTableName: (this.storage as any).ddbTableName,
+      storage: this.storage,
+    })
   }
 
   //= aws-encryption-sdk-specification/framework/branch-key-store.md#getkeystoreinfo
