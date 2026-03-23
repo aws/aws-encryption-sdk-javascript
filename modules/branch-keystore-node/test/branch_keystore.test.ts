@@ -20,6 +20,7 @@ import {
   BRANCH_KEY_ACTIVE_VERSION,
   BRANCH_KEY_ACTIVE_VERSION_UTF8_BYTES,
   BRANCH_KEY_ID,
+  BRANCH_KEY_ID_WITH_EC,
   DDB_TABLE_NAME,
   INCORRECT_LOGICAL_NAME,
   KEY_ARN,
@@ -749,5 +750,299 @@ describe('Test Branch keystore', () => {
         LYING_BRANCH_KEY_DECRYPT_ONLY_VERSION
       )
     ).to.be.rejectedWith(IncorrectKeyException))
+  })
+
+  describe('VersionKey', () => {
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#versionkey
+    //= type=test
+    //# On invocation, the caller:
+    //# - MUST supply a `branch-key-id`
+    it('MUST fail if no branch-key-id is provided', async () => {
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: { identifier: KEY_ARN },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME },
+      })
+
+      await expect(
+        keyStore.versionKey({ branchKeyIdentifier: '' })
+      ).to.be.rejectedWith('MUST supply a branch-key-id')
+
+      await expect(
+        keyStore.versionKey({ branchKeyIdentifier: undefined as any })
+      ).to.be.rejectedWith('MUST supply a branch-key-id')
+
+      await expect(
+        keyStore.versionKey({ branchKeyIdentifier: null as any })
+      ).to.be.rejectedWith('MUST supply a branch-key-id')
+    })
+
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#versionkey
+    //= type=test
+    //# If the Keystore's KMS Configuration is `Discovery` or `MRDiscovery`,
+    //# this operation MUST immediately fail.
+    it('MUST fail with Discovery KMS Configuration', async () => {
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: 'discovery',
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME },
+      })
+
+      await expect(
+        keyStore.versionKey({ branchKeyIdentifier: BRANCH_KEY_ID })
+      ).to.be.rejectedWith(
+        'VersionKey is not supported with Discovery or MRDiscovery KMS Configuration'
+      )
+    })
+
+    it('MUST fail with MRDiscovery KMS Configuration', async () => {
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: { region: 'us-west-2' },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME },
+      })
+
+      await expect(
+        keyStore.versionKey({ branchKeyIdentifier: BRANCH_KEY_ID })
+      ).to.be.rejectedWith(
+        'VersionKey is not supported with Discovery or MRDiscovery KMS Configuration'
+      )
+    })
+
+    it('MUST fail if branch key does not exist', async () => {
+      const kmsClient = new KMSClient({})
+      const ddbClient = new DynamoDBClient({})
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: { identifier: KEY_ARN },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME, ddbClient },
+        keyManagement: { kmsClient },
+      })
+
+      await expect(
+        keyStore.versionKey({
+          branchKeyIdentifier: 'non-existent-branch-key-id',
+        })
+      ).to.be.rejectedWith('was not found')
+    })
+
+    it('Test version key for existing branch key', async () => {
+      const kmsClient = new KMSClient({})
+      const ddbClient = new DynamoDBClient({})
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: { identifier: KEY_ARN },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME, ddbClient },
+        keyManagement: { kmsClient },
+      })
+
+      // Get active key before versioning
+      const before = await keyStore.getActiveBranchKey(BRANCH_KEY_ID_WITH_EC)
+      const oldVersion = before.branchKeyVersion.toString('utf8')
+
+      // Version the key
+      await keyStore.versionKey({
+        branchKeyIdentifier: BRANCH_KEY_ID_WITH_EC, // Use BRANCH_KEY_ID_WITH_EC to avoid mutating the primary test fixture.
+      })
+
+      // Get active key after versioning
+      const after = await keyStore.getActiveBranchKey(BRANCH_KEY_ID_WITH_EC)
+      const newVersion = after.branchKeyVersion.toString('utf8')
+
+      // New version must differ from old
+      expect(newVersion).to.not.equal(oldVersion)
+
+      // New version must be a valid UUID
+      expect(validate(newVersion)).to.be.true
+      expect(version(newVersion)).to.equal(4)
+
+      // Branch key ID unchanged
+      expect(after.branchKeyIdentifier).to.equal(BRANCH_KEY_ID_WITH_EC)
+
+      // Decrypted key is 32 bytes
+      expect(after.branchKey().length).to.equal(32)
+
+      // Old version is still retrievable
+      const oldMaterial = await keyStore.getBranchKeyVersion(
+        BRANCH_KEY_ID_WITH_EC,
+        oldVersion
+      )
+      expect(oldMaterial.branchKey().length).to.equal(32)
+      expect(oldMaterial.branchKeyIdentifier).to.equal(BRANCH_KEY_ID_WITH_EC)
+    })
+  })
+
+  describe('CreateKey', () => {
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#createkey
+    //= type=test
+    //# If the Keystore's KMS Configuration is `Discovery` or `MRDiscovery`,
+    //# this operation MUST fail.
+    it('MUST fail with Discovery KMS Configuration', async () => {
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: 'discovery',
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME },
+      })
+
+      await expect(keyStore.createKey()).to.be.rejectedWith(
+        'CreateKey is not supported with Discovery or MRDiscovery KMS Configuration'
+      )
+    })
+
+    it('MUST fail with MRDiscovery KMS Configuration', async () => {
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: { region: 'us-west-2' },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME },
+      })
+
+      await expect(keyStore.createKey()).to.be.rejectedWith(
+        'CreateKey is not supported with Discovery or MRDiscovery KMS Configuration'
+      )
+    })
+
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#createkey
+    //= type=test
+    //# If an optional branch key id is provided and no encryption context is provided
+    //# this operation MUST fail.
+    it('MUST fail if branch key id provided without encryption context', async () => {
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: { identifier: KEY_ARN },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME },
+      })
+
+      await expect(
+        keyStore.createKey({ branchKeyIdentifier: 'some-id' })
+      ).to.be.rejectedWith(
+        'If branch key identifier is provided, encryption context must also be provided'
+      )
+
+      await expect(
+        keyStore.createKey({
+          branchKeyIdentifier: 'some-id',
+          encryptionContext: {},
+        })
+      ).to.be.rejectedWith(
+        'If branch key identifier is provided, encryption context must also be provided'
+      )
+    })
+
+    //= aws-encryption-sdk-specification/framework/branch-key-store.md#createkey
+    //= type=test
+    //# If no branch key id is provided, then this operation MUST create a
+    //# version 4 UUID to be used as the branch key id.
+    it('Test create key with auto-generated ID', async () => {
+      const kmsClient = new KMSClient({})
+      const ddbClient = new DynamoDBClient({})
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: { identifier: KEY_ARN },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME, ddbClient },
+        keyManagement: { kmsClient },
+      })
+
+      const result = await keyStore.createKey()
+
+      // Must return a valid v4 UUID
+      expect(result.branchKeyIdentifier).to.be.a('string')
+      expect(validate(result.branchKeyIdentifier)).to.be.true
+      expect(version(result.branchKeyIdentifier)).to.equal(4)
+
+      // Must be retrievable
+      const material = await keyStore.getActiveBranchKey(
+        result.branchKeyIdentifier
+      )
+      expect(material.branchKey().length).to.equal(32)
+      expect(material.branchKeyIdentifier).to.equal(result.branchKeyIdentifier)
+    })
+
+    it('Test create key with custom ID and encryption context', async () => {
+      const kmsClient = new KMSClient({})
+      const ddbClient = new DynamoDBClient({})
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: { identifier: KEY_ARN },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME, ddbClient },
+        keyManagement: { kmsClient },
+      })
+
+      const customId = v4()
+      const result = await keyStore.createKey({
+        branchKeyIdentifier: customId,
+        encryptionContext: { department: 'test' },
+      })
+
+      expect(result.branchKeyIdentifier).to.equal(customId)
+
+      // Active key must be retrievable
+      const material = await keyStore.getActiveBranchKey(customId)
+      expect(material.branchKey().length).to.equal(32)
+
+      // Custom encryption context must be preserved.
+      // Custom encryption context is returned with the prefix stripped,
+      // matching the Dafny implementation behavior.
+      expect(material.encryptionContext).to.have.property('department', 'test')
+    })
+  })
+
+  describe('CreateKey + VersionKey lifecycle', () => {
+    it('Create with custom EC, retrieve, version, retrieve new, retrieve old', async () => {
+      const kmsClient = new KMSClient({})
+      const ddbClient = new DynamoDBClient({})
+      const keyStore = new BranchKeyStoreNode({
+        kmsConfiguration: { identifier: KEY_ARN },
+        logicalKeyStoreName: LOGICAL_KEYSTORE_NAME,
+        storage: { ddbTableName: DDB_TABLE_NAME, ddbClient },
+        keyManagement: { kmsClient },
+      })
+
+      // 1. Create a new branch key with custom encryption context
+      const customEc = { department: 'engineering', project: 'lifecycle' }
+      const { branchKeyIdentifier } = await keyStore.createKey({
+        branchKeyIdentifier: v4(),
+        encryptionContext: customEc,
+      })
+
+      // 2. Retrieve the active key and verify EC
+      // Custom encryption context is returned with the prefix stripped,
+      // matching the Dafny implementation behavior.
+      const v1 = await keyStore.getActiveBranchKey(branchKeyIdentifier)
+      const v1Version = v1.branchKeyVersion.toString('utf8')
+      expect(v1.branchKey().length).to.equal(32)
+      expect(v1.encryptionContext).to.have.property('department', 'engineering')
+      expect(v1.encryptionContext).to.have.property('project', 'lifecycle')
+
+      // 3. Version the key
+      await keyStore.versionKey({ branchKeyIdentifier })
+
+      // 4. Retrieve the new active key — must be different version, EC preserved
+      const v2 = await keyStore.getActiveBranchKey(branchKeyIdentifier)
+      const v2Version = v2.branchKeyVersion.toString('utf8')
+      expect(v2.branchKey().length).to.equal(32)
+      expect(v2Version).to.not.equal(v1Version)
+      // Custom encryption context is returned with the prefix stripped,
+      // matching the Dafny implementation behavior.
+      expect(v2.encryptionContext).to.have.property('department', 'engineering')
+      expect(v2.encryptionContext).to.have.property('project', 'lifecycle')
+
+      // 5. Old version is still retrievable with EC preserved
+      const oldMaterial = await keyStore.getBranchKeyVersion(
+        branchKeyIdentifier,
+        v1Version
+      )
+      expect(oldMaterial.branchKey().length).to.equal(32)
+      expect(oldMaterial.branchKeyIdentifier).to.equal(branchKeyIdentifier)
+      // Custom encryption context is returned with the prefix stripped,
+      // matching the Dafny implementation behavior.
+      expect(oldMaterial.encryptionContext).to.have.property(
+        'department',
+        'engineering'
+      )
+      expect(oldMaterial.encryptionContext).to.have.property(
+        'project',
+        'lifecycle'
+      )
+    })
   })
 })
