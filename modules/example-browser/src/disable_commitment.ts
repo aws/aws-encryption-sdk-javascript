@@ -12,7 +12,7 @@ import {
   buildClient,
   CommitmentPolicy,
 } from '@aws-crypto/client-browser'
-import { toBase64 } from '@aws-sdk/util-base64-browser'
+import { toBase64 } from '@aws-sdk/util-base64'
 
 /* This is injected by webpack.
  * The webpack.DefinePlugin will replace the values when bundling.

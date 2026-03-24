@@ -12,7 +12,7 @@ import {
   buildClient,
   CommitmentPolicy,
 } from '@aws-crypto/client-browser'
-import { toBase64 } from '@aws-sdk/util-base64-browser'
+import { toBase64 } from '@aws-sdk/util-base64'
 
 /* This builds the client with the REQUIRE_ENCRYPT_REQUIRE_DECRYPT commitment policy,
  * which enforces that this client only encrypts using committing algorithm suites

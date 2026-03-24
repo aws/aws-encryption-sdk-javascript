@@ -22,7 +22,7 @@ import {
   CommitmentPolicy,
 } from '@aws-crypto/material-management'
 import { ENCODED_SIGNER_KEY } from '@aws-crypto/serialize'
-import { toBase64 } from '@aws-sdk/util-base64-browser'
+import { toBase64 } from '@aws-sdk/util-base64'
 import { synchronousRandomValues } from '@aws-crypto/web-crypto-backend'
 
 chai.use(chaiAsPromised)

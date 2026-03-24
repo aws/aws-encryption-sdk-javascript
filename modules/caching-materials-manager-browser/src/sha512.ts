@@ -1,7 +1,7 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { fromUtf8 } from '@aws-sdk/util-utf8-browser'
+import { fromUtf8 } from '@smithy/util-utf8'
 import {
   getWebCryptoBackend,
   getNonZeroByteBackend,

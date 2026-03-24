@@ -15,7 +15,7 @@ import {
   configureFallback,
   AlgorithmSuiteIdentifier,
 } from '@aws-crypto/client-browser'
-import { toBase64 } from '@aws-sdk/util-base64-browser'
+import { toBase64 } from '@aws-sdk/util-base64'
 
 /* This builds the client with the FORBID_ENCRYPT_ALLOW_DECRYPT commitment policy.
  * This is because the current version of `msrcrypto`

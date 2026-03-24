@@ -27,7 +27,7 @@ import {
   getWebCryptoBackend,
   getNonZeroByteBackend,
 } from '@aws-crypto/web-crypto-backend'
-import { fromBase64, toBase64 } from '@aws-sdk/util-base64-browser'
+import { fromBase64, toBase64 } from '@aws-sdk/util-base64'
 
 export type WebCryptoEncryptionRequest =
   EncryptionRequest<WebCryptoAlgorithmSuite>

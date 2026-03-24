@@ -14,7 +14,7 @@ import {
   TestVectorResult,
 } from '@aws-crypto/integration-vectors'
 import { decryptMaterialsManagerWebCrypto } from './decrypt_materials_manager_web_crypto'
-import { fromBase64 } from '@aws-sdk/util-base64-browser'
+import { fromBase64 } from '@aws-sdk/util-base64'
 
 export const expectedNotActualPlaintextMessage = `Decrypted plaintext did not match expected plaintext`
 

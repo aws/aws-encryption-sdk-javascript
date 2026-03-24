@@ -24,7 +24,7 @@ import {
 } from '@aws-crypto/serialize'
 import { buildEncrypt } from '../src/index'
 import { _encrypt } from '../src/encrypt'
-import { toUtf8, fromUtf8 } from '@aws-sdk/util-utf8-browser'
+import { toUtf8, fromUtf8 } from '@smithy/util-utf8'
 const { encrypt } = buildEncrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
 
 chai.use(chaiAsPromised)

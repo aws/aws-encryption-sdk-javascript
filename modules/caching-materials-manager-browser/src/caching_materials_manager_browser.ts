@@ -19,8 +19,8 @@ import {
   WebCryptoGetEncryptionMaterials,
   WebCryptoGetDecryptMaterials,
 } from '@aws-crypto/material-management-browser'
-import { fromUtf8, toUtf8 } from '@aws-sdk/util-utf8-browser'
-import { toBase64 } from '@aws-sdk/util-base64-browser'
+import { fromUtf8, toUtf8 } from '@smithy/util-utf8'
+import { toBase64 } from '@aws-sdk/util-base64'
 import { synchronousRandomValues } from '@aws-crypto/web-crypto-backend'
 import { sha512 } from './sha512'
 
