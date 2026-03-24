@@ -57,7 +57,7 @@ function aTest(testName: string, decryptOracle: string) {
         body: result,
       })
       const body = await response.arrayBuffer()
-      needs(response.ok, `Failed to decrypt: ${toUtf8(body)}`)
+      needs(response.ok, `Failed to decrypt: ${toUtf8(new Uint8Array(body))}`)
       expect(plainText).toEqual(new Uint8Array(body))
     } catch (err) {
       needs(
