@@ -1,7 +1,7 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { toBase64 } from '@aws-sdk/util-base64-browser'
+import { toBase64 } from '@aws-sdk/util-base64'
 
 export function bytes2JWK(rawKeyBytes: Uint8Array): JsonWebKey {
   // See https://tools.ietf.org/html/rfc7515#appendix-C Base64url Encoding

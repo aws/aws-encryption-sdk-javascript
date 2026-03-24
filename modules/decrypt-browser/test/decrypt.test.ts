@@ -22,7 +22,7 @@ import {
   MessageFormat,
   WebCryptoAlgorithmSuite,
 } from '@aws-crypto/material-management'
-import { fromBase64 } from '@aws-sdk/util-base64-browser'
+import { fromBase64 } from '@aws-sdk/util-base64'
 chai.use(chaiAsPromised)
 const { expect } = chai
 const { decrypt } = buildDecrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)

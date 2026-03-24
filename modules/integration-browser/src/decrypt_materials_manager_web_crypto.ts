@@ -28,7 +28,7 @@ import {
   buildGetKeyring,
 } from '@aws-crypto/integration-vectors'
 
-import { fromBase64 } from '@aws-sdk/util-base64-browser'
+import { fromBase64 } from '@aws-sdk/util-base64'
 // @ts-ignore
 import keyto from '@trust/keyto'
 // credentials is from '@aws-sdk/karma-credential-loader'

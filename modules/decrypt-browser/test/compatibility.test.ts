@@ -24,8 +24,8 @@ import {
   KMS,
   getClient,
 } from '@aws-crypto/kms-keyring-browser'
-import { fromBase64, toBase64 } from '@aws-sdk/util-base64-browser'
-import { toUtf8 } from '@aws-sdk/util-utf8-browser'
+import { fromBase64, toBase64 } from '@aws-sdk/util-base64'
+import { toUtf8 } from '@smithy/util-utf8'
 chai.use(chaiAsPromised)
 const { expect } = chai
 

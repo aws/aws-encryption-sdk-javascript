@@ -34,7 +34,7 @@ import {
   getNonZeroByteBackend,
 } from '@aws-crypto/web-crypto-backend'
 
-import { fromBase64 } from '@aws-sdk/util-base64-browser'
+import { fromBase64 } from '@aws-sdk/util-base64'
 
 chai.use(chaiAsPromised)
 const { expect } = chai

@@ -24,7 +24,7 @@ import {
   HeaderInfo,
   MessageHeaderV2,
 } from '@aws-crypto/serialize'
-import { fromUtf8, toUtf8 } from '@aws-sdk/util-utf8-browser'
+import { fromUtf8, toUtf8 } from '@smithy/util-utf8'
 
 const deserialize = deserializeFactory(toUtf8, WebCryptoAlgorithmSuite)
 const { messageAADContentString, messageAAD } = aadFactory(fromUtf8)

@@ -4,13 +4,13 @@
 /* eslint-env jasmine */
 
 import { encryptMaterialsManagerWebCrypto } from './decrypt_materials_manager_web_crypto'
-import { fromBase64 } from '@aws-sdk/util-base64-browser'
+import { fromBase64 } from '@aws-sdk/util-base64'
 import {
   buildClient,
   CommitmentPolicy,
   needs,
 } from '@aws-crypto/client-browser'
-import { toUtf8 } from '@aws-sdk/util-utf8-browser'
+import { toUtf8 } from '@smithy/util-utf8'
 const { encrypt } = buildClient(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
 declare const expect: any
 declare const __fixtures__: any
@@ -57,7 +57,7 @@ function aTest(testName: string, decryptOracle: string) {
         body: result,
       })
       const body = await response.arrayBuffer()
-      needs(response.ok, `Failed to decrypt: ${toUtf8(body)}`)
+      needs(response.ok, `Failed to decrypt: ${toUtf8(new Uint8Array(body))}`)
       expect(plainText).toEqual(new Uint8Array(body))
     } catch (err) {
       needs(

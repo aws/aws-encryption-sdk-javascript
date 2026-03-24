@@ -29,7 +29,7 @@ import {
   WrapKey,
   UnwrapKey,
 } from '@aws-crypto/raw-keyring'
-import { fromUtf8, toUtf8 } from '@aws-sdk/util-utf8-browser'
+import { fromUtf8, toUtf8 } from '@smithy/util-utf8'
 import { randomValuesOnly } from '@aws-crypto/random-source-browser'
 import {
   getWebCryptoBackend,

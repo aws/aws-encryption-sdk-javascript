@@ -6,7 +6,7 @@
 /* eslint-env mocha */
 
 import { expect } from 'chai'
-import { fromBase64 } from '@aws-sdk/util-base64-browser'
+import { fromBase64 } from '@aws-sdk/util-base64'
 import { KeyInfoTuple, TestVectorResult } from '@aws-crypto/integration-vectors'
 import {
   KeyringWebCrypto,
