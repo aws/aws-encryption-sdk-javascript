@@ -23,6 +23,9 @@
     "tslib": "^2.2.0",
     "uuid": "^10.0.0"
   },
+  "devDependencies": {
+    "@types/uuid": "^10.0.0"
+  },
   "sideEffects": false,
   "main": "./build/main/src/index.js",
   "module": "./build/module/src/index.js",
