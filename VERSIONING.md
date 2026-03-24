@@ -2,6 +2,8 @@
 
 The AWS Encryption SDK for JavaScript versioning follows [semantic versioning][link-semver] standards.
 
+**Exception**: Dropping support for a runtime or dependency that has reached end of life (EOL) is treated as a minor version change.
+
 ## Major versions
 
 Major version changes are significant and expected to break backwards compatibility.
