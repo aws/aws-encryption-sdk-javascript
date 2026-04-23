@@ -50,5 +50,10 @@
   "files": [
     "build/**/src/*",
     "karma.conf.js"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awslabs/aws-encryption-sdk-javascript.git",
+    "directory": "modules/integration-browser"
+  }
 }

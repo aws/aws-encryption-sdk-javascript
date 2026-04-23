@@ -35,5 +35,10 @@
   "bin": "./build/main/src/cli.js",
   "files": [
     "build/**/src/*"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awslabs/aws-encryption-sdk-javascript.git",
+    "directory": "modules/integration-node"
+  }
 }

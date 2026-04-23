@@ -28,5 +28,10 @@
   "types": "./build/main/src/index.d.ts",
   "files": [
     "build/**/src/*"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awslabs/aws-encryption-sdk-javascript.git",
+    "directory": "modules/decrypt-browser"
+  }
 }

@@ -22,7 +22,6 @@
     "@aws-crypto/serialize": "file:../serialize",
     "@aws-crypto/web-crypto-backend": "file:../web-crypto-backend",
     "@aws-sdk/util-base64": "^3.374.0",
-    "@aws-sdk/util-base64": "^3.374.0",
     "tslib": "^2.2.0"
   },
   "sideEffects": false,
@@ -31,5 +30,10 @@
   "types": "./build/main/src/index.d.ts",
   "files": [
     "build/**/src/*"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awslabs/aws-encryption-sdk-javascript.git",
+    "directory": "modules/material-management-browser"
+  }
 }
