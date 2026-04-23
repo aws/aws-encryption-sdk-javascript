@@ -3,29 +3,6 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [5.0.0](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.2.2...v5.0.0) (2026-04-23)
-
-### Bug Fixes
-
-- **ci:** fix VERSION_BUMP scoping and remove unused NPM token from publish job ([#1653](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1653)) ([6fd56ea](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/6fd56ea4ac135bf7b28faa935b5cd20412ffd4bc))
-- **ci:** force pull in publish step ([#1639](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1639)) ([6b74c8c](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/6b74c8cd573290f33ea0142ea3e5da68005e0468))
-- **ci:** npm otp fix for publish ([#1641](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1641)) ([fcaf49f](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/fcaf49f31821f8453f8ad34e9766efd39084c5ca))
-- **ci:** npm token for publish ([#1640](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1640)) ([953ae60](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/953ae609cd19e4bf508613bb06bac8ed3574f784))
-- mitigate dependency issues — remove deprecated packages ([#1654](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1654)) ([d795278](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/d795278bfc6f9d023545f0b36bef701ba5387081))
-- Removes the internal added prefix from custom encryption context before creating the branch key material node object ([#1650](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1650)) ([9907b1b](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/9907b1ba70233edf96ce56eb0e8eb094b93c517f))
-
-- feat!: Drop IE11 support (#1651) ([f11b277](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/f11b277b802180e89532ff83bced7440e42247e0)), closes [#1651](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1651)
-
-### Features
-
-- Adds create and version branch key functionality ([#1652](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1652)) ([6fab564](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/6fab56475d4d2521bca859a66f7ce759aad7ba44)), closes [#1642](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1642)
-
-### BREAKING CHANGES
-
-- The AWS Encryption SDK for JavaScript no longer supports Internet Explorer 11 (IE11). The msCrypto shim and related IE11 detection code have been removed from the web-crypto-backend module.
-
-Co-authored-by: Lucas McDonald <lucmcdon@amazon.com>
-
 ## [4.2.2](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.2.1...v4.2.2) (2026-03-05)
 
 ### Bug Fixes
