@@ -1,6 +1,6 @@
 {
   "packages": ["modules/*"],
-  "version": "5.0.0",
+  "version": "4.2.2",
   "command": {
     "bootstrap": {
       "nohoist": ["typedoc"]
