@@ -3,16 +3,6 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [5.0.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.2...v5.0.0) (2026-04-23)
-
-### Bug Fixes
-
-- Removes the internal added prefix from custom encryption context before creating the branch key material node object ([#1650](https://github.com/aws/aws-encryption-sdk-javascript/issues/1650)) ([9907b1b](https://github.com/aws/aws-encryption-sdk-javascript/commit/9907b1ba70233edf96ce56eb0e8eb094b93c517f))
-
-### Features
-
-- Adds create and version branch key functionality ([#1652](https://github.com/aws/aws-encryption-sdk-javascript/issues/1652)) ([6fab564](https://github.com/aws/aws-encryption-sdk-javascript/commit/6fab56475d4d2521bca859a66f7ce759aad7ba44)), closes [#1642](https://github.com/aws/aws-encryption-sdk-javascript/issues/1642)
-
 ## [4.2.2](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.1...v4.2.2) (2026-03-05)
 
 ### Bug Fixes
