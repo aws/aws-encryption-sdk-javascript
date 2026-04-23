@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.0.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.2...v5.0.0) (2026-04-23)
+
+### Reverts
+
+- Revert "v5.0.0" ([0ee917e](https://github.com/aws/aws-encryption-sdk-javascript/commit/0ee917e08b202c93d10927eb279132ae03634c0d))
+
 # [4.0.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v3.2.2...v4.0.0) (2023-07-17)
 
 **Note:** Version bump only for package @aws-crypto/hkdf-node

@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [5.0.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.2...v5.0.0) (2026-04-23)
+
+### Bug Fixes
+
+- mitigate dependency issues — remove deprecated packages ([#1654](https://github.com/aws/aws-encryption-sdk-javascript/issues/1654)) ([d795278](https://github.com/aws/aws-encryption-sdk-javascript/commit/d795278bfc6f9d023545f0b36bef701ba5387081))
+
+- feat!: Drop IE11 support (#1651) ([f11b277](https://github.com/aws/aws-encryption-sdk-javascript/commit/f11b277b802180e89532ff83bced7440e42247e0)), closes [#1651](https://github.com/aws/aws-encryption-sdk-javascript/issues/1651)
+
+### Reverts
+
+- Revert "v5.0.0" ([0ee917e](https://github.com/aws/aws-encryption-sdk-javascript/commit/0ee917e08b202c93d10927eb279132ae03634c0d))
+
+### BREAKING CHANGES
+
+- The AWS Encryption SDK for JavaScript no longer supports Internet Explorer 11 (IE11). The msCrypto shim and related IE11 detection code have been removed from the web-crypto-backend module.
+
+Co-authored-by: Lucas McDonald <lucmcdon@amazon.com>
+
 ## [4.0.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.0.0...v4.0.1) (2024-07-30)
 
 **Note:** Version bump only for package @aws-crypto/web-crypto-backend
