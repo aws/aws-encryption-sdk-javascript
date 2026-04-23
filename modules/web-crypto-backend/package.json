@@ -36,5 +36,10 @@
     "plugins": [
       "@typescript-eslint"
     ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awslabs/aws-encryption-sdk-javascript.git",
+    "directory": "modules/web-crypto-backend"
   }
 }
