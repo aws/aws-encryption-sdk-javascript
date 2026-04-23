@@ -47,7 +47,7 @@
   "types": "./build/main/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/awslabs/aws-encryption-sdk-javascript.git",
+    "url": "https://github.com/aws/aws-encryption-sdk-javascript.git",
     "directory": "modules/example-browser"
   }
 }
