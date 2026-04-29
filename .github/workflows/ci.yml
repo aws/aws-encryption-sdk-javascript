@@ -4,11 +4,21 @@ permissions:
   contents: read
   id-token: write
 
-on: [pull_request, workflow_call]
+on:
+  pull_request:
+  workflow_call:
+    inputs:
+      branch:
+        description: "Branch to checkout"
+        required: false
+        default: master
+        type: string
 
 jobs:
   shared-ci:
     uses: ./.github/workflows/shared-ci.yml
+    with:
+      branch: ${{ inputs.branch || 'master' }}
   pr-ci-all-required:
     if: always()
     needs:
