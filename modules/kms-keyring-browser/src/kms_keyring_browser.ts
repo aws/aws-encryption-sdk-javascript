@@ -46,8 +46,16 @@ export class KmsKeyringBrowser extends KmsKeyringClass<
     generatorKeyId,
     grantTokens,
     discovery,
+    discoveryFilter,
   }: KmsKeyringWebCryptoInput = {}) {
-    super({ clientProvider, keyIds, generatorKeyId, grantTokens, discovery })
+    super({
+      clientProvider,
+      keyIds,
+      generatorKeyId,
+      grantTokens,
+      discovery,
+      discoveryFilter,
+    })
   }
 
   async _onEncrypt(material: WebCryptoEncryptionMaterial) {

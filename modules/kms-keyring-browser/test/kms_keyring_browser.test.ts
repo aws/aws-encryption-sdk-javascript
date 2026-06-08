@@ -48,6 +48,13 @@ describe('KmsKeyringBrowser::constructor', () => {
     const test = new KmsKeyringBrowser({ discovery: true })
     expect(test instanceof KeyringWebCrypto).to.equal(true)
   })
+
+  it('forwards discoveryFilter to base KmsKeyring', () => {
+    const discoveryFilter = { accountIDs: ['123456789012'], partition: 'aws' }
+    const test = new KmsKeyringBrowser({ discovery: true, discoveryFilter })
+    expect(test.isDiscovery).to.equal(true)
+    expect(test.discoveryFilter).to.deep.equal(discoveryFilter)
+  })
 })
 
 describe('KmsKeyringBrowser can encrypt/decrypt with AWS SDK v3 client', () => {

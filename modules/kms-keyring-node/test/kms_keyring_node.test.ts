@@ -37,6 +37,60 @@ describe('KmsKeyringNode::constructor', () => {
     const test = new KmsKeyringNode({ discovery: true })
     expect(test instanceof KeyringNode).to.equal(true)
   })
+
+  it('forwards discoveryFilter to base KmsKeyring', () => {
+    const discoveryFilter = { accountIDs: ['123456789012'], partition: 'aws' }
+    const test = new KmsKeyringNode({ discovery: true, discoveryFilter })
+    expect(test.isDiscovery).to.equal(true)
+    expect(test.discoveryFilter).to.deep.equal(discoveryFilter)
+  })
+
+  it('discoveryFilter excludes EDKs from non-allowed accounts on decrypt', async () => {
+    const allowedAccount = '111111111111'
+    const otherAccount = '222222222222'
+    const allowedArn = `arn:aws:kms:us-east-1:${allowedAccount}:key/12345678-1234-1234-1234-123456789012`
+    const otherArn = `arn:aws:kms:us-east-1:${otherAccount}:key/12345678-1234-1234-1234-123456789012`
+
+    const decryptCalls: string[] = []
+    const clientProvider: any = () => ({
+      decrypt: ({ KeyId }: any) => {
+        decryptCalls.push(KeyId)
+        // Always succeed for the keys the keyring chooses to call.
+        return {
+          Plaintext: new Uint8Array(16),
+          KeyId,
+        }
+      },
+    })
+
+    const keyring = new KmsKeyringNode({
+      clientProvider,
+      discovery: true,
+      discoveryFilter: { accountIDs: [allowedAccount], partition: 'aws' },
+    })
+
+    const suite = new NodeAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
+    const material = new NodeDecryptionMaterial(suite, {})
+    const edks = [
+      new EncryptedDataKey({
+        providerId: 'aws-kms',
+        providerInfo: otherArn,
+        encryptedDataKey: Buffer.from(otherArn),
+      }),
+      new EncryptedDataKey({
+        providerId: 'aws-kms',
+        providerInfo: allowedArn,
+        encryptedDataKey: Buffer.from(allowedArn),
+      }),
+    ]
+
+    await keyring.onDecrypt(material, edks)
+
+    // Only the allowed-account EDK should reach KMS.
+    expect(decryptCalls).to.deep.equal([allowedArn])
+  })
 })
 
 describe('KmsKeyringNode can encrypt/decrypt with AWS SDK v3 client', () => {
