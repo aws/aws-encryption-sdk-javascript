@@ -91,6 +91,50 @@ describe('KmsKeyringNode::constructor', () => {
     // Only the allowed-account EDK should reach KMS.
     expect(decryptCalls).to.deep.equal([allowedArn])
   })
+
+  it('throws when discoveryFilter has empty accountIDs', () => {
+    expect(
+      () =>
+        new KmsKeyringNode({
+          discovery: true,
+          discoveryFilter: { accountIDs: [], partition: 'aws' },
+        })
+    ).to.throw('A discovery filter must be able to match something.')
+  })
+
+  it('throws when discoveryFilter has empty partition', () => {
+    expect(
+      () =>
+        new KmsKeyringNode({
+          discovery: true,
+          discoveryFilter: { accountIDs: ['123456789012'], partition: '' },
+        })
+    ).to.throw('A discovery filter must be able to match something.')
+  })
+
+  it('throws when discoveryFilter accountIDs contains an empty string', () => {
+    expect(
+      () =>
+        new KmsKeyringNode({
+          discovery: true,
+          discoveryFilter: { accountIDs: [''], partition: 'aws' },
+        })
+    ).to.throw('A discovery filter must be able to match something.')
+  })
+
+  it('throws when discoveryFilter is set without discovery=true', () => {
+    expect(
+      () =>
+        new KmsKeyringNode({
+          keyIds: [
+            'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012',
+          ],
+          discoveryFilter: { accountIDs: ['123456789012'], partition: 'aws' },
+        })
+    ).to.throw(
+      'Account and partition decrypt filtering are only supported when discovery === true'
+    )
+  })
 })
 
 describe('KmsKeyringNode can encrypt/decrypt with AWS SDK v3 client', () => {

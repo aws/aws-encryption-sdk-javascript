@@ -55,6 +55,95 @@ describe('KmsKeyringBrowser::constructor', () => {
     expect(test.isDiscovery).to.equal(true)
     expect(test.discoveryFilter).to.deep.equal(discoveryFilter)
   })
+
+  it('discoveryFilter excludes EDKs from non-allowed accounts on decrypt', async () => {
+    const allowedAccount = '111111111111'
+    const otherAccount = '222222222222'
+    const allowedArn = `arn:aws:kms:us-east-1:${allowedAccount}:key/12345678-1234-1234-1234-123456789012`
+    const otherArn = `arn:aws:kms:us-east-1:${otherAccount}:key/12345678-1234-1234-1234-123456789012`
+
+    const decryptCalls: string[] = []
+    const mockClientProvider: any = () => ({
+      decrypt: ({ KeyId }: any) => {
+        decryptCalls.push(KeyId)
+        return {
+          Plaintext: new Uint8Array(16),
+          KeyId,
+        }
+      },
+    })
+
+    const keyring = new KmsKeyringBrowser({
+      clientProvider: mockClientProvider,
+      discovery: true,
+      discoveryFilter: { accountIDs: [allowedAccount], partition: 'aws' },
+    })
+
+    const suite = new WebCryptoAlgorithmSuite(
+      AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16
+    )
+    const material = new WebCryptoDecryptionMaterial(suite, {})
+    const edks = [
+      new EncryptedDataKey({
+        providerId: 'aws-kms',
+        providerInfo: otherArn,
+        encryptedDataKey: new Uint8Array(Buffer.from(otherArn)),
+      }),
+      new EncryptedDataKey({
+        providerId: 'aws-kms',
+        providerInfo: allowedArn,
+        encryptedDataKey: new Uint8Array(Buffer.from(allowedArn)),
+      }),
+    ]
+
+    await keyring.onDecrypt(material, edks)
+
+    expect(decryptCalls).to.deep.equal([allowedArn])
+  })
+
+  it('throws when discoveryFilter has empty accountIDs', () => {
+    expect(
+      () =>
+        new KmsKeyringBrowser({
+          discovery: true,
+          discoveryFilter: { accountIDs: [], partition: 'aws' },
+        })
+    ).to.throw('A discovery filter must be able to match something.')
+  })
+
+  it('throws when discoveryFilter has empty partition', () => {
+    expect(
+      () =>
+        new KmsKeyringBrowser({
+          discovery: true,
+          discoveryFilter: { accountIDs: ['123456789012'], partition: '' },
+        })
+    ).to.throw('A discovery filter must be able to match something.')
+  })
+
+  it('throws when discoveryFilter accountIDs contains an empty string', () => {
+    expect(
+      () =>
+        new KmsKeyringBrowser({
+          discovery: true,
+          discoveryFilter: { accountIDs: [''], partition: 'aws' },
+        })
+    ).to.throw('A discovery filter must be able to match something.')
+  })
+
+  it('throws when discoveryFilter is set without discovery=true', () => {
+    expect(
+      () =>
+        new KmsKeyringBrowser({
+          keyIds: [
+            'arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012',
+          ],
+          discoveryFilter: { accountIDs: ['123456789012'], partition: 'aws' },
+        })
+    ).to.throw(
+      'Account and partition decrypt filtering are only supported when discovery === true'
+    )
+  })
 })
 
 describe('KmsKeyringBrowser can encrypt/decrypt with AWS SDK v3 client', () => {
