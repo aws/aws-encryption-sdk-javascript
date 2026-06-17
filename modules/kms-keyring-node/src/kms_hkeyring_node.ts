@@ -15,6 +15,7 @@ import {
   KeyringNode,
   needs,
   NodeAlgorithmSuite,
+  NodeBranchKeyMaterial,
   NodeDecryptionMaterial,
   NodeEncryptionMaterial,
   readOnlyProperty,
@@ -88,6 +89,7 @@ export interface IKmsHierarchicalKeyRingNode extends KeyringNode {
     encryptedDataKeys: EncryptedDataKey[]
   ): Promise<NodeDecryptionMaterial>
   cacheEntryHasExceededLimits(entry: BranchKeyMaterialEntry): boolean
+  _branchKeyMaterialsInFlight: Map<string, Promise<NodeBranchKeyMaterial>>
 }
 
 export class KmsHierarchicalKeyRingNode
@@ -104,6 +106,10 @@ export class KmsHierarchicalKeyRingNode
   public declare cacheLimitTtl: number
   public declare maxCacheSize?: number
   public declare _cmc: CryptographicMaterialsCache<NodeAlgorithmSuite>
+  public declare _branchKeyMaterialsInFlight: Map<
+    string,
+    Promise<NodeBranchKeyMaterial>
+  >
   declare readonly _partition: Buffer
   public declare _utf8Sorting: boolean
 
@@ -258,6 +264,8 @@ export class KmsHierarchicalKeyRingNode
     }
     readOnlyProperty(this, 'maxCacheSize', maxCacheSize)
     readOnlyProperty(this, '_cmc', cache)
+
+    readOnlyProperty(this, '_branchKeyMaterialsInFlight', new Map())
 
     if (utf8Sorting === undefined) {
       readOnlyProperty(this, '_utf8Sorting', false)
