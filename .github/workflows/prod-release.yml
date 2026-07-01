@@ -99,7 +99,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '22.22.1'
           registry-url: 'https://registry.npmjs.org'
 
       # Ensure npm 11.5.1 or later is installed
@@ -108,6 +108,8 @@ jobs:
       - run: npm ci --unsafe-perm
       - run: npm run build --if-present
       - run: npx lerna publish from-package --yes --dist-tag ${{ github.event.inputs.dist_tag }}
+        env:
+          NPM_CONFIG_PROVENANCE: true
 
   # Once publishing is complete, validate that the published packages are useable
   validate:

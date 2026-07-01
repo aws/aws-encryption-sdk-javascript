@@ -15,7 +15,12 @@ jobs:
   DAILY_CI:
     # Don't run the cron builds on forks
     if: github.event_name != 'schedule' || github.repository_owner == 'aws'
+    strategy:
+      matrix:
+        branch: [master, v4.x]
     uses: ./.github/workflows/ci.yml
+    with:
+      branch: ${{ matrix.branch }}
   notify:
     needs:
       [

@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/raw-rsa-keyring-browser",
-  "version": "4.2.2",
+  "version": "5.0.0",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -31,5 +31,10 @@
   "types": "./build/main/src/index.d.ts",
   "files": [
     "build/**/src/*"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aws/aws-encryption-sdk-javascript.git",
+    "directory": "modules/raw-rsa-keyring-browser"
+  }
 }

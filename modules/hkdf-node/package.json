@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/hkdf-node",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "nodejs hkdf crypto primitive",
   "scripts": {
     "prepublishOnly": "npm run build",
@@ -12,7 +12,11 @@
     "test": "npm run lint && npm run coverage",
     "coverage": "nyc -e .ts npm run mocha"
   },
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aws/aws-encryption-sdk-javascript.git",
+    "directory": "modules/hkdf-node"
+  },
   "author": {
     "name": "AWS Crypto Tools Team",
     "email": "aws-cryptools@amazon.com",
