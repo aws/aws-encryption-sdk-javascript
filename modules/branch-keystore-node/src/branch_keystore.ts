@@ -10,7 +10,7 @@ import {
   needs,
   readOnlyProperty,
 } from '@aws-crypto/material-management'
-import { v4 } from 'uuid'
+import { randomUUID } from 'crypto'
 import {
   constructBranchKeyMaterials,
   decryptBranchKey,
@@ -204,7 +204,7 @@ export class BranchKeyStoreNode implements IBranchKeyStoreNode {
     //= aws-encryption-sdk-specification/framework/branch-key-store.md#keystore-id
     //# The Identifier for this KeyStore.
     //# If one is not supplied, then a [version 4 UUID](https://www.ietf.org/rfc/rfc4122.txt) MUST be used.
-    readOnlyProperty(this, 'keyStoreId', keyStoreId ? keyStoreId : v4())
+    readOnlyProperty(this, 'keyStoreId', keyStoreId ? keyStoreId : randomUUID())
     /* Postcondition: If unprovided, the keystore id is a generated valid uuidv4 */
 
     //= aws-encryption-sdk-specification/framework/branch-key-store.md#aws-kms-grant-tokens
@@ -436,7 +436,7 @@ export class BranchKeyStoreNode implements IBranchKeyStoreNode {
     //= aws-encryption-sdk-specification/framework/branch-key-store.md#createkey
     //# If no branch key id is provided, then this operation MUST create a
     //# version 4 UUID to be used as the branch key id.
-    const branchKeyIdentifier = input?.branchKeyIdentifier || v4()
+    const branchKeyIdentifier = input?.branchKeyIdentifier || randomUUID()
     const customEncryptionContext = input?.encryptionContext || {}
 
     await createBranchAndBeaconKeys({

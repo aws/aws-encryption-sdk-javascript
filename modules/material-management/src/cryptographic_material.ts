@@ -17,7 +17,14 @@ import { KeyringTrace, KeyringTraceFlag } from './keyring_trace'
 import { NodeAlgorithmSuite } from './node_algorithms'
 import { WebCryptoAlgorithmSuite } from './web_crypto_algorithms'
 import { needs } from './needs'
-import { validate, version } from 'uuid'
+
+/* Matches a canonical RFC 4122 version 4 UUID.
+ * Equivalent to the previous `validate(x) && version(x) === 4` check
+ * from the `uuid` package: the third group must start with `4` (version)
+ * and the fourth group must start with `8`, `9`, `a`, or `b` (variant).
+ */
+const UUIDV4_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 /* KeyObject were introduced in v11.
  * They protect the data key better than a Buffer.
@@ -180,7 +187,7 @@ export class NodeBranchKeyMaterial implements BranchKeyMaterial {
 
     /* Precondition: branch key version must be valid version 4 uuid */
     needs(
-      validate(branchKeyVersion) && version(branchKeyVersion) === 4,
+      UUIDV4_PATTERN.test(branchKeyVersion),
       'Branch key version must be valid version 4 uuid'
     )
 

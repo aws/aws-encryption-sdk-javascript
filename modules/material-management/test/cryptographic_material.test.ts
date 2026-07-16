@@ -31,8 +31,13 @@ import {
   supportsKeyObject,
   NodeBranchKeyMaterial,
 } from '../src/cryptographic_material'
-import { v1, v4, v3, v5 } from 'uuid'
-import { createSecretKey } from 'crypto'
+import { createSecretKey, randomUUID } from 'crypto'
+
+// Valid-format UUIDs whose version nibble is not 4, used to exercise the
+// "not a v4 UUID" rejection paths (previously generated via uuid's v1/v3/v5).
+const uuidV1 = '2c5ea4c0-4067-11e9-8bad-9b1deb4d3b7d'
+const uuidV3 = '9125a8dc-52ee-365b-a5aa-81b0b3681cf6'
+const uuidV5 = '74738ff5-5367-5958-9aee-98fffdcd1876'
 
 describe('decorateCryptographicMaterial', () => {
   it('will decorate', () => {
@@ -994,7 +999,7 @@ describe('decorateWebCryptoMaterial:Helpers', () => {
 describe('NodeBranchKeyMaterial', () => {
   const branchKey = Buffer.alloc(32)
   const branchKeyId = 'id'
-  const branchKeyVersion = v4()
+  const branchKeyVersion = randomUUID()
   const encryptionContext = {}
   const test = new NodeBranchKeyMaterial(
     branchKey,
@@ -1094,19 +1099,17 @@ describe('NodeBranchKeyMaterial', () => {
         new NodeBranchKeyMaterial(
           branchKey,
           branchKeyId,
-          v1(),
+          uuidV1,
           encryptionContext
         )
     ).to.throw('Branch key version must be valid version 4 uuid')
 
-    const namespace = v4()
-    const name = 'example.com'
     expect(
       () =>
         new NodeBranchKeyMaterial(
           branchKey,
           branchKeyId,
-          v3(name, namespace),
+          uuidV3,
           encryptionContext
         )
     ).to.throw('Branch key version must be valid version 4 uuid')
@@ -1115,7 +1118,7 @@ describe('NodeBranchKeyMaterial', () => {
         new NodeBranchKeyMaterial(
           branchKey,
           branchKeyId,
-          v5(name, namespace),
+          uuidV5,
           encryptionContext
         )
     ).to.throw('Branch key version must be valid version 4 uuid')
@@ -1124,7 +1127,7 @@ describe('NodeBranchKeyMaterial', () => {
       new NodeBranchKeyMaterial(
         branchKey,
         branchKeyId,
-        v4().toUpperCase(),
+        randomUUID().toUpperCase(),
         encryptionContext
       )
     })

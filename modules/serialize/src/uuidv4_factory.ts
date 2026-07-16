@@ -2,11 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { needs } from '@aws-crypto/material-management'
-import { validate, version } from 'uuid'
+
+/* Matches a canonical RFC 4122 version 4 UUID.
+ * Equivalent to the previous `validate(x) && version(x) === 4` check
+ * from the `uuid` package: the third group must start with `4` (version)
+ * and the fourth group must start with `8`, `9`, `a`, or `b` (variant).
+ */
+const UUIDV4_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 // function to validate a string as uuidv4
-const validateUuidv4 = (input: string): boolean =>
-  validate(input) && version(input) === 4
+const validateUuidv4 = (input: string): boolean => UUIDV4_PATTERN.test(input)
 
 // accepts user defined lambda functions to convert between a string and
 // compressed hex encoded

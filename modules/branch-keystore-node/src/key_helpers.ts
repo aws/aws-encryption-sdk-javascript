@@ -10,7 +10,7 @@ import {
   DynamoDBClient,
   TransactWriteItemsCommand,
 } from '@aws-sdk/client-dynamodb'
-import { v4 } from 'uuid'
+import { randomUUID } from 'crypto'
 import { needs } from '@aws-crypto/material-management'
 import { KmsKeyConfig } from './kms_config'
 import {
@@ -177,7 +177,7 @@ export async function createBranchAndBeaconKeys(
 
   //= aws-encryption-sdk-specification/framework/branch-key-store.md#branch-key-and-beacon-key-creation
   //# - `version`: a new guid. This guid MUST be version 4 UUID
-  const branchKeyVersion = v4()
+  const branchKeyVersion = randomUUID()
   const timestamp = getCurrentTimestamp()
 
   const kmsKeyArn = getKmsKeyArn(kmsConfiguration)
@@ -346,7 +346,7 @@ export async function versionActiveBranchKey(
 
   //= aws-encryption-sdk-specification/framework/branch-key-store.md#branch-key-and-beacon-key-creation
   //# - `version`: a new guid. This guid MUST be version 4 UUID
-  const branchKeyVersion = v4()
+  const branchKeyVersion = randomUUID()
   const timestamp = getCurrentTimestamp()
 
   //= aws-encryption-sdk-specification/framework/branch-key-store.md#versionkey

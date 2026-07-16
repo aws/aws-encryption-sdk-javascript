@@ -3,9 +3,15 @@
 
 // tests contains MPL tests: https://github.com/aws/aws-cryptographic-material-providers-library/blob/da6812fa30315fda75d4277f814d1d0e36e22498/StandardLibrary/test/UUID.dfy
 
-import { v3, v5, v1, v4 } from 'uuid'
+import { randomUUID } from 'crypto'
 import { uuidv4Factory } from '../src/uuidv4_factory'
 import { expect } from 'chai'
+
+// Valid-format UUIDs whose version nibble is not 4, used to exercise the
+// "not a v4 UUID" rejection paths (previously generated via uuid's v1/v3/v5).
+const uuidV1 = '2c5ea4c0-4067-11e9-8bad-9b1deb4d3b7d'
+const uuidV3 = '9125a8dc-52ee-365b-a5aa-81b0b3681cf6'
+const uuidV5 = '74738ff5-5367-5958-9aee-98fffdcd1876'
 
 const stringToHexBytes = (input: string): Uint8Array =>
   new Uint8Array(Buffer.from(input, 'hex'))
@@ -42,7 +48,7 @@ describe('uuidv4Factory', () => {
   })
 
   it('Test generate and conversion', () => {
-    const uuid = v4()
+    const uuid = randomUUID()
     const uuidBytes = uuidv4ToCompressedBytes(uuid)
     const bytesToString = decompressBytesToUuidv4(uuidBytes)
     const stringToBytes = uuidv4ToCompressedBytes(bytesToString)
@@ -82,17 +88,15 @@ describe('uuidv4Factory', () => {
 
   describe('uuidv4ToCompressedBytes', () => {
     it('Precondition: Input string must be valid uuidv4', () => {
-      expect(() => uuidv4ToCompressedBytes(v1())).to.throw(
+      expect(() => uuidv4ToCompressedBytes(uuidV1)).to.throw(
         'Input must be valid uuidv4'
       )
 
-      const name = 'example.com'
-      const namespace = uuidString
-      expect(() => uuidv4ToCompressedBytes(v3(name, namespace))).to.throw(
+      expect(() => uuidv4ToCompressedBytes(uuidV3)).to.throw(
         'Input must be valid uuidv4'
       )
 
-      expect(() => uuidv4ToCompressedBytes(v5(name, namespace))).to.throw(
+      expect(() => uuidv4ToCompressedBytes(uuidV5)).to.throw(
         'Input must be valid uuidv4'
       )
     })

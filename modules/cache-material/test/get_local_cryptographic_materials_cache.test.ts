@@ -12,7 +12,7 @@ import {
   AlgorithmSuiteIdentifier,
   NodeBranchKeyMaterial,
 } from '@aws-crypto/material-management'
-import { v4 } from 'uuid'
+import { randomUUID } from 'crypto'
 
 const nodeSuite = new NodeAlgorithmSuite(
   AlgorithmSuiteIdentifier.ALG_AES128_GCM_IV12_TAG16_HKDF_SHA256
@@ -22,7 +22,7 @@ const decryptionMaterial = new NodeDecryptionMaterial(nodeSuite, {})
 const branchKeyMaterial = new NodeBranchKeyMaterial(
   Buffer.alloc(32),
   'id',
-  v4(),
+  randomUUID(),
   {}
 )
 

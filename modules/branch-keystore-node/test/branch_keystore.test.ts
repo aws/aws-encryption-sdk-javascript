@@ -7,7 +7,7 @@ import {
   isIBranchKeyStoreNode,
 } from '../src/branch_keystore'
 import { DynamoDBKeyStorage } from '../src/dynamodb_key_storage'
-import { validate, v4, version } from 'uuid'
+import { randomUUID } from 'crypto'
 import chaiAsPromised from 'chai-as-promised'
 import {
   KMSClient,
@@ -40,6 +40,13 @@ import {
 } from '../src/constants'
 
 chai.use(chaiAsPromised)
+
+// Matches a canonical RFC 4122 version 4 UUID, replacing the previous
+// `validate(x) && version(x) === 4` check from the `uuid` package.
+const UUIDV4_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const isUuidV4 = (input: string): boolean => UUIDV4_PATTERN.test(input)
+
 describe('Test Branch keystore', () => {
   it('Test type guard', () => {
     for (const keyStore of [null, undefined, 0, {}, '']) {
@@ -232,9 +239,7 @@ describe('Test Branch keystore', () => {
         keyManagement: { kmsClient },
       })
 
-      expect(
-        validate(keyStore.keyStoreId) && version(keyStore.keyStoreId) === 4
-      ).equals(true)
+      expect(isUuidV4(keyStore.keyStoreId)).equals(true)
       expect(keyStore.kmsConfiguration._config).equals(kmsConfig)
     })
 
@@ -288,7 +293,7 @@ describe('Test Branch keystore', () => {
           keyStoreId: keyStoreId as any,
         })
 
-        expect(validate(id) && version(id) === 4).equals(true)
+        expect(isUuidV4(id)).equals(true)
       }
     })
 
@@ -504,7 +509,7 @@ describe('Test Branch keystore', () => {
         const ddbClient = new DynamoDBClient({
           region: getRegionFromIdentifier(KEY_ARN),
         })
-        const keyStoreId = v4()
+        const keyStoreId = randomUUID()
         const grantTokens = [] as string[]
         const test = new BranchKeyStoreNode({
           storage: { ddbTableName: DDB_TABLE_NAME, ddbClient: ddbClient },
@@ -852,9 +857,8 @@ describe('Test Branch keystore', () => {
       // New version must differ from old
       expect(newVersion).to.not.equal(oldVersion)
 
-      // New version must be a valid UUID
-      expect(validate(newVersion)).to.be.true
-      expect(version(newVersion)).to.equal(4)
+      // New version must be a valid v4 UUID
+      expect(isUuidV4(newVersion)).to.be.true
 
       // Branch key ID unchanged
       expect(after.branchKeyIdentifier).to.equal(BRANCH_KEY_ID_WITH_EC)
@@ -946,8 +950,7 @@ describe('Test Branch keystore', () => {
 
       // Must return a valid v4 UUID
       expect(result.branchKeyIdentifier).to.be.a('string')
-      expect(validate(result.branchKeyIdentifier)).to.be.true
-      expect(version(result.branchKeyIdentifier)).to.equal(4)
+      expect(isUuidV4(result.branchKeyIdentifier)).to.be.true
 
       // Must be retrievable
       const material = await keyStore.getActiveBranchKey(
@@ -967,7 +970,7 @@ describe('Test Branch keystore', () => {
         keyManagement: { kmsClient },
       })
 
-      const customId = v4()
+      const customId = randomUUID()
       const result = await keyStore.createKey({
         branchKeyIdentifier: customId,
         encryptionContext: { department: 'test' },
@@ -1000,7 +1003,7 @@ describe('Test Branch keystore', () => {
       // 1. Create a new branch key with custom encryption context
       const customEc = { department: 'engineering', project: 'lifecycle' }
       const { branchKeyIdentifier } = await keyStore.createKey({
-        branchKeyIdentifier: v4(),
+        branchKeyIdentifier: randomUUID(),
         encryptionContext: customEc,
       })
 

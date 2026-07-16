@@ -30,7 +30,7 @@ import got from 'got'
 import streamToPromise from 'stream-to-promise'
 import { ZipFile } from 'yazl'
 import { createWriteStream } from 'fs'
-import { v4 } from 'uuid'
+import { randomUUID } from 'crypto'
 import * as stream from 'stream'
 import * as util from 'util'
 import {
@@ -275,7 +275,7 @@ function decryptionManifestEncryptResults(
     encryptResult: Buffer,
     info: EncryptTestVectorInfo
   ): Promise<boolean> {
-    const testName = v4()
+    const testName = randomUUID()
 
     manifestZip.addBuffer(
       encryptResult,

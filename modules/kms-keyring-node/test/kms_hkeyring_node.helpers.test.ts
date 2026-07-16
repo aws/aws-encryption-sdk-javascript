@@ -1,7 +1,7 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { randomBytes } from 'crypto'
+import { randomBytes, randomUUID } from 'crypto'
 import {
   wrapAad,
   destructureCiphertext,
@@ -17,7 +17,6 @@ import {
   NodeEncryptionMaterial,
 } from '@aws-crypto/material-management'
 import { serializeFactory, SerializeOptions } from '@aws-crypto/serialize'
-import { v4 } from 'uuid'
 
 describe('KmsHierarchicalKeyRingNode: helpers', () => {
   //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#ciphertext
@@ -198,7 +197,7 @@ describe('KmsHierarchicalKeyRingNode: helpers', () => {
         const expectedPdk = randomBytes(algSuite.keyLengthBytes)
         const branchKey = Buffer.alloc(32)
         const branchKeyId = 'myBranchKey'
-        const branchKeyVersion = v4()
+        const branchKeyVersion = randomUUID()
         const encryptionContext = { key: 'value' }
         const branchKeyMaterial = new NodeBranchKeyMaterial(
           branchKey,
@@ -260,7 +259,7 @@ describe('KmsHierarchicalKeyRingNode: helpers', () => {
         )
         const branchKey = Buffer.alloc(32)
         const branchKeyId = 'myBranchKey'
-        const branchKeyVersion = v4()
+        const branchKeyVersion = randomUUID()
         const encryptionContext = { key: 'value' }
         const branchKeyMaterial = new NodeBranchKeyMaterial(
           branchKey,

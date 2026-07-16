@@ -13,7 +13,7 @@ import {
   TEST_ESDK_ALG_SUITE,
   TTL,
 } from './fixtures'
-import { v4 } from 'uuid'
+import { randomUUID } from 'crypto'
 import { uuidv4ToCompressedBytes } from '../src/kms_hkeyring_node_helpers'
 import {
   EncryptedDataKey,
@@ -57,7 +57,7 @@ const badUuidEdkCiphertext = new Uint8Array(Buffer.alloc(ciphertextLength))
 
 // an edk whose branch key version can be decompressed but is non-existent in
 // the keystore
-const nonExistentBranchKeyVersion = v4()
+const nonExistentBranchKeyVersion = randomUUID()
 const nonExistentBranchKeyVersionEdkCiphertext = new Uint8Array(
   badUuidEdkCiphertext
 )
