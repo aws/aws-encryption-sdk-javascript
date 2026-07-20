@@ -16,7 +16,9 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 // @ts-ignore
 import from from 'from2'
-const { decrypt } = buildDecrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
+const { decrypt, decryptUnsignedMessageStream } = buildDecrypt(
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+)
 
 describe('decrypt', () => {
   it('string with encoding', async () => {
@@ -137,6 +139,63 @@ describe('decrypt', () => {
         fixtures.encryptionContext()
       )
       expect(test.toString('base64')).to.equal(fixtures.base64Plaintext())
+    })
+  })
+
+  /* Regression test for silent plaintext truncation.
+   * decipherStream used to be exposed as the Duplexify readable AND piped to a
+   * discarded PassThrough, giving it two consumers; in flowing mode frames were
+   * split between them, so decrypt returned fewer bytes than were encrypted and
+   * still reached 'end' (reported no error). This only reproduces when
+   * frameLength >= the stream highWaterMark (16384) and the source delivers
+   * chunks larger than one frame, which is why the small-frame fixtures above
+   * never caught it. The message is a patterned 40960-byte / three-frame
+   * (frameLength 16384) plaintext; we assert byte-exact recovery via the
+   * one-shot API and via the streaming API across several source chunkings,
+   * including whole-buffer and multi-frame chunks.
+   */
+  it('does not silently truncate multi-frame messages (one-shot).', async () => {
+    const ciphertext = Buffer.from(
+      fixtures.base64CiphertextAlgAes256GcmIv12Tag16Hkdf3FrameLength16384(),
+      'base64'
+    )
+    const expected = Buffer.alloc(40960)
+    for (let i = 0; i < expected.length; i++) expected[i] = i & 0xff
+
+    const { plaintext } = await decrypt(fixtures.decryptKeyring(), ciphertext)
+    expect(plaintext.length).to.equal(expected.length)
+    expect(plaintext.equals(expected)).to.equal(true)
+  })
+
+  it('does not silently truncate multi-frame messages across source chunk boundaries (streaming).', async () => {
+    const ciphertext = Buffer.from(
+      fixtures.base64CiphertextAlgAes256GcmIv12Tag16Hkdf3FrameLength16384(),
+      'base64'
+    )
+    const expected = Buffer.alloc(40960)
+    for (let i = 0; i < expected.length; i++) expected[i] = i & 0xff
+
+    const results = await Promise.all(
+      [
+        { size: 16384 }, // exactly one frame
+        { size: 32768 }, // spans a frame boundary — truncated pre-fix
+        { size: ciphertext.length }, // whole buffer — truncated pre-fix
+      ].map(
+        async (op) =>
+          new Promise<Buffer>((resolve, reject) => {
+            const chunks: Buffer[] = []
+            chunkCipherTextStream(ciphertext, op)
+              .pipe(decryptUnsignedMessageStream(fixtures.decryptKeyring()))
+              .on('data', (chunk: Buffer) => chunks.push(chunk))
+              .on('error', reject)
+              .on('end', () => resolve(Buffer.concat(chunks)))
+          })
+      )
+    )
+
+    results.map((plaintext) => {
+      expect(plaintext.length).to.equal(expected.length)
+      expect(plaintext.equals(expected)).to.equal(true)
     })
   })
 
