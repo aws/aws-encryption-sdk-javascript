@@ -4,21 +4,11 @@ permissions:
   contents: read
   id-token: write
 
-on:
-  pull_request:
-  workflow_call:
-    inputs:
-      branch:
-        description: "Ref to check out. Empty (the default) uses the ref that triggered the run."
-        required: false
-        default: ''
-        type: string
+on: [pull_request, workflow_call]
 
 jobs:
   shared-ci:
     uses: ./.github/workflows/shared-ci.yml
-    with:
-      branch: ${{ inputs.branch }}
   pr-ci-all-required:
     if: always()
     needs:

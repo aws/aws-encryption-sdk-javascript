@@ -3,11 +3,6 @@ name: Shared CI Tests
 on:
   workflow_call:
     inputs:
-      branch:
-        description: 'Ref to check out. Empty (the default) uses the ref that triggered the run.'
-        required: false
-        default: ''
-        type: string
       test-published-packages:
         description: 'Test against published packages instead of checked out code'
         required: false
@@ -39,7 +34,6 @@ jobs:
         # Always need repo for test scripts and configuration, even when testing published packages
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
           fetch-depth: 0
           submodules: true
 
