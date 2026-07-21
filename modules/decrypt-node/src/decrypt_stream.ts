@@ -34,17 +34,22 @@ export function _decryptStream(
   )
   const verifyStream = new VerifyStream({ maxBodySize })
   const decipherStream = getDecipherStream()
-  const stream = new Duplexify(parseHeaderStream, decipherStream)
+
+  /* decipherStream must have exactly one consumer so that every decrypted
+   * frame reaches the caller. outputStream is that single consumer and is
+   * surfaced as the readable side of the Duplexify returned below.
+   */
+  const outputStream = new PassThrough()
+  const stream = new Duplexify(parseHeaderStream, outputStream)
 
   /* pipeline will _either_ stream.destroy or the callback.
    * decipherStream uses destroy to dispose the material.
-   * So I tack a pass though stream onto the end.
    */
   pipeline(
     parseHeaderStream,
     verifyStream,
     decipherStream,
-    new PassThrough(),
+    outputStream,
     (err: Error) => {
       if (err) stream.emit('error', err)
     }
