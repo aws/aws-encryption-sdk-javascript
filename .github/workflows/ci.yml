@@ -9,16 +9,16 @@ on:
   workflow_call:
     inputs:
       branch:
-        description: "Branch to checkout"
+        description: "Ref to check out. Empty (the default) uses the ref that triggered the run."
         required: false
-        default: master
+        default: ''
         type: string
 
 jobs:
   shared-ci:
     uses: ./.github/workflows/shared-ci.yml
     with:
-      branch: ${{ inputs.branch || 'master' }}
+      branch: ${{ inputs.branch }}
   pr-ci-all-required:
     if: always()
     needs:
