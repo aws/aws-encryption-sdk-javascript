@@ -142,19 +142,10 @@ describe('decrypt', () => {
     })
   })
 
-  /* Regression test for silent plaintext truncation.
-   * decipherStream used to be exposed as the Duplexify readable AND piped to a
-   * discarded PassThrough, giving it two consumers; in flowing mode frames were
-   * split between them, so decrypt returned fewer bytes than were encrypted and
-   * still reached 'end' (reported no error). This only reproduces when
-   * frameLength >= the stream highWaterMark (16384) and the source delivers
-   * chunks larger than one frame, which is why the small-frame fixtures above
-   * never caught it. The message is a patterned 40960-byte / three-frame
-   * (frameLength 16384) plaintext; we assert byte-exact recovery via the
-   * one-shot API and via the streaming API across several source chunkings,
-   * including whole-buffer and multi-frame chunks.
-   */
-  it('does not silently truncate multi-frame messages (one-shot).', async () => {
+/* Multi-frame messages must decrypt to exactly the bytes that were encrypted
+ * through both the one-shot and streaming APIs.
+ */
+  it('decrypts all frames of a multi-frame message (one-shot).', async () => {
     const ciphertext = Buffer.from(
       fixtures.base64CiphertextAlgAes256GcmIv12Tag16Hkdf3FrameLength16384(),
       'base64'
@@ -167,7 +158,7 @@ describe('decrypt', () => {
     expect(plaintext.equals(expected)).to.equal(true)
   })
 
-  it('does not silently truncate multi-frame messages across source chunk boundaries (streaming).', async () => {
+  it('decrypts all frames of a multi-frame message across source chunk boundaries (streaming).', async () => {
     const ciphertext = Buffer.from(
       fixtures.base64CiphertextAlgAes256GcmIv12Tag16Hkdf3FrameLength16384(),
       'base64'
