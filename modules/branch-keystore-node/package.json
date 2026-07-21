@@ -24,7 +24,7 @@
     "@aws-sdk/client-kms": "^3.616.0",
     "@aws-sdk/util-dynamodb": "^3.616.0",
     "tslib": "^2.2.0",
-    "uuid": "^9.0.0"
+    "uuid": "^11.1.1"
   },
   "sideEffects": false,
   "main": "./build/main/src/index.js",
