@@ -14,10 +14,6 @@ on:
         description: 'NPM distribution tag'
         required: false
         default: 'latest'
-      branch:
-        description: 'The branch to release from'
-        required: false
-        default: 'master'
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
@@ -72,8 +68,11 @@ jobs:
           gh auth setup-git
 
       - name: Configure git
+        # Release the branch the workflow was dispatched from. The reusable
+        # shared-ci workflow's test matrix is read from this same ref, so the
+        # branch being released must be the ref the workflow runs on.
         env:
-          BRANCH: ${{ github.event.inputs.branch }}
+          BRANCH: ${{ github.ref_name }}
           VERSION_BUMP: ${{ github.event.inputs.version_bump }}
         run: |
           git config --global user.name "aws-crypto-tools-ci-bot"
@@ -105,7 +104,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [pre-release-ci, version]
     steps:
+      # Check out by branch name (not the triggering SHA) so we pick up the
+      # version-bump commit the `version` job just pushed to this branch.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
