@@ -142,9 +142,9 @@ describe('decrypt', () => {
     })
   })
 
-/* Multi-frame messages must decrypt to exactly the bytes that were encrypted
- * through both the one-shot and streaming APIs.
- */
+  /* Multi-frame messages must decrypt to exactly the bytes that were encrypted
+   * through both the one-shot and streaming APIs.
+   */
   it('decrypts all frames of a multi-frame message (one-shot).', async () => {
     const ciphertext = Buffer.from(
       fixtures.base64CiphertextAlgAes256GcmIv12Tag16Hkdf3FrameLength16384(),
@@ -169,8 +169,8 @@ describe('decrypt', () => {
     const results = await Promise.all(
       [
         { size: 16384 }, // exactly one frame
-        { size: 32768 }, // spans a frame boundary — truncated pre-fix
-        { size: ciphertext.length }, // whole buffer — truncated pre-fix
+        { size: 32768 }, // spans a frame boundary
+        { size: ciphertext.length }, // whole buffer
       ].map(
         async (op) =>
           new Promise<Buffer>((resolve, reject) => {
