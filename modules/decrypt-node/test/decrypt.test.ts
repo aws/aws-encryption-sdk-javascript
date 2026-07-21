@@ -16,9 +16,56 @@ chai.use(chaiAsPromised)
 const { expect } = chai
 // @ts-ignore
 import from from 'from2'
-const { decrypt } = buildDecrypt(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT)
+const { decrypt, decryptUnsignedMessageStream } = buildDecrypt(
+  CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT
+)
 
 describe('decrypt', () => {
+  /* Multi-frame messages must decrypt to exactly the bytes that were
+   * encrypted, via the one-shot and streaming APIs, for any source chunking.
+   * The fixture is a three-frame (frameLength 16384) 40960-byte patterned
+   * plaintext; the frame length is >= the stream highWaterMark so the
+   * assembled output spans multiple frames. */
+  it('returns the complete plaintext for a multi-frame message (one-shot)', async () => {
+    const ciphertext = Buffer.from(
+      fixtures.base64CiphertextAlgAes256GcmIv12Tag16Hkdf3FrameLength16384(),
+      'base64'
+    )
+    const expected = Buffer.alloc(40960)
+    for (let i = 0; i < expected.length; i++) expected[i] = i & 0xff
+
+    const { plaintext } = await decrypt(fixtures.decryptKeyring(), ciphertext)
+    expect(plaintext.length).to.equal(expected.length)
+    expect(plaintext.equals(expected)).to.equal(true)
+  })
+
+  it('returns the complete plaintext for a multi-frame message across source chunk boundaries (streaming)', async () => {
+    const ciphertext = Buffer.from(
+      fixtures.base64CiphertextAlgAes256GcmIv12Tag16Hkdf3FrameLength16384(),
+      'base64'
+    )
+    const expected = Buffer.alloc(40960)
+    for (let i = 0; i < expected.length; i++) expected[i] = i & 0xff
+
+    const results = await Promise.all(
+      [{ size: 16384 }, { size: 32768 }, { size: ciphertext.length }].map(
+        async (op) =>
+          new Promise<Buffer>((resolve, reject) => {
+            const chunks: Buffer[] = []
+            chunkCipherTextStream(ciphertext, op)
+              .pipe(decryptUnsignedMessageStream(fixtures.decryptKeyring()))
+              .on('data', (chunk: Buffer) => chunks.push(chunk))
+              .on('error', reject)
+              .on('end', () => resolve(Buffer.concat(chunks)))
+          })
+      )
+    )
+
+    results.map((plaintext) => {
+      expect(plaintext.length).to.equal(expected.length)
+      expect(plaintext.equals(expected)).to.equal(true)
+    })
+  })
   it('string with encoding', async () => {
     const { plaintext: test, messageHeader } = await decrypt(
       fixtures.decryptKeyring(),
