@@ -32,9 +32,6 @@ jobs:
     steps:
       - name: Checkout code
         # Always need repo for test scripts and configuration, even when testing published packages
-        # No explicit ref: checkout defaults to the ref that triggered the
-        # run (the PR merge ref for CI, or the dispatched branch for a release),
-        # which keeps the tested code and this workflow's matrix on the same branch.
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
