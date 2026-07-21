@@ -26,6 +26,8 @@ env:
 jobs:
   pre-release-ci:
     uses: ./.github/workflows/shared-ci.yml
+    with:
+      branch: ${{ github.event.inputs.branch }}
 
   # Once all tests have passed, run semantic versioning
   version:
@@ -119,3 +121,4 @@ jobs:
     needs: [publish]
     with:
       test-published-packages: true
+      branch: ${{ github.event.inputs.branch }}
