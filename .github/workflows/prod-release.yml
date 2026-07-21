@@ -68,9 +68,6 @@ jobs:
           gh auth setup-git
 
       - name: Configure git
-        # Release the branch the workflow was dispatched from. The reusable
-        # shared-ci workflow's test matrix is read from this same ref, so the
-        # branch being released must be the ref the workflow runs on.
         env:
           BRANCH: ${{ github.ref_name }}
           VERSION_BUMP: ${{ github.event.inputs.version_bump }}
@@ -104,8 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [pre-release-ci, version]
     steps:
-      # Check out by branch name (not the triggering SHA) so we pick up the
-      # version-bump commit the `version` job just pushed to this branch.
+      # Include the version-bump commit the version job pushed
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
