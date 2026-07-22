@@ -80,7 +80,7 @@ jobs:
         run: |
           git config --global user.name "aws-crypto-tools-ci-bot"
           git config --global user.email "no-reply@noemail.local"
-          git checkout "$BRANCH"
+          git checkout --end-of-options "$BRANCH"
 
       - name: Version packages
         env:
