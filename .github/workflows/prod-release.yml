@@ -14,10 +14,6 @@ on:
         description: 'NPM distribution tag'
         required: false
         default: 'latest'
-      branch:
-        description: 'The branch to release from'
-        required: false
-        default: 'master'
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
@@ -35,6 +31,12 @@ jobs:
     needs: [pre-release-ci]
     environment: release
     steps:
+      - name: Require a branch
+        if: github.ref_type != 'branch'
+        run: |
+          echo "::error::Dispatch this workflow from a branch (got ${{ github.ref_type }} '${{ github.ref_name }}'). To release a specific commit, point a branch at it first."
+          exit 1
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -76,11 +78,11 @@ jobs:
 
       - name: Configure git
         env:
-          BRANCH: ${{ github.event.inputs.branch }}
+          BRANCH: ${{ github.ref_name }}
         run: |
           git config --global user.name "aws-crypto-tools-ci-bot"
           git config --global user.email "no-reply@noemail.local"
-          git checkout $BRANCH
+          git checkout "$BRANCH"
 
       - name: Version packages
         env:
@@ -96,9 +98,10 @@ jobs:
     needs: [pre-release-ci, version]
     environment: release
     steps:
+      # Include the version-bump commit the version job pushed
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.branch }}
+          ref: ${{ github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
