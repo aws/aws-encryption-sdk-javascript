@@ -77,27 +77,14 @@ jobs:
       - name: Configure git
         env:
           BRANCH: ${{ github.ref_name }}
-          VERSION_BUMP: ${{ github.event.inputs.version_bump }}
         run: |
           git config --global user.name "aws-crypto-tools-ci-bot"
           git config --global user.email "no-reply@noemail.local"
-          git checkout $BRANCH
+          git checkout "$BRANCH"
 
-      - name: Verify git auth identity
-        run: |
-          echo "=== gh auth status ==="
-          gh auth status
-          echo ""
-          echo "=== Git credential helper config ==="
-          git config --global --get-regexp credential
-          echo ""
-          echo "=== Git remote URL ==="
-          git remote -v
-          echo ""
-          echo "=== Authenticated GitHub user ==="
-          gh api user --jq '.login'
-
-      - name: Version packages (dry run - no push)
+      - name: Version packages
+        env:
+          VERSION_BUMP: ${{ github.event.inputs.version_bump }}
         run: |
           # Generate new version and CHANGELOG entry and push it
           npx lerna version --conventional-commits --git-remote origin --yes ${VERSION_BUMP:+$VERSION_BUMP --force-publish}
@@ -124,7 +111,10 @@ jobs:
         run: npm install -g npm@latest
       - run: npm ci --unsafe-perm
       - run: npm run build --if-present
-      - run: npx lerna publish from-package --yes --dist-tag ${{ github.event.inputs.dist_tag }}
+      - run: npx lerna publish from-package --yes --dist-tag "$DIST_TAG"
+        env:
+          NPM_CONFIG_PROVENANCE: true
+          DIST_TAG: ${{ github.event.inputs.dist_tag }}
 
   # Once publishing is complete, validate that the published packages are useable
   validate:
