@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.2.3](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.2.2...v4.2.3) (2026-07-22)
+
+### Bug Fixes
+
+- **ci:** release v4.x from the dispatched branch instead of a branch input ([#1676](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1676)) ([ffa6895](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/ffa6895f37193af3a7610d65403140cfe9d3915d))
+- **decrypt-node:** correct multi-frame stream assembly ([#1672](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1672)) ([66a4c85](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/66a4c85dfc25f8ce828da307622a427868a90e85))
+- **release:** use environment for release ci, other changes from master ([#1677](https://github.com/awslabs/aws-encryption-sdk-javascript/issues/1677)) ([c84f664](https://github.com/awslabs/aws-encryption-sdk-javascript/commit/c84f664b9d90f28dceda4de6861e2016c273c47e))
+
 ## [4.2.2](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.2.1...v4.2.2) (2026-03-05)
 
 ### Bug Fixes
