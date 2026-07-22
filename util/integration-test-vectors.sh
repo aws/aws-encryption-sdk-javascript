@@ -1,3 +1,6 @@
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Single source of truth for integration test vector locations.
 # Sourced by the integration-* and verdaccio-* npm scripts.
 export LOCAL_TEST_VECTORS="aws-encryption-sdk-test-vectors/vectors/awses-decrypt/python-2.3.0.zip"
