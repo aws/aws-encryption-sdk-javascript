@@ -109,7 +109,7 @@ jobs:
       # Ensure npm 11.5.1 or later is installed
       - name: Update npm
         run: npm install -g npm@latest
-      - run: npm ci --unsafe-perm
+      - run: npm ci
       - run: npm run build --if-present
       - run: npx lerna publish from-package --yes --dist-tag "$DIST_TAG"
         env:
