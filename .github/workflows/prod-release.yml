@@ -17,7 +17,6 @@ on:
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
-  NPM_CONFIG_UNSAFE_PERM: true
 
 jobs:
   pre-release-ci:
