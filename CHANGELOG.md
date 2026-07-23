@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.2.4](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.3...v4.2.4) (2026-07-23)
+
+### Bug Fixes
+
+- **release:** drop --unsafe-perm from publish npm ci ([#1681](https://github.com/aws/aws-encryption-sdk-javascript/issues/1681)) ([4f6e74f](https://github.com/aws/aws-encryption-sdk-javascript/commit/4f6e74f88493302174b573711a7341d021885d7e))
+- **release:** drop NPM_CONFIG_UNSAFE_PERM env ([#1685](https://github.com/aws/aws-encryption-sdk-javascript/issues/1685)) ([abc3be5](https://github.com/aws/aws-encryption-sdk-javascript/commit/abc3be54d0550c5387820cf55645838dd7aa7a27))
+- **release:** publish on Node LTS so npm@latest installs ([#1679](https://github.com/aws/aws-encryption-sdk-javascript/issues/1679)) ([84b753f](https://github.com/aws/aws-encryption-sdk-javascript/commit/84b753f901a2afcf3679045f318b27e3bb40b0e1))
+- **release:** set repository in every package.json for provenance ([#1687](https://github.com/aws/aws-encryption-sdk-javascript/issues/1687)) ([23a7b62](https://github.com/aws/aws-encryption-sdk-javascript/commit/23a7b62adac50bc0f0501fadb648c4dc09664bbf))
+- **release:** source test vector values from one file so npm 12 can run scripts ([#1684](https://github.com/aws/aws-encryption-sdk-javascript/issues/1684)) ([c77bb08](https://github.com/aws/aws-encryption-sdk-javascript/commit/c77bb08ad8d60652962580c9c1a5f41e64506df3))
+- **release:** upgrade lerna to v9 for OIDC trusted publishing ([#1686](https://github.com/aws/aws-encryption-sdk-javascript/issues/1686)) ([9a3612f](https://github.com/aws/aws-encryption-sdk-javascript/commit/9a3612f451934817e9d733d39f29efca4f083668))
+
 ## [4.2.3](https://github.com/awslabs/aws-encryption-sdk-javascript/compare/v4.2.2...v4.2.3) (2026-07-22)
 
 ### Bug Fixes
