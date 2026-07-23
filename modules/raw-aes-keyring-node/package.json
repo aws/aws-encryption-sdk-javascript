@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/raw-aes-keyring-node",
-  "version": "4.2.3",
+  "version": "4.2.4",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsc -b tsconfig.json && tsc -b tsconfig.module.json",
@@ -29,5 +29,10 @@
   "types": "./build/main/src/index.d.ts",
   "files": [
     "build/**/src/*"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aws/aws-encryption-sdk-javascript.git",
+    "directory": "modules/raw-aes-keyring-node"
+  }
 }

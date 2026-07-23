@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/kdf-ctr-mode-node",
-  "version": "4.1.0",
+  "version": "4.2.4",
   "description": "nodejs kdf ctr mode crypto primitive",
   "scripts": {
     "prepublishOnly": "npm run build",
@@ -12,7 +12,6 @@
     "test": "npm run lint && npm run coverage",
     "coverage": "nyc -e .ts npm run mocha"
   },
-  "repository": "",
   "author": {
     "name": "AWS Crypto Tools Team",
     "email": "aws-cryptools@amazon.com",
@@ -38,5 +37,10 @@
   },
   "devDependencies": {
     "@types/sinon": "^17.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aws/aws-encryption-sdk-javascript.git",
+    "directory": "modules/kdf-ctr-mode-node"
   }
 }

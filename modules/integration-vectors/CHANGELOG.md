@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.2.4](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.3...v4.2.4) (2026-07-23)
+
+### Bug Fixes
+
+- **release:** set repository in every package.json for provenance ([#1687](https://github.com/aws/aws-encryption-sdk-javascript/issues/1687)) ([23a7b62](https://github.com/aws/aws-encryption-sdk-javascript/commit/23a7b62adac50bc0f0501fadb648c4dc09664bbf))
+
 ## [4.2.3](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.2...v4.2.3) (2026-07-22)
 
 **Note:** Version bump only for package @aws-crypto/integration-vectors

@@ -1,6 +1,6 @@
 {
   "name": "@aws-crypto/integration-node",
-  "version": "4.2.3",
+  "version": "4.2.4",
   "scripts": {
     "prepublishOnly": "npm run generate-version.ts; npm run build",
     "generate-version.ts": "npx genversion --es6  src/version.ts",
@@ -35,5 +35,10 @@
   "bin": "./build/main/src/cli.js",
   "files": [
     "build/**/src/*"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aws/aws-encryption-sdk-javascript.git",
+    "directory": "modules/integration-node"
+  }
 }
