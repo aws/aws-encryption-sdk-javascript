@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.0.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/v5.0.0...v5.0.1) (2026-07-23)
+
+### Bug Fixes
+
+- Using discovery filter while constructing keyring ([#1662](https://github.com/aws/aws-encryption-sdk-javascript/issues/1662)) ([23f3f5b](https://github.com/aws/aws-encryption-sdk-javascript/commit/23f3f5b79eb9e178a28e0507fdd0beddb1e8be63))
+
 # [5.0.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.2...v5.0.0) (2026-04-23)
 
 ### Bug Fixes

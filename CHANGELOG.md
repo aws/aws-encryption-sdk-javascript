@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.0.1](https://github.com/aws/aws-encryption-sdk-javascript/compare/v5.0.0...v5.0.1) (2026-07-23)
+
+### Bug Fixes
+
+- **ci:** pass branch input into shared-ci for release workflow ([#1674](https://github.com/aws/aws-encryption-sdk-javascript/issues/1674)) ([7237bf2](https://github.com/aws/aws-encryption-sdk-javascript/commit/7237bf283f87355f2fd927239295ce7da2424d26))
+- **ci:** release from the dispatched branch instead of a branch input ([#1675](https://github.com/aws/aws-encryption-sdk-javascript/issues/1675)) ([235d871](https://github.com/aws/aws-encryption-sdk-javascript/commit/235d8716adae11a6bcc9cf9ad85768db42c1f93d))
+- **decrypt-node:** single-consumer output stream for framed decrypt ([#1670](https://github.com/aws/aws-encryption-sdk-javascript/issues/1670)) ([77fbd26](https://github.com/aws/aws-encryption-sdk-javascript/commit/77fbd260eddd155eb8ab8b21771afc49c0ad1841))
+- **release:** drop --unsafe-perm from publish npm ci ([#1682](https://github.com/aws/aws-encryption-sdk-javascript/issues/1682)) ([4081d91](https://github.com/aws/aws-encryption-sdk-javascript/commit/4081d914f550baea16d3e8cf673f5c0acb0f7a42))
+- **release:** Prevent script injection via dist_tag input ([#1668](https://github.com/aws/aws-encryption-sdk-javascript/issues/1668)) ([d2aee46](https://github.com/aws/aws-encryption-sdk-javascript/commit/d2aee46e128e68b3286a3da7d3341cf2b321a31a))
+- **release:** publish on Node LTS so npm@latest installs ([#1680](https://github.com/aws/aws-encryption-sdk-javascript/issues/1680)) ([f0f6548](https://github.com/aws/aws-encryption-sdk-javascript/commit/f0f6548809b4a2cd4a9bbc589bb8cba1d74eecb9))
+- **release:** source test vector values from one file so npm 12 can run scripts ([#1683](https://github.com/aws/aws-encryption-sdk-javascript/issues/1683)) ([a05aa80](https://github.com/aws/aws-encryption-sdk-javascript/commit/a05aa8065be0908287c40f92b10f564eb9799b66))
+- **release:** stop passing removed branch input to shared-ci ([#1678](https://github.com/aws/aws-encryption-sdk-javascript/issues/1678)) ([babf30d](https://github.com/aws/aws-encryption-sdk-javascript/commit/babf30d72afcbc6e747d3a032fe7fc4ea283a8dc))
+- use environment for release ci ([#1667](https://github.com/aws/aws-encryption-sdk-javascript/issues/1667)) ([6adf90b](https://github.com/aws/aws-encryption-sdk-javascript/commit/6adf90bb07bfc1ff2493468d9a3e0ccd1002bebd))
+- Using discovery filter while constructing keyring ([#1662](https://github.com/aws/aws-encryption-sdk-javascript/issues/1662)) ([23f3f5b](https://github.com/aws/aws-encryption-sdk-javascript/commit/23f3f5b79eb9e178a28e0507fdd0beddb1e8be63))
+
 # [5.0.0](https://github.com/aws/aws-encryption-sdk-javascript/compare/v4.2.2...v5.0.0) (2026-04-23)
 
 ### Bug Fixes
