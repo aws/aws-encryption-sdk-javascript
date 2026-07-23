@@ -11,7 +11,7 @@ on:
         description: '[Optional] Override semantic versioning with explict version (allowed values: "patch", "minor", "major", or explicit version)'
         default: ''
       dist_tag:
-        description: 'NPM distribution tag'
+        description: 'NPM dist-tag to publish under; delete to publish without an explicit dist-tag'
         required: false
         default: 'latest'
 
@@ -109,10 +109,16 @@ jobs:
         run: npm install -g npm@latest
       - run: npm ci
       - run: npm run build --if-present
-      - run: npx lerna publish from-package --yes --dist-tag "$DIST_TAG"
+      - name: Publish
         env:
           NPM_CONFIG_PROVENANCE: true
           DIST_TAG: ${{ github.event.inputs.dist_tag }}
+        run: |
+          if [ -n "$DIST_TAG" ]; then
+            npx lerna publish from-package --yes --dist-tag "$DIST_TAG"
+          else
+            npx lerna publish from-package --yes
+          fi
 
   # Once publishing is complete, validate that the published packages are useable
   validate:
