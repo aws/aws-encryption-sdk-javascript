@@ -115,9 +115,9 @@ jobs:
           DIST_TAG: ${{ github.event.inputs.dist_tag }}
         run: |
           if [ -n "$DIST_TAG" ]; then
-            npx lerna publish from-package --yes --dist-tag "$DIST_TAG"
+            npx lerna publish from-package --yes --concurrency 1 --dist-tag "$DIST_TAG"
           else
-            npx lerna publish from-package --yes
+            npx lerna publish from-package --yes --concurrency 1
           fi
 
   # Once publishing is complete, validate that the published packages are useable
