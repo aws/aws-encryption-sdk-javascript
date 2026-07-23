@@ -11,9 +11,8 @@ on:
         description: '[Optional] Override semantic versioning with explict version (allowed values: "patch", "minor", "major", or explicit version)'
         default: ''
       dist_tag:
-        description: 'NPM distribution tag'
-        required: false
-        default: 'latest'
+        description: 'NPM distribution tag (required; this is a 4.x maintenance line, so do not use "latest")'
+        required: true
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
@@ -32,6 +31,12 @@ jobs:
         if: github.ref_type != 'branch'
         run: |
           echo "::error::Dispatch this workflow from a branch (got ${{ github.ref_type }} '${{ github.ref_name }}'). To release a specific commit, point a branch at it first."
+          exit 1
+
+      - name: Require a dist-tag
+        if: github.event.inputs.dist_tag == ''
+        run: |
+          echo "::error::Specify an npm dist-tag. This is the 4.x maintenance line; do not publish to 'latest'."
           exit 1
 
       - name: Checkout code
