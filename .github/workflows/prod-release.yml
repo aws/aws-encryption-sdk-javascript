@@ -11,7 +11,7 @@ on:
         description: '[Optional] Override semantic versioning with explict version (allowed values: "patch", "minor", "major", or explicit version)'
         default: ''
       dist_tag:
-        description: 'NPM dist-tag to publish under; delete to publish without an explicit dist-tag'
+        description: 'NPM dist-tag to publish under; leave empty to publish without an explicit dist-tag'
         required: false
         default: 'latest'
 
