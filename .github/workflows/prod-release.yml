@@ -11,9 +11,9 @@ on:
         description: '[Optional] Override semantic versioning with explict version (allowed values: "patch", "minor", "major", or explicit version)'
         default: ''
       dist_tag:
-        description: 'NPM dist-tag. Leave empty to publish without moving the "latest" tag (use for 4.x maintenance releases).'
+        description: 'NPM dist-tag to publish under; delete to publish without an explicit dist-tag'
         required: false
-        default: ''
+        default: 'latest'
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
@@ -109,8 +109,6 @@ jobs:
         run: npm install -g npm@latest
       - run: npm ci
       - run: npm run build --if-present
-      # If no dist-tag is given, omit --dist-tag entirely so npm doesn't move
-      # `latest` (modern npm won't set `latest` when publishing a lower version).
       - name: Publish
         env:
           NPM_CONFIG_PROVENANCE: true
