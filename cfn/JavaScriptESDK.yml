@@ -1,0 +1,101 @@
+Outputs:
+  StackArn:
+    Description: >-
+      Do not remove this output! Pipelines needs this to do its association. (And
+      LPT. Removing it will break things)
+    Value: !Ref 'AWS::StackId'
+Parameters:
+  DeploymentBucketImportName:
+    Default: 'BONESBootstrap-PDX-beta-DeploymentBucket'
+    Description: >-
+      This parameter is meant to be passed by LPT (and piplines). It holds the
+      name of import that points to the bucket that holds your artifacts. You
+      should use this as the import (Fn::ImportValue: {Ref: DeploymentBucket})
+      for getting any BATS related artifacts.
+    Type: String
+  Stage:
+    Default: 'beta'
+    Type: String
+  PipelinesControlledRegionBucket:
+    Type: String
+    Description: The regionalized bucket to read the artifact from.
+    Default: 'placeholder'
+  NumberOfBuildsInBatch:
+    Type: Number
+    MaxValue: 100
+    MinValue: 1
+    Default: 16
+    Description: The number of builds you expect to run in a batch
+    
+Resources:
+  CodeBuildRole:
+    Properties:
+      AssumeRolePolicyDocument: >-
+        {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"codebuild.amazonaws.com"},"Action":"sts:AssumeRole"},{"Effect":"Allow","Principal":{"Federated":"arn:aws:iam::587316601012:oidc-provider/token.actions.githubusercontent.com"},"Action":"sts:AssumeRoleWithWebIdentity","Condition":{"StringEquals":{"token.actions.githubusercontent.com:aud":"sts.amazonaws.com"},"StringLike":{"token.actions.githubusercontent.com:sub":"repo:aws/aws-encryption-sdk-javascript:*"}}}]}
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                  - 'logs:GetLogEvents'
+                Effect: Allow
+                Resource:
+                  - '*'
+              - Action:
+                  - 'kms:Encrypt'
+                  - 'kms:Decrypt'
+                  - 'kms:GenerateDataKey'
+                Effect: Allow
+                Resource:
+                  - '*'
+              - Action:
+                  - 's3:PutObject'
+                Effect: Allow
+                Resource:
+                  - '*'
+              - Action:
+                  - 'codebuild:StartBuild'
+                  - 'codebuild:StopBuild'
+                  - 'codebuild:RetryBuild'
+                  - 'codebuild:BatchGetBuilds'
+                Effect: Allow
+                Resource:
+                  - !Sub 'arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/JavaScriptESDK'
+          PolicyName: !Sub '${AWS::StackName}CloudWatchLogsPolicy'
+    Type: 'AWS::IAM::Role'
+  ExampleWaitHandle:
+    Properties: {}
+    Type: 'AWS::CloudFormation::WaitConditionHandle'
+  JavaScriptESDK:
+    Properties:
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: 'aws/codebuild/standard:5.0'
+        Type: LINUX_CONTAINER
+      LogsConfig:
+        S3Logs:
+          Location: !Sub '${LogBucket}/JavaScriptESDK'
+          Status: ENABLED
+      Name: JavaScriptESDK
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      BuildBatchConfig:
+        ServiceRole: !GetAtt CodeBuildRole.Arn
+        Restrictions:
+          MaximumBuildsAllowed: !Ref NumberOfBuildsInBatch
+          ComputeTypesAllowed:
+            - BUILD_GENERAL1_SMALL
+            - BUILD_GENERAL1_MEDIUM
+            - BUILD_GENERAL1_LARGE
+        TimeoutInMins: 480
+      Source:
+        Location: 'https://github.com/aws/aws-encryption-sdk-javascript'
+        ReportBuildStatus: 'true'
+        Type: GITHUB
+    Type: 'AWS::CodeBuild::Project'
+  LogBucket:
+    Type: 'AWS::S3::Bucket'
+
