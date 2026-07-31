@@ -1,0 +1,44 @@
+# Separate from the library CI (ci.yml) so the test-server directory is not
+# swept into the coverage-gated library jobs.
+name: ESDK TestServer (Node.js)
+
+on:
+  pull_request:
+    paths:
+      - "test-server/**"
+      - ".github/workflows/test-server.yml"
+  push:
+    paths:
+      - "test-server/**"
+      - ".github/workflows/test-server.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  javascript-language-server:
+    name: build + test (live modules)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --unsafe-perm
+
+      - name: Build modules
+        run: npm run build-node
+
+      - name: Build server
+        working-directory: test-server
+        run: npx tsc -p tsconfig.json
+
+      - name: Test server
+        working-directory: test-server
+        run: npm test

@@ -1,0 +1,14 @@
+{
+  "extends": "../modules/tsconfig.settings.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "outDir": "build",
+    "rootDir": "./",
+    "lib": ["es2020"],
+    "types": ["node", "mocha", "chai"]
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "exclude": ["node_modules/**", "build/**"]
+}
