@@ -5,6 +5,11 @@
     "branch": "lucmcdon/esdk-test-server-all-languages"
   },
   "product": "esdk",
+  "knownBugOverrides": {
+    "_comment": "Override of the commons base known-bug ledger for this repository's own Language_Server target. 'present' adds bug ids this target exhibits that the base ledger omits; 'absent' removes base-declared bug ids this target no longer exhibits (the lever to PR an exception away, watch the row fail, then fix it green). Empty = the base ledger applies unchanged.",
+    "present": [],
+    "absent": []
+  },
   "supportedFeatures": [
     "streaming",
     "hierarchical",
