@@ -42,3 +42,46 @@ jobs:
       - name: Test server
         working-directory: test-server
         run: npm test
+
+  # The complete cross-language TestServer run: `make test-server` clones the
+  # commons repo and orchestrates the full matrix with this working tree as the
+  # live JavaScript server. Runs on every pull_request/push; needs the
+  # CI_AWS_ROLE_ARN and COMMONS_REPO_TOKEN repo secrets.
+  test-server:
+    name: Cross-language TestServer run
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      AWS_REGION: us-west-2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
+
+      # The commons orchestrator (smithy-java) needs a JDK 21+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Configure AWS credentials (branch-key-store account)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.CI_AWS_ROLE_ARN }}
+          aws-region: us-west-2
+
+      # The private commons clone (git@ URL from commons-configuration.json)
+      # picks up this SSH -> HTTPS+token mapping.
+      - name: Authenticate the commons clone
+        run: git config --global url."https://x-access-token:${{ secrets.COMMONS_REPO_TOKEN }}@github.com/".insteadOf "git@github.com:"
+
+      - name: Run the orchestrated TestServer
+        working-directory: test-server
+        run: make test-server
