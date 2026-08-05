@@ -43,12 +43,11 @@ jobs:
         working-directory: test-server
         run: npm test
 
-  # The complete cross-language TestServer run: `make test-server` clones commons
-  # and the orchestrator materializes + builds + launches every configured
-  # Language_Server (this working tree is the live server), runs the full pairwise
-  # Tests matrix, and tears down. Because the orchestrated run builds EVERY
-  # language server, this job provisions the full cross-language toolchain matrix.
-  # Needs the COMMONS_REPO_PAT repo secret (read on commons + java + rust).
+  # The complete cross-language TestServer run: `make test-server` clones commons and
+  # the orchestrator materializes + builds + launches every configured Language_Server
+  # (this working tree is the live server), runs the full pairwise matrix, and tears
+  # down. Provisions the full toolchain matrix + the commons build caches. Needs the
+  # COMMONS_REPO_PAT secret (read on commons + java + rust).
   test-server:
     name: Cross-language TestServer run
     runs-on: ubuntu-latest
@@ -58,6 +57,10 @@ jobs:
     env:
       AWS_REGION: us-west-2
       GRADLE_OPTS: -Dorg.gradle.daemon=false
+      # Cold builds (Java gradle/maven, Rust aws-lc-sys, .NET dafny transpile) exceed
+      # the orchestrator's 180s default server-readiness window; widen it so the first
+      # (cold-cache) run fits. Warm runs are fast via the build caches above.
+      ESDK_TESTSERVER_READY_TIMEOUT_SECONDS: "1800"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -121,6 +124,23 @@ jobs:
           cmake --build "$RUNNER_TEMP/aws-c-common-build" --target install -- -j
           echo "CMAKE_PREFIX_PATH=${{ github.workspace }}/.aws-c-common-install" >> "$GITHUB_ENV"
 
+      - name: Restore build caches (Gradle/Maven/Cargo/NuGet/Go/npm)
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.m2/repository
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.nuget/packages
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/.npm
+          key: ${{ runner.os }}-esdk-ts-build-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-esdk-ts-build-
+
       - name: Install stub for the unpublished MPL test-vectors artifact
         # The materialized Java Language_Server build runs `mvn install`, which
         # resolves a test-scope MPL artifact (TestAwsCryptographicMaterialProviders)
@@ -138,9 +158,6 @@ jobs:
             -Dpackaging=jar
 
       - name: Authenticate the private clones (commons, java, rust)
-        # `make test-server` clones commons and the orchestrator materializes the
-        # other language servers, several from private repos via git@ URLs; rewrite
-        # SSH to token HTTPS. COMMONS_REPO_PAT needs read on commons + java + rust.
         env:
           PAT: ${{ secrets.COMMONS_REPO_PAT }}
         run: |
@@ -165,3 +182,19 @@ jobs:
       - name: Run the orchestrated TestServer
         working-directory: test-server
         run: make test-server
+
+      - name: Save build caches
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.m2/repository
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.nuget/packages
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/.npm
+          key: ${{ runner.os }}-esdk-ts-build-${{ github.run_id }}
