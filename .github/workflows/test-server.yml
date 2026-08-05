@@ -82,6 +82,21 @@ jobs:
       - name: Authenticate the commons clone
         run: git config --global url."https://x-access-token:${{ secrets.COMMONS_REPO_PAT }}@github.com/".insteadOf "git@github.com:"
 
+      - name: Install stub for the unpublished MPL test-vectors artifact
+        # The java Language_Server build runs `mvn install`, which resolves a
+        # test-scope MPL artifact (TestAwsCryptographicMaterialProviders) that is
+        # not on Maven Central; a stub jar satisfies resolution (its tests skip).
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          echo placeholder > "$tmp/README.txt"
+          "$JAVA_HOME/bin/jar" cf "$tmp/stub.jar" -C "$tmp" README.txt
+          mvn -q -e org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file \
+            -Dfile="$tmp/stub.jar" \
+            -DgroupId=software.amazon.cryptography \
+            -DartifactId=TestAwsCryptographicMaterialProviders \
+            -Dversion=1.7.0 \
+            -Dpackaging=jar
       - name: Run the orchestrated TestServer
         working-directory: test-server
         run: make test-server
