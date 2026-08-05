@@ -74,7 +74,7 @@ jobs:
       - name: Configure AWS credentials (branch-key-store account)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.CI_AWS_ROLE_ARN }}
+          role-to-assume: ${{ vars.ESDK_TEST_SERVER_KMS_ROLE_ARN || 'arn:aws:iam::370957321024:role/esdk-test-server-ci-kms-role' }}
           aws-region: us-west-2
 
       # The private commons clone (git@ URL from commons-configuration.json)
