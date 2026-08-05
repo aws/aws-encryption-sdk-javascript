@@ -80,7 +80,7 @@ jobs:
       # The private commons clone (git@ URL from commons-configuration.json)
       # picks up this SSH -> HTTPS+token mapping.
       - name: Authenticate the commons clone
-        run: git config --global url."https://x-access-token:${{ secrets.COMMONS_REPO_TOKEN }}@github.com/".insteadOf "git@github.com:"
+        run: git config --global url."https://x-access-token:${{ secrets.COMMONS_REPO_PAT }}@github.com/".insteadOf "git@github.com:"
 
       - name: Run the orchestrated TestServer
         working-directory: test-server
