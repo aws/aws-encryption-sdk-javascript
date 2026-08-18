@@ -8,6 +8,11 @@ on:
         required: false
         type: boolean
         default: false
+      ref:
+        description: 'Git ref (branch, tag, or SHA) to check out and test. Defaults to the ref that triggered the workflow.'
+        required: false
+        type: string
+        default: ''
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
@@ -34,6 +39,7 @@ jobs:
         # Always need repo for test scripts and configuration, even when testing published packages
         uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
           submodules: true
 
