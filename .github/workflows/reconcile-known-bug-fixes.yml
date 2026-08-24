@@ -1,0 +1,20 @@
+# Reconcile this repo's merged known-bug fixes into the authoritative commons
+# ledger. On a merge to the default branch that changes this repo's
+# commons-configuration.json, call the reusable commons workflow: it removes the
+# bugs this repo declared fixed (its `knownBugFixOverrides`) from aws-crypto-tools-commons'
+# known-bugs.json and opens a PR there. All logic lives in commons; this file
+# only wires the trigger + the commons-write token.
+name: Reconcile known-bug fixes
+
+on:
+  push:
+    branches: [master]
+    paths: ["test-server/commons-configuration.json"]
+
+jobs:
+  reconcile:
+    uses: aws/aws-crypto-tools-commons/.github/workflows/reconcile-known-bug-fixes.yml@main
+    with:
+      commons-config-path: test-server/commons-configuration.json
+    secrets:
+      commons-token: ${{ secrets.COMMONS_RECONCILE_TOKEN }}
