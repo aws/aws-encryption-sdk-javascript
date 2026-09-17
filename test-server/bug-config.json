@@ -1,0 +1,6 @@
+[
+  "decrypt-accepts-trailing-bytes-commit-key",
+  "create-client-accepts-reserved-aws-kms-namespace",
+  "encrypt-accepts-reserved-prefix-encryption-context-key",
+  "encrypt-mishandles-proto-encryption-context-key"
+]
