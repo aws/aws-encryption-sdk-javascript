@@ -201,11 +201,9 @@ export async function getBranchKeyMaterials(
   let branchKeyMaterials: NodeBranchKeyMaterial
   // if the cache entry is false, branch key materials were not found
   if (!cacheEntry || hKeyring.cacheEntryHasExceededLimits(cacheEntry)) {
-    /* Concurrent misses for the same cache entry share one keystore request.
-     * Without this, N decrypts that start before the cache is populated each
-     * fire their own DynamoDB GetItem and KMS Decrypt. */
+    /* Concurrent misses for the same cache entry share one keystore request. */
     branchKeyMaterials = await ensureBranchKeyMaterialsInFlight(
-      hKeyring._branchKeyMaterialsInFlight,
+      cmc,
       cacheEntryId,
       async () => {
         //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
@@ -281,29 +279,31 @@ function deepCopyBranchKeyMaterial(
   )
 }
 
-// Coalesces concurrent misses for one cache entry onto a single in-flight
-// request, evicted on settle so the cryptographic materials cache (not this
-// map) keeps ownership of caching and TTL. A rejected request is evicted too,
-// so the next call retries rather than sharing the failure.
+/* In-flight keystore requests are tracked per cache,
+ * so keyrings that share a cache also share requests.
+ * A request leaves the map when it settles;
+ * the cache alone holds results, and a failure is not reused by later calls. */
+const branchKeyMaterialsInFlight = new WeakMap<
+  CryptographicMaterialsCache<NodeAlgorithmSuite>,
+  Map<string, Promise<NodeBranchKeyMaterial>>
+>()
+
 async function ensureBranchKeyMaterialsInFlight(
-  inFlight: Map<string, Promise<NodeBranchKeyMaterial>>,
+  cmc: CryptographicMaterialsCache<NodeAlgorithmSuite>,
   cacheEntryId: string,
   fetch: () => Promise<NodeBranchKeyMaterial>
 ): Promise<NodeBranchKeyMaterial> {
-  let pending = inFlight.get(cacheEntryId)
-  if (!pending) {
-    pending = fetch()
-    inFlight.set(cacheEntryId, pending)
-  }
+  const inFlight =
+    branchKeyMaterialsInFlight.get(cmc) ||
+    new Map<string, Promise<NodeBranchKeyMaterial>>()
+  branchKeyMaterialsInFlight.set(cmc, inFlight)
 
-  try {
-    const branchKeyMaterials = await pending
-    inFlight.delete(cacheEntryId)
-    return branchKeyMaterials
-  } catch (error) {
-    inFlight.delete(cacheEntryId)
-    throw error
-  }
+  const existing = inFlight.get(cacheEntryId)
+  if (existing) return existing
+
+  const pending = fetch().finally(() => inFlight.delete(cacheEntryId))
+  inFlight.set(cacheEntryId, pending)
+  return pending
 }
 
 //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt

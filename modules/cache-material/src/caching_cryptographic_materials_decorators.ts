@@ -102,50 +102,79 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       suite,
       encryptionContext,
     })
-    const entry = this._cache.getEncryptionMaterial(cacheKey, plaintextLength)
-    /* Check for early return (Postcondition): If I have a valid EncryptionMaterial, return it. */
-    if (entry && !this._cacheEntryHasExceededLimits(entry)) {
-      return cloneResponse(entry.response)
-    } else {
-      this._cache.del(cacheKey)
-    }
-
-    const material = await this._backingMaterialsManager
-      /* Strip any information about the plaintext from the backing request,
-       * because the resulting response may be used to encrypt multiple plaintexts.
-       */
-      .getEncryptionMaterials({ suite, encryptionContext, commitmentPolicy })
-
-    /* Check for early return (Postcondition): If I can not cache the EncryptionMaterial, just return it. */
-    if (!material.suite.cacheSafe) return material
-
-    /* It is possible for an entry to exceed limits immediately.
-     * The simplest case is to need to encrypt more than then maxBytesEncrypted.
-     * In this case, I return the response to encrypt the data,
-     * but do not put a know invalid item into the cache.
+    const inFlight = inFlightRequests(this._cache)
+    /* Concurrent misses wait for one backing request,
+     * then read the cache again so that each use counts against the entry's limits.
      */
-    const testEntry = {
-      response: material,
-      now: Date.now(),
-      messagesEncrypted: 1,
-      bytesEncrypted: plaintextLength,
+    for (;;) {
+      const entry = this._cache.getEncryptionMaterial(cacheKey, plaintextLength)
+      /* Check for early return (Postcondition): If I have a valid EncryptionMaterial, return it. */
+      if (entry && !this._cacheEntryHasExceededLimits(entry)) {
+        return cloneResponse(entry.response)
+      } else {
+        this._cache.del(cacheKey)
+      }
+
+      const pending = inFlight.get(cacheKey)
+      if (!pending) break
+      await pending
     }
-    if (!this._cacheEntryHasExceededLimits(testEntry)) {
-      this._cache.putEncryptionMaterial(
-        cacheKey,
-        material,
-        plaintextLength,
-        this._maxAge
-      )
-      return cloneResponse(material)
-    } else {
-      /* Postcondition: If the material has exceeded limits it MUST NOT be cloned.
-       * If it is cloned, and the clone is returned,
-       * then there exist a copy of the unencrypted data key.
-       * It is true that this data would be caught by GC, it is better to just not rely on that.
-       */
-      return material
+
+    const settle = startRequest(inFlight, cacheKey)
+    let material: EncryptionMaterial<S>
+    try {
+      material = await this._backingMaterialsManager
+        /* Strip any information about the plaintext from the backing request,
+         * because the resulting response may be used to encrypt multiple plaintexts.
+         */
+        .getEncryptionMaterials({ suite, encryptionContext, commitmentPolicy })
+    } catch (error) {
+      settle({ error })
+      throw error
     }
+    try {
+      return cacheEncryptionMaterial(this, cacheKey, material, plaintextLength)
+    } finally {
+      settle()
+    }
+  }
+}
+
+function cacheEncryptionMaterial<S extends SupportedAlgorithmSuites>(
+  cmm: CachingMaterialsManager<S>,
+  cacheKey: string,
+  material: EncryptionMaterial<S>,
+  plaintextLength: number
+): EncryptionMaterial<S> {
+  /* Check for early return (Postcondition): If I can not cache the EncryptionMaterial, just return it. */
+  if (!material.suite.cacheSafe) return material
+
+  /* It is possible for an entry to exceed limits immediately.
+   * The simplest case is to need to encrypt more than then maxBytesEncrypted.
+   * In this case, I return the response to encrypt the data,
+   * but do not put a know invalid item into the cache.
+   */
+  const testEntry = {
+    response: material,
+    now: Date.now(),
+    messagesEncrypted: 1,
+    bytesEncrypted: plaintextLength,
+  }
+  if (!cmm._cacheEntryHasExceededLimits(testEntry)) {
+    cmm._cache.putEncryptionMaterial(
+      cacheKey,
+      material,
+      plaintextLength,
+      cmm._maxAge
+    )
+    return cloneResponse(material)
+  } else {
+    /* Postcondition: If the material has exceeded limits it MUST NOT be cloned.
+     * If it is cloned, and the clone is returned,
+     * then there exist a copy of the unencrypted data key.
+     * It is true that this data would be caught by GC, it is better to just not rely on that.
+     */
+    return material
   }
 }
 
@@ -169,20 +198,77 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       this._partition,
       request
     )
-    const entry = this._cache.getDecryptionMaterial(cacheKey)
-    /* Check for early return (Postcondition): If I have a valid DecryptionMaterial, return it. */
-    if (entry && !this._cacheEntryHasExceededLimits(entry)) {
-      return cloneResponse(entry.response)
-    } else {
-      this._cache.del(cacheKey)
+    const inFlight = inFlightRequests(this._cache)
+    /* Concurrent misses wait for one backing request, then read the cache again. */
+    for (;;) {
+      const entry = this._cache.getDecryptionMaterial(cacheKey)
+      /* Check for early return (Postcondition): If I have a valid DecryptionMaterial, return it. */
+      if (entry && !this._cacheEntryHasExceededLimits(entry)) {
+        return cloneResponse(entry.response)
+      } else {
+        this._cache.del(cacheKey)
+      }
+
+      const pending = inFlight.get(cacheKey)
+      if (!pending) break
+      await pending
     }
 
-    const material = await this._backingMaterialsManager.decryptMaterials(
-      request
-    )
+    const settle = startRequest(inFlight, cacheKey)
+    let material: DecryptionMaterial<S>
+    try {
+      material = await this._backingMaterialsManager.decryptMaterials(request)
+    } catch (error) {
+      settle({ error })
+      throw error
+    }
+    try {
+      this._cache.putDecryptionMaterial(cacheKey, material, this._maxAge)
+      return cloneResponse(material)
+    } finally {
+      settle()
+    }
+  }
+}
 
-    this._cache.putDecryptionMaterial(cacheKey, material, this._maxAge)
-    return cloneResponse(material)
+/* In-flight backing requests are tracked per cache,
+ * so caching materials managers that share a cache also share requests.
+ */
+const inFlightByCache = new WeakMap<
+  CryptographicMaterialsCache<any>,
+  Map<string, Promise<void>>
+>()
+
+function inFlightRequests(
+  cache: CryptographicMaterialsCache<any>
+): Map<string, Promise<void>> {
+  const inFlight =
+    inFlightByCache.get(cache) || new Map<string, Promise<void>>()
+  inFlightByCache.set(cache, inFlight)
+  return inFlight
+}
+
+/* Marks a backing request for `cacheKey` as in flight.
+ * The returned function settles it once the response is in the cache,
+ * or fails every waiting caller with the request's error.
+ */
+function startRequest(
+  inFlight: Map<string, Promise<void>>,
+  cacheKey: string
+): (failure?: { error: unknown }) => void {
+  let resolve!: () => void
+  let reject!: (error: unknown) => void
+  const pending = new Promise<void>((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  /* The requesting caller throws the error itself; only waiting callers read it from here. */
+  pending.catch(() => undefined)
+  inFlight.set(cacheKey, pending)
+  return (failure) => {
+    inFlight.delete(cacheKey)
+    if (failure) reject(failure.error)
+    else resolve()
   }
 }
 

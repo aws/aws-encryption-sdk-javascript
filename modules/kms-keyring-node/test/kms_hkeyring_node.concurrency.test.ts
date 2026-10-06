@@ -29,7 +29,6 @@ import {
   KeyStoreInfoOutput,
 } from '@aws-crypto/branch-keystore-node'
 
-import { getBranchKeyMaterials } from '../src/kms_hkeyring_node_helpers'
 import { getLocalCryptographicMaterialsCache } from '@aws-crypto/cache-material'
 import { NodeAlgorithmSuite } from '@aws-crypto/material-management'
 import { v4 } from 'uuid'
@@ -149,45 +148,107 @@ describe('KmsHierarchicalKeyRingNode: concurrent cold-cache operations (#1691)',
   })
 })
 
-const CONCURRENT_DECRYPTS = 3000
-const CACHE_LIMIT_TTL = 60_000
-const CACHE_ENTRY_ID = 'shared-cache-entry-id'
+const CONCURRENT_OPERATIONS = 3000
 
-function fixtureMaterial(): NodeBranchKeyMaterial {
-  return new NodeBranchKeyMaterial(Buffer.alloc(32), 'branchKeyId', v4(), {})
+// A keystore stub that takes a few milliseconds per request,
+// so concurrent operations all miss the cache before the first request returns.
+function slowKeyStore(
+  fail = false
+): Sinon.SinonStubbedInstance<BranchKeyStoreNode> {
+  const material = new NodeBranchKeyMaterial(
+    Buffer.alloc(32, 1),
+    BRANCH_KEY_ID_A,
+    v4(),
+    {}
+  )
+  const keyStore =
+    stubKeyStore() as Sinon.SinonStubbedInstance<BranchKeyStoreNode>
+  const fetch = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    if (fail) throw new Error('keystore unavailable')
+    return deepCopyBranchKeyMaterial(material)
+  }
+  keyStore.getActiveBranchKey.callsFake(fetch)
+  keyStore.getBranchKeyVersion.callsFake(fetch)
+  return keyStore
 }
 
-describe('KmsHierarchicalKeyRingNode: concurrent branch key retrieval', () => {
-  it(`coalesces ${CONCURRENT_DECRYPTS} concurrent cache misses into one keystore call`, async () => {
-    let getBranchKeyVersionCalls = 0
-    const keyStore = {
-      async getBranchKeyVersion() {
-        getBranchKeyVersionCalls += 1
-        await new Promise((resolve) => setTimeout(resolve, 5))
-        return fixtureMaterial()
-      },
-    }
+function keyringFor(
+  keyStore: BranchKeyStoreNode,
+  cache?: KmsHierarchicalKeyRingNode['_cmc'],
+  partitionId?: string
+): KmsHierarchicalKeyRingNode {
+  return new KmsHierarchicalKeyRingNode({
+    branchKeyIdSupplier: BRANCH_KEY_ID_SUPPLIER,
+    keyStore,
+    cacheLimitTtl: TTL,
+    cache,
+    partitionId,
+  })
+}
 
-    const cmc = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
-    const hKeyring = {
-      keyStore,
-      cacheLimitTtl: CACHE_LIMIT_TTL,
-      cacheEntryHasExceededLimits: () => false,
-      _branchKeyMaterialsInFlight: new Map(),
-    } as any
+async function encryptConcurrently(
+  hkr: KmsHierarchicalKeyRingNode,
+  count: number
+) {
+  return Promise.all(
+    Array.from({ length: count }, async () =>
+      hkr.onEncrypt(new NodeEncryptionMaterial(TEST_ESDK_ALG_SUITE, EC_A))
+    )
+  )
+}
 
-    await Promise.all(
-      Array.from({ length: CONCURRENT_DECRYPTS }, () =>
-        getBranchKeyMaterials(
-          hKeyring,
-          cmc,
-          'branchKeyId',
-          CACHE_ENTRY_ID,
-          'branchKeyVersion'
-        )
-      )
+describe('KmsHierarchicalKeyRingNode: concurrent branch key cache misses (#1663)', () => {
+  it(`coalesces ${CONCURRENT_OPERATIONS} concurrent onEncrypt misses into one keystore call`, async () => {
+    const keyStore = slowKeyStore()
+    await encryptConcurrently(keyringFor(keyStore), CONCURRENT_OPERATIONS)
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
+  })
+
+  it(`coalesces ${CONCURRENT_OPERATIONS} concurrent onDecrypt misses into one keystore call`, async () => {
+    const keyStore = slowKeyStore()
+    const [encrypted] = await encryptConcurrently(keyringFor(keyStore), 1)
+    const expectedPdk = unwrapDataKey(encrypted.getUnencryptedDataKey())
+
+    const hkr = keyringFor(keyStore)
+    const recovered = await Promise.all(
+      Array.from({ length: CONCURRENT_OPERATIONS }, async () => {
+        const material = new NodeDecryptionMaterial(TEST_ESDK_ALG_SUITE, EC_A)
+        await hkr.onDecrypt(material, encrypted.encryptedDataKeys)
+        return unwrapDataKey(material.getUnencryptedDataKey())
+      })
     )
 
-    expect(getBranchKeyVersionCalls).to.equal(1)
+    expect(keyStore.getBranchKeyVersion.callCount).to.equal(1)
+    for (const pdk of recovered) expect(pdk).to.deep.equal(expectedPdk)
+  })
+
+  it('coalesces misses across keyrings that share a cache and partition', async () => {
+    const keyStore = slowKeyStore()
+    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
+    const partitionId = v4()
+    await Promise.all([
+      encryptConcurrently(keyringFor(keyStore, cache, partitionId), 10),
+      encryptConcurrently(keyringFor(keyStore, cache, partitionId), 10),
+    ])
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
+  })
+
+  it('fails every waiting operation on a failed request, and retries on the next call', async () => {
+    const keyStore = slowKeyStore(true)
+    const hkr = keyringFor(keyStore)
+
+    const results = await Promise.allSettled(
+      Array.from({ length: 10 }, async () =>
+        hkr.onEncrypt(new NodeEncryptionMaterial(TEST_ESDK_ALG_SUITE, EC_A))
+      )
+    )
+    expect(results.every((r) => r.status === 'rejected')).to.equal(true)
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
+
+    await hkr
+      .onEncrypt(new NodeEncryptionMaterial(TEST_ESDK_ALG_SUITE, EC_A))
+      .catch(() => undefined)
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
   })
 })
