@@ -29,6 +29,7 @@ import {
   KeyStoreInfoOutput,
 } from '@aws-crypto/branch-keystore-node'
 
+import { getBranchKeyMaterials } from '../src/kms_hkeyring_node_helpers'
 import { getLocalCryptographicMaterialsCache } from '@aws-crypto/cache-material'
 import { NodeAlgorithmSuite } from '@aws-crypto/material-management'
 import { v4 } from 'uuid'
@@ -250,5 +251,75 @@ describe('KmsHierarchicalKeyRingNode: concurrent branch key cache misses (#1663)
       .onEncrypt(new NodeEncryptionMaterial(TEST_ESDK_ALG_SUITE, EC_A))
       .catch(() => undefined)
     expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
+  })
+})
+
+describe('getBranchKeyMaterials: eviction while a request settles', () => {
+  const material = (fill: number) =>
+    new NodeBranchKeyMaterial(Buffer.alloc(32, fill), BRANCH_KEY_ID_A, v4(), {})
+
+  function hKeyringWith(keyStore: any) {
+    return {
+      keyStore,
+      cacheLimitTtl: TTL,
+      cacheEntryHasExceededLimits: () => false,
+    } as any
+  }
+
+  it('returns an intact branch key when another put evicts the entry before callers resume', async () => {
+    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(1)
+    // Another operation's put lands one microtask after this request's put.
+    const racingCache = {
+      ...cache,
+      putBranchKeyMaterial(
+        key: string,
+        m: NodeBranchKeyMaterial,
+        ttl?: number
+      ) {
+        cache.putBranchKeyMaterial(key, m, ttl)
+        queueMicrotask(() => cache.putBranchKeyMaterial('other', material(2)))
+      },
+    }
+    const keyStore = { getBranchKeyVersion: async () => material(1) }
+
+    const results = await Promise.all(
+      Array.from({ length: 3 }, async () =>
+        getBranchKeyMaterials(
+          hKeyringWith(keyStore),
+          racingCache,
+          BRANCH_KEY_ID_A,
+          'entry',
+          'version'
+        )
+      )
+    )
+
+    for (const result of results) {
+      expect(result.branchKey()).to.deep.equal(Buffer.alloc(32, 1))
+    }
+  })
+
+  it('returns intact branch keys for two keys racing through a one-entry cache', async () => {
+    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(1)
+    const keyStore = {
+      getBranchKeyVersion: async (id: string) =>
+        material(id === BRANCH_KEY_ID_A ? 1 : 2),
+    }
+
+    const results = await Promise.all(
+      Array.from({ length: 10 }, async (_, i) =>
+        getBranchKeyMaterials(
+          hKeyringWith(keyStore),
+          cache,
+          i % 2 ? BRANCH_KEY_ID_B : BRANCH_KEY_ID_A,
+          i % 2 ? 'entry-b' : 'entry-a',
+          'version'
+        )
+      )
+    )
+
+    results.forEach((result, i) =>
+      expect(result.branchKey()).to.deep.equal(Buffer.alloc(32, i % 2 ? 2 : 1))
+    )
   })
 })

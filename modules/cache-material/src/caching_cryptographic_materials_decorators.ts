@@ -105,7 +105,16 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
     const inFlight = inFlightRequests(this._cache)
     /* Concurrent misses wait for one backing request,
      * then read the cache again so that each use counts against the entry's limits.
+     * Once an entry's limits are spent, the next waiter requests a new data key
+     * while the rest wait, so N callers with a limit of L make about N/L
+     * backing requests in sequence.
+     * A response that cannot serve another caller is not shared:
+     * waiters then request their own in parallel.
      */
+    const shareable =
+      plaintextLength <= this._maxBytesEncrypted &&
+      this._maxMessagesEncrypted > 1
+    let settle: Settle | undefined
     for (;;) {
       const entry = this._cache.getEncryptionMaterial(cacheKey, plaintextLength)
       /* Check for early return (Postcondition): If I have a valid EncryptionMaterial, return it. */
@@ -115,27 +124,32 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
         this._cache.del(cacheKey)
       }
 
+      if (!shareable) break
       const pending = inFlight.get(cacheKey)
-      if (!pending) break
-      await pending
+      if (!pending) {
+        settle = startRequest(inFlight, cacheKey)
+        break
+      }
+      if (!(await pending)) break
     }
 
-    const settle = startRequest(inFlight, cacheKey)
-    let material: EncryptionMaterial<S>
     try {
-      material = await this._backingMaterialsManager
+      const material = await this._backingMaterialsManager
         /* Strip any information about the plaintext from the backing request,
          * because the resulting response may be used to encrypt multiple plaintexts.
          */
         .getEncryptionMaterials({ suite, encryptionContext, commitmentPolicy })
+      const response = cacheEncryptionMaterial(
+        this,
+        cacheKey,
+        material,
+        plaintextLength
+      )
+      settle && settle({ shared: response.shared })
+      return response.material
     } catch (error) {
-      settle({ error })
+      settle && settle({ error })
       throw error
-    }
-    try {
-      return cacheEncryptionMaterial(this, cacheKey, material, plaintextLength)
-    } finally {
-      settle()
     }
   }
 }
@@ -145,9 +159,9 @@ function cacheEncryptionMaterial<S extends SupportedAlgorithmSuites>(
   cacheKey: string,
   material: EncryptionMaterial<S>,
   plaintextLength: number
-): EncryptionMaterial<S> {
+): { material: EncryptionMaterial<S>; shared: boolean } {
   /* Check for early return (Postcondition): If I can not cache the EncryptionMaterial, just return it. */
-  if (!material.suite.cacheSafe) return material
+  if (!material.suite.cacheSafe) return { material, shared: false }
 
   /* It is possible for an entry to exceed limits immediately.
    * The simplest case is to need to encrypt more than then maxBytesEncrypted.
@@ -167,14 +181,14 @@ function cacheEncryptionMaterial<S extends SupportedAlgorithmSuites>(
       plaintextLength,
       cmm._maxAge
     )
-    return cloneResponse(material)
+    return { material: cloneResponse(material), shared: true }
   } else {
     /* Postcondition: If the material has exceeded limits it MUST NOT be cloned.
      * If it is cloned, and the clone is returned,
      * then there exist a copy of the unencrypted data key.
      * It is true that this data would be caught by GC, it is better to just not rely on that.
      */
-    return material
+    return { material, shared: false }
   }
 }
 
@@ -215,60 +229,63 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
     }
 
     const settle = startRequest(inFlight, cacheKey)
-    let material: DecryptionMaterial<S>
     try {
-      material = await this._backingMaterialsManager.decryptMaterials(request)
+      const material = await this._backingMaterialsManager.decryptMaterials(
+        request
+      )
+      this._cache.putDecryptionMaterial(cacheKey, material, this._maxAge)
+      settle({ shared: true })
+      return cloneResponse(material)
     } catch (error) {
       settle({ error })
       throw error
-    }
-    try {
-      this._cache.putDecryptionMaterial(cacheKey, material, this._maxAge)
-      return cloneResponse(material)
-    } finally {
-      settle()
     }
   }
 }
 
 /* In-flight backing requests are tracked per cache,
  * so caching materials managers that share a cache also share requests.
+ * Each resolves to whether its response can serve a waiting caller.
+ * Callers already waiting share a failed request's error; later calls retry.
  */
 const inFlightByCache = new WeakMap<
   CryptographicMaterialsCache<any>,
-  Map<string, Promise<void>>
+  Map<string, Promise<boolean>>
 >()
 
 function inFlightRequests(
   cache: CryptographicMaterialsCache<any>
-): Map<string, Promise<void>> {
-  const inFlight =
-    inFlightByCache.get(cache) || new Map<string, Promise<void>>()
-  inFlightByCache.set(cache, inFlight)
+): Map<string, Promise<boolean>> {
+  let inFlight = inFlightByCache.get(cache)
+  if (!inFlight) {
+    inFlight = new Map()
+    inFlightByCache.set(cache, inFlight)
+  }
   return inFlight
 }
 
+type Settle = (result: { shared: boolean } | { error: unknown }) => void
+
 /* Marks a backing request for `cacheKey` as in flight.
- * The returned function settles it once the response is in the cache,
- * or fails every waiting caller with the request's error.
+ * The returned function removes it and resolves or rejects its waiting callers.
  */
 function startRequest(
-  inFlight: Map<string, Promise<void>>,
+  inFlight: Map<string, Promise<boolean>>,
   cacheKey: string
-): (failure?: { error: unknown }) => void {
-  let resolve!: () => void
+): Settle {
+  let resolve!: (shared: boolean) => void
   let reject!: (error: unknown) => void
-  const pending = new Promise<void>((res, rej) => {
+  const pending = new Promise<boolean>((res, rej) => {
     resolve = res
     reject = rej
   })
   /* The requesting caller throws the error itself; only waiting callers read it from here. */
   pending.catch(() => undefined)
   inFlight.set(cacheKey, pending)
-  return (failure) => {
-    inFlight.delete(cacheKey)
-    if (failure) reject(failure.error)
-    else resolve()
+  return (result) => {
+    if (inFlight.get(cacheKey) === pending) inFlight.delete(cacheKey)
+    if ('error' in result) reject(result.error)
+    else resolve(result.shared)
   }
 }
 

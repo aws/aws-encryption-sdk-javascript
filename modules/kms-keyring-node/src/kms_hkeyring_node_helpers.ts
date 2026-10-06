@@ -249,7 +249,9 @@ export async function getBranchKeyMaterials(
         //# formula defined in [Appendix A](#appendix-a-cache-entry-identifier-formulas).
         cmc.putBranchKeyMaterial(cacheEntryId, materials, cacheLimitTtl)
 
-        return materials
+        /* Share a copy: the cache can evict and zero `materials`
+         * before waiting callers resume. */
+        return deepCopyBranchKeyMaterial(materials)
       }
     )
   } else {
@@ -281,8 +283,8 @@ function deepCopyBranchKeyMaterial(
 
 /* In-flight keystore requests are tracked per cache,
  * so keyrings that share a cache also share requests.
- * A request leaves the map when it settles;
- * the cache alone holds results, and a failure is not reused by later calls. */
+ * A request leaves the map when it settles, so the cache alone holds results.
+ * Callers already waiting share a failed request's error; later calls retry. */
 const branchKeyMaterialsInFlight = new WeakMap<
   CryptographicMaterialsCache<NodeAlgorithmSuite>,
   Map<string, Promise<NodeBranchKeyMaterial>>
@@ -293,16 +295,18 @@ async function ensureBranchKeyMaterialsInFlight(
   cacheEntryId: string,
   fetch: () => Promise<NodeBranchKeyMaterial>
 ): Promise<NodeBranchKeyMaterial> {
-  const inFlight =
-    branchKeyMaterialsInFlight.get(cmc) ||
-    new Map<string, Promise<NodeBranchKeyMaterial>>()
-  branchKeyMaterialsInFlight.set(cmc, inFlight)
+  let inFlight = branchKeyMaterialsInFlight.get(cmc)
+  if (!inFlight) {
+    inFlight = new Map()
+    branchKeyMaterialsInFlight.set(cmc, inFlight)
+  }
+  const requests = inFlight
 
-  const existing = inFlight.get(cacheEntryId)
+  const existing = requests.get(cacheEntryId)
   if (existing) return existing
 
-  const pending = fetch().finally(() => inFlight.delete(cacheEntryId))
-  inFlight.set(cacheEntryId, pending)
+  const pending = fetch().finally(() => requests.delete(cacheEntryId))
+  requests.set(cacheEntryId, pending)
   return pending
 }
 
