@@ -249,8 +249,10 @@ export async function getBranchKeyMaterials(
         //# formula defined in [Appendix A](#appendix-a-cache-entry-identifier-formulas).
         cmc.putBranchKeyMaterial(cacheEntryId, materials, cacheLimitTtl)
 
-        /* Share a copy: the cache can evict and zero `materials`
-         * before waiting callers resume. */
+        /* The cache zeroes `materials` when it evicts them,
+         * which can happen before waiting callers resume.
+         * Share a copy instead.
+         */
         return deepCopyBranchKeyMaterial(materials)
       }
     )
@@ -281,10 +283,11 @@ function deepCopyBranchKeyMaterial(
   )
 }
 
-/* In-flight keystore requests are tracked per cache,
+/* Tracks in-flight keystore requests per cache,
  * so keyrings that share a cache also share requests.
- * A request leaves the map when it settles, so the cache alone holds results.
- * Callers already waiting share a failed request's error; later calls retry. */
+ * A request leaves the map when it finishes; only the cache keeps results.
+ * Callers already waiting get a failed request's error; later calls make a new request.
+ */
 const branchKeyMaterialsInFlight = new WeakMap<
   CryptographicMaterialsCache<NodeAlgorithmSuite>,
   Map<string, Promise<NodeBranchKeyMaterial>>

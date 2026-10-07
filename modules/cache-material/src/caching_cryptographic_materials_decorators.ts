@@ -103,13 +103,12 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       encryptionContext,
     })
     const inFlight = inFlightRequests(this._cache)
-    /* Concurrent misses wait for one backing request,
-     * then read the cache again so that each use counts against the entry's limits.
-     * Once an entry's limits are spent, the next waiter requests a new data key
-     * while the rest wait, so N callers with a limit of L make about N/L
-     * backing requests in sequence.
-     * A response that cannot serve two callers of this size is not shared:
-     * waiters then request their own in parallel.
+    /* Concurrent misses wait for one backing request, then read the cache.
+     * Reading through the cache counts each caller's use against the entry's limits.
+     * When an entry's limits run out, one waiter requests a new data key and the rest wait again,
+     * so N callers with a limit of L make about N/L backing requests one after another.
+     * Callers make their own requests in parallel when a response cannot serve another caller:
+     * when two uses of this size exceed the limits, or when the response is not cached.
      */
     const shareable =
       2 * plaintextLength <= this._maxBytesEncrypted &&
@@ -243,10 +242,10 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
   }
 }
 
-/* In-flight backing requests are tracked per cache,
+/* Tracks in-flight backing requests per cache,
  * so caching materials managers that share a cache also share requests.
- * Each resolves to whether its response can serve a waiting caller.
- * Callers already waiting share a failed request's error; later calls retry.
+ * A request resolves to whether it put its response in the cache for waiting callers.
+ * Callers already waiting get a failed request's error; later calls make a new request.
  */
 const inFlightByCache = new WeakMap<
   CryptographicMaterialsCache<any>,
@@ -267,7 +266,8 @@ function inFlightRequests(
 type Settle = (result: { shared: boolean } | { error: unknown }) => void
 
 /* Marks a backing request for `cacheKey` as in flight.
- * The returned function removes it and resolves or rejects its waiting callers.
+ * Call the returned function when the request finishes:
+ * it removes the request from `inFlight` and wakes its waiting callers.
  */
 function startRequest(
   inFlight: Map<string, Promise<boolean>>,
@@ -279,7 +279,9 @@ function startRequest(
     resolve = res
     reject = rej
   })
-  /* The requesting caller throws the error itself; only waiting callers read it from here. */
+  /* The requesting caller rethrows the error itself.
+   * Without this handler, a failed request with no waiters is an unhandled rejection.
+   */
   pending.catch(() => undefined)
   inFlight.set(cacheKey, pending)
   return (result) => {

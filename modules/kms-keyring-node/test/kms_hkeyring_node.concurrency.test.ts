@@ -151,7 +151,7 @@ describe('KmsHierarchicalKeyRingNode: concurrent cold-cache operations (#1691)',
 
 const CONCURRENT_OPERATIONS = 3000
 
-// A keystore stub that takes a few milliseconds per request,
+// A keystore stub that takes 5 ms per request,
 // so concurrent operations all miss the cache before the first request returns.
 function slowKeyStore(
   fail = false

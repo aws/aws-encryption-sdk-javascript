@@ -47,8 +47,8 @@ const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(
       .digest()
 )
 
-// A backing materials manager that takes a few milliseconds per request
-// and returns a new data key every time.
+// A backing materials manager that takes 5 ms per request
+// and returns a new data key each time.
 function slowBackingMaterialsManager({
   fail = false,
   materialSuite = suite,
@@ -219,7 +219,8 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
         backing: { materialSuite: uncacheableSuite },
         cmm: {},
         request: { encryptionContext: {}, plaintextLength: 1 },
-        // Known only once the first response returns.
+        // The first response reveals the suite is not cache safe,
+        // so the other 9 requests start after it, in parallel.
         peak: 9,
       },
     }
@@ -243,7 +244,7 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
 
   it('serves every caller when the entry is evicted while waiters resume', async () => {
     const backing = slowBackingMaterialsManager()
-    // A one-entry cache that another key overwrites right after each put.
+    // A cache that deletes each entry one microtask after it is put.
     const cache = getLocalCryptographicMaterialsCache(1)
     const evictingCache = {
       ...cache,
