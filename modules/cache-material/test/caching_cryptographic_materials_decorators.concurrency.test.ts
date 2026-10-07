@@ -203,6 +203,12 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
         request: { ...encryptRequest, plaintextLength: 11 },
         peak: 10,
       },
+      'two plaintexts exceed maxBytesEncrypted': {
+        backing: {},
+        cmm: { maxBytesEncrypted: 10 },
+        request: { ...encryptRequest, plaintextLength: 6 },
+        peak: 10,
+      },
       'maxMessagesEncrypted is 1': {
         backing: {},
         cmm: { maxMessagesEncrypted: 1 },

@@ -295,18 +295,18 @@ async function ensureBranchKeyMaterialsInFlight(
   cacheEntryId: string,
   fetch: () => Promise<NodeBranchKeyMaterial>
 ): Promise<NodeBranchKeyMaterial> {
-  let inFlight = branchKeyMaterialsInFlight.get(cmc)
-  if (!inFlight) {
-    inFlight = new Map()
+  const inFlight =
+    branchKeyMaterialsInFlight.get(cmc) ||
+    new Map<string, Promise<NodeBranchKeyMaterial>>()
+  if (!branchKeyMaterialsInFlight.has(cmc)) {
     branchKeyMaterialsInFlight.set(cmc, inFlight)
   }
-  const requests = inFlight
 
-  const existing = requests.get(cacheEntryId)
+  const existing = inFlight.get(cacheEntryId)
   if (existing) return existing
 
-  const pending = fetch().finally(() => requests.delete(cacheEntryId))
-  requests.set(cacheEntryId, pending)
+  const pending = fetch().finally(() => inFlight.delete(cacheEntryId))
+  inFlight.set(cacheEntryId, pending)
   return pending
 }
 

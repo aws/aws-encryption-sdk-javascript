@@ -108,11 +108,11 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
      * Once an entry's limits are spent, the next waiter requests a new data key
      * while the rest wait, so N callers with a limit of L make about N/L
      * backing requests in sequence.
-     * A response that cannot serve another caller is not shared:
+     * A response that cannot serve two callers of this size is not shared:
      * waiters then request their own in parallel.
      */
     const shareable =
-      plaintextLength <= this._maxBytesEncrypted &&
+      2 * plaintextLength <= this._maxBytesEncrypted &&
       this._maxMessagesEncrypted > 1
     let settle: Settle | undefined
     for (;;) {
