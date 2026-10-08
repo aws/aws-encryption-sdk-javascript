@@ -232,7 +232,7 @@ describe('KmsHierarchicalKeyRingNode: storm tracking (#1663)', () => {
   afterEach(() => Object.assign(STORM_TRACKING, DEFAULT_STORM))
 
   it(`coalesces ${CONCURRENT_OPERATIONS} concurrent onEncrypt misses into one keystore call`, async () => {
-    // Default timings: thousands of waiters slow the event loop past the short graceInterval.
+    // Default timings: 3000 waiters slow the event loop until a fetch outlasts the short graceInterval.
     Object.assign(STORM_TRACKING, DEFAULT_STORM)
     const keyStore = slowKeyStore()
     await encryptConcurrently(keyringFor(keyStore), CONCURRENT_OPERATIONS)
@@ -240,7 +240,7 @@ describe('KmsHierarchicalKeyRingNode: storm tracking (#1663)', () => {
   })
 
   it(`coalesces ${CONCURRENT_OPERATIONS} concurrent onDecrypt misses into one keystore call`, async () => {
-    // Default timings: thousands of waiters slow the event loop past the short graceInterval.
+    // Default timings: 3000 waiters slow the event loop until a fetch outlasts the short graceInterval.
     Object.assign(STORM_TRACKING, DEFAULT_STORM)
     const keyStore = slowKeyStore()
     const [encrypted] = await encryptConcurrently(keyringFor(keyStore), 1)
@@ -303,7 +303,7 @@ describe('KmsHierarchicalKeyRingNode: storm tracking (#1663)', () => {
   it('fails waiting callers after inFlightTTL when every fetch hangs', async () => {
     const keyStore = slowKeyStore(5, ['hang'])
     const hkr = keyringFor(keyStore)
-    // Callers told to fetch hang forever; every caller left waiting fails.
+    // Each caller told to fetch hangs forever; every other caller fails after inFlightTTL.
     const failures: string[] = []
     for (const p of startEncrypts(hkr, 10)) {
       p.catch((e) => failures.push(e.message))

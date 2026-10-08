@@ -4,10 +4,10 @@
 import { NodeAlgorithmSuite } from '@aws-crypto/material-management'
 import { CryptographicMaterialsCache } from '@aws-crypto/cache-material'
 
-/* A port of the MPL's StormTracker (StormTracker.dfy),
- * which backs the hierarchical keyring's default cache in every other ESDK.
- * Times are in milliseconds; the values are the MPL's DefaultStorm().
- * Tests shorten them, so read them at call time.
+/* A port of the MPL's StormTracker (StormTracker.dfy).
+ * The MPL-based ESDKs use it for the hierarchical keyring's default cache.
+ * Times are in milliseconds, and the values match the MPL's DefaultStorm().
+ * Read them at call time: tests shorten them.
  */
 export const STORM_TRACKING = {
   // Within this long of expiring, one caller per graceInterval refreshes the entry.
@@ -29,7 +29,7 @@ export class StormTracker {
   private readonly inFlight = new Map<string, number>()
   private lastPrune = 0
 
-  /* The entry is in the cache and not expired. */
+  /* For an entry that is in the cache and not expired. */
   checkEntry(id: string, expiresAt: number, now: number): CacheState {
     if (this.fanOutReached(now)) return 'use'
     if (!this.inGracePeriod(expiresAt, now)) return 'use'
@@ -41,7 +41,7 @@ export class StormTracker {
     return 'fetch'
   }
 
-  /* The entry is missing or expired. */
+  /* For an entry that is missing or expired. */
   checkNewEntry(id: string, now: number): CacheState {
     if (this.fanOutReached(now)) return 'wait'
     const started = this.inFlight.get(id)
@@ -53,7 +53,8 @@ export class StormTracker {
   }
 
   /* Call before putting a fetched entry in the cache.
-   * A failed fetch leaves its mark, so waiters retry after graceInterval instead of at once.
+   * A failed fetch never calls this, so the entry stays marked
+   * and waiters retry after graceInterval instead of at once.
    */
   fetched(id: string) {
     this.inFlight.delete(id)
@@ -80,8 +81,8 @@ export class StormTracker {
 }
 
 /* One tracker per cache, so keyrings that share a cache also share fetches.
- * The map lives in this module: two copies of this package loaded in one process
- * keep separate trackers for the same cache.
+ * Two copies of this package in one process each keep their own trackers,
+ * so they do not share fetches for the same cache.
  */
 const trackers = new WeakMap<
   CryptographicMaterialsCache<NodeAlgorithmSuite>,

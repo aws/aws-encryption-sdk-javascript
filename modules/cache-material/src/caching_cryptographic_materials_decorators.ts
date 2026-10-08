@@ -22,12 +22,12 @@ import {
 } from './cryptographic_materials_cache'
 import { CryptographicMaterialsCacheKeyHelpersInterface } from './build_cryptographic_materials_cache_key_helpers'
 
-/* Timing for coalesced backing requests, from the MPL's storm-tracking cache defaults.
- * Times are in milliseconds.
- * Tests shorten them, so read them at call time.
+/* Timing for coalesced backing requests, in milliseconds.
+ * The values match the MPL's storm-tracking cache defaults.
+ * Read them at call time: tests shorten them.
  */
 export const COALESCING = {
-  // A request this old takes no new callers; the next caller starts another.
+  // A request this old accepts no new callers; the next caller starts its own.
   graceInterval: 1000,
   // A caller that has waited this long fails.
   inFlightTTL: 10 * 1000,
@@ -123,10 +123,10 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
     const waitUntil = Date.now() + COALESCING.inFlightTTL
     let retried = false
 
-    /* Concurrent misses join an in-flight backing request that still has room in its limits.
-     * Each caller that joins reserves its use of the data key before the response arrives,
-     * so the data key is never used past maxMessagesEncrypted or maxBytesEncrypted.
-     * A caller that does not fit starts its own request, so requests run in parallel.
+    /* A caller that misses joins an in-flight backing request if its data key has room left.
+     * Joining reserves the caller's use before the response arrives,
+     * so a data key never goes past maxMessagesEncrypted or maxBytesEncrypted.
+     * A caller that does not fit starts its own request, in parallel with the others.
      */
     for (;;) {
       const entry = this._cache.getEncryptionMaterial(cacheKey, plaintextLength)
@@ -169,8 +169,8 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
         messagesEncrypted: batch.messages,
         bytesEncrypted: batch.bytes,
       }
-      /* A batch over its limits has no members: none could join it.
-       * The requester's own use exceeds the limits, as in cacheEncryptionMaterial.
+      /* Only a request whose own use exceeds the limits gets here, so no caller joined it.
+       * Like cacheEncryptionMaterial, return material over its limits without a clone.
        */
       if (this._cacheEntryHasExceededLimits(used)) {
         settleMembers(batch, { uncached: true })
@@ -182,7 +182,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
         plaintextLength,
         this._maxAge
       )
-      /* Count every member's use against the entry this request just put. */
+      /* Count each member's use against the entry just put, so later cache hits see it. */
       for (const member of batch.members) {
         this._cache.getEncryptionMaterial(cacheKey, member.plaintextLength)
       }
@@ -262,7 +262,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
     const waitUntil = Date.now() + COALESCING.inFlightTTL
     let retried = false
 
-    /* Concurrent misses join the in-flight backing request. */
+    /* A caller that misses joins the in-flight backing request. */
     for (;;) {
       const entry = this._cache.getDecryptionMaterial(cacheKey)
       /* Check for early return (Postcondition): If I have a valid DecryptionMaterial, return it. */
@@ -277,7 +277,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       const outcome = await joinBatch(batch, 0, waitUntil)
       if ('material' in outcome) return outcome.material
       /* A failed request is retried once, then its error reaches the caller.
-       * Decrypt requests always cache their response, so the outcome is a failure.
+       * A decrypt request has no uncached outcome, so here the outcome is a failure.
        */
       if (retried) throw (outcome as Failed).error
       retried = true
@@ -304,7 +304,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
 }
 
 /* An in-flight backing request and the callers waiting on it.
- * `messages` and `bytes` count the uses reserved by the requester and its members.
+ * `messages` and `bytes` total the uses reserved by the requester and its members.
  */
 interface Batch<M> {
   startedAt: number
@@ -319,10 +319,10 @@ interface Failed {
 }
 type Outcome<M> = { material: M } | { uncached: true } | Failed
 
-/* Open requests per cache and cache key,
+/* Open requests, by cache and then cache key,
  * so caching materials managers that share a cache also share requests.
- * The map lives in this module: two copies of this package loaded in one process
- * keep separate requests for the same cache.
+ * Two copies of this package in one process each keep their own map,
+ * so they do not share requests for the same cache.
  */
 const batchesByCache = new WeakMap<
   CryptographicMaterialsCache<any>,
@@ -403,7 +403,9 @@ async function joinBatch<M>(
     batch.members.push({ plaintextLength, settle: resolve })
   })
   clearTimeout(timer)
-  /* The caller's reserved use stays counted, which only lowers the data key's remaining uses. */
+  /* A caller that times out leaves its reserved use counted.
+   * That can only leave the data key fewer uses, never more.
+   */
   needs(outcome, 'Caching materials manager inFlightTTL exceeded')
   return outcome
 }

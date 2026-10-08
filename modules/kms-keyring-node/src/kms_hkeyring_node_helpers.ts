@@ -216,8 +216,8 @@ export async function getBranchKeyMaterials(
         ? tracker.checkNewEntry(cacheEntryId, now)
         : tracker.checkEntry(
             cacheEntryId,
-            /* The MPL rejects a TTL within the grace period.
-             * Such entries are not refreshed early here instead.
+            /* The MPL rejects a keyring whose TTL is within the grace period.
+             * Here, such a keyring skips the early refresh instead.
              */
             cacheLimitTtl > STORM_TRACKING.gracePeriod
               ? cacheEntry.now + cacheLimitTtl
