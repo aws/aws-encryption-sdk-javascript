@@ -30,6 +30,7 @@ import {
 } from '@aws-crypto/branch-keystore-node'
 
 import { getBranchKeyMaterials } from '../src/kms_hkeyring_node_helpers'
+import { STORM_TRACKING } from '../src/branch_key_storm_tracker'
 import { getLocalCryptographicMaterialsCache } from '@aws-crypto/cache-material'
 import { NodeAlgorithmSuite } from '@aws-crypto/material-management'
 import { v4 } from 'uuid'
@@ -151,26 +152,43 @@ describe('KmsHierarchicalKeyRingNode: concurrent cold-cache operations (#1691)',
 
 const CONCURRENT_OPERATIONS = 3000
 
-// A keystore stub that takes 5 ms per request,
-// so concurrent operations all miss the cache before the first request returns.
+// Shortened storm-tracking timings, so the tests run in milliseconds.
+const FAST_STORM = {
+  ...STORM_TRACKING,
+  graceInterval: 40,
+  inFlightTTL: 200,
+  sleepMilli: 2,
+}
+const DEFAULT_STORM = { ...STORM_TRACKING }
+
+// A keystore stub where each request takes `ms` milliseconds.
+// `outcomes` decides each call in order: 'ok', 'fail', or 'hang'; later calls use the last one.
 function slowKeyStore(
-  fail = false
-): Sinon.SinonStubbedInstance<BranchKeyStoreNode> {
+  ms = 5,
+  outcomes: ('ok' | 'fail' | 'hang')[] = ['ok']
+): Sinon.SinonStubbedInstance<BranchKeyStoreNode> & { peak: () => number } {
   const material = new NodeBranchKeyMaterial(
     Buffer.alloc(32, 1),
     BRANCH_KEY_ID_A,
     v4(),
     {}
   )
-  const keyStore =
-    stubKeyStore() as Sinon.SinonStubbedInstance<BranchKeyStoreNode>
+  const keyStore = stubKeyStore() as any
+  let calls = 0
+  let active = 0
+  let peak = 0
   const fetch = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 5))
-    if (fail) throw new Error('keystore unavailable')
+    const outcome = outcomes[Math.min(calls++, outcomes.length - 1)]
+    if (outcome === 'hang') return new Promise<never>(() => undefined)
+    peak = Math.max(peak, ++active)
+    await new Promise((resolve) => setTimeout(resolve, ms))
+    active -= 1
+    if (outcome === 'fail') throw new Error('keystore unavailable')
     return deepCopyBranchKeyMaterial(material)
   }
   keyStore.getActiveBranchKey.callsFake(fetch)
   keyStore.getBranchKeyVersion.callsFake(fetch)
+  keyStore.peak = () => peak
   return keyStore
 }
 
@@ -199,14 +217,31 @@ async function encryptConcurrently(
   )
 }
 
-describe('KmsHierarchicalKeyRingNode: concurrent branch key cache misses (#1663)', () => {
+async function encryptSettled(hkr: KmsHierarchicalKeyRingNode, count: number) {
+  return Promise.allSettled(startEncrypts(hkr, count))
+}
+
+function startEncrypts(hkr: KmsHierarchicalKeyRingNode, count: number) {
+  return Array.from({ length: count }, async () =>
+    hkr.onEncrypt(new NodeEncryptionMaterial(TEST_ESDK_ALG_SUITE, EC_A))
+  )
+}
+
+describe('KmsHierarchicalKeyRingNode: storm tracking (#1663)', () => {
+  beforeEach(() => Object.assign(STORM_TRACKING, FAST_STORM))
+  afterEach(() => Object.assign(STORM_TRACKING, DEFAULT_STORM))
+
   it(`coalesces ${CONCURRENT_OPERATIONS} concurrent onEncrypt misses into one keystore call`, async () => {
+    // Default timings: thousands of waiters slow the event loop past the short graceInterval.
+    Object.assign(STORM_TRACKING, DEFAULT_STORM)
     const keyStore = slowKeyStore()
     await encryptConcurrently(keyringFor(keyStore), CONCURRENT_OPERATIONS)
     expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
   })
 
   it(`coalesces ${CONCURRENT_OPERATIONS} concurrent onDecrypt misses into one keystore call`, async () => {
+    // Default timings: thousands of waiters slow the event loop past the short graceInterval.
+    Object.assign(STORM_TRACKING, DEFAULT_STORM)
     const keyStore = slowKeyStore()
     const [encrypted] = await encryptConcurrently(keyringFor(keyStore), 1)
     const expectedPdk = unwrapDataKey(encrypted.getUnencryptedDataKey())
@@ -235,22 +270,104 @@ describe('KmsHierarchicalKeyRingNode: concurrent branch key cache misses (#1663)
     expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
   })
 
-  it('fails every waiting operation on a failed request, and retries on the next call', async () => {
-    const keyStore = slowKeyStore(true)
+  it('waiting callers retry after graceInterval instead of failing with the first error', async () => {
+    const keyStore = slowKeyStore(5, ['fail', 'ok'])
+    const results = await encryptSettled(keyringFor(keyStore), 10)
+
+    expect(results.filter((r) => r.status === 'rejected')).to.have.lengthOf(1)
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
+  })
+
+  it('retries a failing keystore at most once per graceInterval until inFlightTTL', async () => {
+    const keyStore = slowKeyStore(5, ['fail'])
+    const results = await encryptSettled(keyringFor(keyStore), 10)
+
+    for (const result of results) expect(result.status).to.equal('rejected')
+    const maxCalls = FAST_STORM.inFlightTTL / FAST_STORM.graceInterval + 1
+    expect(keyStore.getActiveBranchKey.callCount).to.be.at.most(maxCalls)
+  })
+
+  it('starts another fetch when the first hangs past graceInterval', async () => {
+    const keyStore = slowKeyStore(5, ['hang', 'ok'])
     const hkr = keyringFor(keyStore)
 
-    const results = await Promise.allSettled(
-      Array.from({ length: 10 }, async () =>
-        hkr.onEncrypt(new NodeEncryptionMaterial(TEST_ESDK_ALG_SUITE, EC_A))
+    // The first caller's fetch never returns; the other 9 must not wait on it.
+    const [, ...waiters] = startEncrypts(hkr, 10)
+    const results = await Promise.allSettled(waiters)
+
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
+    expect(results).to.have.lengthOf(9)
+    for (const result of results) expect(result.status).to.equal('fulfilled')
+  })
+
+  it('fails waiting callers after inFlightTTL when every fetch hangs', async () => {
+    const keyStore = slowKeyStore(5, ['hang'])
+    const hkr = keyringFor(keyStore)
+    // Callers told to fetch hang forever; every caller left waiting fails.
+    const failures: string[] = []
+    for (const p of startEncrypts(hkr, 10)) {
+      p.catch((e) => failures.push(e.message))
+    }
+    await new Promise((resolve) =>
+      setTimeout(resolve, 2 * FAST_STORM.inFlightTTL)
+    )
+
+    const fetchers = keyStore.getActiveBranchKey.callCount
+    expect(fetchers).to.be.at.most(
+      FAST_STORM.inFlightTTL / FAST_STORM.graceInterval + 1
+    )
+    expect(failures).to.have.lengthOf(10 - fetchers)
+    for (const message of failures) {
+      expect(message).to.equal('Storm cache inFlightTTL exceeded')
+    }
+  })
+
+  it('refreshes an entry in its grace period with one fetch while others use it', async () => {
+    const clock = Sinon.useFakeTimers({ now: Date.now(), toFake: ['Date'] })
+    try {
+      const keyStore = slowKeyStore(20)
+      const hkr = keyringFor(keyStore)
+      await encryptConcurrently(hkr, 1)
+      clock.tick(TTL * 1000 - STORM_TRACKING.gracePeriod / 2)
+
+      let finished = 0
+      const all = Promise.all(
+        Array.from({ length: 10 }, async () => {
+          await hkr.onEncrypt(
+            new NodeEncryptionMaterial(TEST_ESDK_ALG_SUITE, EC_A)
+          )
+          finished += 1
+        })
+      )
+      // The refresh takes 20 ms; the other 9 callers use the cached entry meanwhile.
+      await new Promise((resolve) => setTimeout(resolve, 5))
+      expect(finished).to.equal(9)
+
+      await all
+      expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
+    } finally {
+      clock.restore()
+    }
+  })
+
+  it('fetches at most fanOut keys at once', async () => {
+    STORM_TRACKING.fanOut = 2
+    const keyStore = slowKeyStore(20)
+    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
+    const hKeyring = {
+      keyStore,
+      cacheLimitTtl: TTL * 1000,
+      cacheEntryHasExceededLimits: () => false,
+    } as any
+
+    await Promise.all(
+      ['a', 'b', 'c', 'd'].map(async (id) =>
+        getBranchKeyMaterials(hKeyring, cache, BRANCH_KEY_ID_A, id, 'version')
       )
     )
-    expect(results.every((r) => r.status === 'rejected')).to.equal(true)
-    expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
 
-    await hkr
-      .onEncrypt(new NodeEncryptionMaterial(TEST_ESDK_ALG_SUITE, EC_A))
-      .catch(() => undefined)
-    expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
+    expect(keyStore.getBranchKeyVersion.callCount).to.equal(4)
+    expect(keyStore.peak()).to.equal(2)
   })
 })
 

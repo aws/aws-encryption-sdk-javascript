@@ -8,6 +8,7 @@ import {
   cacheEntryHasExceededLimits,
   getEncryptionMaterials,
   decryptMaterials,
+  COALESCING,
 } from '../src/caching_cryptographic_materials_decorators'
 import { getLocalCryptographicMaterialsCache } from '../src/get_local_cryptographic_materials_cache'
 import { buildCryptographicMaterialsCacheKeyHelpers } from '../src/build_cryptographic_materials_cache_key_helpers'
@@ -47,19 +48,27 @@ const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(
       .digest()
 )
 
-// A backing materials manager that takes 5 ms per request
-// and returns a new data key each time.
+// Shortened timings, so the tests run in milliseconds.
+const FAST = { graceInterval: 20, inFlightTTL: 100 }
+const DEFAULT = { ...COALESCING }
+
+// A backing materials manager that takes 5 ms per request and returns a new data key each time.
+// `outcomes` decides each call in order: 'ok', 'fail', or 'hang'; later calls use the last one.
 function slowBackingMaterialsManager({
-  fail = false,
+  outcomes = ['ok'] as ('ok' | 'fail' | 'hang')[],
   materialSuite = suite,
 } = {}) {
   const calls = { encrypt: 0, decrypt: 0, active: 0, peak: 0 }
+  let n = 0
   const respond = async () => {
+    const outcome = outcomes[Math.min(n++, outcomes.length - 1)]
+    if (outcome === 'hang') await new Promise<never>(() => undefined)
     calls.active += 1
     calls.peak = Math.max(calls.peak, calls.active)
     await new Promise((resolve) => setTimeout(resolve, 5))
     calls.active -= 1
-    if (fail) throw new Error('backing materials manager unavailable')
+    if (outcome === 'fail')
+      throw new Error('backing materials manager unavailable')
   }
   return {
     calls,
@@ -115,55 +124,110 @@ const decryptRequest = {
   encryptedDataKeys: [edk],
 }
 
-async function encryptConcurrently(cmm: any, count: number, request: any) {
-  return Promise.all(
-    Array.from({ length: count }, async () =>
-      cmm.getEncryptionMaterials(request)
-    )
+function startEncrypts(cmm: any, lengths: number[], request: any = {}) {
+  return lengths.map(async (plaintextLength) =>
+    cmm.getEncryptionMaterials({
+      ...encryptRequest,
+      ...request,
+      plaintextLength,
+    })
   )
 }
 
+async function encryptConcurrently(cmm: any, lengths: number[], request?: any) {
+  return Promise.all(startEncrypts(cmm, lengths, request))
+}
+
+const times = (count: number, length = 1) =>
+  Array.from({ length: count }, () => length)
+
 // Messages and bytes encrypted under each distinct data key.
-function usageByDataKey(materials: any[], plaintextLength: number) {
+function usageByDataKey(materials: any[], lengths: number[]) {
   const usage = new Map<string, { messages: number; bytes: number }>()
-  for (const material of materials) {
+  materials.forEach((material, i) => {
     const dataKey = Buffer.from(
       unwrapDataKey(material.getUnencryptedDataKey())
     ).toString('hex')
     const entry = usage.get(dataKey) || { messages: 0, bytes: 0 }
     entry.messages += 1
-    entry.bytes += plaintextLength
+    entry.bytes += lengths[i]
     usage.set(dataKey, entry)
-  }
+  })
   return [...usage.values()]
 }
 
 describe('caching materials manager: concurrent cache misses (#1665)', () => {
+  beforeEach(() => Object.assign(COALESCING, FAST))
+  afterEach(() => Object.assign(COALESCING, DEFAULT))
+
   it('concurrent encrypts share data keys without exceeding maxMessagesEncrypted', async () => {
     const backing = slowBackingMaterialsManager()
     const cmm = cachingCMM(backing, { maxMessagesEncrypted: 5 })
 
-    const materials = await encryptConcurrently(cmm, 10, encryptRequest)
+    const materials = await encryptConcurrently(cmm, times(10))
 
     expect(backing.calls.encrypt).to.equal(2)
-    expect(usageByDataKey(materials, 1).map((u) => u.messages)).to.deep.equal([
-      5, 5,
-    ])
+    expect(backing.calls.peak).to.equal(2)
+    expect(
+      usageByDataKey(materials, times(10)).map((u) => u.messages)
+    ).to.deep.equal([5, 5])
   })
 
   it('concurrent encrypts share data keys without exceeding maxBytesEncrypted', async () => {
     const backing = slowBackingMaterialsManager()
     const cmm = cachingCMM(backing, { maxBytesEncrypted: 10 })
 
-    const materials = await encryptConcurrently(cmm, 10, {
-      ...encryptRequest,
-      plaintextLength: 3,
-    })
+    const materials = await encryptConcurrently(cmm, times(10, 3))
 
     expect(backing.calls.encrypt).to.equal(4)
-    expect(usageByDataKey(materials, 3).map((u) => u.bytes)).to.deep.equal([
-      9, 9, 9, 3,
-    ])
+    expect(
+      usageByDataKey(materials, times(10, 3)).map((u) => u.bytes)
+    ).to.deep.equal([9, 9, 9, 3])
+  })
+
+  it('a large burst runs its backing requests in parallel', async () => {
+    const backing = slowBackingMaterialsManager()
+    const cmm = cachingCMM(backing, { maxMessagesEncrypted: 5 })
+
+    const materials = await encryptConcurrently(cmm, times(100))
+
+    expect(backing.calls.encrypt).to.equal(20)
+    expect(backing.calls.peak).to.equal(20)
+    for (const { messages } of usageByDataKey(materials, times(100))) {
+      expect(messages).to.be.at.most(5)
+    }
+  })
+
+  it('a warm entry serves callers until its limit, then one request serves the rest', async () => {
+    const backing = slowBackingMaterialsManager()
+    const cmm = cachingCMM(backing, { maxMessagesEncrypted: 5 })
+    const warm = await cmm.getEncryptionMaterials(encryptRequest)
+
+    const materials = await encryptConcurrently(cmm, times(10))
+
+    expect(backing.calls.encrypt).to.equal(3)
+    for (const { messages } of usageByDataKey(
+      [warm, ...materials],
+      times(11)
+    )) {
+      expect(messages).to.be.at.most(5)
+    }
+  })
+
+  it('keeps every data key within its limits for mixed plaintext sizes', async () => {
+    const backing = slowBackingMaterialsManager()
+    const cmm = cachingCMM(backing, {
+      maxBytesEncrypted: 10,
+      maxMessagesEncrypted: 3,
+    })
+    const lengths = [6, 3, 1, 11, 4, 4, 2, 11, 9, 1, 1, 5]
+
+    const materials = await encryptConcurrently(cmm, lengths)
+
+    for (const { messages, bytes } of usageByDataKey(materials, lengths)) {
+      expect(messages).to.be.at.most(3)
+      if (messages > 1) expect(bytes).to.be.at.most(10)
+    }
   })
 
   it('concurrent decrypts share one backing request', async () => {
@@ -179,73 +243,10 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
     expect(backing.calls.decrypt).to.equal(1)
   })
 
-  it('fails every waiting caller on a failed request, and retries on the next call', async () => {
-    const backing = slowBackingMaterialsManager({ fail: true })
-    const cmm = cachingCMM(backing)
-
-    const results = await Promise.allSettled(
-      Array.from({ length: 10 }, async () =>
-        cmm.getEncryptionMaterials(encryptRequest)
-      )
-    )
-    expect(results.every((r) => r.status === 'rejected')).to.equal(true)
-    expect(backing.calls.encrypt).to.equal(1)
-
-    await cmm.getEncryptionMaterials(encryptRequest).catch(() => undefined)
-    expect(backing.calls.encrypt).to.equal(2)
-  })
-
-  describe('requests run in parallel when the response is not cached', () => {
-    const uncached = {
-      'plaintextLength exceeds maxBytesEncrypted': {
-        backing: {},
-        cmm: { maxBytesEncrypted: 10 },
-        request: { ...encryptRequest, plaintextLength: 11 },
-        peak: 10,
-      },
-      'two plaintexts exceed maxBytesEncrypted': {
-        backing: {},
-        cmm: { maxBytesEncrypted: 10 },
-        request: { ...encryptRequest, plaintextLength: 6 },
-        peak: 10,
-      },
-      'maxMessagesEncrypted is 1': {
-        backing: {},
-        cmm: { maxMessagesEncrypted: 1 },
-        request: encryptRequest,
-        peak: 10,
-      },
-      'the backing suite is not cache safe': {
-        backing: { materialSuite: uncacheableSuite },
-        cmm: {},
-        request: { encryptionContext: {}, plaintextLength: 1 },
-        // The first response reveals the suite is not cache safe,
-        // so the other 9 requests start after it, in parallel.
-        peak: 9,
-      },
-    }
-
-    for (const [
-      name,
-      { backing: options, cmm: limits, request, peak },
-    ] of Object.entries(uncached)) {
-      it(name, async () => {
-        const backing = slowBackingMaterialsManager(options)
-        const cmm = cachingCMM(backing, limits)
-
-        const materials = await encryptConcurrently(cmm, 10, request)
-
-        expect(backing.calls.encrypt).to.equal(10)
-        expect(backing.calls.peak).to.equal(peak)
-        expect(usageByDataKey(materials, 1)).to.have.lengthOf(10)
-      })
-    }
-  })
-
-  it('serves every caller when the entry is evicted while waiters resume', async () => {
+  it('serves every waiting caller even when the cache evicts the entry at once', async () => {
     const backing = slowBackingMaterialsManager()
-    // A cache that deletes each entry one microtask after it is put.
     const cache = getLocalCryptographicMaterialsCache(1)
+    // A cache that deletes each entry one microtask after it is put.
     const evictingCache = {
       ...cache,
       putEncryptionMaterial(...args: [string, any, number, number?]) {
@@ -255,12 +256,62 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
     }
     const cmm = cachingCMM(backing, { cache: evictingCache })
 
-    const materials = await encryptConcurrently(cmm, 10, encryptRequest)
+    const materials = await encryptConcurrently(cmm, times(10))
 
     expect(materials).to.have.lengthOf(10)
-    for (const material of materials) {
-      expect(material.hasUnencryptedDataKey).to.equal(true)
+    expect(backing.calls.encrypt).to.equal(1)
+  })
+
+  it('waiting callers retry a failed request once', async () => {
+    const backing = slowBackingMaterialsManager({ outcomes: ['fail', 'ok'] })
+    const cmm = cachingCMM(backing)
+
+    const results = await Promise.allSettled(startEncrypts(cmm, times(10)))
+
+    expect(results.filter((r) => r.status === 'rejected')).to.have.lengthOf(1)
+    expect(backing.calls.encrypt).to.equal(2)
+  })
+
+  it('a request that keeps failing reaches every caller after one retry', async () => {
+    const backing = slowBackingMaterialsManager({ outcomes: ['fail'] })
+    const cmm = cachingCMM(backing)
+
+    const results = await Promise.allSettled(startEncrypts(cmm, times(10)))
+
+    for (const result of results) {
+      expect(result.status).to.equal('rejected')
+      expect((result as PromiseRejectedResult).reason.message).to.equal(
+        'backing materials manager unavailable'
+      )
     }
+    expect(backing.calls.encrypt).to.equal(2)
+  })
+
+  it('fails waiting callers after inFlightTTL when the request hangs', async () => {
+    const backing = slowBackingMaterialsManager({ outcomes: ['hang'] })
+    const cmm = cachingCMM(backing)
+
+    const [, ...waiters] = startEncrypts(cmm, times(5))
+    const results = await Promise.allSettled(waiters)
+
+    for (const result of results) {
+      expect((result as PromiseRejectedResult).reason.message).to.equal(
+        'Caching materials manager inFlightTTL exceeded'
+      )
+    }
+    expect(backing.calls.encrypt).to.equal(1)
+  })
+
+  it('starts another request for new callers once one hangs past graceInterval', async () => {
+    const backing = slowBackingMaterialsManager({ outcomes: ['hang', 'ok'] })
+    const cmm = cachingCMM(backing)
+
+    startEncrypts(cmm, times(1))
+    await new Promise((resolve) => setTimeout(resolve, FAST.graceInterval + 5))
+    const materials = await encryptConcurrently(cmm, times(5))
+
+    expect(materials).to.have.lengthOf(5)
+    expect(backing.calls.encrypt).to.equal(2)
   })
 
   it('fails waiting callers when the response cannot be cached', async () => {
@@ -276,11 +327,7 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
     }
     const cmm = cachingCMM(malformed)
 
-    const encrypts = await Promise.allSettled(
-      Array.from({ length: 3 }, async () =>
-        cmm.getEncryptionMaterials(encryptRequest)
-      )
-    )
+    const encrypts = await Promise.allSettled(startEncrypts(cmm, times(3)))
     const decrypts = await Promise.allSettled(
       Array.from({ length: 3 }, async () =>
         cmm.decryptMaterials(decryptRequest)
@@ -289,6 +336,63 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
 
     for (const result of [...encrypts, ...decrypts]) {
       expect(result.status).to.equal('rejected')
+    }
+  })
+
+  describe('requests run in parallel when the response cannot serve another caller', () => {
+    const uncached = {
+      'plaintextLength exceeds maxBytesEncrypted': {
+        backing: {},
+        cmm: { maxBytesEncrypted: 10 },
+        length: 11,
+        request: {},
+        peak: 10,
+      },
+      'two plaintexts exceed maxBytesEncrypted': {
+        backing: {},
+        cmm: { maxBytesEncrypted: 10 },
+        length: 6,
+        request: {},
+        peak: 10,
+      },
+      'maxMessagesEncrypted is 1': {
+        backing: {},
+        cmm: { maxMessagesEncrypted: 1 },
+        length: 1,
+        request: {},
+        peak: 10,
+      },
+      'the backing suite is not cache safe': {
+        backing: { materialSuite: uncacheableSuite },
+        cmm: {},
+        length: 1,
+        request: { suite: undefined },
+        // The first response reveals the suite is not cache safe,
+        // so the other 9 requests start after it, in parallel.
+        peak: 9,
+      },
+    }
+
+    for (const [
+      name,
+      { backing: options, cmm: limits, length, request, peak },
+    ] of Object.entries(uncached)) {
+      it(name, async () => {
+        const backing = slowBackingMaterialsManager(options)
+        const cmm = cachingCMM(backing, limits)
+
+        const materials = await encryptConcurrently(
+          cmm,
+          times(10, length),
+          request
+        )
+
+        expect(backing.calls.encrypt).to.equal(10)
+        expect(backing.calls.peak).to.equal(peak)
+        expect(usageByDataKey(materials, times(10, length))).to.have.lengthOf(
+          10
+        )
+      })
     }
   })
 })
