@@ -20,7 +20,7 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: codebuild-CryptoToolsCI-linux-aws-encryption-sdk-javascript-${{ github.run_id }}-${{ github.run_attempt }}
     permissions:
       id-token: write
       contents: read

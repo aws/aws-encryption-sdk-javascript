@@ -24,7 +24,7 @@ jobs:
 
   # Once all tests have passed, run semantic versioning
   version:
-    runs-on: ubuntu-latest
+    runs-on: codebuild-CryptoToolsCI-linux-aws-encryption-sdk-javascript-${{ github.run_id }}-${{ github.run_attempt }}
     needs: [pre-release-ci]
     environment: release
     steps:
@@ -91,6 +91,7 @@ jobs:
           git log -n 1
 
   publish:
+    # npm provenance requires a GitHub-hosted runner.
     runs-on: ubuntu-latest
     needs: [pre-release-ci, version]
     environment: release

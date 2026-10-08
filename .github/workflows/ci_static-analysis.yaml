@@ -8,6 +8,7 @@ permissions:
 
 jobs:
   not-grep:
+    # not-grep is a Docker container action.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
