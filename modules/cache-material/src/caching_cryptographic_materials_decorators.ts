@@ -21,6 +21,7 @@ import {
   Entry,
 } from './cryptographic_materials_cache'
 import { CryptographicMaterialsCacheKeyHelpersInterface } from './build_cryptographic_materials_cache_key_helpers'
+import { clockFor } from './cache_clock'
 
 export function decorateProperties<S extends SupportedAlgorithmSuites>(
   obj: CachingMaterialsManager<S>,
@@ -126,7 +127,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
      */
     const testEntry = {
       response: material,
-      now: Date.now(),
+      now: clockFor(this._cache)(),
       messagesEncrypted: 1,
       bytesEncrypted: plaintextLength,
     }
@@ -193,7 +194,7 @@ export function cacheEntryHasExceededLimits<
     this: CachingMaterialsManager<S>,
     { now, messagesEncrypted, bytesEncrypted }: Entry<S>
   ): boolean {
-    const age = Date.now() - now
+    const age = clockFor(this._cache)() - now
     return (
       age > this._maxAge ||
       messagesEncrypted > this._maxMessagesEncrypted ||

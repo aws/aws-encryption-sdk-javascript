@@ -18,7 +18,6 @@ import {
   buildEncrypt,
   CommitmentPolicy,
   getKmsClient,
-  getLocalCryptographicMaterialsCache,
   KeyringNode,
   KmsHierarchicalKeyRingNode,
   KmsKeyringNode,
@@ -31,6 +30,8 @@ import {
   RawRsaKeyringNode,
   WrappingSuiteIdentifier,
 } from '@aws-crypto/client-node'
+/* Not exported from the package index: builds a cache with a clock the test server controls. */
+import { localCryptographicMaterialsCache } from '@aws-crypto/cache-material/build/main/src/local_cryptographic_materials_cache'
 import { constants } from 'crypto'
 import { Readable } from 'stream'
 import { ClientError, ServerError } from './errors'
@@ -50,7 +51,6 @@ import {
   MultiKeyringConfig,
   RawAesKeyringConfig,
   RawRsaKeyringConfig,
-  TestHooks,
   toSuiteId,
 } from './model'
 
@@ -62,22 +62,19 @@ export interface CallCounts {
   decryptMaterials: number
 }
 
-/* Test-only wrapper around a caching CMM's underlying CMM.
- * Counts the caching CMM's calls to it, and can delay each call
- * so that concurrent cache misses overlap.
+/* Test-only wrapper around a caching CMM's underlying CMM,
+ * counting the caching CMM's calls to it.
  */
-class InstrumentedMaterialsManager implements NodeMaterialsManager {
+class CountingMaterialsManager implements NodeMaterialsManager {
   constructor(
     private readonly inner: NodeMaterialsManager,
-    private readonly counts: CallCounts,
-    private readonly delayMilliseconds: number
+    private readonly counts: CallCounts
   ) {}
 
   async getEncryptionMaterials(
     request: Parameters<NodeMaterialsManager['getEncryptionMaterials']>[0]
   ) {
     this.counts.getEncryptionMaterials += 1
-    await this.delay()
     return this.inner.getEncryptionMaterials(request)
   }
 
@@ -85,22 +82,20 @@ class InstrumentedMaterialsManager implements NodeMaterialsManager {
     request: Parameters<NodeMaterialsManager['decryptMaterials']>[0]
   ) {
     this.counts.decryptMaterials += 1
-    await this.delay()
     return this.inner.decryptMaterials(request)
-  }
-
-  private async delay() {
-    if (this.delayMilliseconds > 0) {
-      await new Promise((resolve) =>
-        setTimeout(resolve, this.delayMilliseconds)
-      )
-    }
   }
 }
 
-interface Instrumentation {
-  counts: CallCounts
-  delayMilliseconds: number
+/* Test-only state for one client: call counts, and the clock its caches use.
+ * The clock is the system time plus `clockOffsetMilliseconds`, which AdvanceClock moves forward.
+ */
+export class Instrumentation {
+  readonly counts: CallCounts = {
+    getEncryptionMaterials: 0,
+    decryptMaterials: 0,
+  }
+  clockOffsetMilliseconds = 0
+  readonly clock = () => Date.now() + this.clockOffsetMilliseconds
 }
 
 export interface OperationResult {
@@ -316,12 +311,15 @@ function buildCmm(
     case 'Caching': {
       const cfg = config as CachingCmmConfig
       return new NodeCachingMaterialsManager({
-        backingMaterials: new InstrumentedMaterialsManager(
+        backingMaterials: new CountingMaterialsManager(
           buildCmm(cfg.underlyingCMM, instrumentation),
-          instrumentation.counts,
-          instrumentation.delayMilliseconds
+          instrumentation.counts
         ),
-        cache: getLocalCryptographicMaterialsCache(100),
+        cache: localCryptographicMaterialsCache(
+          100,
+          60 * 1000,
+          instrumentation.clock
+        ),
         maxAge: cfg.cacheLimitTtlSeconds * 1000,
         partition: cfg.partitionId,
         maxBytesEncrypted: cfg.limitBytes,
@@ -341,7 +339,7 @@ export class EsdkClientBundle {
   constructor(
     private readonly client: Client,
     private readonly cmm: NodeMaterialsManager,
-    readonly callCounts: CallCounts
+    readonly instrumentation: Instrumentation
   ) {}
 
   async encrypt(
@@ -441,16 +439,10 @@ async function collect(stream: NodeJS.ReadableStream): Promise<Buffer> {
   return Buffer.concat(chunks)
 }
 
-export function buildClientBundle(
-  config: EsdkClientConfig,
-  testHooks: TestHooks = {}
-): EsdkClientBundle {
+export function buildClientBundle(config: EsdkClientConfig): EsdkClientBundle {
   const policy = commitmentPolicy(config.commitmentPolicy)
-  const callCounts = { getEncryptionMaterials: 0, decryptMaterials: 0 }
-  const cmm = buildCmm(config.cmm, {
-    counts: callCounts,
-    delayMilliseconds: testHooks.cachingCmmUnderlyingDelayMilliseconds || 0,
-  })
+  const instrumentation = new Instrumentation()
+  const cmm = buildCmm(config.cmm, instrumentation)
   const client = buildClient({
     commitmentPolicy: policy,
     maxEncryptedDataKeys:
@@ -459,5 +451,5 @@ export function buildClientBundle(
         ? false
         : config.maxEncryptedDataKeys,
   })
-  return new EsdkClientBundle(client, cmm, callCounts)
+  return new EsdkClientBundle(client, cmm, instrumentation)
 }

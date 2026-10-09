@@ -28,6 +28,9 @@ import {
   EncryptRequest,
   EncryptStreamRequest,
   GetCallCountsRequest,
+  EncryptConcurrentlyRequest,
+  DecryptConcurrentlyRequest,
+  AdvanceClockRequest,
 } from './model'
 
 const SMITHY_PROTOCOL = 'rpc-v2-cbor'
@@ -63,7 +66,7 @@ async function createClient(
   if (!config) throw new ServerError('config is required')
   let bundle: EsdkClientBundle
   try {
-    bundle = buildClientBundle(config, request.testHooks)
+    bundle = buildClientBundle(config)
   } catch (err) {
     if (err instanceof ClientError || err instanceof ServerError) throw err
     throw new ServerError(
@@ -155,14 +158,51 @@ async function dispatch(
       )
     }
     case 'GetCallCounts': {
-      const { callCounts } = registry.resolve(
+      const { counts } = registry.resolve(
         (request as GetCallCountsRequest).clientId
-      )
+      ).instrumentation
       return {
-        cachingCmmGetEncryptionMaterialsCalls:
-          callCounts.getEncryptionMaterials,
-        cachingCmmDecryptMaterialsCalls: callCounts.decryptMaterials,
+        cachingCmmGetEncryptionMaterialsCalls: counts.getEncryptionMaterials,
+        cachingCmmDecryptMaterialsCalls: counts.decryptMaterials,
       }
+    }
+    case 'EncryptConcurrently': {
+      const req = request as EncryptConcurrentlyRequest
+      const bundle = registry.resolve(req.clientId)
+      if (!req.plaintexts) throw new ServerError('plaintexts is required')
+      // Start every encrypt before awaiting any, so they reach the caches together.
+      const results = await Promise.all(
+        req.plaintexts.map(async (plaintext) =>
+          delegated(
+            bundle.encrypt(
+              plaintext,
+              req.encryptionContext,
+              req.algorithmSuiteId
+            )
+          )
+        )
+      )
+      return { ciphertexts: results.map(({ data }) => data) }
+    }
+    case 'DecryptConcurrently': {
+      const req = request as DecryptConcurrentlyRequest
+      const bundle = registry.resolve(req.clientId)
+      if (!req.ciphertexts) throw new ServerError('ciphertexts is required')
+      const results = await Promise.all(
+        req.ciphertexts.map(async (ciphertext) =>
+          delegated(bundle.decrypt(ciphertext))
+        )
+      )
+      return { plaintexts: results.map(({ data }) => data) }
+    }
+    case 'AdvanceClock': {
+      const req = request as AdvanceClockRequest
+      const { instrumentation } = registry.resolve(req.clientId)
+      if (typeof req.milliseconds !== 'number' || req.milliseconds < 0) {
+        throw new ServerError('milliseconds must be a non-negative number')
+      }
+      instrumentation.clockOffsetMilliseconds += req.milliseconds
+      return {}
     }
     default:
       throw new ServerError(`unknown operation: ${operation}`)
