@@ -199,12 +199,9 @@ export async function getBranchKeyMaterials(
 ): Promise<NodeBranchKeyMaterial> {
   const { keyStore, cacheLimitTtl } = hKeyring
   const tracker = stormTrackerFor(cmc)
-  // When this caller stops waiting for other callers' fetches and fails.
   const waitUntil = Date.now() + STORM_TRACKING.inFlightTTL
 
-  /* Concurrent callers for the same branch key share one keystore fetch.
-   * Each pass, the tracker tells this caller to use the cached entry, fetch it, or wait.
-   */
+  // Concurrent callers for the same branch key share one keystore fetch.
   for (;;) {
     const now = Date.now()
     //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
@@ -240,10 +237,9 @@ export async function getBranchKeyMaterials(
        * buffer mid-derivation. */
       return deepCopyBranchKeyMaterial(cacheEntry.response)
     }
-    // This caller fetches from the keystore below.
     if (state === 'fetch') break
 
-    // Another caller is fetching: check the cache again shortly, until inFlightTTL runs out.
+    // Someone else is fetching it. Check the cache again shortly.
     needs(Date.now() <= waitUntil, 'Storm cache inFlightTTL exceeded')
     await sleep(STORM_TRACKING.sleepMilli)
   }
