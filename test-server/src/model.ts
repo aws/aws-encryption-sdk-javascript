@@ -131,6 +131,27 @@ export interface EncryptStreamRequest extends EncryptRequest {
 
 export type DecryptStreamRequest = DecryptRequest
 
+export interface GetCallCountsRequest {
+  clientId?: string
+}
+
+export interface EncryptConcurrentlyRequest {
+  clientId?: string
+  plaintexts?: Uint8Array[]
+  encryptionContext?: EncryptionContext
+  algorithmSuiteId?: string
+}
+
+export interface DecryptConcurrentlyRequest {
+  clientId?: string
+  ciphertexts?: Uint8Array[]
+}
+
+export interface AdvanceClockRequest {
+  clientId?: string
+  milliseconds?: number
+}
+
 /* Modeled ESDKAlgorithmSuiteId name -> library AlgorithmSuiteIdentifier. */
 const SUITE_BY_MODEL_NAME: { [name: string]: AlgorithmSuiteIdentifier } = {
   ALG_AES_128_GCM_IV12_TAG16_NO_KDF:

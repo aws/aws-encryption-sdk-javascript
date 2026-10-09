@@ -18,7 +18,8 @@ REPO_ROOT    := $(abspath $(MAKEFILE_DIR)/..)
 COMMONS_CONFIGURATION := $(MAKEFILE_DIR)/server-config.json
 COMMONS_BRANCH ?=
 CLONE_DIR      ?= $(MAKEFILE_DIR)/.commons-clone
-CLONE_ORCH_DIR := $(CLONE_DIR)/esdk/test-server/orchestrator
+CLONE_ORCH_DIR := $(CLONE_DIR)/test-server-common/orchestrator
+CLONE_ROOT_DIR := $(CLONE_DIR)/esdk/test-server
 
 .PHONY: help build-server run-server start-server wait-for-server stop-server \
         test test-server check-java clean
@@ -88,10 +89,10 @@ test-server: check-java ## Run the complete cross-language TestServer via the co
 		echo "ERROR: failed to clone $$url at branch $$branch; no Tests will run." >&2; exit 1; \
 	fi; \
 	if [ ! -d "$(CLONE_ORCH_DIR)" ]; then \
-		echo "ERROR: branch $$branch of $$url has no orchestrator at esdk/test-server/orchestrator." >&2; exit 1; \
+		echo "ERROR: branch $$branch of $$url has no orchestrator at test-server-common/orchestrator." >&2; exit 1; \
 	fi; \
 	echo "==> Delegating: context=language:javascript languageRepoRoot=$(REPO_ROOT)"; \
-	cd "$(CLONE_ORCH_DIR)" && ./gradlew --console=plain run \
+	cd "$(CLONE_ORCH_DIR)" && ./gradlew --console=plain run -Dtestserver.root="$(CLONE_ROOT_DIR)" \
 		--args="context=language:javascript languageRepoRoot=$(REPO_ROOT) commonsOrigin.url=$$url commonsOrigin.branch=$$branch commonsOrigin.reason=$$reason"
 
 clean: ## Remove build output, server scratch files, and the commons clone
