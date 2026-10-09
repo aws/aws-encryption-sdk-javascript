@@ -396,6 +396,46 @@ describe('client construction', () => {
     )
   })
 
+  it('GetCallCounts reports the caching CMM calls to its underlying CMM', async () => {
+    const base = rawAesConfig() as { cmm: CborValue; commitmentPolicy: string }
+    const clientId = await createClient({
+      commitmentPolicy: base.commitmentPolicy,
+      cmm: {
+        Caching: { underlyingCMM: base.cmm, cacheLimitTtlSeconds: 60 },
+      },
+    })
+    const encrypted = await operation('Encrypt', {
+      clientId,
+      plaintext: PLAINTEXT,
+    })
+    await operation('Encrypt', { clientId, plaintext: PLAINTEXT })
+    await operation('Decrypt', {
+      clientId,
+      ciphertext: encrypted.body.ciphertext,
+    })
+    await operation('Decrypt', {
+      clientId,
+      ciphertext: encrypted.body.ciphertext,
+    })
+
+    const counts = await operation('GetCallCounts', { clientId })
+    expect(counts.status).to.equal(200)
+    expect(counts.body).to.deep.equal({
+      cachingCmmGetEncryptionMaterialsCalls: 1,
+      cachingCmmDecryptMaterialsCalls: 1,
+    })
+  })
+
+  it('GetCallCounts reports zero for a client with no caching CMM', async () => {
+    const clientId = await createClient(rawAesConfig())
+    await operation('Encrypt', { clientId, plaintext: PLAINTEXT })
+    const counts = await operation('GetCallCounts', { clientId })
+    expect(counts.body).to.deep.equal({
+      cachingCmmGetEncryptionMaterialsCalls: 0,
+      cachingCmmDecryptMaterialsCalls: 0,
+    })
+  })
+
   it('multi-keyring with a raw-AES generator round-trips', async () => {
     const clientId = await createClient({
       commitmentPolicy: 'REQUIRE_ENCRYPT_REQUIRE_DECRYPT',

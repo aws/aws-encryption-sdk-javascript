@@ -27,6 +27,7 @@ import {
   DecryptStreamRequest,
   EncryptRequest,
   EncryptStreamRequest,
+  GetCallCountsRequest,
 } from './model'
 
 const SMITHY_PROTOCOL = 'rpc-v2-cbor'
@@ -62,7 +63,7 @@ async function createClient(
   if (!config) throw new ServerError('config is required')
   let bundle: EsdkClientBundle
   try {
-    bundle = buildClientBundle(config)
+    bundle = buildClientBundle(config, request.testHooks)
   } catch (err) {
     if (err instanceof ClientError || err instanceof ServerError) throw err
     throw new ServerError(
@@ -152,6 +153,16 @@ async function dispatch(
           bundle.decryptStream(req.ciphertext, req.encryptionContext)
         )
       )
+    }
+    case 'GetCallCounts': {
+      const { callCounts } = registry.resolve(
+        (request as GetCallCountsRequest).clientId
+      )
+      return {
+        cachingCmmGetEncryptionMaterialsCalls:
+          callCounts.getEncryptionMaterials,
+        cachingCmmDecryptMaterialsCalls: callCounts.decryptMaterials,
+      }
     }
     default:
       throw new ServerError(`unknown operation: ${operation}`)

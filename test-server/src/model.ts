@@ -109,6 +109,11 @@ export interface EsdkClientConfig {
 
 export interface CreateClientRequest {
   config?: EsdkClientConfig
+  testHooks?: TestHooks
+}
+
+export interface TestHooks {
+  cachingCmmUnderlyingDelayMilliseconds?: number
 }
 
 export interface EncryptRequest {
@@ -130,6 +135,10 @@ export interface EncryptStreamRequest extends EncryptRequest {
 }
 
 export type DecryptStreamRequest = DecryptRequest
+
+export interface GetCallCountsRequest {
+  clientId?: string
+}
 
 /* Modeled ESDKAlgorithmSuiteId name -> library AlgorithmSuiteIdentifier. */
 const SUITE_BY_MODEL_NAME: { [name: string]: AlgorithmSuiteIdentifier } = {
