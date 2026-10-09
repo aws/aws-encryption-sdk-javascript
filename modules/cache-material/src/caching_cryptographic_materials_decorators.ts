@@ -126,18 +126,18 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
     let retried = false
 
     for (;;) {
-      /* On a miss, share another caller's in-flight request instead of making a new one
-       * as long as its data key can still encrypt this message within maxMessagesEncrypted and maxBytesEncrypted.
-       * Otherwise, this caller makes its own request, in parallel with the others.
-       */
+      /* If the cache has a valid entry, return it */
       const entry = this._cache.getEncryptionMaterial(cacheKey, plaintextLength)
-      /* Check for early return (Postcondition): If I have a valid EncryptionMaterial, return it. */
       if (entry && !this._cacheEntryHasExceededLimits(entry)) {
         return cloneResponse(entry.response)
       } else {
         this._cache.del(cacheKey)
       }
 
+      /* On a miss, share another caller's in-flight request instead of making a new one
+       * as long as its data key is still valid
+       * (i.e. is within maxMessagesEncrypted and maxBytesEncrypted).
+       */
       const batch = batches.find((b) => canJoin(this, b, plaintextLength))
       if (!batch) break
       const outcome = await joinBatch(batch, plaintextLength, waitUntil)
