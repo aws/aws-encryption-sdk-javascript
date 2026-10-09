@@ -22,16 +22,16 @@ import {
 } from './cryptographic_materials_cache'
 import { CryptographicMaterialsCacheKeyHelpersInterface } from './build_cryptographic_materials_cache_key_helpers'
 
-/* Concurrent cache misses for the same entry share one backing request:
- * one caller asks the backing materials manager and the rest wait for its answer (see Batch).
- * These limits stop a slow or stuck request from holding up the waiting callers.
- * Milliseconds, using the MPL storm-tracking cache defaults. Tests change them.
+/* If the cache is accessed concurrently from multiple threads,
+ * cache misses for the same entry will share one single backing request to the backing materials manager.
+ * One caller asks the backing materials manager, and the rest wait for its answer.
+ * These limits stop a slow or stuck request from holding up any waiting callers.
  */
 export const SHARED_REQUESTS = {
   // After a request has run this long, new callers stop waiting on it and make their own.
-  graceInterval: 1000,
+  graceInterval: 1000, // milliseconds == 1 second
   // A caller that has waited this long fails.
-  inFlightTTL: 10 * 1000,
+  inFlightTTL: 10 * 1000, // milliseconds == 10 seconds
 }
 
 export function decorateProperties<S extends SupportedAlgorithmSuites>(
@@ -116,7 +116,8 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
     })
     const fetch = async () =>
       this._backingMaterialsManager
-        /* No plaintextLength: the data key is cached and reused for other messages,
+        /* Drop plaintext length from this temp backing materials manager.
+         * The data key is cached and reused for other messages,
          * so the backing request must not depend on this message's length.
          */
         .getEncryptionMaterials({ suite, encryptionContext, commitmentPolicy })
@@ -124,11 +125,11 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
     const waitUntil = Date.now() + SHARED_REQUESTS.inFlightTTL
     let retried = false
 
-    /* On a miss, share another caller's in-flight request instead of making a new one,
-     * as long as its data key can still encrypt this message within maxMessagesEncrypted and maxBytesEncrypted.
-     * Otherwise, make a new request; it runs in parallel with the others.
-     */
+    
     for (;;) {
+      /* On a miss, share another caller's in-flight request instead of making a new one
+       * as long as its data key can still encrypt this message within maxMessagesEncrypted and maxBytesEncrypted.
+       */
       const entry = this._cache.getEncryptionMaterial(cacheKey, plaintextLength)
       /* Check for early return (Postcondition): If I have a valid EncryptionMaterial, return it. */
       if (entry && !this._cacheEntryHasExceededLimits(entry)) {
@@ -151,7 +152,8 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
         )
       }
       /* The request we waited on failed.
-       * Try again once its graceInterval has passed; a second failure goes to the caller.
+       * Try again once its graceInterval has passed.
+       * A second failure will go to the caller.
        */
       if (retried) throw outcome.error
       retried = true
