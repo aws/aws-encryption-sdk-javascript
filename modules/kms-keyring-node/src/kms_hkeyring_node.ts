@@ -75,6 +75,12 @@ export interface KmsHierarchicalKeyRingNodeInput {
   //# - MAY provide a [Partition ID](#partition-id)
   partitionId?: string
   utf8Sorting?: boolean
+  /* Seconds before a cached branch key expires during which one caller refreshes it
+   * from the keystore while other callers keep using the cached key.
+   * Defaults to 0: cached branch keys are never refreshed early.
+   * Must be less than cacheLimitTtl.
+   */
+  gracePeriod?: number
 }
 
 export interface IKmsHierarchicalKeyRingNode extends KeyringNode {
@@ -82,6 +88,8 @@ export interface IKmsHierarchicalKeyRingNode extends KeyringNode {
   branchKeyIdSupplier?: Readonly<BranchKeyIdSupplier>
   keyStore: Readonly<BranchKeyStoreNode>
   cacheLimitTtl: number
+  // Milliseconds.
+  gracePeriod?: number
   _onEncrypt(material: NodeEncryptionMaterial): Promise<NodeEncryptionMaterial>
   _onDecrypt(
     material: NodeDecryptionMaterial,
@@ -102,6 +110,7 @@ export class KmsHierarchicalKeyRingNode
   public declare keyStore: Readonly<BranchKeyStoreNode>
   public declare _logicalKeyStoreName: Buffer
   public declare cacheLimitTtl: number
+  public declare gracePeriod: number
   public declare maxCacheSize?: number
   public declare _cmc: CryptographicMaterialsCache<NodeAlgorithmSuite>
   declare readonly _partition: Buffer
@@ -116,6 +125,7 @@ export class KmsHierarchicalKeyRingNode
     maxCacheSize,
     partitionId,
     utf8Sorting,
+    gracePeriod,
   }: KmsHierarchicalKeyRingNodeInput) {
     super()
 
@@ -215,6 +225,21 @@ export class KmsHierarchicalKeyRingNode
 
     // convert seconds to milliseconds
     readOnlyProperty(this, 'cacheLimitTtl', cacheLimitTtl * 1000)
+
+    /* Precondition: The grace period must be a number */
+    needs(
+      gracePeriod === undefined || typeof gracePeriod === 'number',
+      'The grace period must be a number'
+    )
+    /* Precondition: The grace period must be non-negative and less than the cache limit TTL */
+    needs(
+      gracePeriod === undefined ||
+        gracePeriod === 0 ||
+        (0 < gracePeriod && gracePeriod < cacheLimitTtl),
+      'The grace period must be non-negative and less than the cache limit TTL'
+    )
+    // convert seconds to milliseconds
+    readOnlyProperty(this, 'gracePeriod', (gracePeriod || 0) * 1000)
 
     readOnlyProperty(this, 'branchKeyId', branchKeyId)
 
