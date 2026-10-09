@@ -426,6 +426,41 @@ describe('client construction', () => {
     })
   })
 
+  it('AdvanceClock expires caching CMM entries', async () => {
+    const base = rawAesConfig() as { cmm: CborValue; commitmentPolicy: string }
+    const clientId = await createClient({
+      commitmentPolicy: base.commitmentPolicy,
+      cmm: { Caching: { underlyingCMM: base.cmm, cacheLimitTtlSeconds: 60 } },
+    })
+    await operation('Encrypt', { clientId, plaintext: PLAINTEXT })
+    const advanced = await operation('AdvanceClock', {
+      clientId,
+      milliseconds: 61000,
+    })
+    expect(advanced.status).to.equal(200)
+    await operation('Encrypt', { clientId, plaintext: PLAINTEXT })
+
+    const counts = await operation('GetCallCounts', { clientId })
+    expect(counts.body.cachingCmmGetEncryptionMaterialsCalls).to.equal(2)
+  })
+
+  it('EncryptConcurrently and DecryptConcurrently round-trip every message', async () => {
+    const clientId = await createClient(rawAesConfig())
+    const plaintexts = [PLAINTEXT, Buffer.from('second'), Buffer.from('third')]
+    const encrypted = await operation('EncryptConcurrently', {
+      clientId,
+      plaintexts,
+    })
+    expect(encrypted.status).to.equal(200)
+    const decrypted = await operation('DecryptConcurrently', {
+      clientId,
+      ciphertexts: encrypted.body.ciphertexts,
+    })
+    expect(
+      (decrypted.body.plaintexts as Uint8Array[]).map((p) => Buffer.from(p))
+    ).to.deep.equal(plaintexts)
+  })
+
   it('GetCallCounts reports zero for a client with no caching CMM', async () => {
     const clientId = await createClient(rawAesConfig())
     await operation('Encrypt', { clientId, plaintext: PLAINTEXT })
