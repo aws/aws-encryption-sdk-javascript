@@ -121,12 +121,15 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
          * so it must not depend on this message's length.
          */
         .getEncryptionMaterials({ suite, encryptionContext, commitmentPolicy })
+    // Requests for this cache entry that other callers have in flight.
     const batches = openBatches<EncryptionMaterial<S>>(this._cache, cacheKey)
+    // When this caller stops waiting on other callers' requests and fails.
     const waitUntil = Date.now() + SHARED_REQUESTS.inFlightTTL
+    // Whether this caller has already retried after a shared request failed.
     let retried = false
 
     for (;;) {
-      /* If the cache has a valid entry, return it */
+      /* Check for early return (Postcondition): If I have a valid EncryptionMaterial, return it. */
       const entry = this._cache.getEncryptionMaterial(cacheKey, plaintextLength)
       if (entry && !this._cacheEntryHasExceededLimits(entry)) {
         return cloneResponse(entry.response)
@@ -137,11 +140,15 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       /* On a miss, share another caller's in-flight request instead of making a new one
        * as long as its data key is still valid
        * (i.e. is within maxMessagesEncrypted and maxBytesEncrypted).
+       * If no request has room, stop waiting and make a new one below.
        */
       const batch = batches.find((b) => canJoin(this, b, plaintextLength))
       if (!batch) break
       const outcome = await joinBatch(batch, plaintextLength, waitUntil)
+
+      // The shared request succeeded: use its data key.
       if ('material' in outcome) return outcome.material
+
       /* The shared request's data key could not be cached (its suite is not cache safe),
        * so it cannot be shared, and this caller makes its own request.
        */
@@ -153,54 +160,63 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
           plaintextLength
         )
       }
+
       /* The request this caller waited on failed.
-       * Wait until that request is graceInterval old, then try once more.
-       * If the retry also fails, throw its error.
+       * If this caller already retried once, throw the error.
        */
       if (retried) throw outcome.error
+      // Otherwise, wait until that request is graceInterval old, then check the cache again.
       retried = true
       await sleep(batch.startedAt + SHARED_REQUESTS.graceInterval - Date.now())
     }
 
+    // No request to share: make one, and let callers that arrive meanwhile share it.
     const batch = startBatch(batches, this, plaintextLength)
     try {
       const material = await fetch()
+      // New callers can no longer join; the ones already waiting get this result below.
       closeBatch(batches, batch)
+
+      // A data key whose suite is not cache safe cannot be shared:
+      // waiting callers make their own requests.
       if (!material.suite.cacheSafe) {
         settleMembers(batch, { uncached: true })
         return material
       }
+
+      /* This message alone exceeds the limits (e.g. plaintext over maxBytesEncrypted),
+       * so nobody could have joined, and the data key must not be cached.
+       * Return it without a clone, as cacheEncryptionMaterial does.
+       */
       const used = {
         response: material,
         now: Date.now(),
         messagesEncrypted: batch.messages,
         bytesEncrypted: batch.bytes,
       }
-      /* This message alone exceeds the limits (e.g. plaintext over maxBytesEncrypted),
-       * so nobody could have joined, and the data key must not be cached.
-       * Return it without a clone, as cacheEncryptionMaterial does.
-       */
       if (this._cacheEntryHasExceededLimits(used)) {
         settleMembers(batch, { uncached: true })
         return material
       }
+
+      // Cache the data key, counting this caller's message.
       this._cache.putEncryptionMaterial(
         cacheKey,
         material,
         plaintextLength,
         this._maxAge
       )
-      /* The new entry counts only this caller's message.
-       * Add the waiting callers' messages, so the entry's limits stay accurate for later cache hits.
-       */
+      // Count the waiting callers' messages too, so later cache hits see the real usage.
       for (const member of batch.members) {
         this._cache.getEncryptionMaterial(cacheKey, member.plaintextLength)
       }
+      // Give each waiting caller its own copy of the material.
       for (const member of batch.members) {
         member.settle({ material: cloneResponse(material) })
       }
       return cloneResponse(material)
     } catch (error) {
+      // The request failed: waiting callers get the error and may retry.
       closeBatch(batches, batch)
       settleMembers(batch, { error })
       throw error
@@ -268,48 +284,59 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       this._partition,
       request
     )
+    // Requests for this cache entry that other callers have in flight.
     const batches = openBatches<DecryptionMaterial<S>>(this._cache, cacheKey)
+    // When this caller stops waiting on other callers' requests and fails.
     const waitUntil = Date.now() + SHARED_REQUESTS.inFlightTTL
+    // Whether this caller has already retried after a shared request failed.
     let retried = false
 
-    /* On a miss, share another caller's in-flight request instead of making a new one.
-     * Decrypt materials have no reuse limits, so every caller can share the same request.
-     */
     for (;;) {
-      const entry = this._cache.getDecryptionMaterial(cacheKey)
       /* Check for early return (Postcondition): If I have a valid DecryptionMaterial, return it. */
+      const entry = this._cache.getDecryptionMaterial(cacheKey)
       if (entry && !this._cacheEntryHasExceededLimits(entry)) {
         return cloneResponse(entry.response)
       } else {
         this._cache.del(cacheKey)
       }
 
+      /* On a miss, share another caller's in-flight request instead of making a new one.
+       * Decrypt materials have no reuse limits, so any recent request can be shared.
+       * If there is none, stop waiting and make a new one below.
+       */
       const batch = batches.find(isRecent)
       if (!batch) break
       const outcome = await joinBatch(batch, 0, waitUntil)
+
+      // The shared request succeeded: use its material.
       if ('material' in outcome) return outcome.material
-      /* The request this caller waited on failed.
-       * (Decrypt responses are always cached, so failure is the only other outcome.)
-       * Wait until that request is graceInterval old, then try once more.
-       * If the retry also fails, throw its error.
+
+      /* The request this caller waited on failed
+       * (decrypt responses are always cached, so failure is the only other outcome).
+       * If this caller already retried once, throw the error.
        */
       if (retried) throw (outcome as Failed).error
+      // Otherwise, wait until that request is graceInterval old, then check the cache again.
       retried = true
       await sleep(batch.startedAt + SHARED_REQUESTS.graceInterval - Date.now())
     }
 
+    // No request to share: make one, and let callers that arrive meanwhile share it.
     const batch = startBatch(batches, this, 0)
     try {
       const material = await this._backingMaterialsManager.decryptMaterials(
         request
       )
+      // New callers can no longer join; the ones already waiting get this result below.
       closeBatch(batches, batch)
       this._cache.putDecryptionMaterial(cacheKey, material, this._maxAge)
+      // Give each waiting caller its own copy of the material.
       for (const member of batch.members) {
         member.settle({ material: cloneResponse(material) })
       }
       return cloneResponse(material)
     } catch (error) {
+      // The request failed: waiting callers get the error and may retry.
       closeBatch(batches, batch)
       settleMembers(batch, { error })
       throw error

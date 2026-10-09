@@ -33,29 +33,32 @@ export class StormTracker {
   private readonly inFlight = new Map<string, number>()
   private lastPrune = 0
 
-  /* The entry is cached and not expired: use it,
-   * unless it is about to expire and nobody is refreshing it yet.
-   */
+  /* For an entry that is cached and not expired. */
   checkEntry(id: string, expiresAt: number, now: number): CacheState {
+    // Too many fetches in flight: use the cached entry, even if it is about to expire.
     if (this.fanOutReached(now)) return 'use'
+    // Not about to expire: use it.
     if (!this.inGracePeriod(expiresAt, now)) return 'use'
+    // About to expire, but another caller is already refreshing it: use it meanwhile.
     const started = this.inFlight.get(id)
     if (started !== undefined && now < started + STORM_TRACKING.graceInterval) {
       return 'use'
     }
+    // About to expire and nobody is refreshing it: this caller refreshes it.
     this.inFlight.set(id, now)
     return 'fetch'
   }
 
-  /* The entry is missing or expired: fetch it,
-   * unless another caller started fetching it less than graceInterval ago.
-   */
+  /* For an entry that is missing or expired. */
   checkNewEntry(id: string, now: number): CacheState {
+    // Too many fetches in flight: wait for one to finish.
     if (this.fanOutReached(now)) return 'wait'
+    // Another caller started fetching it less than graceInterval ago: wait for that fetch.
     const started = this.inFlight.get(id)
     if (started !== undefined && now < started + STORM_TRACKING.graceInterval) {
       return 'wait'
     }
+    // Nobody is fetching it, or that fetch may be stuck or have failed: this caller fetches it.
     this.inFlight.set(id, now)
     return 'fetch'
   }
@@ -77,10 +80,9 @@ export class StormTracker {
     return this.inFlight.size >= STORM_TRACKING.fanOut
   }
 
-  /* Forget fetches older than inFlightTTL, so stuck fetches stop counting toward fanOut.
-   * As in the MPL, only when fanOut is reached, and at most once a second.
-   */
+  /* Forget fetches older than inFlightTTL, so stuck fetches stop counting toward fanOut. */
   private pruneInFlight(now: number) {
+    // As in the MPL, only when fanOut is reached, and at most once a second.
     if (this.inFlight.size < STORM_TRACKING.fanOut) return
     if (now - 1000 < this.lastPrune) return
     this.lastPrune = now
