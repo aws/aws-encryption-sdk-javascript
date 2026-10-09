@@ -201,8 +201,8 @@ export async function getBranchKeyMaterials(
   const tracker = stormTrackerFor(cmc)
   const waitUntil = Date.now() + STORM_TRACKING.inFlightTTL
 
-  /* Concurrent callers for one entry share a single keystore fetch:
-   * the tracker tells one caller to fetch and the rest to wait and check the cache again.
+  /* Concurrent callers for the same branch key share one keystore fetch.
+   * The tracker tells one caller to fetch; the rest wait and check the cache again.
    */
   for (;;) {
     const now = Date.now()
@@ -216,8 +216,8 @@ export async function getBranchKeyMaterials(
         ? tracker.checkNewEntry(cacheEntryId, now)
         : tracker.checkEntry(
             cacheEntryId,
-            /* The MPL rejects a keyring whose TTL is within the grace period.
-             * Here, such a keyring skips the early refresh instead.
+            /* A TTL of gracePeriod or less would refresh on every call.
+             * The MPL rejects such keyrings; here they skip the early refresh instead.
              */
             cacheLimitTtl > STORM_TRACKING.gracePeriod
               ? cacheEntry.now + cacheLimitTtl

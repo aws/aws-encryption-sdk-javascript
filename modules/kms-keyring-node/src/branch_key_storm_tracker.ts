@@ -4,32 +4,38 @@
 import { NodeAlgorithmSuite } from '@aws-crypto/material-management'
 import { CryptographicMaterialsCache } from '@aws-crypto/cache-material'
 
-/* A port of the MPL's StormTracker (StormTracker.dfy).
- * The MPL-based ESDKs use it for the hierarchical keyring's default cache.
- * Times are in milliseconds, and the values match the MPL's DefaultStorm().
- * Read them at call time: tests shorten them.
+/* Stops concurrent callers from all fetching the same branch key from the keystore.
+ * For a cache entry, the tracker tells each caller to
+ * use the cached entry, fetch it from the keystore,
+ * or wait and check the cache again because another caller is fetching it.
+ *
+ * Ported from the MPL's StormTracker.dfy,
+ * which the other ESDKs use by default for the hierarchical keyring.
+ * Timings are in milliseconds, with the MPL's defaults. Tests change them.
  */
 export const STORM_TRACKING = {
-  // Within this long of expiring, one caller per graceInterval refreshes the entry.
+  // In the last 10 s before an entry expires, one caller refreshes it while the rest keep using it.
   gracePeriod: 10 * 1000,
-  // After a fetch has run this long, the next caller may start another.
+  // A fetch running longer than this may be stuck or have failed; the next caller fetches again.
   graceInterval: 1 * 1000,
-  // The most keys that can be fetched at once.
+  // At most this many different branch keys are fetched at once; callers for other keys wait.
   fanOut: 20,
   // A caller that has waited this long fails.
   inFlightTTL: 10 * 1000,
-  // How long a waiting caller sleeps before checking the cache again.
+  // How often a waiting caller checks the cache.
   sleepMilli: 20,
 }
 
 export type CacheState = 'use' | 'fetch' | 'wait'
 
 export class StormTracker {
-  // Cache entry id -> when its current fetch started.
+  // Cache entries being fetched, and when each fetch started.
   private readonly inFlight = new Map<string, number>()
   private lastPrune = 0
 
-  /* For an entry that is in the cache and not expired. */
+  /* The entry is cached and not expired: use it,
+   * unless it is about to expire and nobody is refreshing it yet.
+   */
   checkEntry(id: string, expiresAt: number, now: number): CacheState {
     if (this.fanOutReached(now)) return 'use'
     if (!this.inGracePeriod(expiresAt, now)) return 'use'
@@ -41,7 +47,9 @@ export class StormTracker {
     return 'fetch'
   }
 
-  /* For an entry that is missing or expired. */
+  /* The entry is missing or expired: fetch it,
+   * unless another caller started fetching it less than graceInterval ago.
+   */
   checkNewEntry(id: string, now: number): CacheState {
     if (this.fanOutReached(now)) return 'wait'
     const started = this.inFlight.get(id)
@@ -52,9 +60,9 @@ export class StormTracker {
     return 'fetch'
   }
 
-  /* Call before putting a fetched entry in the cache.
-   * A failed fetch never calls this, so the entry stays marked
-   * and waiters retry after graceInterval instead of at once.
+  /* Call when a fetch succeeds.
+   * A failed fetch does not call this, so waiting callers fetch again after graceInterval,
+   * one at a time, instead of all at once.
    */
   fetched(id: string) {
     this.inFlight.delete(id)
@@ -69,7 +77,9 @@ export class StormTracker {
     return this.inFlight.size >= STORM_TRACKING.fanOut
   }
 
-  /* Drops fetches older than inFlightTTL, at most once a second, and only when fanOut is reached. */
+  /* Forget fetches older than inFlightTTL, so stuck fetches stop counting toward fanOut.
+   * As in the MPL, only when fanOut is reached, and at most once a second.
+   */
   private pruneInFlight(now: number) {
     if (this.inFlight.size < STORM_TRACKING.fanOut) return
     if (now - 1000 < this.lastPrune) return
@@ -80,10 +90,7 @@ export class StormTracker {
   }
 }
 
-/* One tracker per cache, so keyrings that share a cache also share fetches.
- * Two copies of this package in one process each keep their own trackers,
- * so they do not share fetches for the same cache.
- */
+/* One tracker per cache, so keyrings that share a cache also share fetches. */
 const trackers = new WeakMap<
   CryptographicMaterialsCache<NodeAlgorithmSuite>,
   StormTracker

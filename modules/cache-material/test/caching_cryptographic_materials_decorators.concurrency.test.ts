@@ -8,7 +8,7 @@ import {
   cacheEntryHasExceededLimits,
   getEncryptionMaterials,
   decryptMaterials,
-  COALESCING,
+  SHARED_REQUESTS,
 } from '../src/caching_cryptographic_materials_decorators'
 import { getLocalCryptographicMaterialsCache } from '../src/get_local_cryptographic_materials_cache'
 import { buildCryptographicMaterialsCacheKeyHelpers } from '../src/build_cryptographic_materials_cache_key_helpers'
@@ -50,7 +50,7 @@ const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(
 
 // Shortened timings, so the tests run in milliseconds.
 const FAST = { graceInterval: 20, inFlightTTL: 100 }
-const DEFAULT = { ...COALESCING }
+const DEFAULT = { ...SHARED_REQUESTS }
 
 // A backing materials manager that takes 5 ms per request and returns a new data key each time.
 // `outcomes` decides each call in order: 'ok', 'fail', or 'hang'; later calls use the last one.
@@ -157,8 +157,8 @@ function usageByDataKey(materials: any[], lengths: number[]) {
 }
 
 describe('caching materials manager: concurrent cache misses (#1665)', () => {
-  beforeEach(() => Object.assign(COALESCING, FAST))
-  afterEach(() => Object.assign(COALESCING, DEFAULT))
+  beforeEach(() => Object.assign(SHARED_REQUESTS, FAST))
+  afterEach(() => Object.assign(SHARED_REQUESTS, DEFAULT))
 
   it('concurrent encrypts share data keys without exceeding maxMessagesEncrypted', async () => {
     const backing = slowBackingMaterialsManager()

@@ -231,7 +231,7 @@ describe('KmsHierarchicalKeyRingNode: storm tracking (#1663)', () => {
   beforeEach(() => Object.assign(STORM_TRACKING, FAST_STORM))
   afterEach(() => Object.assign(STORM_TRACKING, DEFAULT_STORM))
 
-  it(`coalesces ${CONCURRENT_OPERATIONS} concurrent onEncrypt misses into one keystore call`, async () => {
+  it(`${CONCURRENT_OPERATIONS} concurrent onEncrypt misses share one keystore call`, async () => {
     // Default timings: 3000 waiters slow the event loop until a fetch outlasts the short graceInterval.
     Object.assign(STORM_TRACKING, DEFAULT_STORM)
     const keyStore = slowKeyStore()
@@ -239,7 +239,7 @@ describe('KmsHierarchicalKeyRingNode: storm tracking (#1663)', () => {
     expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
   })
 
-  it(`coalesces ${CONCURRENT_OPERATIONS} concurrent onDecrypt misses into one keystore call`, async () => {
+  it(`${CONCURRENT_OPERATIONS} concurrent onDecrypt misses share one keystore call`, async () => {
     // Default timings: 3000 waiters slow the event loop until a fetch outlasts the short graceInterval.
     Object.assign(STORM_TRACKING, DEFAULT_STORM)
     const keyStore = slowKeyStore()
@@ -259,7 +259,7 @@ describe('KmsHierarchicalKeyRingNode: storm tracking (#1663)', () => {
     for (const pdk of recovered) expect(pdk).to.deep.equal(expectedPdk)
   })
 
-  it('coalesces misses across keyrings that share a cache and partition', async () => {
+  it('keyrings that share a cache and partition share keystore calls', async () => {
     const keyStore = slowKeyStore()
     const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
     const partitionId = v4()
