@@ -12,11 +12,10 @@ import { CryptographicMaterialsCache } from '@aws-crypto/cache-material'
  * Ported from the MPL's StormTracker.dfy,
  * which the other ESDKs use by default for the hierarchical keyring.
  * Timings are in milliseconds, with the MPL's defaults. Tests change them.
+ * The grace period (refreshing an entry before it expires) is a keyring option, off by default.
  */
 export const STORM_TRACKING = {
-  // In the last 10 s before an entry expires, one caller refreshes it while the rest keep using it.
-  gracePeriod: 10 * 1000,
-  // A fetch running longer than this may be stuck or have failed; the next caller fetches again.
+  // A fetch running longer than this may be stuck; the next caller fetches again.
   graceInterval: 1 * 1000,
   // At most this many different branch keys are fetched at once; callers for other keys wait.
   fanOut: 20,
@@ -32,13 +31,21 @@ export class StormTracker {
   // Cache entries being fetched, and when each fetch started.
   private readonly inFlight = new Map<string, number>()
   private lastPrune = 0
+  // The latest failed fetch for each cache entry, so callers waiting on it get its error.
+  private readonly failures = new Map<string, { at: number; error: unknown }>()
+  private lastFailurePrune = 0
 
   /* For a cached entry that hasn't expired.
-   * Use it, unless it's about to expire and nobody is refreshing it yet.
+   * Use it, unless it's within gracePeriod of expiring and nobody is refreshing it yet.
    */
-  checkEntry(id: string, expiresAt: number, now: number): CacheState {
+  checkEntry(
+    id: string,
+    expiresAt: number,
+    gracePeriod: number,
+    now: number
+  ): CacheState {
     if (this.fanOutReached(now)) return 'use'
-    if (!this.inGracePeriod(expiresAt, now)) return 'use'
+    if (now < expiresAt - gracePeriod) return 'use'
     const started = this.inFlight.get(id)
     if (started !== undefined && now < started + STORM_TRACKING.graceInterval) {
       return 'use'
@@ -60,16 +67,26 @@ export class StormTracker {
     return 'fetch'
   }
 
-  /* Call when a fetch succeeds.
-   * A failed fetch does not call this, so waiting callers fetch again after graceInterval,
-   * one at a time, instead of all at once.
-   */
+  /* Call when a fetch succeeds. */
   fetched(id: string) {
     this.inFlight.delete(id)
+    this.failures.delete(id)
   }
 
-  private inGracePeriod(expiresAt: number, now: number) {
-    return expiresAt - STORM_TRACKING.gracePeriod <= now
+  /* Call when a fetch fails.
+   * Callers waiting on it fail with the same error instead of timing out,
+   * and the entry stops counting toward fanOut, so the next caller can fetch right away.
+   */
+  failed(id: string, error: unknown, now: number) {
+    this.inFlight.delete(id)
+    this.pruneFailures(now)
+    this.failures.set(id, { at: now, error })
+  }
+
+  /* The error of a fetch for this entry that failed at or after `since`, if any. */
+  failureSince(id: string, since: number) {
+    const failure = this.failures.get(id)
+    return failure && since <= failure.at ? failure : undefined
   }
 
   private fanOutReached(now: number) {
@@ -86,6 +103,17 @@ export class StormTracker {
     this.lastPrune = now
     for (const [id, started] of this.inFlight) {
       if (now >= started + STORM_TRACKING.inFlightTTL) this.inFlight.delete(id)
+    }
+  }
+
+  /* Forget failures older than inFlightTTL. Every caller that could have waited on them has given up.
+   * At most once a second.
+   */
+  private pruneFailures(now: number) {
+    if (now - 1000 < this.lastFailurePrune) return
+    this.lastFailurePrune = now
+    for (const [id, { at }] of this.failures) {
+      if (now >= at + STORM_TRACKING.inFlightTTL) this.failures.delete(id)
     }
   }
 }

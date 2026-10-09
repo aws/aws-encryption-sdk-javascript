@@ -160,6 +160,59 @@ describe('KmsHierarchicalKeyRingNode: constructor', () => {
   //# The maximum amount of time in seconds that an entry within the cache may be used before it MUST be evicted.
   //# The client MUST set a time-to-live (TTL) for [branch key materials](../structures.md#branch-key-materials) in the underlying cache.
   //# This value MUST be greater than zero.
+  it('The grace period defaults to 0 and is stored in milliseconds', () => {
+    expect(
+      new KmsHierarchicalKeyRingNode({ branchKeyId, keyStore, cacheLimitTtl })
+        .gracePeriod
+    ).to.equal(0)
+    expect(
+      new KmsHierarchicalKeyRingNode({
+        branchKeyId,
+        keyStore,
+        cacheLimitTtl: 60,
+        gracePeriod: 10,
+      }).gracePeriod
+    ).to.equal(10 * 1000)
+    expect(
+      new KmsHierarchicalKeyRingNode({
+        branchKeyId,
+        keyStore,
+        cacheLimitTtl: 0,
+        gracePeriod: 0,
+      }).gracePeriod
+    ).to.equal(0)
+  })
+
+  it('Precondition: The grace period must be a number', () => {
+    for (const gracePeriod of ['1', true, {}, [], null]) {
+      expect(
+        () =>
+          new KmsHierarchicalKeyRingNode({
+            branchKeyId,
+            keyStore,
+            cacheLimitTtl,
+            gracePeriod: gracePeriod as any,
+          })
+      ).to.throw('The grace period must be a number')
+    }
+  })
+
+  it('Precondition: The grace period must be non-negative and less than the cache limit TTL', () => {
+    for (const gracePeriod of [-1, 60, 61, NaN, Infinity]) {
+      expect(
+        () =>
+          new KmsHierarchicalKeyRingNode({
+            branchKeyId,
+            keyStore,
+            cacheLimitTtl: 60,
+            gracePeriod,
+          })
+      ).to.throw(
+        'The grace period must be non-negative and less than the cache limit TTL'
+      )
+    }
+  })
+
   it('Precondition: Cache limit TTL must be non-negative and less than or equal to (Number.MAX_SAFE_INTEGER / 1000) seconds', () => {
     expect(
       new KmsHierarchicalKeyRingNode({

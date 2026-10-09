@@ -198,8 +198,12 @@ export async function getBranchKeyMaterials(
   branchKeyVersion?: string
 ): Promise<NodeBranchKeyMaterial> {
   const { keyStore, cacheLimitTtl } = hKeyring
+  // Milliseconds. 0 (the default) never refreshes an entry before it expires.
+  const gracePeriod = hKeyring.gracePeriod || 0
   const tracker = stormTrackerFor(cmc)
-  const waitUntil = Date.now() + STORM_TRACKING.inFlightTTL
+  const startedAt = Date.now()
+  const waitUntil = startedAt + STORM_TRACKING.inFlightTTL
+  let waited = false
 
   // Concurrent callers for the same branch key share one keystore fetch.
   for (;;) {
@@ -209,20 +213,22 @@ export async function getBranchKeyMaterials(
     //# from the underlying [cryptographic materials cache](../local-cryptographic-materials-cache.md).
     const cacheEntry = cmc.getBranchKeyMaterial(cacheEntryId)
     // if the cache entry is false, branch key materials were not found
-    const state =
+    const missing =
       !cacheEntry || hKeyring.cacheEntryHasExceededLimits(cacheEntry)
-        ? tracker.checkNewEntry(cacheEntryId, now)
-        : tracker.checkEntry(
-            cacheEntryId,
-            /* With a TTL of gracePeriod (10 s) or less, an entry is always about to expire,
-             * so it would be refreshed every graceInterval.
-             * The MPL rejects such keyrings; here they skip the early refresh instead.
-             */
-            cacheLimitTtl > STORM_TRACKING.gracePeriod
-              ? cacheEntry.now + cacheLimitTtl
-              : Infinity,
-            now
-          )
+    // If the fetch this caller waited on failed, fail with its error.
+    const failure =
+      waited && missing && tracker.failureSince(cacheEntryId, startedAt)
+    if (failure) throw failure.error
+    const state = missing
+      ? tracker.checkNewEntry(cacheEntryId, now)
+      : gracePeriod > 0
+      ? tracker.checkEntry(
+          cacheEntryId,
+          cacheEntry.now + cacheLimitTtl,
+          gracePeriod,
+          now
+        )
+      : 'use'
 
     if (cacheEntry && state === 'use') {
       //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#ondecrypt
@@ -240,6 +246,7 @@ export async function getBranchKeyMaterials(
     if (state === 'fetch') break
 
     // Someone else is fetching it. Check the cache again shortly.
+    waited = true
     needs(Date.now() <= waitUntil, 'Storm cache inFlightTTL exceeded')
     await sleep(STORM_TRACKING.sleepMilli)
   }
@@ -268,13 +275,19 @@ export async function getBranchKeyMaterials(
 
   //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#getitem-branch-keystore-ondecrypt
   //# OnDecrypt MUST call the Keystore's [GetBranchKeyVersion](../branch-key-store.md#getbranchkeyversion) operation with the following inputs:
-  const branchKeyMaterials = branchKeyVersion
-    ? await keyStore.getBranchKeyVersion(branchKeyId, branchKeyVersion)
-    : // The complice needs a line
-      //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
-      //# OnEncrypt MUST call the Keystore's [GetActiveBranchKey](../branch-key-store.md#getactivebranchkey) operation with the following inputs:
-      //# - the `branchKeyId` used in this operation
-      await keyStore.getActiveBranchKey(branchKeyId)
+  let branchKeyMaterials: NodeBranchKeyMaterial
+  try {
+    branchKeyMaterials = branchKeyVersion
+      ? await keyStore.getBranchKeyVersion(branchKeyId, branchKeyVersion)
+      : // The complice needs a line
+        //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
+        //# OnEncrypt MUST call the Keystore's [GetActiveBranchKey](../branch-key-store.md#getactivebranchkey) operation with the following inputs:
+        //# - the `branchKeyId` used in this operation
+        await keyStore.getActiveBranchKey(branchKeyId)
+  } catch (error) {
+    tracker.failed(cacheEntryId, error, Date.now())
+    throw error
+  }
 
   //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
   //# If the Keystore's GetActiveBranchKey operation succeeds

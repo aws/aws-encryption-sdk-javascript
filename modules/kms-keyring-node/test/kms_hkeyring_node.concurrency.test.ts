@@ -30,7 +30,7 @@ import {
 } from '@aws-crypto/branch-keystore-node'
 
 import { getBranchKeyMaterials } from '../src/kms_hkeyring_node_helpers'
-import { STORM_TRACKING } from '../src/branch_key_storm_tracker'
+import { STORM_TRACKING, StormTracker } from '../src/branch_key_storm_tracker'
 import { getLocalCryptographicMaterialsCache } from '@aws-crypto/cache-material'
 import { NodeAlgorithmSuite } from '@aws-crypto/material-management'
 import { v4 } from 'uuid'
@@ -195,7 +195,8 @@ function slowKeyStore(
 function keyringFor(
   keyStore: BranchKeyStoreNode,
   cache?: KmsHierarchicalKeyRingNode['_cmc'],
-  partitionId?: string
+  partitionId?: string,
+  gracePeriod?: number
 ): KmsHierarchicalKeyRingNode {
   return new KmsHierarchicalKeyRingNode({
     branchKeyIdSupplier: BRANCH_KEY_ID_SUPPLIER,
@@ -203,6 +204,7 @@ function keyringFor(
     cacheLimitTtl: TTL,
     cache,
     partitionId,
+    gracePeriod,
   })
 }
 
@@ -272,21 +274,44 @@ describe('KmsHierarchicalKeyRingNode: storm tracking (#1663)', () => {
     expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
   })
 
-  it('waiting callers retry after graceInterval instead of failing with the first error', async () => {
+  it('waiting callers fail right away with the keystore error', async () => {
     const keyStore = slowKeyStore(5, ['fail', 'ok'])
-    const results = await encryptSettled(keyringFor(keyStore), 10)
+    const hkr = keyringFor(keyStore)
+    const started = Date.now()
+    const results = await encryptSettled(hkr, 10)
 
-    expect(results.filter((r) => r.status === 'rejected')).to.have.lengthOf(1)
+    expect(Date.now() - started).to.be.below(FAST_STORM.graceInterval)
+    for (const result of results) {
+      expect((result as PromiseRejectedResult).reason.message).to.equal(
+        'keystore unavailable'
+      )
+    }
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
+
+    // The next caller fetches again right away.
+    await encryptConcurrently(hkr, 1)
     expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
   })
 
-  it('retries a failing keystore at most once per graceInterval until inFlightTTL', async () => {
-    const keyStore = slowKeyStore(5, ['fail'])
-    const results = await encryptSettled(keyringFor(keyStore), 10)
+  it('failed fetches do not count toward fanOut', async () => {
+    STORM_TRACKING.fanOut = 2
+    const keyStore = slowKeyStore(5, ['fail', 'fail', 'ok'])
+    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
+    const hKeyring = {
+      keyStore,
+      cacheLimitTtl: TTL * 1000,
+      cacheEntryHasExceededLimits: () => false,
+    } as any
+    const fetch = async (id: string) =>
+      getBranchKeyMaterials(hKeyring, cache, BRANCH_KEY_ID_A, id, 'version')
 
-    for (const result of results) expect(result.status).to.equal('rejected')
-    const maxCalls = FAST_STORM.inFlightTTL / FAST_STORM.graceInterval + 1
-    expect(keyStore.getActiveBranchKey.callCount).to.be.at.most(maxCalls)
+    const failed = await Promise.allSettled([fetch('bad-1'), fetch('bad-2')])
+    for (const result of failed) expect(result.status).to.equal('rejected')
+
+    const started = Date.now()
+    await fetch('good')
+    expect(Date.now() - started).to.be.below(FAST_STORM.graceInterval)
+    expect(keyStore.getBranchKeyVersion.callCount).to.equal(3)
   })
 
   it('starts another fetch when the first hangs past graceInterval', async () => {
@@ -324,13 +349,29 @@ describe('KmsHierarchicalKeyRingNode: storm tracking (#1663)', () => {
     }
   })
 
-  it('refreshes an entry in its grace period with one fetch while others use it', async () => {
+  it('does not refresh an entry before it expires by default', async () => {
     const clock = Sinon.useFakeTimers({ now: Date.now(), toFake: ['Date'] })
     try {
       const keyStore = slowKeyStore(20)
       const hkr = keyringFor(keyStore)
       await encryptConcurrently(hkr, 1)
-      clock.tick(TTL * 1000 - STORM_TRACKING.gracePeriod / 2)
+      clock.tick(TTL * 1000 - 1)
+
+      await encryptConcurrently(hkr, 10)
+      expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
+    } finally {
+      clock.restore()
+    }
+  })
+
+  it('with a gracePeriod, refreshes an entry in its grace period with one fetch while others use it', async () => {
+    const clock = Sinon.useFakeTimers({ now: Date.now(), toFake: ['Date'] })
+    try {
+      const keyStore = slowKeyStore(20)
+      const gracePeriod = 10 // seconds
+      const hkr = keyringFor(keyStore, undefined, undefined, gracePeriod)
+      await encryptConcurrently(hkr, 1)
+      clock.tick(TTL * 1000 - (gracePeriod * 1000) / 2)
 
       let finished = 0
       const all = Promise.all(
@@ -370,6 +411,37 @@ describe('KmsHierarchicalKeyRingNode: storm tracking (#1663)', () => {
 
     expect(keyStore.getBranchKeyVersion.callCount).to.equal(4)
     expect(keyStore.peak()).to.equal(2)
+  })
+})
+
+describe('StormTracker: failures', () => {
+  it('reports a failure only to callers that started waiting before it', () => {
+    const tracker = new StormTracker()
+    const error = new Error('nope')
+    tracker.failed('id', error, 100)
+
+    expect(tracker.failureSince('id', 100)?.error).to.equal(error)
+    expect(tracker.failureSince('id', 101)).to.equal(undefined)
+    expect(tracker.failureSince('other', 0)).to.equal(undefined)
+  })
+
+  it('a successful fetch clears the failure', () => {
+    const tracker = new StormTracker()
+    tracker.failed('id', new Error('nope'), 100)
+    tracker.fetched('id')
+    expect(tracker.failureSince('id', 0)).to.equal(undefined)
+  })
+
+  it('forgets failures older than inFlightTTL, at most once a second', () => {
+    const tracker = new StormTracker()
+    const ttl = STORM_TRACKING.inFlightTTL
+    tracker.failed('old', new Error('old'), 2000) // prunes (nothing to prune yet)
+    tracker.failed('other', new Error('other'), 2500) // within a second: skips pruning
+    expect(tracker.failureSince('old', 0)).to.not.equal(undefined)
+    // 'old' is now older than inFlightTTL and gets pruned; 'other' is not yet.
+    tracker.failed('newest', new Error('newest'), 2000 + ttl + 1)
+    expect(tracker.failureSince('old', 0)).to.equal(undefined)
+    expect(tracker.failureSince('other', 0)).to.not.equal(undefined)
   })
 })
 
