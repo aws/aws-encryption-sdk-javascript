@@ -8,8 +8,9 @@ import {
   cacheEntryHasExceededLimits,
   getEncryptionMaterials,
   decryptMaterials,
-  SHARED_REQUESTS,
 } from '../src/caching_cryptographic_materials_decorators'
+import { SHARED_REQUESTS, batchesByCache } from '../src/shared_requests'
+import * as cacheMaterial from '../src/index'
 import { getLocalCryptographicMaterialsCache } from '../src/get_local_cryptographic_materials_cache'
 import { buildCryptographicMaterialsCacheKeyHelpers } from '../src/build_cryptographic_materials_cache_key_helpers'
 import { createHash, randomBytes } from 'crypto'
@@ -337,6 +338,47 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
     for (const result of [...encrypts, ...decrypts]) {
       expect(result.status).to.equal('rejected')
     }
+  })
+
+  it('forgets a cache key once its requests finish', async () => {
+    const backing = slowBackingMaterialsManager()
+    const cache = getLocalCryptographicMaterialsCache(100)
+    const cmm = cachingCMM(backing, { cache, maxMessagesEncrypted: 2 })
+
+    await encryptConcurrently(cmm, times(5))
+    await Promise.all(
+      Array.from({ length: 5 }, async () =>
+        cmm.decryptMaterials(decryptRequest)
+      )
+    )
+    await Promise.allSettled(
+      startEncrypts(
+        cachingCMM(slowBackingMaterialsManager({ outcomes: ['fail'] }), {
+          cache,
+        }),
+        times(3),
+        { encryptionContext: { a: 'b' } }
+      )
+    )
+
+    expect(batchesByCache.get(cache)?.size).to.equal(0)
+  })
+
+  it('forgets a request that never settles once a newer one starts', async () => {
+    const backing = slowBackingMaterialsManager({ outcomes: ['hang', 'ok'] })
+    const cache = getLocalCryptographicMaterialsCache(100)
+    const cmm = cachingCMM(backing, { cache })
+
+    startEncrypts(cmm, times(1))
+    await new Promise((resolve) => setTimeout(resolve, FAST.graceInterval + 5))
+    await encryptConcurrently(cmm, times(3))
+
+    expect(batchesByCache.get(cache)?.size).to.equal(0)
+  })
+
+  it('does not export the shared request internals from the package', () => {
+    expect(cacheMaterial).to.not.have.property('SHARED_REQUESTS')
+    expect(cacheMaterial).to.not.have.property('batchesByCache')
   })
 
   describe('requests run in parallel when the response cannot serve another caller', () => {
