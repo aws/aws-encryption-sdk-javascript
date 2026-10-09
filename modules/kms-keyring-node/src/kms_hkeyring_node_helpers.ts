@@ -216,7 +216,8 @@ export async function getBranchKeyMaterials(
         ? tracker.checkNewEntry(cacheEntryId, now)
         : tracker.checkEntry(
             cacheEntryId,
-            /* A TTL of gracePeriod or less would refresh on every call.
+            /* With a TTL of gracePeriod (10 s) or less, an entry is always about to expire,
+             * so it would be refreshed every graceInterval.
              * The MPL rejects such keyrings; here they skip the early refresh instead.
              */
             cacheLimitTtl > STORM_TRACKING.gracePeriod

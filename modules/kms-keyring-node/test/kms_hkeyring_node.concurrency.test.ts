@@ -232,7 +232,8 @@ describe('KmsHierarchicalKeyRingNode: storm tracking (#1663)', () => {
   afterEach(() => Object.assign(STORM_TRACKING, DEFAULT_STORM))
 
   it(`${CONCURRENT_OPERATIONS} concurrent onEncrypt misses share one keystore call`, async () => {
-    // Default timings: 3000 waiters slow the event loop until a fetch outlasts the short graceInterval.
+    // Use the default timings: 3000 callers slow the event loop enough
+    // that the shortened graceInterval would expire and start a second fetch.
     Object.assign(STORM_TRACKING, DEFAULT_STORM)
     const keyStore = slowKeyStore()
     await encryptConcurrently(keyringFor(keyStore), CONCURRENT_OPERATIONS)
@@ -240,7 +241,8 @@ describe('KmsHierarchicalKeyRingNode: storm tracking (#1663)', () => {
   })
 
   it(`${CONCURRENT_OPERATIONS} concurrent onDecrypt misses share one keystore call`, async () => {
-    // Default timings: 3000 waiters slow the event loop until a fetch outlasts the short graceInterval.
+    // Use the default timings: 3000 callers slow the event loop enough
+    // that the shortened graceInterval would expire and start a second fetch.
     Object.assign(STORM_TRACKING, DEFAULT_STORM)
     const keyStore = slowKeyStore()
     const [encrypted] = await encryptConcurrently(keyringFor(keyStore), 1)
@@ -385,7 +387,8 @@ describe('getBranchKeyMaterials: eviction while a request settles', () => {
 
   it('returns an intact branch key when another put evicts the entry before callers resume', async () => {
     const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(1)
-    // Another operation's put lands one microtask after this request's put.
+    // Another branch key is cached one microtask after this one,
+    // which evicts and zeroes this entry in the one-entry cache.
     const racingCache = {
       ...cache,
       putBranchKeyMaterial(

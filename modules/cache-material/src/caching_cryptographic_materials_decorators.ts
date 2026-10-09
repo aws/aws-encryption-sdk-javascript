@@ -22,8 +22,8 @@ import {
 } from './cryptographic_materials_cache'
 import { CryptographicMaterialsCacheKeyHelpersInterface } from './build_cryptographic_materials_cache_key_helpers'
 
-/* If the cache is accessed concurrently from multiple threads,
- * cache misses for the same entry will share one single backing request to the backing materials manager.
+/* If many encrypt or decrypt calls use the cache at the same time,
+ * cache misses for the same entry share one request to the backing materials manager.
  * One caller asks the backing materials manager, and the rest wait for its answer.
  * These limits stop a slow or stuck request from holding up any waiting callers.
  */
@@ -116,19 +116,19 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
     })
     const fetch = async () =>
       this._backingMaterialsManager
-        /* Drop plaintext length from this temp backing materials manager.
-         * The data key is cached and reused for other messages,
-         * so the backing request must not depend on this message's length.
+        /* Leave plaintextLength out of the request to the backing materials manager.
+         * The data key it returns is cached and reused for other messages,
+         * so it must not depend on this message's length.
          */
         .getEncryptionMaterials({ suite, encryptionContext, commitmentPolicy })
     const batches = openBatches<EncryptionMaterial<S>>(this._cache, cacheKey)
     const waitUntil = Date.now() + SHARED_REQUESTS.inFlightTTL
     let retried = false
 
-    
     for (;;) {
       /* On a miss, share another caller's in-flight request instead of making a new one
        * as long as its data key can still encrypt this message within maxMessagesEncrypted and maxBytesEncrypted.
+       * Otherwise, this caller makes its own request, in parallel with the others.
        */
       const entry = this._cache.getEncryptionMaterial(cacheKey, plaintextLength)
       /* Check for early return (Postcondition): If I have a valid EncryptionMaterial, return it. */
@@ -142,7 +142,9 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       if (!batch) break
       const outcome = await joinBatch(batch, plaintextLength, waitUntil)
       if ('material' in outcome) return outcome.material
-      /* The response could not be cached, so it cannot be shared; make our own request. */
+      /* The shared request's data key could not be cached (its suite is not cache safe),
+       * so it cannot be shared, and this caller makes its own request.
+       */
       if ('uncached' in outcome) {
         return cacheEncryptionMaterial(
           this,
@@ -151,9 +153,9 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
           plaintextLength
         )
       }
-      /* The request we waited on failed.
-       * Try again once its graceInterval has passed.
-       * A second failure will go to the caller.
+      /* The request this caller waited on failed.
+       * Wait until that request is graceInterval old, then try once more.
+       * If the retry also fails, throw its error.
        */
       if (retried) throw outcome.error
       retried = true
@@ -286,8 +288,10 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       if (!batch) break
       const outcome = await joinBatch(batch, 0, waitUntil)
       if ('material' in outcome) return outcome.material
-      /* The request we waited on failed (decrypt responses are always cached).
-       * Try again once its graceInterval has passed; a second failure goes to the caller.
+      /* The request this caller waited on failed.
+       * (Decrypt responses are always cached, so failure is the only other outcome.)
+       * Wait until that request is graceInterval old, then try once more.
+       * If the retry also fails, throw its error.
        */
       if (retried) throw (outcome as Failed).error
       retried = true
@@ -325,6 +329,9 @@ interface Batch<M> {
   members: { plaintextLength: number; settle: (outcome: Outcome<M>) => void }[]
 }
 
+/* What a waiting caller gets when the shared request finishes:
+ * the material, `uncached` if the material cannot be shared, or the request's error.
+ */
 interface Failed {
   error: unknown
 }
@@ -355,6 +362,7 @@ function openBatches<M>(
   return batches
 }
 
+/* A request older than graceInterval may be stuck, so new callers stop sharing it. */
 function isRecent(batch: Batch<any>) {
   return Date.now() < batch.startedAt + SHARED_REQUESTS.graceInterval
 }
@@ -402,6 +410,9 @@ function closeBatch<M>(batches: Batch<M>[], batch: Batch<M>) {
   if (index !== -1) batches.splice(index, 1)
 }
 
+/* Wait for the shared request's answer, counting this caller's message against its data key.
+ * Fails after inFlightTTL.
+ */
 async function joinBatch<M>(
   batch: Batch<M>,
   plaintextLength: number,
@@ -415,8 +426,8 @@ async function joinBatch<M>(
     batch.members.push({ plaintextLength, settle: resolve })
   })
   clearTimeout(timer)
-  /* A caller that times out stays counted in the batch.
-   * The data key may then encrypt one message fewer than allowed; never one more.
+  /* A caller that times out was counted when it joined, and stays counted.
+   * So the data key may encrypt one message fewer than its limits allow, never one more.
    */
   needs(outcome, 'Caching materials manager inFlightTTL exceeded')
   return outcome
