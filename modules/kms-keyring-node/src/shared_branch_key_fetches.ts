@@ -45,7 +45,8 @@ function isRecent(fetch: SharedFetch) {
 
 /* Fetch the branch key materials, or wait on another caller's fetch of the same entry.
  * Returns a copy only this caller holds.
- * A caller that waited on a failed fetch gets one more attempt, with `retry` false.
+ * If the shared fetch fails, its waiting callers retry once, together.
+ * If the retry fails too, they throw its error.
  */
 export async function sharedFetch(
   cmc: CryptographicMaterialsCache<NodeAlgorithmSuite>,
@@ -66,8 +67,8 @@ export async function sharedFetch(
     )
     if ('material' in outcome) return outcome.material
     if (!retry) throw outcome.error
-    // The failed fetch closed before its waiting callers resumed,
-    // so the first one to resume starts the retry and the rest join it.
+    // The failed fetch is gone by the time its waiting callers resume,
+    // so the first to resume starts one new fetch and the rest join it.
     return sharedFetch(cmc, cacheEntryId, fetch, put, false)
   }
 
@@ -95,9 +96,7 @@ export async function sharedFetch(
     failure = { error }
     throw error
   } finally {
-    // Close before settling, so a waiting caller's retry starts a new fetch
-    // instead of rejoining this one.
-    // Callers that already got the material ignore this second settle.
+    // After a success, every waiting caller already has the material and ignores this.
     close()
     for (const settle of mine.members) settle(failure)
   }

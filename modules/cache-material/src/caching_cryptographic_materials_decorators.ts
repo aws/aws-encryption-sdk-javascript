@@ -110,7 +110,8 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
          */
         .getEncryptionMaterials({ suite, encryptionContext, commitmentPolicy })
 
-    // A caller that waited on a failed request gets one more attempt, with `retry` false.
+    // If a shared request fails, its waiting callers retry once, together.
+    // If the retry fails too, they throw its error.
     const getShared = async (
       retry: boolean
     ): Promise<EncryptionMaterial<S>> => {
@@ -133,8 +134,8 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
         if ('material' in outcome) return outcome.material
         if ('error' in outcome) {
           if (!retry) throw outcome.error
-          // The failed batch closed before its waiting callers resumed,
-          // so the first one to resume starts the retry and the rest join it.
+          // The failed batch is gone by the time its waiting callers resume,
+          // so the first to resume starts one new request and the rest join it.
           return getShared(false)
         }
         // The data key can't be shared, so this message needs its own request.
@@ -187,9 +188,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
         release = { error }
         throw error
       } finally {
-        // Close before settling, so a waiting caller's retry starts a new batch
-        // instead of rejoining this one.
-        // Callers that already got the material ignore this second settle.
+        // After a success, every waiting caller already has the material and ignores this.
         closeBatch(this._cache, cacheKey, batch)
         settleMembers(batch, release)
       }
@@ -260,7 +259,8 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       return material
     }
 
-    // A caller that waited on a failed request gets one more attempt, with `retry` false.
+    // If a shared request fails, its waiting callers retry once, together.
+    // If the retry fails too, they throw its error.
     const getShared = async (
       retry: boolean
     ): Promise<DecryptionMaterial<S>> => {
@@ -281,8 +281,8 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
         const outcome = await joinBatch(joinable, 0)
         if ('material' in outcome) return outcome.material
         if ('error' in outcome && !retry) throw outcome.error
-        // The failed batch closed before its waiting callers resumed,
-        // so the first one to resume starts the retry and the rest join it.
+        // The failed batch is gone by the time its waiting callers resume,
+        // so the first to resume starts one new request and the rest join it.
         return getShared(false)
       }
 
@@ -303,9 +303,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
         release = { error }
         throw error
       } finally {
-        // Close before settling, so a waiting caller's retry starts a new batch
-        // instead of rejoining this one.
-        // Callers that already got the material ignore this second settle.
+        // After a success, every waiting caller already has the material and ignores this.
         closeBatch(this._cache, cacheKey, batch)
         settleMembers(batch, release)
       }
