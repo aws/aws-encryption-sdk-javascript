@@ -146,53 +146,40 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       this,
       plaintextLength
     )
-    let material: EncryptionMaterial<S>
     try {
-      material = await fetch()
-    } catch (error) {
-      closeBatch(this._cache, cacheKey, batch)
-      settleMembers(batch, { failed: true })
-      throw error
-    }
-    closeBatch(this._cache, cacheKey, batch)
+      const material = await fetch()
 
-    // Can't cache it, so the waiting callers can't share it.
-    if (!material.suite.cacheSafe) {
-      settleMembers(batch, { failed: true })
-      return material
-    }
+      // Can't cache it, so the waiting callers can't share it.
+      if (!material.suite.cacheSafe) return material
 
-    // This message alone is over the limits, so nobody joined, and it can't be cached.
-    const used = {
-      response: material,
-      now: Date.now(),
-      messagesEncrypted: batch.messages,
-      bytesEncrypted: batch.bytes,
-    }
-    if (this._cacheEntryHasExceededLimits(used)) {
-      settleMembers(batch, { failed: true })
-      return material
-    }
+      // This message alone is over the limits, so nobody joined, and it can't be cached.
+      const used = {
+        response: material,
+        now: Date.now(),
+        messagesEncrypted: batch.messages,
+        bytesEncrypted: batch.bytes,
+      }
+      if (this._cacheEntryHasExceededLimits(used)) return material
 
-    try {
       this._cache.putEncryptionMaterial(
         cacheKey,
         material,
         plaintextLength,
         this._maxAge
       )
-    } catch (error) {
+      // Count the waiting callers' messages against the cache entry too.
+      for (const member of batch.members) {
+        this._cache.getEncryptionMaterial(cacheKey, member.plaintextLength)
+      }
+      for (const member of batch.members) {
+        member.settle({ material: cloneResponse(material) })
+      }
+      return cloneResponse(material)
+    } finally {
+      // However this request ends, waiting callers not given its material make their own.
+      closeBatch(this._cache, cacheKey, batch)
       settleMembers(batch, { failed: true })
-      throw error
     }
-    // Count the waiting callers' messages against the cache entry too.
-    for (const member of batch.members) {
-      this._cache.getEncryptionMaterial(cacheKey, member.plaintextLength)
-    }
-    for (const member of batch.members) {
-      member.settle({ material: cloneResponse(material) })
-    }
-    return cloneResponse(material)
   }
 }
 
@@ -290,19 +277,17 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       this,
       0
     )
-    let material: DecryptionMaterial<S>
     try {
-      material = await fetchAndCache()
-    } catch (error) {
+      const material = await fetchAndCache()
+      for (const member of batch.members) {
+        member.settle({ material: cloneResponse(material) })
+      }
+      return cloneResponse(material)
+    } finally {
+      // However this request ends, waiting callers not given its material make their own.
       closeBatch(this._cache, cacheKey, batch)
       settleMembers(batch, { failed: true })
-      throw error
     }
-    closeBatch(this._cache, cacheKey, batch)
-    for (const member of batch.members) {
-      member.settle({ material: cloneResponse(material) })
-    }
-    return cloneResponse(material)
   }
 }
 
@@ -320,6 +305,7 @@ interface Batch<M> {
 
 /* What a waiting caller gets when the shared request finishes:
  * the material, or `failed` if the request failed or its material can't be shared.
+ * A caller's settle is a promise resolve, so only the first outcome counts.
  */
 type Outcome<M> = { material: M } | { failed: true }
 

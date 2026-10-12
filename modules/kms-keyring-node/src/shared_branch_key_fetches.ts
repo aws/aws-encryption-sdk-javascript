@@ -84,21 +84,20 @@ export async function sharedFetch(
     if (!list.length) byId.delete(cacheEntryId)
   }
 
-  let material: NodeBranchKeyMaterial
   try {
-    material = await fetch()
-  } catch (error) {
+    const material = await fetch()
+    // Copy before put: once cached, an eviction can zero the material's buffer.
+    for (const settle of mine.members) {
+      settle({ material: deepCopyBranchKeyMaterial(material) })
+    }
+    put(material)
+    return deepCopyBranchKeyMaterial(material)
+  } finally {
+    // However this fetch ends, waiting callers not given its material make their own.
+    // Each settle is a promise resolve, so only the first outcome counts.
     close()
     for (const settle of mine.members) settle({ failed: true })
-    throw error
   }
-  close()
-  // Copy before put: once cached, an eviction can zero the material's buffer.
-  for (const settle of mine.members) {
-    settle({ material: deepCopyBranchKeyMaterial(material) })
-  }
-  put(material)
-  return deepCopyBranchKeyMaterial(material)
 }
 
 /* A copy with its own buffer.

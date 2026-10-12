@@ -302,6 +302,32 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
     expect(keyStore.getActiveBranchKey.callCount).to.equal(10)
   })
 
+  it('releases every waiting caller when the keystore response is malformed', async () => {
+    // Copying this response throws before the fetch can hand it out.
+    const keyStore = {
+      getBranchKeyVersion: async () => {
+        await wait(5)
+        return {} as NodeBranchKeyMaterial
+      },
+    }
+    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
+
+    const results = await Promise.allSettled(
+      Array.from({ length: 3 }, async () =>
+        getBranchKeyMaterials(
+          hKeyringFor(keyStore),
+          cache,
+          BRANCH_KEY_ID_A,
+          'entry',
+          'version'
+        )
+      )
+    )
+
+    for (const result of results) expect(result.status).to.equal('rejected')
+    expect(sharedFetchesFor(cache)?.size).to.equal(0)
+  })
+
   it('waiting callers do not time out', async () => {
     // Waiting callers have no timeout, however long the shared fetch takes.
     const keyStore = slowKeyStore(250)

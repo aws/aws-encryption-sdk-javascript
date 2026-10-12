@@ -356,6 +356,32 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
     }
   })
 
+  it('releases every waiting caller when the response is malformed', async () => {
+    // No suite at all: reading the response throws before the request can hand it out.
+    const malformed = {
+      async getEncryptionMaterials() {
+        await new Promise((resolve) => setTimeout(resolve, 5))
+        return {}
+      },
+      async decryptMaterials() {
+        await new Promise((resolve) => setTimeout(resolve, 5))
+        return {}
+      },
+    }
+    const cmm = cachingCMM(malformed)
+
+    const encrypts = await Promise.allSettled(startEncrypts(cmm, times(3)))
+    const decrypts = await Promise.allSettled(
+      Array.from({ length: 3 }, async () =>
+        cmm.decryptMaterials(decryptRequest)
+      )
+    )
+
+    for (const result of [...encrypts, ...decrypts]) {
+      expect(result.status).to.equal('rejected')
+    }
+  })
+
   it('forgets a cache key once its requests finish', async () => {
     const backing = slowBackingMaterialsManager()
     const cache = getLocalCryptographicMaterialsCache(100)
