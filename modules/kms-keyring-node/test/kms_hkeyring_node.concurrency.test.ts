@@ -237,16 +237,18 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   afterEach(() => Object.assign(SHARED_FETCHES, DEFAULT))
 
   it(`${CONCURRENT_OPERATIONS} concurrent onEncrypt misses share one keystore call`, async () => {
-    // 3000 callers can block the event loop past the shortened graceInterval, which starts a second fetch.
-    Object.assign(SHARED_FETCHES, DEFAULT)
+    // Starting 3000 callers takes an unpredictable time on a slow runner.
+    // A grace interval far longer than the test keeps that from starting a second fetch.
+    Object.assign(SHARED_FETCHES, { graceInterval: 60 * 1000 })
     const keyStore = slowKeyStore()
     await encryptConcurrently(keyringFor(keyStore), CONCURRENT_OPERATIONS)
     expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
   })
 
   it(`${CONCURRENT_OPERATIONS} concurrent onDecrypt misses share one keystore call`, async () => {
-    // 3000 callers can block the event loop past the shortened graceInterval, which starts a second fetch.
-    Object.assign(SHARED_FETCHES, DEFAULT)
+    // Starting 3000 callers takes an unpredictable time on a slow runner.
+    // A grace interval far longer than the test keeps that from starting a second fetch.
+    Object.assign(SHARED_FETCHES, { graceInterval: 60 * 1000 })
     const keyStore = slowKeyStore()
     const [encrypted] = await encryptConcurrently(keyringFor(keyStore), 1)
     const expectedPdk = unwrapDataKey(encrypted.getUnencryptedDataKey())
@@ -275,13 +277,21 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
     expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
   })
 
-  it('waiting callers make their own fetch when the shared one fails', async () => {
+  it('waiting callers share one retry when the shared fetch fails', async () => {
     const keyStore = slowKeyStore(['fail', 'ok'])
     const results = await encryptSettled(keyringFor(keyStore), 10)
 
-    // Only the caller whose fetch failed sees the error, as without sharing.
+    // Only the caller whose fetch failed sees the error.
     expect(results.filter((r) => r.status === 'rejected')).to.have.lengthOf(1)
-    expect(keyStore.getActiveBranchKey.callCount).to.equal(10)
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
+  })
+
+  it('waiting callers get the error when the shared retry also fails', async () => {
+    const keyStore = slowKeyStore(['fail'])
+    const results = await encryptSettled(keyringFor(keyStore), 10)
+
+    for (const result of results) expect(result.status).to.equal('rejected')
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
   })
 
   it('releases every waiting caller when the keystore response is malformed', async () => {

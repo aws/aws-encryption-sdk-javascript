@@ -257,18 +257,28 @@ describe('caching materials manager: concurrent cache misses', () => {
     expect(backing.calls.encrypt).to.equal(1)
   })
 
-  it('waiting callers make their own request when the shared one fails', async () => {
+  it('waiting callers share one retry when the shared request fails', async () => {
     const backing = slowBackingMaterialsManager({ outcomes: ['fail', 'ok'] })
     const cmm = cachingCMM(backing)
 
     const results = await Promise.allSettled(startEncrypts(cmm, times(10)))
 
-    // Only the caller whose request failed sees the error, as without sharing.
+    // Only the caller whose request failed sees the error.
     expect(results.filter((r) => r.status === 'rejected')).to.have.lengthOf(1)
-    expect(backing.calls.encrypt).to.equal(10)
+    expect(backing.calls.encrypt).to.equal(2)
   })
 
-  it('decrypts make their own request when the shared one fails', async () => {
+  it('waiting callers get the error when the shared retry also fails', async () => {
+    const backing = slowBackingMaterialsManager({ outcomes: ['fail'] })
+    const cmm = cachingCMM(backing)
+
+    const results = await Promise.allSettled(startEncrypts(cmm, times(10)))
+
+    for (const result of results) expect(result.status).to.equal('rejected')
+    expect(backing.calls.encrypt).to.equal(2)
+  })
+
+  it('waiting decrypts share one retry when the shared request fails', async () => {
     const backing = slowBackingMaterialsManager({ outcomes: ['fail', 'ok'] })
     const cmm = cachingCMM(backing)
 
@@ -279,7 +289,7 @@ describe('caching materials manager: concurrent cache misses', () => {
     )
 
     expect(results.filter((r) => r.status === 'rejected')).to.have.lengthOf(1)
-    expect(backing.calls.decrypt).to.equal(5)
+    expect(backing.calls.decrypt).to.equal(2)
   })
 
   it('starts another request for new callers once one hangs past graceInterval', async () => {
