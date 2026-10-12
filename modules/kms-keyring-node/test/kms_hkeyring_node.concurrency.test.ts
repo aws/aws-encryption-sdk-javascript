@@ -243,7 +243,7 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   afterEach(() => Object.assign(SHARED_FETCHES, DEFAULT))
 
   it(`${CONCURRENT_OPERATIONS} concurrent onEncrypt misses share one keystore call`, async () => {
-    // 3000 callers can block the event loop past the shortened graceInterval.
+    // 3000 callers can block the event loop past the shortened graceInterval, which starts a second fetch.
     Object.assign(SHARED_FETCHES, DEFAULT)
     const keyStore = slowKeyStore()
     await encryptConcurrently(keyringFor(keyStore), CONCURRENT_OPERATIONS)
@@ -251,7 +251,7 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   })
 
   it(`${CONCURRENT_OPERATIONS} concurrent onDecrypt misses share one keystore call`, async () => {
-    // 3000 callers can block the event loop past the shortened graceInterval.
+    // 3000 callers can block the event loop past the shortened graceInterval, which starts a second fetch.
     Object.assign(SHARED_FETCHES, DEFAULT)
     const keyStore = slowKeyStore()
     const [encrypted] = await encryptConcurrently(keyringFor(keyStore), 1)
@@ -303,7 +303,7 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   })
 
   it('releases every waiting caller when the keystore response is malformed', async () => {
-    // Copying this response throws before the fetch can hand it out.
+    // Copying this malformed response throws before the waiting callers get it.
     const keyStore = {
       getBranchKeyVersion: async () => {
         await wait(5)

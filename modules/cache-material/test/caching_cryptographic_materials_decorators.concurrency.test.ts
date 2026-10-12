@@ -356,7 +356,7 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
   })
 
   it('releases every waiting caller when the response is malformed', async () => {
-    // No suite at all: reading the response throws before the request can hand it out.
+    // Without a suite, reading the response throws before the waiting callers get it.
     const malformed = {
       async getEncryptionMaterials() {
         await new Promise((resolve) => setTimeout(resolve, 5))

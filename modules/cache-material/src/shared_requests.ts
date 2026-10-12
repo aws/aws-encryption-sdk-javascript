@@ -6,12 +6,12 @@ import { CryptographicMaterialsCache } from './cryptographic_materials_cache'
 /* Concurrent cache misses for the same entry share one request to the backing materials manager.
  * One caller makes the request, and the others wait for its answer.
  * Sharing must not add failures:
- * if the shared request fails or its material can't be shared, each waiting caller makes its own.
+ * if the shared request fails or its material can't be reused, each waiting caller makes its own request.
  */
 
 // An object, not a constant, so tests can shorten it.
 export const SHARED_REQUESTS = {
-  // A request older than this may be stuck, so new callers make their own.
+  // A request older than this may be stuck, so new callers don't join it.
   graceInterval: 1000, // milliseconds == 1 second
 }
 

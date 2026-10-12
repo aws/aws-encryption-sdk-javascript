@@ -10,12 +10,12 @@ import { CryptographicMaterialsCache } from '@aws-crypto/cache-material'
 /* Concurrent cache misses for the same branch key share one keystore fetch.
  * One caller fetches, and the others wait for its answer.
  * Sharing must not add failures:
- * if the shared fetch fails, each waiting caller makes its own.
+ * if the shared fetch fails, each waiting caller makes its own fetch.
  */
 
 // An object, not a constant, so tests can shorten it.
 export const SHARED_FETCHES = {
-  // A fetch older than this may be stuck, so new callers make their own.
+  // A fetch older than this may be stuck, so new callers don't join it.
   graceInterval: 1000, // milliseconds
 }
 
@@ -57,8 +57,8 @@ export async function sharedFetch(
 ): Promise<NodeBranchKeyMaterial> {
   const byId = sharedFetches.get(cmc) || new Map<string, SharedFetch[]>()
   sharedFetches.set(cmc, byId)
-  // Drop fetches nobody can join anymore.
-  // This is the only place a fetch that never settles gets forgotten.
+  // Drop this entry's fetches that are too old to join.
+  // A fetch that never settles is only ever removed here.
   const fetches = (byId.get(cacheEntryId) || []).filter(isRecent)
   const current = fetches[fetches.length - 1]
 
@@ -67,7 +67,7 @@ export async function sharedFetch(
       current.members.push(resolve)
     )
     if ('material' in outcome) return outcome.material
-    // The shared fetch failed, so make this caller's own.
+    // The shared fetch failed, so fetch for just this caller.
     const material = await fetch()
     put(material)
     return deepCopyBranchKeyMaterial(material)
@@ -93,8 +93,8 @@ export async function sharedFetch(
     put(material)
     return deepCopyBranchKeyMaterial(material)
   } finally {
-    // However the fetch ends, waiting callers not given its material make their own.
-    // A caller already given the material ignores this second settle.
+    // Release waiting callers that didn't get the material, so they make their own fetches.
+    // Callers that did get it ignore this.
     close()
     for (const settle of mine.members) settle({ failed: true })
   }
