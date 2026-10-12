@@ -36,12 +36,8 @@ import { BranchKeyIdSupplier } from '@aws-crypto/kms-keyring'
 import { serializeFactory, uuidv4Factory } from '@aws-crypto/serialize'
 import {
   deepCopyBranchKeyMaterial,
-  FetchToken,
   sharedFetch,
-  sleep,
-  SHARED_FETCHES,
-  stormTrackerFor,
-} from './branch_key_storm_tracker'
+} from './shared_branch_key_fetches'
 
 export const stringToUtf8Bytes = (input: string): Buffer =>
   Buffer.from(input, 'utf-8')
@@ -203,7 +199,6 @@ export async function getBranchKeyMaterials(
   const { keyStore, cacheLimitTtl } = hKeyring
 
   // The cached entry, or undefined if it's missing or past this keyring's TTL.
-  // Callers must copy its material before returning it; see deepCopyBranchKeyMaterial.
   const lookUp = () => {
     //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
     //# The hierarchical keyring MUST attempt to find [branch key materials](../structures.md#branch-key-materials)
@@ -260,59 +255,16 @@ export async function getBranchKeyMaterials(
   const put = (material: NodeBranchKeyMaterial) =>
     cmc.putBranchKeyMaterial(cacheEntryId, material, cacheLimitTtl)
 
-  const storm = hKeyring._stormTracking
-  if (!storm) {
-    const cacheEntry = lookUp()
-    if (cacheEntry) {
-      //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#ondecrypt
-      //# If a cache entry is found and the entry's TTL has not expired, the hierarchical keyring MUST use those branch key materials for key unwrapping.
+  const cacheEntry = lookUp()
+  if (cacheEntry) {
+    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#ondecrypt
+    //# If a cache entry is found and the entry's TTL has not expired, the hierarchical keyring MUST use those branch key materials for key unwrapping.
 
-      //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
-      //# If a cache entry is found and the entry's TTL has not expired, the hierarchical keyring MUST use those branch key materials for key wrapping.
-      return deepCopyBranchKeyMaterial(cacheEntry.response)
-    }
-    return sharedFetch(cmc, cacheEntryId, fetch, put)
+    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
+    //# If a cache entry is found and the entry's TTL has not expired, the hierarchical keyring MUST use those branch key materials for key wrapping.
+    return deepCopyBranchKeyMaterial(cacheEntry.response)
   }
-
-  // With stormTracking, behave like the MPL's StormTracking cache.
-  const tracker = stormTrackerFor(cmc)
-  const waitUntil = Date.now() + storm.inFlightTTL
-  let token: FetchToken | undefined
-  while (!token) {
-    const now = Date.now()
-    const cacheEntry = lookUp()
-    const decision = cacheEntry
-      ? tracker.checkEntry(
-          cacheEntryId,
-          cacheEntry.now + cacheLimitTtl,
-          now,
-          storm
-        )
-      : tracker.checkNewEntry(cacheEntryId, now, storm)
-    if (cacheEntry && decision.state === 'use') {
-      return deepCopyBranchKeyMaterial(cacheEntry.response)
-    }
-    if (decision.state === 'fetch') {
-      token = decision.token
-      continue
-    }
-    needs(Date.now() <= waitUntil, 'Storm cache inFlightTTL exceeded')
-    await sleep(SHARED_FETCHES.sleepMilli)
-  }
-
-  let branchKeyMaterials: NodeBranchKeyMaterial
-  try {
-    branchKeyMaterials = await fetch()
-  } catch (error) {
-    // A failed early refresh leaves a valid cached entry, so use it.
-    // The MPL fails the call instead.
-    const cacheEntry = lookUp()
-    if (cacheEntry) return deepCopyBranchKeyMaterial(cacheEntry.response)
-    throw error
-  }
-  tracker.fetched(cacheEntryId, token)
-  put(branchKeyMaterials)
-  return deepCopyBranchKeyMaterial(branchKeyMaterials)
+  return sharedFetch(cmc, cacheEntryId, fetch, put)
 }
 
 //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt

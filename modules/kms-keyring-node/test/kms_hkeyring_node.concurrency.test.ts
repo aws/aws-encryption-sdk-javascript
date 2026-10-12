@@ -17,10 +17,7 @@ import {
   TEST_ESDK_ALG_SUITE,
   TTL,
 } from './fixtures'
-import {
-  KmsHierarchicalKeyRingNode,
-  KmsHierarchicalKeyRingStormTracking,
-} from '../src/kms_hkeyring_node'
+import { KmsHierarchicalKeyRingNode } from '../src/kms_hkeyring_node'
 import {
   BRANCH_KEY_ID_SUPPLIER,
   deepCopyBranchKeyMaterial,
@@ -34,12 +31,9 @@ import {
 
 import { getBranchKeyMaterials } from '../src/kms_hkeyring_node_helpers'
 import {
-  FetchToken,
   SHARED_FETCHES,
-  StormTracker,
-  StormTrackingSettings,
   sharedFetchesFor,
-} from '../src/branch_key_storm_tracker'
+} from '../src/shared_branch_key_fetches'
 import { getLocalCryptographicMaterialsCache } from '@aws-crypto/cache-material'
 import { NodeAlgorithmSuite } from '@aws-crypto/material-management'
 import { v4 } from 'uuid'
@@ -162,14 +156,8 @@ describe('KmsHierarchicalKeyRingNode: concurrent cold-cache operations (#1691)',
 const CONCURRENT_OPERATIONS = 3000
 
 // Shortened timings, so the tests run in milliseconds.
-const FAST = { graceInterval: 40, sleepMilli: 2 }
+const FAST = { graceInterval: 40 }
 const DEFAULT = { ...SHARED_FETCHES }
-// Seconds, like the keyring option.
-const FAST_STORM: KmsHierarchicalKeyRingStormTracking = {
-  gracePeriod: 0.2,
-  graceInterval: 0.04,
-  inFlightTTL: 0.2,
-}
 
 // A keystore stub where each request takes `ms` milliseconds.
 // `outcomes` decides each call in order: 'ok', 'fail', or 'hang'; later calls use the last one.
@@ -207,11 +195,9 @@ function keyringFor(
   {
     cache,
     partitionId,
-    stormTracking,
   }: {
     cache?: KmsHierarchicalKeyRingNode['_cmc']
     partitionId?: string
-    stormTracking?: KmsHierarchicalKeyRingStormTracking
   } = {}
 ): KmsHierarchicalKeyRingNode {
   return new KmsHierarchicalKeyRingNode({
@@ -220,17 +206,15 @@ function keyringFor(
     cacheLimitTtl: TTL,
     cache,
     partitionId,
-    stormTracking,
   })
 }
 
 // A minimal keyring for calling getBranchKeyMaterials directly.
-function hKeyringFor(keyStore: any, stormTracking?: StormTrackingSettings) {
+function hKeyringFor(keyStore: any) {
   return {
     keyStore,
     cacheLimitTtl: TTL * 1000,
     cacheEntryHasExceededLimits: () => false,
-    _stormTracking: stormTracking,
   } as any
 }
 
@@ -319,7 +303,7 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   })
 
   it('waiting callers do not time out', async () => {
-    // Slower than FAST_STORM.inFlightTTL; every caller still succeeds.
+    // Waiting callers have no timeout, however long the shared fetch takes.
     const keyStore = slowKeyStore(250)
     await encryptConcurrently(keyringFor(keyStore), 10)
     expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
@@ -411,168 +395,6 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
     } finally {
       clock.restore()
     }
-  })
-})
-
-describe('KmsHierarchicalKeyRingNode: stormTracking', () => {
-  beforeEach(() => Object.assign(SHARED_FETCHES, FAST))
-  afterEach(() => Object.assign(SHARED_FETCHES, DEFAULT))
-
-  it('concurrent misses share one keystore call', async () => {
-    const keyStore = slowKeyStore()
-    await encryptConcurrently(
-      keyringFor(keyStore, { stormTracking: FAST_STORM }),
-      100
-    )
-    expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
-  })
-
-  it('after a failed fetch, one waiting caller fetches again once it is graceInterval old', async () => {
-    const keyStore = slowKeyStore(5, ['fail', 'ok'])
-    const results = await encryptSettled(
-      keyringFor(keyStore, { stormTracking: FAST_STORM }),
-      10
-    )
-
-    expect(results.filter((r) => r.status === 'rejected')).to.have.lengthOf(1)
-    expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
-  })
-
-  it('starts another fetch when the first hangs past graceInterval', async () => {
-    const keyStore = slowKeyStore(5, ['hang', 'ok'])
-    const hkr = keyringFor(keyStore, { stormTracking: FAST_STORM })
-
-    // The first caller's fetch never returns; the other 9 must not wait on it.
-    const [, ...waiters] = startEncrypts(hkr, 10)
-    const results = await Promise.allSettled(waiters)
-
-    expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
-    for (const result of results) expect(result.status).to.equal('fulfilled')
-  })
-
-  it('fails waiting callers after inFlightTTL when every fetch hangs', async () => {
-    const keyStore = slowKeyStore(5, ['hang'])
-    const hkr = keyringFor(keyStore, { stormTracking: FAST_STORM })
-    // Each caller told to fetch hangs forever; every other caller fails after inFlightTTL.
-    const failures: string[] = []
-    for (const p of startEncrypts(hkr, 10)) {
-      p.catch((e) => failures.push(e.message))
-    }
-    const inFlightTTL = (FAST_STORM.inFlightTTL as number) * 1000
-    const graceInterval = (FAST_STORM.graceInterval as number) * 1000
-    await wait(2 * inFlightTTL)
-
-    const fetchers = keyStore.getActiveBranchKey.callCount
-    expect(fetchers).to.be.at.most(inFlightTTL / graceInterval + 1)
-    expect(failures).to.have.lengthOf(10 - fetchers)
-    for (const message of failures) {
-      expect(message).to.equal('Storm cache inFlightTTL exceeded')
-    }
-  })
-
-  it('fetches at most fanOut keys at once', async () => {
-    const keyStore = slowKeyStore(20)
-    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
-    const hKeyring = hKeyringFor(keyStore, {
-      gracePeriod: 200,
-      graceInterval: 40,
-      inFlightTTL: 200,
-      fanOut: 2,
-    })
-
-    await Promise.all(
-      ['a', 'b', 'c', 'd'].map(async (id) =>
-        getBranchKeyMaterials(hKeyring, cache, BRANCH_KEY_ID_A, id, 'version')
-      )
-    )
-
-    expect(keyStore.getBranchKeyVersion.callCount).to.equal(4)
-    expect(keyStore.peak()).to.equal(2)
-  })
-
-  it('refreshes an entry in its grace period with one fetch while others use it', async () => {
-    const clock = Sinon.useFakeTimers({ now: Date.now(), toFake: ['Date'] })
-    try {
-      const keyStore = slowKeyStore(20)
-      const gracePeriod = 10 // seconds
-      const hkr = keyringFor(keyStore, { stormTracking: { gracePeriod } })
-      await encryptConcurrently(hkr, 1)
-      clock.tick(TTL * 1000 - (gracePeriod * 1000) / 2)
-
-      let finished = 0
-      const all = Promise.all(
-        startEncrypts(hkr, 10).map(async (p) => {
-          await p
-          finished += 1
-        })
-      )
-      // The refresh takes 20 ms; the other 9 callers use the cached entry meanwhile.
-      await wait(5)
-      expect(finished).to.equal(9)
-
-      await all
-      expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
-    } finally {
-      clock.restore()
-    }
-  })
-
-  it('uses the cached entry when an early refresh fails', async () => {
-    const clock = Sinon.useFakeTimers({ now: Date.now(), toFake: ['Date'] })
-    try {
-      const keyStore = slowKeyStore(5, ['ok', 'fail'])
-      const gracePeriod = 10 // seconds
-      const hkr = keyringFor(keyStore, { stormTracking: { gracePeriod } })
-      await encryptConcurrently(hkr, 1)
-      clock.tick(TTL * 1000 - (gracePeriod * 1000) / 2)
-
-      await encryptConcurrently(hkr, 1)
-      expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
-    } finally {
-      clock.restore()
-    }
-  })
-})
-
-describe('StormTracker', () => {
-  const settings = {
-    gracePeriod: 10000,
-    graceInterval: 1000,
-    fanOut: 20,
-    inFlightTTL: 10000,
-  }
-
-  it('only the newest fetch for an entry marks it fetched', () => {
-    const tracker = new StormTracker()
-    const stale = tracker.checkNewEntry('id', 0, settings)
-    const newer = tracker.checkNewEntry('id', 1000, settings)
-    expect(stale.state).to.equal('fetch')
-    expect(newer.state).to.equal('fetch')
-
-    // The stale fetch finishing late leaves the newer one in flight.
-    tracker.fetched('id', stale.token as FetchToken)
-    expect(tracker.checkNewEntry('id', 1001, settings).state).to.equal('wait')
-
-    tracker.fetched('id', newer.token as FetchToken)
-    expect(tracker.checkNewEntry('id', 1002, settings).state).to.equal('fetch')
-  })
-
-  it('a failed fetch stays in flight until graceInterval, like the MPL', () => {
-    const tracker = new StormTracker()
-    tracker.checkNewEntry('id', 0, settings)
-    expect(tracker.checkNewEntry('id', 999, settings).state).to.equal('wait')
-    expect(tracker.checkNewEntry('id', 1000, settings).state).to.equal('fetch')
-  })
-
-  it('forgets fetches older than inFlightTTL once fanOut is reached', () => {
-    const tracker = new StormTracker()
-    const small = { ...settings, fanOut: 1 }
-    tracker.checkNewEntry('a', 2000, small)
-    expect(tracker.checkNewEntry('b', 2000, small).state).to.equal('wait')
-    expect(
-      tracker.checkNewEntry('b', 2000 + small.inFlightTTL, small).state
-    ).to.equal('fetch')
-    expect(tracker.inFlightCount()).to.equal(1)
   })
 })
 

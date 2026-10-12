@@ -50,10 +50,6 @@ import {
   isBranchKeyIdSupplier,
 } from '@aws-crypto/kms-keyring'
 import { randomBytes } from 'crypto'
-import {
-  StormTrackingSettings,
-  STORM_TRACKING_DEFAULTS,
-} from './branch_key_storm_tracker'
 
 export interface KmsHierarchicalKeyRingNodeInput {
   //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#initialization
@@ -79,52 +75,6 @@ export interface KmsHierarchicalKeyRingNodeInput {
   //# - MAY provide a [Partition ID](#partition-id)
   partitionId?: string
   utf8Sorting?: boolean
-  /** Opt in to the MPL's StormTracking behavior; see {@link KmsHierarchicalKeyRingStormTracking}. */
-  stormTracking?: KmsHierarchicalKeyRingStormTracking
-}
-
-/**
- * Settings that make the keyring's branch key cache behave like the MPL's StormTracking cache,
- * which the other ESDKs use by default.
- * Times are in seconds, like cacheLimitTtl.
- *
- * Without stormTracking, concurrent misses for the same branch key still share one keystore fetch,
- * but sharing adds no new failures:
- * - if the shared fetch fails, each waiting caller makes its own fetch
- * - waiting callers don't time out
- * - no limit on fetches in flight
- * - no early refresh of cached branch keys
- *
- * These defaults differ from the MPL so existing customers see no change.
- * A future major version may align them.
- *
- * With stormTracking, unset settings take the MPL's defaults,
- * and the settings must satisfy graceInterval <= inFlightTTL <= gracePeriod < cacheLimitTtl, as in the MPL.
- * Unlike the MPL, a failed early refresh uses the still-valid cached branch key instead of failing the call.
- */
-export interface KmsHierarchicalKeyRingStormTracking {
-  /**
-   * How long before a cached branch key expires one caller refreshes it,
-   * while other callers keep using the cached key.
-   * Default 10.
-   */
-  gracePeriod?: number
-  /**
-   * After a fetch has run this long, the next caller fetches again.
-   * Default 1.
-   */
-  graceInterval?: number
-  /**
-   * At most this many branch keys are fetched at once, across every keyring that shares the cache.
-   * Callers for other branch keys wait.
-   * Default 20.
-   */
-  fanOut?: number
-  /**
-   * A caller that has waited this long fails.
-   * Default 10.
-   */
-  inFlightTTL?: number
 }
 
 export interface IKmsHierarchicalKeyRingNode extends KeyringNode {
@@ -132,8 +82,6 @@ export interface IKmsHierarchicalKeyRingNode extends KeyringNode {
   branchKeyIdSupplier?: Readonly<BranchKeyIdSupplier>
   keyStore: Readonly<BranchKeyStoreNode>
   cacheLimitTtl: number
-  // Milliseconds; set only when the stormTracking input is given.
-  _stormTracking?: Readonly<StormTrackingSettings>
   _onEncrypt(material: NodeEncryptionMaterial): Promise<NodeEncryptionMaterial>
   _onDecrypt(
     material: NodeDecryptionMaterial,
@@ -154,7 +102,6 @@ export class KmsHierarchicalKeyRingNode
   public declare keyStore: Readonly<BranchKeyStoreNode>
   public declare _logicalKeyStoreName: Buffer
   public declare cacheLimitTtl: number
-  public declare _stormTracking?: Readonly<StormTrackingSettings>
   public declare maxCacheSize?: number
   public declare _cmc: CryptographicMaterialsCache<NodeAlgorithmSuite>
   declare readonly _partition: Buffer
@@ -169,7 +116,6 @@ export class KmsHierarchicalKeyRingNode
     maxCacheSize,
     partitionId,
     utf8Sorting,
-    stormTracking,
   }: KmsHierarchicalKeyRingNodeInput) {
     super()
 
@@ -269,12 +215,6 @@ export class KmsHierarchicalKeyRingNode
 
     // convert seconds to milliseconds
     readOnlyProperty(this, 'cacheLimitTtl', cacheLimitTtl * 1000)
-
-    readOnlyProperty(
-      this,
-      '_stormTracking',
-      resolveStormTracking(stormTracking, cacheLimitTtl)
-    )
 
     readOnlyProperty(this, 'branchKeyId', branchKeyId)
 
@@ -556,51 +496,3 @@ immutableClass(KmsHierarchicalKeyRingNode)
 //# Users MUST make sure that all of Partition ID, Logical Key Store Name of the Key Store for the Hierarchical Keyring
 //# and Branch Key ID are set to be the same for two Hierarchical Keyrings if and only they want the keyrings to share
 //# cache entries.
-
-function resolveStormTracking(
-  stormTracking: KmsHierarchicalKeyRingStormTracking | undefined,
-  cacheLimitTtl: number
-): Readonly<StormTrackingSettings> | undefined {
-  if (stormTracking === undefined) return undefined
-  /* Precondition: stormTracking must be an object */
-  needs(
-    stormTracking && typeof stormTracking === 'object',
-    'stormTracking must be an object'
-  )
-  const {
-    gracePeriod = STORM_TRACKING_DEFAULTS.gracePeriod,
-    graceInterval = STORM_TRACKING_DEFAULTS.graceInterval,
-    fanOut = STORM_TRACKING_DEFAULTS.fanOut,
-    inFlightTTL = STORM_TRACKING_DEFAULTS.inFlightTTL,
-  } = stormTracking
-  /* Precondition: stormTracking times must be positive numbers */
-  needs(
-    [gracePeriod, graceInterval, inFlightTTL].every(
-      (value) =>
-        typeof value === 'number' && Number.isFinite(value) && value > 0
-    ),
-    'stormTracking gracePeriod, graceInterval, and inFlightTTL must be positive numbers'
-  )
-  /* Precondition: stormTracking fanOut must be a positive integer */
-  needs(
-    Number.isSafeInteger(fanOut) && fanOut > 0,
-    'stormTracking fanOut must be a positive integer'
-  )
-  /* Precondition: stormTracking settings must be consistent, as in the MPL */
-  needs(
-    graceInterval <= inFlightTTL && inFlightTTL <= gracePeriod,
-    'stormTracking graceInterval must not exceed inFlightTTL, and inFlightTTL must not exceed gracePeriod'
-  )
-  /* Precondition: stormTracking gracePeriod must be less than the cache limit TTL */
-  needs(
-    gracePeriod < cacheLimitTtl,
-    'stormTracking gracePeriod must be less than the cache limit TTL'
-  )
-  // convert seconds to milliseconds
-  return Object.freeze({
-    gracePeriod: gracePeriod * 1000,
-    graceInterval: graceInterval * 1000,
-    fanOut,
-    inFlightTTL: inFlightTTL * 1000,
-  })
-}
