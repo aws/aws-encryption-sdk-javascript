@@ -424,6 +424,7 @@ function fanOutReached(
   settings: SharingSettings,
   waitUntil: number
 ): boolean {
+  if (!settings.stormTracking) return false
   if (inFlightCount(cache, settings) < settings.fanOut) return false
   needs(Date.now() <= waitUntil, IN_FLIGHT_TTL_EXCEEDED)
   return true

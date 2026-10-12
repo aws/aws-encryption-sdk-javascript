@@ -113,7 +113,6 @@ export async function sharedFetch(
   }
   close()
   // Copy before put: once cached, an eviction can zero the material's buffer.
-
   for (const settle of mine.members) {
     settle({ material: deepCopyBranchKeyMaterial(material) })
   }
@@ -138,7 +137,6 @@ export class StormTracker {
   private lastPrune = 0
 
   // For an unexpired entry: use it, unless it's within gracePeriod of expiring and nobody is refreshing it.
-
   checkEntry(
     id: string,
     expiresAt: number,

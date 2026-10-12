@@ -306,7 +306,6 @@ export async function getBranchKeyMaterials(
   } catch (error) {
     // A failed early refresh leaves a valid cached entry, so use it.
     // The MPL fails the call instead.
-
     const cacheEntry = lookUp()
     if (cacheEntry) return deepCopyBranchKeyMaterial(cacheEntry.response)
     throw error

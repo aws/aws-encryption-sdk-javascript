@@ -259,12 +259,16 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   afterEach(() => Object.assign(SHARED_FETCHES, DEFAULT))
 
   it(`${CONCURRENT_OPERATIONS} concurrent onEncrypt misses share one keystore call`, async () => {
+    // 3000 callers can block the event loop past the shortened graceInterval.
+    Object.assign(SHARED_FETCHES, DEFAULT)
     const keyStore = slowKeyStore()
     await encryptConcurrently(keyringFor(keyStore), CONCURRENT_OPERATIONS)
     expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
   })
 
   it(`${CONCURRENT_OPERATIONS} concurrent onDecrypt misses share one keystore call`, async () => {
+    // 3000 callers can block the event loop past the shortened graceInterval.
+    Object.assign(SHARED_FETCHES, DEFAULT)
     const keyStore = slowKeyStore()
     const [encrypted] = await encryptConcurrently(keyringFor(keyStore), 1)
     const expectedPdk = unwrapDataKey(encrypted.getUnencryptedDataKey())
