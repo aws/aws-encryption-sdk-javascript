@@ -8,7 +8,6 @@ import { CryptographicMaterialsCache } from './cryptographic_materials_cache'
  * so a failing backing materials manager gets one more call, not one per waiting caller.
  */
 
-// An object, not a constant, so tests can shorten it.
 export const SHARED_REQUESTS = {
   // A request older than this may be stuck, so new callers don't join it.
   graceInterval: 1000, // milliseconds

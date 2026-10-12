@@ -12,7 +12,6 @@ import { CryptographicMaterialsCache } from '@aws-crypto/cache-material'
  * so a failing keystore gets one more call, not one per waiting caller.
  */
 
-// An object, not a constant, so tests can shorten it.
 export const SHARED_FETCHES = {
   // A fetch older than this may be stuck, so new callers don't join it.
   graceInterval: 1000, // milliseconds
