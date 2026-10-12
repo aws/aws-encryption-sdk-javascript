@@ -128,9 +128,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
     if (joinable) {
       const outcome = await joinBatch(joinable, plaintextLength)
       if ('material' in outcome) return outcome.material
-      /* The shared data key can't be cached, or the shared request failed.
-       * Make this caller's own request, as it would without sharing.
-       */
+      // The shared request failed, or its data key can't be shared.
       return cacheEncryptionMaterial(
         this,
         cacheKey,
@@ -149,7 +147,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
     try {
       const material = await fetch()
 
-      // Can't cache it, so the waiting callers can't share it.
+      // Not cache safe, so not shareable; the finally below releases the waiting callers.
       if (!material.suite.cacheSafe) return material
 
       // This message alone is over the limits, so nobody joined, and it can't be cached.
@@ -177,6 +175,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       return cloneResponse(material)
     } finally {
       // However this request ends, waiting callers not given its material make their own.
+      // Each settle is a promise resolve, so callers already given the material ignore this.
       closeBatch(this._cache, cacheKey, batch)
       settleMembers(batch, { failed: true })
     }
@@ -266,7 +265,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
     if (joinable) {
       const outcome = await joinBatch(joinable, 0)
       if ('material' in outcome) return outcome.material
-      // The shared request failed: make this caller's own request, as it would without sharing.
+      // The shared request failed.
       return cloneResponse(await fetchAndCache())
     }
 
@@ -285,6 +284,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       return cloneResponse(material)
     } finally {
       // However this request ends, waiting callers not given its material make their own.
+      // Each settle is a promise resolve, so callers already given the material ignore this.
       closeBatch(this._cache, cacheKey, batch)
       settleMembers(batch, { failed: true })
     }
@@ -305,7 +305,6 @@ interface Batch<M> {
 
 /* What a waiting caller gets when the shared request finishes:
  * the material, or `failed` if the request failed or its material can't be shared.
- * A caller's settle is a promise resolve, so only the first outcome counts.
  */
 type Outcome<M> = { material: M } | { failed: true }
 
@@ -369,7 +368,6 @@ function startBatch<M>(
   return batch
 }
 
-// Also deletes the cache key's list once it is empty, so the map doesn't grow with every key ever used.
 function closeBatch<M>(
   cache: CryptographicMaterialsCache<any>,
   cacheKey: string,

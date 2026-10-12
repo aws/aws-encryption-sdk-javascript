@@ -9,11 +9,11 @@ import { CryptographicMaterialsCache } from '@aws-crypto/cache-material'
 
 /* Concurrent cache misses for the same branch key share one keystore fetch.
  * One caller fetches, and the others wait for its answer.
- * If that fetch fails, each waiting caller makes its own fetch, as it would without sharing.
- * Internal: not exported from the package index.
+ * Sharing must not add failures:
+ * if the shared fetch fails, each waiting caller makes its own.
  */
 
-// Tests shorten these.
+// An object, not a constant, so tests can shorten it.
 export const SHARED_FETCHES = {
   // A fetch older than this may be stuck, so new callers make their own.
   graceInterval: 1000, // milliseconds
@@ -67,7 +67,7 @@ export async function sharedFetch(
       current.members.push(resolve)
     )
     if ('material' in outcome) return outcome.material
-    // The shared fetch failed: make this caller's own fetch, as it would without sharing.
+    // The shared fetch failed.
     const material = await fetch()
     put(material)
     return deepCopyBranchKeyMaterial(material)
