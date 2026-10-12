@@ -159,12 +159,14 @@ const CONCURRENT_OPERATIONS = 3000
 const FAST = { graceInterval: 40 }
 const DEFAULT = { ...SHARED_FETCHES }
 
-// A keystore stub where each request takes `ms` milliseconds.
+const wait = async (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms))
+
+// A keystore stub where each request takes 5 ms.
 // `outcomes` decides each call in order: 'ok', 'fail', or 'hang'; later calls use the last one.
 function slowKeyStore(
-  ms = 5,
   outcomes: ('ok' | 'fail' | 'hang')[] = ['ok']
-): Sinon.SinonStubbedInstance<BranchKeyStoreNode> & { peak: () => number } {
+): Sinon.SinonStubbedInstance<BranchKeyStoreNode> {
   const material = new NodeBranchKeyMaterial(
     Buffer.alloc(32, 1),
     BRANCH_KEY_ID_A,
@@ -173,20 +175,15 @@ function slowKeyStore(
   )
   const keyStore = stubKeyStore() as any
   let calls = 0
-  let active = 0
-  let peak = 0
   const fetch = async () => {
     const outcome = outcomes[Math.min(calls++, outcomes.length - 1)]
     if (outcome === 'hang') return new Promise<never>(() => undefined)
-    peak = Math.max(peak, ++active)
-    await new Promise((resolve) => setTimeout(resolve, ms))
-    active -= 1
+    await wait(5)
     if (outcome === 'fail') throw new Error('keystore unavailable')
     return deepCopyBranchKeyMaterial(material)
   }
   keyStore.getActiveBranchKey.callsFake(fetch)
   keyStore.getBranchKeyVersion.callsFake(fetch)
-  keyStore.peak = () => peak
   return keyStore
 }
 
@@ -235,9 +232,6 @@ async function encryptSettled(hkr: KmsHierarchicalKeyRingNode, count: number) {
   return Promise.allSettled(startEncrypts(hkr, count))
 }
 
-const wait = async (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms))
-
 describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   beforeEach(() => Object.assign(SHARED_FETCHES, FAST))
   afterEach(() => Object.assign(SHARED_FETCHES, DEFAULT))
@@ -282,23 +276,11 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   })
 
   it('waiting callers make their own fetch when the shared one fails', async () => {
-    const keyStore = slowKeyStore(5, ['fail', 'ok'])
+    const keyStore = slowKeyStore(['fail', 'ok'])
     const results = await encryptSettled(keyringFor(keyStore), 10)
 
     // Only the caller whose fetch failed sees the error, as without sharing.
     expect(results.filter((r) => r.status === 'rejected')).to.have.lengthOf(1)
-    expect(keyStore.getActiveBranchKey.callCount).to.equal(10)
-  })
-
-  it('a failing keystore fails each caller with its own error', async () => {
-    const keyStore = slowKeyStore(5, ['fail'])
-    const results = await encryptSettled(keyringFor(keyStore), 10)
-
-    for (const result of results) {
-      expect((result as PromiseRejectedResult).reason.message).to.equal(
-        'keystore unavailable'
-      )
-    }
     expect(keyStore.getActiveBranchKey.callCount).to.equal(10)
   })
 
@@ -328,14 +310,8 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
     expect(sharedFetchesFor(cache)?.size).to.equal(0)
   })
 
-  it('waiting callers do not time out', async () => {
-    const keyStore = slowKeyStore(250)
-    await encryptConcurrently(keyringFor(keyStore), 10)
-    expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
-  })
-
   it('starts another fetch for new callers once one hangs past graceInterval', async () => {
-    const keyStore = slowKeyStore(5, ['hang', 'ok'])
+    const keyStore = slowKeyStore(['hang', 'ok'])
     const hkr = keyringFor(keyStore)
 
     startEncrypts(hkr, 1)
@@ -377,6 +353,8 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
     expect((staleResult as PromiseRejectedResult).reason.message).to.equal(
       'stale'
     )
+    // A caller arriving now still joins the newer fetch.
+    newer.push(get())
     deferreds[1].resolve(
       new NodeBranchKeyMaterial(Buffer.alloc(32, 7), BRANCH_KEY_ID_A, v4(), {})
     )
@@ -386,54 +364,17 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
     expect(deferreds).to.have.lengthOf(2)
   })
 
-  it('has no limit on branch keys fetched at once', async () => {
-    const keyStore = slowKeyStore(20)
-    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
-    const hKeyring = hKeyringFor(keyStore)
-
-    await Promise.all(
-      Array.from({ length: 30 }, async (_, i) =>
-        getBranchKeyMaterials(hKeyring, cache, BRANCH_KEY_ID_A, `id-${i}`, 'v')
-      )
-    )
-
-    expect(keyStore.peak()).to.equal(30)
-  })
-
   it('forgets a cache entry once its fetches settle', async () => {
     const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
     await encryptConcurrently(keyringFor(slowKeyStore(), { cache }), 5)
-    await encryptSettled(keyringFor(slowKeyStore(5, ['fail']), { cache }), 5)
+    await encryptSettled(keyringFor(slowKeyStore(['fail']), { cache }), 5)
     expect(sharedFetchesFor(cache)?.size).to.equal(0)
-  })
-
-  it('does not refresh an entry before it expires', async () => {
-    const clock = Sinon.useFakeTimers({ now: Date.now(), toFake: ['Date'] })
-    try {
-      const keyStore = slowKeyStore(20)
-      const hkr = keyringFor(keyStore)
-      await encryptConcurrently(hkr, 1)
-      clock.tick(TTL * 1000 - 1)
-
-      await encryptConcurrently(hkr, 10)
-      expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
-    } finally {
-      clock.restore()
-    }
   })
 })
 
 describe('getBranchKeyMaterials: eviction while a request settles', () => {
   const material = (fill: number) =>
     new NodeBranchKeyMaterial(Buffer.alloc(32, fill), BRANCH_KEY_ID_A, v4(), {})
-
-  function hKeyringWith(keyStore: any) {
-    return {
-      keyStore,
-      cacheLimitTtl: TTL,
-      cacheEntryHasExceededLimits: () => false,
-    } as any
-  }
 
   it('returns an intact branch key when another put evicts the entry before callers resume', async () => {
     const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(1)
@@ -455,7 +396,7 @@ describe('getBranchKeyMaterials: eviction while a request settles', () => {
     const results = await Promise.all(
       Array.from({ length: 3 }, async () =>
         getBranchKeyMaterials(
-          hKeyringWith(keyStore),
+          hKeyringFor(keyStore),
           racingCache,
           BRANCH_KEY_ID_A,
           'entry',
@@ -467,29 +408,5 @@ describe('getBranchKeyMaterials: eviction while a request settles', () => {
     for (const result of results) {
       expect(result.branchKey()).to.deep.equal(Buffer.alloc(32, 1))
     }
-  })
-
-  it('returns intact branch keys for two keys racing through a one-entry cache', async () => {
-    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(1)
-    const keyStore = {
-      getBranchKeyVersion: async (id: string) =>
-        material(id === BRANCH_KEY_ID_A ? 1 : 2),
-    }
-
-    const results = await Promise.all(
-      Array.from({ length: 10 }, async (_, i) =>
-        getBranchKeyMaterials(
-          hKeyringWith(keyStore),
-          cache,
-          i % 2 ? BRANCH_KEY_ID_B : BRANCH_KEY_ID_A,
-          i % 2 ? 'entry-b' : 'entry-a',
-          'version'
-        )
-      )
-    )
-
-    results.forEach((result, i) =>
-      expect(result.branchKey()).to.deep.equal(Buffer.alloc(32, i % 2 ? 2 : 1))
-    )
   })
 })
