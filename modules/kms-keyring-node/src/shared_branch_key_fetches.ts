@@ -67,7 +67,7 @@ export async function sharedFetch(
       current.members.push(resolve)
     )
     if ('material' in outcome) return outcome.material
-    // The shared fetch failed.
+    // The shared fetch failed, so make this caller's own.
     const material = await fetch()
     put(material)
     return deepCopyBranchKeyMaterial(material)
@@ -93,8 +93,8 @@ export async function sharedFetch(
     put(material)
     return deepCopyBranchKeyMaterial(material)
   } finally {
-    // However this fetch ends, waiting callers not given its material make their own.
-    // Each settle is a promise resolve, so only the first outcome counts.
+    // However the fetch ends, waiting callers not given its material make their own.
+    // A caller already given the material ignores this second settle.
     close()
     for (const settle of mine.members) settle({ failed: true })
   }

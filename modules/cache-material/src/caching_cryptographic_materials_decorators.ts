@@ -119,7 +119,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       this._cache.del(cacheKey)
     }
 
-    // If another caller's request has room for this message, use that one instead of making a new one.
+    // Join another caller's request if its data key has room for this message.
     const joinable = findBatch<EncryptionMaterial<S>>(
       this._cache,
       cacheKey,
@@ -128,8 +128,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
     if (joinable) {
       const outcome = await joinBatch(joinable, plaintextLength)
       if ('material' in outcome) return outcome.material
-      // The shared request failed, or its data key can't be shared.
-      // (do what?)
+      // The shared request failed or its data key can't be shared, so make this caller's own.
       return cacheEncryptionMaterial(
         this,
         cacheKey,
@@ -138,7 +137,6 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       )
     }
 
-    // Start a call to cache/upstream data source for this request (or, possibly, a batch of requests)
     const batch = startBatch<EncryptionMaterial<S>>(
       this._cache,
       cacheKey,
@@ -157,7 +155,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
         messagesEncrypted: batch.messages,
         bytesEncrypted: batch.bytes,
       }
-      // This is over the bytes/messages limit for cached material. Don't cache it
+      // Only this message can be over the limits: canJoin keeps joiners within them.
       if (this._cacheEntryHasExceededLimits(used)) return material
 
       this._cache.putEncryptionMaterial(
@@ -166,7 +164,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
         plaintextLength,
         this._maxAge
       )
-      // If any other requests are in this batch, pass them the encryption material
+      // Count each waiting caller's message against the cache entry.
       for (const member of batch.members) {
         this._cache.getEncryptionMaterial(cacheKey, member.plaintextLength)
       }
@@ -175,7 +173,8 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       }
       return cloneResponse(material)
     } finally {
-      // If there are any failures, signal failure to any waiting requests in the batch
+      // However the request ends, waiting callers not given its material make their own.
+      // A caller already given the material ignores this second settle.
       closeBatch(this._cache, cacheKey, batch)
       settleMembers(batch, { failed: true })
     }
@@ -255,7 +254,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       this._cache.del(cacheKey)
     }
 
-    // If another caller has a request in flight, wait for it instead of making a new one.
+    // Join another caller's request if one is in flight.
     const joinable = findBatch<DecryptionMaterial<S>>(
       this._cache,
       cacheKey,
@@ -264,7 +263,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
     if (joinable) {
       const outcome = await joinBatch(joinable, 0)
       if ('material' in outcome) return outcome.material
-      // The shared request failed.
+      // The shared request failed, so make this caller's own.
       return cloneResponse(await fetchAndCache())
     }
 
@@ -281,7 +280,8 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       }
       return cloneResponse(material)
     } finally {
-      // If there are any failures, signal failure to any waiting requests in the batch
+      // However the request ends, waiting callers not given its material make their own.
+      // A caller already given the material ignores this second settle.
       closeBatch(this._cache, cacheKey, batch)
       settleMembers(batch, { failed: true })
     }
@@ -291,16 +291,14 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
 // Tracks one request to the backing materials manager plus the callers waiting for its answer.
 interface Batch<M> {
   startedAt: number
-  // `messages` and `bytes` count towards messages/bytes encrypted limits for all requests in the batch.
+  // What the batch's data key will encrypt, counted as callers join so canJoin can enforce the limits before the key exists.
   messages: number
   bytes: number
   requester: CachingMaterialsManager<any>
   members: { plaintextLength: number; settle: (outcome: Outcome<M>) => void }[]
 }
 
-/* Result from a shared/batched request.
- * Either the actual material, or `failed` if the request failed or its material can't be shared.
- */
+// What a waiting caller gets: the material, or `failed` if the request failed or its material can't be shared.
 type Outcome<M> = { material: M } | { failed: true }
 
 function findBatch<M>(
@@ -339,6 +337,7 @@ function canJoin<S extends SupportedAlgorithmSuites>(
   )
 }
 
+// Don't await between a findBatch miss and this call, or concurrent callers each start their own batch.
 function startBatch<M>(
   cache: CryptographicMaterialsCache<any>,
   cacheKey: string,

@@ -309,7 +309,6 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
   })
 
   it('waiting callers do not time out', async () => {
-    // Waiting callers have no timeout, however long the shared request takes.
     const backing = slowBackingMaterialsManager({ ms: 150 })
     const cmm = cachingCMM(backing)
 

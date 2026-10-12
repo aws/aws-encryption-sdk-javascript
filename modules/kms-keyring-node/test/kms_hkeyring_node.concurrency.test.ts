@@ -329,7 +329,6 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   })
 
   it('waiting callers do not time out', async () => {
-    // Waiting callers have no timeout, however long the shared fetch takes.
     const keyStore = slowKeyStore(250)
     await encryptConcurrently(keyringFor(keyStore), 10)
     expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
