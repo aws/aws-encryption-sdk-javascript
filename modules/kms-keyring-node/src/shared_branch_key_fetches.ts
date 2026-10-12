@@ -24,8 +24,9 @@ interface SharedFetch {
 }
 type SharedOutcome = { material: NodeBranchKeyMaterial } | { error: unknown }
 
-/* Keyed by cache, so keyrings that share a cache also share fetches.
- * Each entry id holds a list, so a stale fetch that settles late removes only itself,
+/* Fetches in progress, by cache and then by cache entry id.
+ * Keyed by cache, so keyrings that share a cache also share fetches.
+ * Each entry id holds a list, so a stuck fetch that finishes late removes only itself,
  * not a newer fetch for the same entry.
  */
 const sharedFetches = new WeakMap<
@@ -44,9 +45,9 @@ function isRecent(fetch: SharedFetch) {
 }
 
 /* Fetch the branch key materials, or wait on another caller's fetch of the same entry.
- * Returns a copy only this caller holds.
- * If the shared fetch fails, its waiting callers retry once, together.
- * If the retry fails too, they throw its error.
+ * Returns a copy with its own buffer (see deepCopyBranchKeyMaterial).
+ * If the fetch this caller waited on fails, it tries once more, and a second failure throws.
+ * `retry` is false on that second try.
  */
 export async function sharedFetch(
   cmc: CryptographicMaterialsCache<NodeAlgorithmSuite>,
@@ -57,7 +58,8 @@ export async function sharedFetch(
 ): Promise<NodeBranchKeyMaterial> {
   const byId = sharedFetches.get(cmc) || new Map<string, SharedFetch[]>()
   sharedFetches.set(cmc, byId)
-  // A fetch that never settles is only removed here, once a newer one starts for the same entry.
+  // A fetch that hangs never removes itself.
+  // This drops it when the next fetch for this entry starts.
   const fetches = (byId.get(cacheEntryId) || []).filter(isRecent)
   const current = fetches[fetches.length - 1]
 
@@ -67,8 +69,8 @@ export async function sharedFetch(
     )
     if ('material' in outcome) return outcome.material
     if (!retry) throw outcome.error
-    // The failed fetch is gone by the time its waiting callers resume,
-    // so the first to resume starts one new fetch and the rest join it.
+    // The caller that made the failed fetch already removed it,
+    // so the first waiting caller to get here starts a new fetch and the others wait on that one.
     return sharedFetch(cmc, cacheEntryId, fetch, put, false)
   }
 
@@ -96,8 +98,8 @@ export async function sharedFetch(
     failure = { error }
     throw error
   } finally {
-    // Release the callers still waiting with the error, so they retry once, together.
-    // After a success they already have the material and ignore this.
+    // If the fetch failed, tell the callers still waiting so they retry once.
+    // After a success they already have the material, so this does nothing.
     close()
     for (const settle of mine.members) settle(failure)
   }

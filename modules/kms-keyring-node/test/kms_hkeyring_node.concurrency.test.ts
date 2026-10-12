@@ -237,7 +237,8 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   afterEach(() => Object.assign(SHARED_FETCHES, DEFAULT))
 
   it(`${CONCURRENT_OPERATIONS} concurrent onEncrypt misses share one keystore call`, async () => {
-    // On a slow runner, starting 3000 callers can outlast a short grace interval and start a second fetch.
+    // On a slow runner, starting 3000 callers can take longer than a short grace interval,
+    // which starts a second fetch.
     Object.assign(SHARED_FETCHES, { graceInterval: 60 * 1000 })
     const keyStore = slowKeyStore()
     await encryptConcurrently(keyringFor(keyStore), CONCURRENT_OPERATIONS)
@@ -245,7 +246,8 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   })
 
   it(`${CONCURRENT_OPERATIONS} concurrent onDecrypt misses share one keystore call`, async () => {
-    // On a slow runner, starting 3000 callers can outlast a short grace interval and start a second fetch.
+    // On a slow runner, starting 3000 callers can take longer than a short grace interval,
+    // which starts a second fetch.
     Object.assign(SHARED_FETCHES, { graceInterval: 60 * 1000 })
     const keyStore = slowKeyStore()
     const [encrypted] = await encryptConcurrently(keyringFor(keyStore), 1)

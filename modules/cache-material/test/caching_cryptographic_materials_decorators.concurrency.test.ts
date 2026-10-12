@@ -188,7 +188,7 @@ describe('caching materials manager: concurrent cache misses', () => {
     const strict = cachingCMM(backing, { cache, maxMessagesEncrypted: 2 })
     const loose = cachingCMM(backing, { cache, maxMessagesEncrypted: 10 })
 
-    // strict's request can serve 2 messages, so loose's 5 share a second request.
+    // strict's data key can encrypt only 2 messages, so loose's 5 callers share a second request.
     await Promise.all([
       ...startEncrypts(strict, times(2)),
       ...startEncrypts(loose, times(5)),

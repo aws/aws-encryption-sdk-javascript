@@ -14,6 +14,7 @@ export const SHARED_REQUESTS = {
   graceInterval: 1000, // milliseconds
 }
 
+// Requests in progress, by cache and then by cache key.
 // Keyed by cache, so caching materials managers that share a cache also share requests.
 export const batchesByCache = new WeakMap<
   CryptographicMaterialsCache<any>,
