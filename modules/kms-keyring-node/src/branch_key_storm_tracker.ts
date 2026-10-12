@@ -7,24 +7,16 @@ import {
 } from '@aws-crypto/material-management'
 import { CryptographicMaterialsCache } from '@aws-crypto/cache-material'
 
-/* Concurrent callers that miss the cache for the same branch key share one keystore fetch.
- *
- * By default, sharing never makes a caller fail or wait in a way it would not without sharing:
- * one caller fetches, the others wait for its answer, and if that fetch fails,
- * each waiting caller makes its own fetch. There is no limit on fetches in flight
- * and no timeout for waiting callers.
- *
- * The keyring's stormTracking option instead ports the MPL's StormTracker.dfy,
- * which the other ESDKs use by default for the hierarchical keyring.
- *
- * Internal: not exported from the package index. Tests change these values.
+/* Shares keystore fetches between concurrent cache misses for the same branch key.
+ * KmsHierarchicalKeyRingStormTracking documents both modes.
+ * Internal: not exported from the package index.
  */
+
+// Tests shorten these.
 export const SHARED_FETCHES = {
-  /* By default: after a fetch has run this long it may be stuck,
-   * so new callers stop waiting on it and make their own.
-   */
+  // Default mode: a fetch older than this may be stuck, so new callers make their own.
   graceInterval: 1000, // milliseconds
-  // With stormTracking: how often a waiting caller checks the cache again.
+  // stormTracking mode: how often a waiting caller checks the cache again.
   sleepMilli: 20,
 }
 
@@ -44,9 +36,7 @@ export const STORM_TRACKING_DEFAULTS = Object.freeze({
   inFlightTTL: 10,
 })
 
-/* ---------------------------------------------------------------------------
- * Default: share one fetch, and fall back to each caller's own fetch on failure.
- */
+// Default mode.
 
 interface SharedFetch {
   startedAt: number
@@ -56,8 +46,8 @@ type SharedOutcome = { material: NodeBranchKeyMaterial } | { failed: true }
 
 /* In-flight fetches by cache, then cache entry id.
  * Keyed by cache so keyrings that share a cache also share fetches.
- * Each fetch is its own object, so a slow fetch that settles late
- * only removes itself, never a newer fetch for the same entry.
+ * Each fetch is its own object, so a slow fetch that settles late removes only itself,
+ * never a newer fetch for the same entry.
  */
 const sharedFetches = new WeakMap<
   CryptographicMaterialsCache<NodeAlgorithmSuite>,
@@ -74,9 +64,9 @@ function isRecent(fetch: SharedFetch) {
   return Date.now() < fetch.startedAt + SHARED_FETCHES.graceInterval
 }
 
-/* Fetch the branch key materials, sharing a fetch another caller already started.
+/* Fetch the branch key materials, or wait for another caller's fetch of the same entry.
  * `fetch` asks the keystore; `put` caches the result.
- * Returns materials this caller owns: a copy no cache will ever zero.
+ * Returns a copy only this caller holds.
  */
 export async function sharedFetch(
   cmc: CryptographicMaterialsCache<NodeAlgorithmSuite>,
@@ -86,17 +76,17 @@ export async function sharedFetch(
 ): Promise<NodeBranchKeyMaterial> {
   const byId = sharedFetches.get(cmc) || new Map<string, SharedFetch[]>()
   sharedFetches.set(cmc, byId)
-  // Drop fetches nobody can join anymore. A fetch that never settles is forgotten here.
+  // Drop fetches nobody can join anymore.
+  // This is the only place a fetch that never settles gets forgotten.
   const fetches = (byId.get(cacheEntryId) || []).filter(isRecent)
   const current = fetches[fetches.length - 1]
 
   if (current) {
-    // Another caller is fetching this branch key. Wait for its answer.
     const outcome = await new Promise<SharedOutcome>((resolve) =>
       current.members.push(resolve)
     )
     if ('material' in outcome) return outcome.material
-    // That fetch failed. Make this caller's own fetch, as it would without sharing.
+    // The shared fetch failed: make this caller's own fetch, as it would without sharing.
     const material = await fetch()
     put(material)
     return deepCopyBranchKeyMaterial(material)
@@ -122,9 +112,8 @@ export async function sharedFetch(
     throw error
   }
   close()
-  /* Give each waiting caller its own copy before caching the material,
-   * because the cache zeroes the material's buffer when it evicts it.
-   */
+  // Copy before put: once cached, an eviction can zero the material's buffer.
+
   for (const settle of mine.members) {
     settle({ material: deepCopyBranchKeyMaterial(material) })
   }
@@ -132,28 +121,24 @@ export async function sharedFetch(
   return deepCopyBranchKeyMaterial(material)
 }
 
-/* ---------------------------------------------------------------------------
- * With stormTracking: the MPL's StormTracker.
- */
+// stormTracking mode: a port of the MPL's StormTracker.dfy.
 
 export type CacheState = 'use' | 'fetch' | 'wait'
 // Identifies one fetch, so a late fetch can't be mistaken for a newer one.
 export type FetchToken = symbol
 
 /* Tells each caller to use the cached entry, fetch it from the keystore,
- * or wait and check the cache again because another caller is fetching it.
+ * or wait and check the cache again.
  */
 export class StormTracker {
-  // Cache entries being fetched: when each fetch started, and a token for that fetch.
   private readonly inFlight = new Map<
     string,
     { startedAt: number; token: FetchToken }
   >()
   private lastPrune = 0
 
-  /* For a cached entry that hasn't expired.
-   * Use it, unless it's within gracePeriod of expiring and nobody is refreshing it yet.
-   */
+  // For an unexpired entry: use it, unless it's within gracePeriod of expiring and nobody is refreshing it.
+
   checkEntry(
     id: string,
     expiresAt: number,
@@ -169,10 +154,9 @@ export class StormTracker {
     return this.start(id, now)
   }
 
-  /* For an entry that's missing or expired.
-   * Fetch it, unless another caller started fetching it within the last graceInterval.
-   * Like the MPL, a failed fetch stays in flight, so waiting callers fetch again
-   * once it is graceInterval old.
+  /* For a missing or expired entry: fetch it, unless another caller started fetching it within graceInterval.
+   * A failed fetch stays in flight, as in the MPL,
+   * so the next fetch waits until the failed one is graceInterval old.
    */
   checkNewEntry(
     id: string,
@@ -188,8 +172,8 @@ export class StormTracker {
   }
 
   /* Call when a fetch succeeds.
-   * Only the newest fetch for an entry clears it, so a slow fetch that
-   * finishes late can't make callers think a newer fetch is done.
+   * Only the newest fetch for an entry clears it,
+   * so a slow fetch that finishes late can't end a newer one's wait.
    */
   fetched(id: string, token: FetchToken) {
     if (this.inFlight.get(id)?.token === token) this.inFlight.delete(id)
@@ -211,7 +195,7 @@ export class StormTracker {
   }
 
   /* Forget fetches older than inFlightTTL, so stuck or failed fetches stop counting toward fanOut.
-   * Like the MPL, only bother when fanOut is reached, and at most once a second.
+   * As in the MPL, this runs only when fanOut is reached, at most once a second.
    */
   private pruneInFlight(now: number, settings: StormTrackingSettings) {
     if (this.inFlight.size < settings.fanOut) return
@@ -244,7 +228,11 @@ export async function sleep(ms: number) {
   await new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-/* A copy of the materials with its own buffer, which no cache will ever zero. */
+/* A copy with its own buffer.
+ * The cache zeroes a material's buffer when it evicts it,
+ * and callers derive keys from the branch key after getBranchKeyMaterials returns,
+ * so handing out the cached buffer lets an eviction zero a key mid-use (#1691).
+ */
 export function deepCopyBranchKeyMaterial(
   material: NodeBranchKeyMaterial
 ): NodeBranchKeyMaterial {

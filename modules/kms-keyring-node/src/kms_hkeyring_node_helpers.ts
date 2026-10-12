@@ -202,10 +202,8 @@ export async function getBranchKeyMaterials(
 ): Promise<NodeBranchKeyMaterial> {
   const { keyStore, cacheLimitTtl } = hKeyring
 
-  /* A valid cached entry, as a copy the cache can never touch. The CMC zeroes a material's
-   * buffer in place on eviction; callers read the branch key AFTER this await,
-   * so a concurrent eviction (overwrite, TTL, or tail) could otherwise zero the
-   * buffer mid-derivation. */
+  // The cached entry, or undefined if it's missing or past this keyring's TTL.
+  // Callers must copy its material before returning it; see deepCopyBranchKeyMaterial.
   const lookUp = () => {
     //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
     //# The hierarchical keyring MUST attempt to find [branch key materials](../structures.md#branch-key-materials)
@@ -273,7 +271,6 @@ export async function getBranchKeyMaterials(
       //# If a cache entry is found and the entry's TTL has not expired, the hierarchical keyring MUST use those branch key materials for key wrapping.
       return deepCopyBranchKeyMaterial(cacheEntry.response)
     }
-    // Concurrent callers for the same branch key share one keystore fetch.
     return sharedFetch(cmc, cacheEntryId, fetch, put)
   }
 
@@ -299,7 +296,6 @@ export async function getBranchKeyMaterials(
       token = decision.token
       continue
     }
-    // Someone else is fetching it. Check the cache again shortly.
     needs(Date.now() <= waitUntil, 'Storm cache inFlightTTL exceeded')
     await sleep(SHARED_FETCHES.sleepMilli)
   }
@@ -308,10 +304,9 @@ export async function getBranchKeyMaterials(
   try {
     branchKeyMaterials = await fetch()
   } catch (error) {
-    /* If this was an early refresh of an entry in its grace period,
-     * the cached entry is still valid, so use it instead of failing.
-     * This differs from the MPL, which fails the call.
-     */
+    // A failed early refresh leaves a valid cached entry, so use it.
+    // The MPL fails the call instead.
+
     const cacheEntry = lookUp()
     if (cacheEntry) return deepCopyBranchKeyMaterial(cacheEntry.response)
     throw error

@@ -318,7 +318,7 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
   })
 
   it('by default, waiting callers do not time out', async () => {
-    // A request slower than the storm tracking inFlightTTL still serves every waiting caller.
+    // Slower than FAST_STORM.inFlightTTL; every waiting caller still gets the material.
     const backing = slowBackingMaterialsManager({ ms: 150 })
     const cmm = cachingCMM(backing)
 

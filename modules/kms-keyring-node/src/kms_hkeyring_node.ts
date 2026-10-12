@@ -79,42 +79,51 @@ export interface KmsHierarchicalKeyRingNodeInput {
   //# - MAY provide a [Partition ID](#partition-id)
   partitionId?: string
   utf8Sorting?: boolean
-  /* Opt in to behaving like the MPL's StormTracking cache.
-   * See KmsHierarchicalKeyRingStormTracking.
-   */
+  /** Opt in to the MPL's StormTracking behavior; see {@link KmsHierarchicalKeyRingStormTracking}. */
   stormTracking?: KmsHierarchicalKeyRingStormTracking
 }
 
-/* Opt-in settings that make the keyring's branch key cache behave like
- * the MPL's StormTracking cache, which the other ESDKs use by default.
+/**
+ * Settings that make the keyring's branch key cache behave like the MPL's StormTracking cache,
+ * which the other ESDKs use by default.
  * Times are in seconds, like cacheLimitTtl.
  *
- * Without stormTracking, concurrent cache misses for the same branch key
- * still share one keystore fetch, but a caller never fails or waits in a way
- * it would not without sharing: there is no limit on fetches in flight,
- * no timeout for waiting callers, cached branch keys are never refreshed early,
- * and if the shared fetch fails, each waiting caller makes its own fetch.
- * This differs from the MPL so that existing customers see no change in behavior.
- * A future major version may align these defaults with the MPL.
+ * Without stormTracking, concurrent misses for the same branch key still share one keystore fetch,
+ * but sharing adds no new failures or waits:
+ * - if the shared fetch fails, each waiting caller makes its own fetch
+ * - waiting callers don't time out
+ * - no limit on fetches in flight
+ * - no early refresh of cached branch keys
+ *
+ * These defaults differ from the MPL so existing customers see no change.
+ * A future major version may align them.
  *
  * With stormTracking, unset settings take the MPL's defaults,
- * and the settings must satisfy the MPL's rules:
- * graceInterval <= inFlightTTL <= gracePeriod < cacheLimitTtl.
- * One difference from the MPL: if an early refresh fails,
- * the caller uses the still-valid cached branch key instead of failing.
+ * and the settings must satisfy graceInterval <= inFlightTTL <= gracePeriod < cacheLimitTtl, as in the MPL.
+ * Unlike the MPL, a failed early refresh uses the still-valid cached branch key instead of failing the call.
  */
 export interface KmsHierarchicalKeyRingStormTracking {
-  /* Before a cached branch key expires, for this long one caller at a time refreshes it
-   * from the keystore while other callers keep using the cached key. Default 10.
+  /**
+   * How long before a cached branch key expires one caller refreshes it,
+   * while other callers keep using the cached key.
+   * Default 10.
    */
   gracePeriod?: number
-  /* After a fetch has run this long, the next caller fetches again. Default 1. */
+  /**
+   * After a fetch has run this long, the next caller fetches again.
+   * Default 1.
+   */
   graceInterval?: number
-  /* At most this many branch keys are fetched at once, across every keyring that
-   * shares the cache. Callers for other branch keys wait. Default 20.
+  /**
+   * At most this many branch keys are fetched at once, across every keyring that shares the cache.
+   * Callers for other branch keys wait.
+   * Default 20.
    */
   fanOut?: number
-  /* A caller that has waited this long fails. Default 10. */
+  /**
+   * A caller that has waited this long fails.
+   * Default 10.
+   */
   inFlightTTL?: number
 }
 
@@ -123,7 +132,7 @@ export interface IKmsHierarchicalKeyRingNode extends KeyringNode {
   branchKeyIdSupplier?: Readonly<BranchKeyIdSupplier>
   keyStore: Readonly<BranchKeyStoreNode>
   cacheLimitTtl: number
-  // Milliseconds. Set only when the stormTracking input is given.
+  // Milliseconds; set only when the stormTracking input is given.
   _stormTracking?: Readonly<StormTrackingSettings>
   _onEncrypt(material: NodeEncryptionMaterial): Promise<NodeEncryptionMaterial>
   _onDecrypt(

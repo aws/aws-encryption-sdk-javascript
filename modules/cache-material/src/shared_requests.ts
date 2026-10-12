@@ -5,24 +5,21 @@ import { needs } from '@aws-crypto/material-management'
 import { CryptographicMaterialsCache } from './cryptographic_materials_cache'
 import type { CachingMaterialsManagerStormTracking } from './caching_cryptographic_materials_decorators'
 
-/* If many encrypt or decrypt calls use the cache at the same time,
- * cache misses for the same entry share one request to the backing materials manager.
- * One caller asks the backing materials manager, and the rest wait for its answer.
- *
- * Internal: not exported from the package index. Tests change these values.
+/* Shares backing requests between concurrent cache misses for the same entry.
+ * CachingMaterialsManagerStormTracking documents both modes.
+ * Internal: not exported from the package index.
  */
+
+// Tests shorten these.
 export const SHARED_REQUESTS = {
-  /* Without storm tracking: after a request has run this long, it may be stuck,
-   * so new callers stop waiting on it and make their own.
-   */
+  // Default mode: a request older than this may be stuck, so new callers make their own.
   graceInterval: 1000, // milliseconds == 1 second
-  // With storm tracking: how often a caller waiting for fanOut to free up checks again.
+  // stormTracking mode: how often a caller waiting for fanOut checks again.
   sleepMilli: 20,
 }
 
-/* How a caching materials manager shares requests. */
 export interface SharingSettings {
-  // false: the defaults described on CachingMaterialsManagerStormTracking.
+  // false: default mode.
   stormTracking: boolean
   graceInterval: number
   fanOut: number
@@ -83,7 +80,7 @@ function isPositive(value: unknown): value is number {
 
 /* In-flight batches (one request plus its waiting callers) by cache, then cache key.
  * Keyed by cache so caching materials managers that share a cache also share requests.
- * A cache key is removed once it has no batches, so this does not grow with every key ever used.
+ * closeBatch removes a cache key once it has no batches, so the map doesn't grow with every key ever used.
  */
 export const batchesByCache = new WeakMap<
   CryptographicMaterialsCache<any>,

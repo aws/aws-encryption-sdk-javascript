@@ -315,7 +315,7 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   })
 
   it('waiting callers do not time out', async () => {
-    // Slower than the storm tracking inFlightTTL used below; every caller still succeeds.
+    // Slower than FAST_STORM.inFlightTTL; every caller still succeeds.
     const keyStore = slowKeyStore(250)
     await encryptConcurrently(keyringFor(keyStore), 10)
     expect(keyStore.getActiveBranchKey.callCount).to.equal(1)

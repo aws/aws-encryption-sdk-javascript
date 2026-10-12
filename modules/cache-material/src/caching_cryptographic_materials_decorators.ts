@@ -136,7 +136,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
         (b) => canJoin(this, settings, b, plaintextLength)
       )
       if (!batch) {
-        /* Check synchronously, so no other caller can start a request for this key in between. */
+        // No await before startBatch, or concurrent callers all find no batch and each start one.
         if (!fanOutReached(this._cache, settings, waitUntil)) break
         await sleep(SHARED_REQUESTS.sleepMilli)
         continue
@@ -157,11 +157,10 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
         )
       }
 
-      // With storm tracking, try again once the failed request is graceInterval old, like the MPL.
+      // stormTracking mode: as in the MPL, try again once the failed request is graceInterval old.
       await sleep(batch.startedAt + settings.graceInterval - Date.now())
     }
 
-    // Callers that miss while this request runs can wait for it.
     const batch = startBatch<EncryptionMaterial<S>>(
       this._cache,
       cacheKey,
@@ -303,7 +302,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
         (b) => isRecent(settings, b)
       )
       if (!batch) {
-        /* Check synchronously, so no other caller can start a request for this key in between. */
+        // No await before startBatch, or concurrent callers all find no batch and each start one.
         if (!fanOutReached(this._cache, settings, waitUntil)) break
         await sleep(SHARED_REQUESTS.sleepMilli)
         continue
@@ -311,14 +310,13 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       const outcome = await joinBatch(batch, 0, waitUntil)
       if ('material' in outcome) return outcome.material
 
-      // The shared request failed. Without storm tracking, make this caller's own request.
+      // The shared request failed: in default mode, make this caller's own request.
       if (!settings.stormTracking) return cloneResponse(await fetchAndCache())
 
-      // With storm tracking, try again once the failed request is graceInterval old, like the MPL.
+      // stormTracking mode: as in the MPL, try again once the failed request is graceInterval old.
       await sleep(batch.startedAt + settings.graceInterval - Date.now())
     }
 
-    // Callers that miss while this request runs can wait for it.
     const batch = startBatch<DecryptionMaterial<S>>(
       this._cache,
       cacheKey,
@@ -344,9 +342,7 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
 
 const IN_FLIGHT_TTL_EXCEEDED = 'Caching materials manager inFlightTTL exceeded'
 
-/* The caching materials manager's sharing settings.
- * Without stormTracking: no fanOut limit and no timeout for waiting callers.
- */
+// Default mode has no fanOut limit and no timeout for waiting callers.
 function sharingSettings(
   cmm: CachingMaterialsManager<any>
 ): Readonly<SharingSettings> {
@@ -382,9 +378,7 @@ interface Member<M> {
  */
 type Outcome<M> = { material: M } | { uncached: true } | { error: unknown }
 
-/* Look batches up by cache and key every time instead of holding on to a list,
- * because closeBatch deletes a key's list once it is empty.
- */
+// Look up the list on every call: closeBatch deletes a key's list once it is empty.
 function findBatch<M>(
   cache: CryptographicMaterialsCache<any>,
   cacheKey: string,
@@ -422,8 +416,8 @@ function canJoin<S extends SupportedAlgorithmSuites>(
   )
 }
 
-/* With storm tracking, whether fanOut requests are already in flight on this cache.
- * A caller that has waited past inFlightTTL for one to finish fails.
+/* stormTracking mode: whether fanOut requests are already in flight on this cache.
+ * Throws once the caller has waited past inFlightTTL.
  */
 function fanOutReached(
   cache: CryptographicMaterialsCache<any>,
@@ -435,8 +429,8 @@ function fanOutReached(
   return true
 }
 
-/* Requests in flight on this cache, for any cache key.
- * Like the MPL, a request older than inFlightTTL no longer counts.
+/* Requests in flight on this cache, across all cache keys.
+ * As in the MPL, a request older than inFlightTTL stops counting.
  */
 function inFlightCount(
   cache: CryptographicMaterialsCache<any>,
@@ -464,9 +458,8 @@ function startBatch<M>(
     byKey = new Map()
     batchesByCache.set(cache, byKey)
   }
-  /* Drop batches nobody can join anymore.
-   * A request that never settles never calls closeBatch, so this is what forgets it.
-   */
+  // Drop batches nobody can join anymore.
+  // This is the only place a request that never settles gets forgotten.
   const batches = (byKey.get(cacheKey) || []).filter((b) =>
     isRecent(settings, b)
   )
@@ -482,7 +475,7 @@ function startBatch<M>(
   return batch
 }
 
-/* Remove the batch, and the cache key's list once it is empty, so the map does not grow forever. */
+// Also deletes the cache key's list once it is empty, so the map doesn't grow with every key ever used.
 function closeBatch<M>(
   cache: CryptographicMaterialsCache<any>,
   cacheKey: string,
@@ -497,7 +490,7 @@ function closeBatch<M>(
 }
 
 /* Wait for the shared request's answer, counting this caller's message against its data key.
- * With storm tracking, fails once waitUntil passes.
+ * In stormTracking mode, fails once waitUntil passes.
  */
 async function joinBatch<M>(
   batch: Batch<M>,
@@ -512,9 +505,7 @@ async function joinBatch<M>(
     batch.members.push(member)
     if (waitUntil === Infinity) return
     timer = setTimeout(() => {
-      /* A caller that times out never gets the data key,
-       * so the request no longer clones it for this caller or counts its message.
-       */
+      // A caller that times out never gets the data key, so stop cloning it for this caller or counting its message.
       const index = batch.members.indexOf(member)
       if (index !== -1) batch.members.splice(index, 1)
       batch.messages -= 1
@@ -575,37 +566,42 @@ export interface CachingMaterialsManagerInput<
     maxBytesEncrypted?: number
     maxMessagesEncrypted?: number
     maxAge: number
-    /* Opt in to behaving like the MPL's StormTracking cache.
-     * See CachingMaterialsManagerStormTracking.
-     */
+    /** Opt in to the MPL's StormTracking behavior; see {@link CachingMaterialsManagerStormTracking}. */
     stormTracking?: CachingMaterialsManagerStormTracking
   }> {}
 
-/* Opt-in settings that make the caching materials manager behave like
- * the MPL's StormTracking cache. Times are in milliseconds, like maxAge.
+/**
+ * Settings that make the caching materials manager share requests like the MPL's StormTracking cache.
+ * Times are in milliseconds, like maxAge.
  *
- * Without stormTracking, concurrent cache misses still share one request,
- * but a caller never fails or waits in a way it would not without sharing:
- * there is no limit on requests in flight, no timeout for waiting callers,
- * and if the shared request fails, each waiting caller makes its own request.
- * This differs from the MPL so that existing customers see no change in behavior.
- * A future major version may align these defaults with the MPL.
+ * Without stormTracking, concurrent misses for the same cache entry still share one backing request,
+ * but sharing adds no new failures or waits:
+ * - if the shared request fails, each waiting caller makes its own request
+ * - waiting callers don't time out
+ * - no limit on requests in flight
+ *
+ * These defaults differ from the MPL so existing customers see no change.
+ * A future major version may align them.
  *
  * With stormTracking, unset settings take the MPL's defaults.
  */
 export interface CachingMaterialsManagerStormTracking {
-  /* After a request has run this long, new callers stop waiting on it and make their own.
-   * If a request fails, waiting callers try again once it is this old.
-   * Default 1000 (1 second).
+  /**
+   * After a request has run this long, new callers stop waiting on it and make their own.
+   * After a failed request, waiting callers try again once it is this old.
+   * Default 1000.
    */
   graceInterval?: number
-  /* At most this many requests to the backing materials manager are in flight at once,
-   * across every entry in the cache. Other callers wait.
+  /**
+   * At most this many backing requests are in flight at once, across every entry in the cache.
+   * Other callers wait.
    * Default 20.
    */
   fanOut?: number
-  /* A caller that has waited this long fails.
-   * Default 10000 (10 seconds). Must be at least graceInterval.
+  /**
+   * A caller that has waited this long fails.
+   * Must be at least graceInterval.
+   * Default 10000.
    */
   inFlightTTL?: number
 }
