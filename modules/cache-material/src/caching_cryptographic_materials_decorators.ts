@@ -188,7 +188,10 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
         release = { error }
         throw error
       } finally {
-        // After a success, every waiting caller already has the material and ignores this.
+        // Release the callers still waiting:
+        // on an error they retry once, together,
+        // and on unshareable material they each make their own request.
+        // After a success they already have the material and ignore this.
         closeBatch(this._cache, cacheKey, batch)
         settleMembers(batch, release)
       }
@@ -303,7 +306,8 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
         release = { error }
         throw error
       } finally {
-        // After a success, every waiting caller already has the material and ignores this.
+        // Release the callers still waiting with the error, so they retry once, together.
+        // After a success they already have the material and ignore this.
         closeBatch(this._cache, cacheKey, batch)
         settleMembers(batch, release)
       }

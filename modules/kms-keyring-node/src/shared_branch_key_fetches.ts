@@ -96,7 +96,8 @@ export async function sharedFetch(
     failure = { error }
     throw error
   } finally {
-    // After a success, every waiting caller already has the material and ignores this.
+    // Release the callers still waiting with the error, so they retry once, together.
+    // After a success they already have the material and ignore this.
     close()
     for (const settle of mine.members) settle(failure)
   }
