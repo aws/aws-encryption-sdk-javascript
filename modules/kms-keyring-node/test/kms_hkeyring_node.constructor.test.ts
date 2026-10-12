@@ -155,64 +155,84 @@ describe('KmsHierarchicalKeyRingNode: constructor', () => {
     })
   })
 
+  describe('stormTracking', () => {
+    const build = (stormTracking: any, ttl = 60) =>
+      new KmsHierarchicalKeyRingNode({
+        branchKeyId,
+        keyStore,
+        cacheLimitTtl: ttl,
+        stormTracking,
+      })._stormTracking
+
+    it('is off unless given', () => {
+      expect(build(undefined)).to.equal(undefined)
+    })
+
+    it('takes the MPL defaults for unset settings, stored in milliseconds', () => {
+      expect(build({})).to.deep.equal({
+        gracePeriod: 10000,
+        graceInterval: 1000,
+        fanOut: 20,
+        inFlightTTL: 10000,
+      })
+      expect(
+        build({ gracePeriod: 30, graceInterval: 2, fanOut: 5, inFlightTTL: 20 })
+      ).to.deep.equal({
+        gracePeriod: 30000,
+        graceInterval: 2000,
+        fanOut: 5,
+        inFlightTTL: 20000,
+      })
+    })
+
+    it('Precondition: stormTracking must be an object', () => {
+      for (const value of [null, true, 1, 'x']) {
+        expect(() => build(value)).to.throw('stormTracking must be an object')
+      }
+    })
+
+    it('Precondition: stormTracking times must be positive numbers', () => {
+      for (const key of ['gracePeriod', 'graceInterval', 'inFlightTTL']) {
+        for (const value of [0, -1, NaN, Infinity, '1', null]) {
+          expect(() => build({ [key]: value })).to.throw(
+            'stormTracking gracePeriod, graceInterval, and inFlightTTL must be positive numbers'
+          )
+        }
+      }
+    })
+
+    it('Precondition: stormTracking fanOut must be a positive integer', () => {
+      for (const fanOut of [0, -1, 1.5, NaN, Infinity, '1', null]) {
+        expect(() => build({ fanOut })).to.throw(
+          'stormTracking fanOut must be a positive integer'
+        )
+      }
+    })
+
+    it('Precondition: stormTracking settings must be consistent, as in the MPL', () => {
+      const message =
+        'stormTracking graceInterval must not exceed inFlightTTL, and inFlightTTL must not exceed gracePeriod'
+      expect(() => build({ graceInterval: 11 })).to.throw(message)
+      expect(() => build({ gracePeriod: 5 })).to.throw(message)
+      expect(
+        build({ gracePeriod: 5, graceInterval: 5, inFlightTTL: 5 })
+      ).to.not.equal(undefined)
+    })
+
+    it('Precondition: stormTracking gracePeriod must be less than the cache limit TTL', () => {
+      const message =
+        'stormTracking gracePeriod must be less than the cache limit TTL'
+      expect(() => build({}, 10)).to.throw(message)
+      expect(() => build({}, 0)).to.throw(message)
+      expect(build({}, 11)).to.not.equal(undefined)
+    })
+  })
+
   //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#cache-limit-ttl
   //= type=test
   //# The maximum amount of time in seconds that an entry within the cache may be used before it MUST be evicted.
   //# The client MUST set a time-to-live (TTL) for [branch key materials](../structures.md#branch-key-materials) in the underlying cache.
   //# This value MUST be greater than zero.
-  it('The grace period defaults to 0 and is stored in milliseconds', () => {
-    expect(
-      new KmsHierarchicalKeyRingNode({ branchKeyId, keyStore, cacheLimitTtl })
-        .gracePeriod
-    ).to.equal(0)
-    expect(
-      new KmsHierarchicalKeyRingNode({
-        branchKeyId,
-        keyStore,
-        cacheLimitTtl: 60,
-        gracePeriod: 10,
-      }).gracePeriod
-    ).to.equal(10 * 1000)
-    expect(
-      new KmsHierarchicalKeyRingNode({
-        branchKeyId,
-        keyStore,
-        cacheLimitTtl: 0,
-        gracePeriod: 0,
-      }).gracePeriod
-    ).to.equal(0)
-  })
-
-  it('Precondition: The grace period must be a number', () => {
-    for (const gracePeriod of ['1', true, {}, [], null]) {
-      expect(
-        () =>
-          new KmsHierarchicalKeyRingNode({
-            branchKeyId,
-            keyStore,
-            cacheLimitTtl,
-            gracePeriod: gracePeriod as any,
-          })
-      ).to.throw('The grace period must be a number')
-    }
-  })
-
-  it('Precondition: The grace period must be non-negative and less than the cache limit TTL', () => {
-    for (const gracePeriod of [-1, 60, 61, NaN, Infinity]) {
-      expect(
-        () =>
-          new KmsHierarchicalKeyRingNode({
-            branchKeyId,
-            keyStore,
-            cacheLimitTtl: 60,
-            gracePeriod,
-          })
-      ).to.throw(
-        'The grace period must be non-negative and less than the cache limit TTL'
-      )
-    }
-  })
-
   it('Precondition: Cache limit TTL must be non-negative and less than or equal to (Number.MAX_SAFE_INTEGER / 1000) seconds', () => {
     expect(
       new KmsHierarchicalKeyRingNode({
