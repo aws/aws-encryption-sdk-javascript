@@ -6,8 +6,10 @@
 import { expect } from 'chai'
 import {
   cacheEntryHasExceededLimits,
+  decorateProperties,
   getEncryptionMaterials,
   decryptMaterials,
+  CachingMaterialsManagerStormTracking,
 } from '../src/caching_cryptographic_materials_decorators'
 import { SHARED_REQUESTS, batchesByCache } from '../src/shared_requests'
 import * as cacheMaterial from '../src/index'
@@ -50,14 +52,19 @@ const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(
 )
 
 // Shortened timings, so the tests run in milliseconds.
-const FAST = { graceInterval: 20, inFlightTTL: 100 }
+const FAST = { graceInterval: 20, sleepMilli: 2 }
 const DEFAULT = { ...SHARED_REQUESTS }
+const FAST_STORM: CachingMaterialsManagerStormTracking = {
+  graceInterval: 20,
+  inFlightTTL: 100,
+}
 
-// A backing materials manager that takes 5 ms per request and returns a new data key each time.
+// A backing materials manager that takes `ms` milliseconds per request and returns a new data key each time.
 // `outcomes` decides each call in order: 'ok', 'fail', or 'hang'; later calls use the last one.
 function slowBackingMaterialsManager({
   outcomes = ['ok'] as ('ok' | 'fail' | 'hang')[],
   materialSuite = suite,
+  ms = 5,
 } = {}) {
   const calls = { encrypt: 0, decrypt: 0, active: 0, peak: 0 }
   let n = 0
@@ -66,7 +73,7 @@ function slowBackingMaterialsManager({
     if (outcome === 'hang') await new Promise<never>(() => undefined)
     calls.active += 1
     calls.peak = Math.max(calls.peak, calls.active)
-    await new Promise((resolve) => setTimeout(resolve, 5))
+    await new Promise((resolve) => setTimeout(resolve, ms))
     calls.active -= 1
     if (outcome === 'fail')
       throw new Error('backing materials manager unavailable')
@@ -102,20 +109,28 @@ function cachingCMM(
   {
     maxMessagesEncrypted = 1000,
     maxBytesEncrypted = 1000,
-    cache = getLocalCryptographicMaterialsCache(100),
+    cache = getLocalCryptographicMaterialsCache(100) as any,
+    stormTracking = undefined as
+      | CachingMaterialsManagerStormTracking
+      | undefined,
   } = {}
 ) {
-  return {
-    _partition: 'partition',
-    _maxAge: 1000 * 60,
-    _maxBytesEncrypted: maxBytesEncrypted,
-    _maxMessagesEncrypted: maxMessagesEncrypted,
-    _cache: cache,
-    _backingMaterialsManager: backing,
+  const cmm = {
     _cacheEntryHasExceededLimits: cacheEntryHasExceededLimits(),
     getEncryptionMaterials: getEncryptionMaterials(cacheKeyHelpers),
     decryptMaterials: decryptMaterials(cacheKeyHelpers),
   } as any
+  decorateProperties(cmm, {
+    cache,
+    backingMaterials: backing,
+    backingMaterialsManager: backing,
+    partition: 'partition',
+    maxAge: 1000 * 60,
+    maxBytesEncrypted,
+    maxMessagesEncrypted,
+    stormTracking,
+  })
+  return cmm
 }
 
 const encryptRequest = { suite, encryptionContext: {}, plaintextLength: 1 }
@@ -263,43 +278,53 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
     expect(backing.calls.encrypt).to.equal(1)
   })
 
-  it('waiting callers retry a failed request once', async () => {
+  it('by default, waiting callers make their own request when the shared one fails', async () => {
     const backing = slowBackingMaterialsManager({ outcomes: ['fail', 'ok'] })
     const cmm = cachingCMM(backing)
 
     const results = await Promise.allSettled(startEncrypts(cmm, times(10)))
 
+    // Only the caller whose request failed sees the error, as without sharing.
     expect(results.filter((r) => r.status === 'rejected')).to.have.lengthOf(1)
-    expect(backing.calls.encrypt).to.equal(2)
+    expect(backing.calls.encrypt).to.equal(10)
   })
 
-  it('a request that keeps failing reaches every caller after one retry', async () => {
+  it('by default, a failing backing materials manager fails each caller with its own error', async () => {
     const backing = slowBackingMaterialsManager({ outcomes: ['fail'] })
     const cmm = cachingCMM(backing)
 
     const results = await Promise.allSettled(startEncrypts(cmm, times(10)))
 
     for (const result of results) {
-      expect(result.status).to.equal('rejected')
       expect((result as PromiseRejectedResult).reason.message).to.equal(
         'backing materials manager unavailable'
       )
     }
-    expect(backing.calls.encrypt).to.equal(2)
+    expect(backing.calls.encrypt).to.equal(10)
   })
 
-  it('fails waiting callers after inFlightTTL when the request hangs', async () => {
-    const backing = slowBackingMaterialsManager({ outcomes: ['hang'] })
+  it('by default, decrypts make their own request when the shared one fails', async () => {
+    const backing = slowBackingMaterialsManager({ outcomes: ['fail', 'ok'] })
     const cmm = cachingCMM(backing)
 
-    const [, ...waiters] = startEncrypts(cmm, times(5))
-    const results = await Promise.allSettled(waiters)
-
-    for (const result of results) {
-      expect((result as PromiseRejectedResult).reason.message).to.equal(
-        'Caching materials manager inFlightTTL exceeded'
+    const results = await Promise.allSettled(
+      Array.from({ length: 5 }, async () =>
+        cmm.decryptMaterials(decryptRequest)
       )
-    }
+    )
+
+    expect(results.filter((r) => r.status === 'rejected')).to.have.lengthOf(1)
+    expect(backing.calls.decrypt).to.equal(5)
+  })
+
+  it('by default, waiting callers do not time out', async () => {
+    // A request slower than the storm tracking inFlightTTL still serves every waiting caller.
+    const backing = slowBackingMaterialsManager({ ms: 150 })
+    const cmm = cachingCMM(backing)
+
+    const materials = await encryptConcurrently(cmm, times(5))
+
+    expect(materials).to.have.lengthOf(5)
     expect(backing.calls.encrypt).to.equal(1)
   })
 
@@ -436,5 +461,106 @@ describe('caching materials manager: concurrent cache misses (#1665)', () => {
         )
       })
     }
+  })
+})
+
+describe('caching materials manager: concurrent cache misses with stormTracking', () => {
+  beforeEach(() => Object.assign(SHARED_REQUESTS, FAST))
+  afterEach(() => Object.assign(SHARED_REQUESTS, DEFAULT))
+
+  it('waiting callers try again after a failed request, and share the retry', async () => {
+    const backing = slowBackingMaterialsManager({ outcomes: ['fail', 'ok'] })
+    const cmm = cachingCMM(backing, { stormTracking: FAST_STORM })
+
+    const results = await Promise.allSettled(startEncrypts(cmm, times(10)))
+
+    expect(results.filter((r) => r.status === 'rejected')).to.have.lengthOf(1)
+    expect(backing.calls.encrypt).to.equal(2)
+  })
+
+  it('decrypts try again after a failed request, and share the retry', async () => {
+    const backing = slowBackingMaterialsManager({ outcomes: ['fail', 'ok'] })
+    const cmm = cachingCMM(backing, { stormTracking: FAST_STORM })
+
+    const results = await Promise.allSettled(
+      Array.from({ length: 5 }, async () =>
+        cmm.decryptMaterials(decryptRequest)
+      )
+    )
+
+    expect(results.filter((r) => r.status === 'rejected')).to.have.lengthOf(1)
+    expect(backing.calls.decrypt).to.equal(2)
+  })
+
+  it('fails waiting callers after inFlightTTL when the request hangs', async () => {
+    const backing = slowBackingMaterialsManager({ outcomes: ['hang'] })
+    const cmm = cachingCMM(backing, { stormTracking: FAST_STORM })
+
+    const [, ...waiters] = startEncrypts(cmm, times(5))
+    const results = await Promise.allSettled(waiters)
+
+    for (const result of results) {
+      expect((result as PromiseRejectedResult).reason.message).to.equal(
+        'Caching materials manager inFlightTTL exceeded'
+      )
+    }
+    expect(backing.calls.encrypt).to.equal(1)
+  })
+
+  it('a caller that times out is not given or charged for the data key', async () => {
+    // The request outlasts inFlightTTL, so the 4 waiting callers time out before it returns.
+    const backing = slowBackingMaterialsManager({ ms: 150 })
+    const cmm = cachingCMM(backing, {
+      maxMessagesEncrypted: 5,
+      stormTracking: FAST_STORM,
+    })
+
+    const [first, ...waiters] = startEncrypts(cmm, times(5))
+    const results = await Promise.allSettled(waiters)
+    for (const result of results) expect(result.status).to.equal('rejected')
+    const leader = await first
+
+    // Only the first message used the data key, so 4 more can reuse it.
+    const later = []
+    for (let i = 0; i < 4; i++)
+      later.push(await cmm.getEncryptionMaterials(encryptRequest))
+    expect(backing.calls.encrypt).to.equal(1)
+    expect(usageByDataKey([leader, ...later], times(5))).to.have.lengthOf(1)
+  })
+
+  it('makes at most fanOut backing requests at once', async () => {
+    const backing = slowBackingMaterialsManager({ ms: 10 })
+    const cmm = cachingCMM(backing, {
+      stormTracking: { ...FAST_STORM, fanOut: 2 },
+    })
+
+    await Promise.all(
+      ['a', 'b', 'c', 'd'].map(async (a) =>
+        cmm.getEncryptionMaterials({
+          ...encryptRequest,
+          encryptionContext: { a },
+        })
+      )
+    )
+
+    expect(backing.calls.encrypt).to.equal(4)
+    expect(backing.calls.peak).to.equal(2)
+  })
+
+  it('a request older than inFlightTTL stops counting toward fanOut', async () => {
+    const backing = slowBackingMaterialsManager({ outcomes: ['hang', 'ok'] })
+    const cmm = cachingCMM(backing, {
+      stormTracking: { ...FAST_STORM, fanOut: 1 },
+    })
+
+    startEncrypts(cmm, times(1), { encryptionContext: { a: 'a' } })
+    await new Promise((resolve) => setTimeout(resolve, 1))
+    const started = Date.now()
+    await encryptConcurrently(cmm, times(1), { encryptionContext: { a: 'b' } })
+
+    expect(Date.now() - started).to.be.at.least(
+      (FAST_STORM.inFlightTTL as number) - 10
+    )
+    expect(backing.calls.encrypt).to.equal(2)
   })
 })

@@ -21,7 +21,12 @@ import {
   Entry,
 } from './cryptographic_materials_cache'
 import { CryptographicMaterialsCacheKeyHelpersInterface } from './build_cryptographic_materials_cache_key_helpers'
-import { SHARED_REQUESTS, batchesByCache } from './shared_requests'
+import {
+  SHARED_REQUESTS,
+  SharingSettings,
+  batchesByCache,
+  resolveStormTracking,
+} from './shared_requests'
 
 export function decorateProperties<S extends SupportedAlgorithmSuites>(
   obj: CachingMaterialsManager<S>,
@@ -34,6 +39,7 @@ export function decorateProperties<S extends SupportedAlgorithmSuites>(
     maxBytesEncrypted,
     maxMessagesEncrypted,
     partition,
+    stormTracking,
   } = input
 
   /* Precondition: A caching material manager needs a cache. */
@@ -76,6 +82,7 @@ export function decorateProperties<S extends SupportedAlgorithmSuites>(
     maxMessagesEncrypted || Maximum.MESSAGES_PER_CACHED_KEY_LIMIT
   )
   readOnlyProperty(obj, '_partition', partition)
+  readOnlyProperty(obj, '_stormTracking', resolveStormTracking(stormTracking))
 }
 
 export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
@@ -110,8 +117,8 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
          * so it must not depend on this message's length.
          */
         .getEncryptionMaterials({ suite, encryptionContext, commitmentPolicy })
-    const waitUntil = Date.now() + SHARED_REQUESTS.inFlightTTL
-    let retried = false
+    const settings = sharingSettings(this)
+    const waitUntil = Date.now() + settings.inFlightTTL
 
     for (;;) {
       /* Check for early return (Postcondition): If I have a valid EncryptionMaterial, return it. */
@@ -126,14 +133,22 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       const batch = findBatch<EncryptionMaterial<S>>(
         this._cache,
         cacheKey,
-        (b) => canJoin(this, b, plaintextLength)
+        (b) => canJoin(this, settings, b, plaintextLength)
       )
-      if (!batch) break
+      if (!batch) {
+        /* Check synchronously, so no other caller can start a request for this key in between. */
+        if (!fanOutReached(this._cache, settings, waitUntil)) break
+        await sleep(SHARED_REQUESTS.sleepMilli)
+        continue
+      }
       const outcome = await joinBatch(batch, plaintextLength, waitUntil)
       if ('material' in outcome) return outcome.material
 
-      // Its data key can't be cached (the suite isn't cache safe), so it can't be shared.
-      if ('uncached' in outcome) {
+      /* Make this caller's own request, as it would without sharing, if
+       * the shared data key can't be cached (the suite isn't cache safe), or
+       * the shared request failed and storm tracking is off.
+       */
+      if ('uncached' in outcome || !settings.stormTracking) {
         return cacheEncryptionMaterial(
           this,
           cacheKey,
@@ -142,10 +157,8 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
         )
       }
 
-      // That request failed. Retry once, after it has had graceInterval to finish.
-      if (retried) throw outcome.error
-      retried = true
-      await sleep(batch.startedAt + SHARED_REQUESTS.graceInterval - Date.now())
+      // With storm tracking, try again once the failed request is graceInterval old, like the MPL.
+      await sleep(batch.startedAt + settings.graceInterval - Date.now())
     }
 
     // Callers that miss while this request runs can wait for it.
@@ -153,49 +166,56 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       this._cache,
       cacheKey,
       this,
+      settings,
       plaintextLength
     )
+    let material: EncryptionMaterial<S>
     try {
-      const material = await fetch()
+      material = await fetch()
+    } catch (error) {
       closeBatch(this._cache, cacheKey, batch)
+      settleMembers(batch, { error })
+      throw error
+    }
+    closeBatch(this._cache, cacheKey, batch)
 
-      // Can't cache it, so the waiting callers can't share it.
-      if (!material.suite.cacheSafe) {
-        settleMembers(batch, { uncached: true })
-        return material
-      }
+    // Can't cache it, so the waiting callers can't share it.
+    if (!material.suite.cacheSafe) {
+      settleMembers(batch, { uncached: true })
+      return material
+    }
 
-      // This message alone is over the limits, so nobody joined, and it can't be cached.
-      const used = {
-        response: material,
-        now: Date.now(),
-        messagesEncrypted: batch.messages,
-        bytesEncrypted: batch.bytes,
-      }
-      if (this._cacheEntryHasExceededLimits(used)) {
-        settleMembers(batch, { uncached: true })
-        return material
-      }
+    // This message alone is over the limits, so nobody joined, and it can't be cached.
+    const used = {
+      response: material,
+      now: Date.now(),
+      messagesEncrypted: batch.messages,
+      bytesEncrypted: batch.bytes,
+    }
+    if (this._cacheEntryHasExceededLimits(used)) {
+      settleMembers(batch, { uncached: true })
+      return material
+    }
 
+    try {
       this._cache.putEncryptionMaterial(
         cacheKey,
         material,
         plaintextLength,
         this._maxAge
       )
-      // Count the waiting callers' messages against the cache entry too.
-      for (const member of batch.members) {
-        this._cache.getEncryptionMaterial(cacheKey, member.plaintextLength)
-      }
-      for (const member of batch.members) {
-        member.settle({ material: cloneResponse(material) })
-      }
-      return cloneResponse(material)
     } catch (error) {
-      closeBatch(this._cache, cacheKey, batch)
       settleMembers(batch, { error })
       throw error
     }
+    // Count the waiting callers' messages against the cache entry too.
+    for (const member of batch.members) {
+      this._cache.getEncryptionMaterial(cacheKey, member.plaintextLength)
+    }
+    for (const member of batch.members) {
+      member.settle({ material: cloneResponse(material) })
+    }
+    return cloneResponse(material)
   }
 }
 
@@ -257,8 +277,15 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       this._partition,
       request
     )
-    const waitUntil = Date.now() + SHARED_REQUESTS.inFlightTTL
-    let retried = false
+    const fetchAndCache = async () => {
+      const material = await this._backingMaterialsManager.decryptMaterials(
+        request
+      )
+      this._cache.putDecryptionMaterial(cacheKey, material, this._maxAge)
+      return material
+    }
+    const settings = sharingSettings(this)
+    const waitUntil = Date.now() + settings.inFlightTTL
 
     for (;;) {
       /* Check for early return (Postcondition): If I have a valid DecryptionMaterial, return it. */
@@ -273,16 +300,22 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       const batch = findBatch<DecryptionMaterial<S>>(
         this._cache,
         cacheKey,
-        isRecent
+        (b) => isRecent(settings, b)
       )
-      if (!batch) break
+      if (!batch) {
+        /* Check synchronously, so no other caller can start a request for this key in between. */
+        if (!fanOutReached(this._cache, settings, waitUntil)) break
+        await sleep(SHARED_REQUESTS.sleepMilli)
+        continue
+      }
       const outcome = await joinBatch(batch, 0, waitUntil)
       if ('material' in outcome) return outcome.material
 
-      // That request failed. Retry once, after it has had graceInterval to finish.
-      if (retried) throw (outcome as Failed).error
-      retried = true
-      await sleep(batch.startedAt + SHARED_REQUESTS.graceInterval - Date.now())
+      // The shared request failed. Without storm tracking, make this caller's own request.
+      if (!settings.stormTracking) return cloneResponse(await fetchAndCache())
+
+      // With storm tracking, try again once the failed request is graceInterval old, like the MPL.
+      await sleep(batch.startedAt + settings.graceInterval - Date.now())
     }
 
     // Callers that miss while this request runs can wait for it.
@@ -290,24 +323,41 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       this._cache,
       cacheKey,
       this,
+      settings,
       0
     )
+    let material: DecryptionMaterial<S>
     try {
-      const material = await this._backingMaterialsManager.decryptMaterials(
-        request
-      )
-      closeBatch(this._cache, cacheKey, batch)
-      this._cache.putDecryptionMaterial(cacheKey, material, this._maxAge)
-      for (const member of batch.members) {
-        member.settle({ material: cloneResponse(material) })
-      }
-      return cloneResponse(material)
+      material = await fetchAndCache()
     } catch (error) {
       closeBatch(this._cache, cacheKey, batch)
       settleMembers(batch, { error })
       throw error
     }
+    closeBatch(this._cache, cacheKey, batch)
+    for (const member of batch.members) {
+      member.settle({ material: cloneResponse(material) })
+    }
+    return cloneResponse(material)
   }
+}
+
+const IN_FLIGHT_TTL_EXCEEDED = 'Caching materials manager inFlightTTL exceeded'
+
+/* The caching materials manager's sharing settings.
+ * Without stormTracking: no fanOut limit and no timeout for waiting callers.
+ */
+function sharingSettings(
+  cmm: CachingMaterialsManager<any>
+): Readonly<SharingSettings> {
+  return (
+    cmm._stormTracking || {
+      stormTracking: false,
+      graceInterval: SHARED_REQUESTS.graceInterval,
+      fanOut: Infinity,
+      inFlightTTL: Infinity,
+    }
+  )
 }
 
 /* One request to the backing materials manager, plus the callers waiting for its answer.
@@ -319,16 +369,18 @@ interface Batch<M> {
   messages: number
   bytes: number
   requester: CachingMaterialsManager<any>
-  members: { plaintextLength: number; settle: (outcome: Outcome<M>) => void }[]
+  members: Member<M>[]
+}
+
+interface Member<M> {
+  plaintextLength: number
+  settle: (outcome: Outcome<M>) => void
 }
 
 /* What a waiting caller gets when the shared request finishes:
  * the material, `uncached` if the material cannot be shared, or the request's error.
  */
-interface Failed {
-  error: unknown
-}
-type Outcome<M> = { material: M } | { uncached: true } | Failed
+type Outcome<M> = { material: M } | { uncached: true } | { error: unknown }
 
 /* Look batches up by cache and key every time instead of holding on to a list,
  * because closeBatch deletes a key's list once it is empty.
@@ -343,8 +395,8 @@ function findBatch<M>(
 }
 
 /* A request older than graceInterval may be stuck, so new callers stop sharing it. */
-function isRecent(batch: Batch<any>) {
-  return Date.now() < batch.startedAt + SHARED_REQUESTS.graceInterval
+function isRecent(settings: SharingSettings, batch: Batch<any>) {
+  return Date.now() < batch.startedAt + settings.graceInterval
 }
 
 /* Whether this caller's message still fits in the batch's data key.
@@ -353,10 +405,11 @@ function isRecent(batch: Batch<any>) {
  */
 function canJoin<S extends SupportedAlgorithmSuites>(
   cmm: CachingMaterialsManager<S>,
+  settings: SharingSettings,
   batch: Batch<any>,
   plaintextLength: number
 ) {
-  if (!isRecent(batch)) return false
+  if (!isRecent(settings, batch)) return false
   const next = {
     response: undefined as any,
     now: Date.now(),
@@ -369,10 +422,41 @@ function canJoin<S extends SupportedAlgorithmSuites>(
   )
 }
 
+/* With storm tracking, whether fanOut requests are already in flight on this cache.
+ * A caller that has waited past inFlightTTL for one to finish fails.
+ */
+function fanOutReached(
+  cache: CryptographicMaterialsCache<any>,
+  settings: SharingSettings,
+  waitUntil: number
+): boolean {
+  if (inFlightCount(cache, settings) < settings.fanOut) return false
+  needs(Date.now() <= waitUntil, IN_FLIGHT_TTL_EXCEEDED)
+  return true
+}
+
+/* Requests in flight on this cache, for any cache key.
+ * Like the MPL, a request older than inFlightTTL no longer counts.
+ */
+function inFlightCount(
+  cache: CryptographicMaterialsCache<any>,
+  settings: SharingSettings
+) {
+  const now = Date.now()
+  let count = 0
+  for (const batches of batchesByCache.get(cache)?.values() || []) {
+    for (const batch of batches as Batch<any>[]) {
+      if (now < batch.startedAt + settings.inFlightTTL) count += 1
+    }
+  }
+  return count
+}
+
 function startBatch<M>(
   cache: CryptographicMaterialsCache<any>,
   cacheKey: string,
   requester: CachingMaterialsManager<any>,
+  settings: SharingSettings,
   plaintextLength: number
 ): Batch<M> {
   let byKey = batchesByCache.get(cache)
@@ -383,7 +467,9 @@ function startBatch<M>(
   /* Drop batches nobody can join anymore.
    * A request that never settles never calls closeBatch, so this is what forgets it.
    */
-  const batches = (byKey.get(cacheKey) || []).filter(isRecent)
+  const batches = (byKey.get(cacheKey) || []).filter((b) =>
+    isRecent(settings, b)
+  )
   byKey.set(cacheKey, batches)
   const batch: Batch<M> = {
     startedAt: Date.now(),
@@ -411,7 +497,7 @@ function closeBatch<M>(
 }
 
 /* Wait for the shared request's answer, counting this caller's message against its data key.
- * Fails after inFlightTTL.
+ * With storm tracking, fails once waitUntil passes.
  */
 async function joinBatch<M>(
   batch: Batch<M>,
@@ -420,16 +506,24 @@ async function joinBatch<M>(
 ): Promise<Outcome<M>> {
   batch.messages += 1
   batch.bytes += plaintextLength
-  let timer: any
+  let timer: ReturnType<typeof setTimeout> | undefined
   const outcome = await new Promise<Outcome<M> | undefined>((resolve) => {
-    timer = setTimeout(resolve, Math.max(0, waitUntil - Date.now()))
-    batch.members.push({ plaintextLength, settle: resolve })
+    const member = { plaintextLength, settle: resolve }
+    batch.members.push(member)
+    if (waitUntil === Infinity) return
+    timer = setTimeout(() => {
+      /* A caller that times out never gets the data key,
+       * so the request no longer clones it for this caller or counts its message.
+       */
+      const index = batch.members.indexOf(member)
+      if (index !== -1) batch.members.splice(index, 1)
+      batch.messages -= 1
+      batch.bytes -= plaintextLength
+      resolve(undefined)
+    }, Math.max(0, waitUntil - Date.now()))
   })
-  clearTimeout(timer)
-  /* A caller that times out was counted when it joined, and stays counted.
-   * So the data key may encrypt one message fewer than its limits allow, never one more.
-   */
-  needs(outcome, 'Caching materials manager inFlightTTL exceeded')
+  if (timer) clearTimeout(timer)
+  needs(outcome, IN_FLIGHT_TTL_EXCEEDED)
   return outcome
 }
 
@@ -481,7 +575,40 @@ export interface CachingMaterialsManagerInput<
     maxBytesEncrypted?: number
     maxMessagesEncrypted?: number
     maxAge: number
+    /* Opt in to behaving like the MPL's StormTracking cache.
+     * See CachingMaterialsManagerStormTracking.
+     */
+    stormTracking?: CachingMaterialsManagerStormTracking
   }> {}
+
+/* Opt-in settings that make the caching materials manager behave like
+ * the MPL's StormTracking cache. Times are in milliseconds, like maxAge.
+ *
+ * Without stormTracking, concurrent cache misses still share one request,
+ * but a caller never fails or waits in a way it would not without sharing:
+ * there is no limit on requests in flight, no timeout for waiting callers,
+ * and if the shared request fails, each waiting caller makes its own request.
+ * This differs from the MPL so that existing customers see no change in behavior.
+ * A future major version may align these defaults with the MPL.
+ *
+ * With stormTracking, unset settings take the MPL's defaults.
+ */
+export interface CachingMaterialsManagerStormTracking {
+  /* After a request has run this long, new callers stop waiting on it and make their own.
+   * If a request fails, waiting callers try again once it is this old.
+   * Default 1000 (1 second).
+   */
+  graceInterval?: number
+  /* At most this many requests to the backing materials manager are in flight at once,
+   * across every entry in the cache. Other callers wait.
+   * Default 20.
+   */
+  fanOut?: number
+  /* A caller that has waited this long fails.
+   * Default 10000 (10 seconds). Must be at least graceInterval.
+   */
+  inFlightTTL?: number
+}
 
 export interface CachingMaterialsManagerDecorateInput<
   S extends SupportedAlgorithmSuites
@@ -498,6 +625,8 @@ export interface CachingMaterialsManager<S extends SupportedAlgorithmSuites>
   readonly _maxBytesEncrypted: number
   readonly _maxMessagesEncrypted: number
   readonly _maxAge: number
+  // Set by decorateProperties when the stormTracking input is given.
+  readonly _stormTracking?: Readonly<SharingSettings>
 
   _cacheEntryHasExceededLimits: CacheEntryHasExceededLimits<S>
 }
