@@ -576,7 +576,7 @@ export interface CachingMaterialsManagerInput<
  * Times are in milliseconds, like maxAge.
  *
  * Without stormTracking, concurrent misses for the same cache entry still share one backing request,
- * but sharing adds no new failures or waits:
+ * but sharing adds no new failures:
  * - if the shared request fails, each waiting caller makes its own request
  * - waiting callers don't time out
  * - no limit on requests in flight

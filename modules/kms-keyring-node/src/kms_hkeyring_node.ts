@@ -89,7 +89,7 @@ export interface KmsHierarchicalKeyRingNodeInput {
  * Times are in seconds, like cacheLimitTtl.
  *
  * Without stormTracking, concurrent misses for the same branch key still share one keystore fetch,
- * but sharing adds no new failures or waits:
+ * but sharing adds no new failures:
  * - if the shared fetch fails, each waiting caller makes its own fetch
  * - waiting callers don't time out
  * - no limit on fetches in flight
