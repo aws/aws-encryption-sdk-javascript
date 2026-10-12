@@ -166,8 +166,9 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
           messagesEncrypted: batch.messages,
           bytesEncrypted: batch.bytes,
         }
-        // canJoin keeps waiting callers within the limits,
-        // so this only trips when this caller's message alone exceeds them.
+        // Over the limits only when this message is larger than maxBytesEncrypted.
+        // canJoin turns away any caller that would push the batch over, so no one is waiting.
+        // Return the data key without caching it.
         if (this._cacheEntryHasExceededLimits(used)) return material
 
         this._cache.putEncryptionMaterial(
