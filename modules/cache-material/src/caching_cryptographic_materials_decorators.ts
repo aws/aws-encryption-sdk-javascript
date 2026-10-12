@@ -128,7 +128,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
     if (joinable) {
       const outcome = await joinBatch(joinable, plaintextLength)
       if ('material' in outcome) return outcome.material
-      // The shared request failed or its data key can't be shared, so make this caller's own.
+      // The shared request failed or its data key can't be shared, so make a new request just for us.
       return cacheEncryptionMaterial(
         this,
         cacheKey,
@@ -155,7 +155,7 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
         messagesEncrypted: batch.messages,
         bytesEncrypted: batch.bytes,
       }
-      // Only this message can be over the limits: canJoin keeps joiners within them.
+      // This message alone is over the limits (e.g. larger than maxBytesEncrypted), so don't cache the data key.
       if (this._cacheEntryHasExceededLimits(used)) return material
 
       this._cache.putEncryptionMaterial(
