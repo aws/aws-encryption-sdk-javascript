@@ -204,7 +204,6 @@ export async function getBranchKeyMaterials(
     //# The hierarchical keyring MUST attempt to find [branch key materials](../structures.md#branch-key-materials)
     //# from the underlying [cryptographic materials cache](../local-cryptographic-materials-cache.md).
     const cacheEntry = cmc.getBranchKeyMaterial(cacheEntryId)
-    // if the cache entry is false, branch key materials were not found
     if (!cacheEntry || hKeyring.cacheEntryHasExceededLimits(cacheEntry)) {
       //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
       //# If this is NOT true, then we MUST treat the cache entry as expired.

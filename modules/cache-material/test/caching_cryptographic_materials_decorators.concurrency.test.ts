@@ -49,7 +49,7 @@ const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(
       .digest()
 )
 
-// Shortened timings, so the tests run in milliseconds.
+// A short grace interval, so the hang tests run in milliseconds.
 const FAST = { graceInterval: 20 }
 const DEFAULT = { ...SHARED_REQUESTS }
 

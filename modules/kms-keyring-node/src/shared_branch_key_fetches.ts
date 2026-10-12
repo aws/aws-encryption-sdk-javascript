@@ -8,10 +8,8 @@ import {
 import { CryptographicMaterialsCache } from '@aws-crypto/cache-material'
 
 /* Concurrent cache misses for the same branch key share one keystore fetch.
- * One caller fetches, and the others wait for its answer.
- * If the shared fetch fails, the waiting callers share one retry,
+ * If that fetch fails, its waiting callers share one retry,
  * so a failing keystore gets one more call, not one per waiting caller.
- * A caller that already retried gets the error.
  */
 
 // An object, not a constant, so tests can shorten it.
@@ -26,10 +24,9 @@ interface SharedFetch {
 }
 type SharedOutcome = { material: NodeBranchKeyMaterial } | { error: unknown }
 
-/* In-flight fetches by cache, then cache entry id.
- * Keyed by cache so keyrings that share a cache also share fetches.
- * Each fetch is its own object, so a slow fetch that settles late removes only itself,
- * never a newer fetch for the same entry.
+/* Keyed by cache, so keyrings that share a cache also share fetches.
+ * Each entry id holds a list, so a stale fetch that settles late removes only itself,
+ * not a newer fetch for the same entry.
  */
 const sharedFetches = new WeakMap<
   CryptographicMaterialsCache<NodeAlgorithmSuite>,
@@ -46,10 +43,9 @@ function isRecent(fetch: SharedFetch) {
   return Date.now() < fetch.startedAt + SHARED_FETCHES.graceInterval
 }
 
-/* Fetch the branch key materials, or wait for another caller's fetch of the same entry.
- * `fetch` asks the keystore; `put` caches the result.
- * `retry` is false once this caller has waited on a fetch that failed.
+/* Fetch the branch key materials, or wait on another caller's fetch of the same entry.
  * Returns a copy only this caller holds.
+ * A caller that waited on a failed fetch gets one more attempt, with `retry` false.
  */
 export async function sharedFetch(
   cmc: CryptographicMaterialsCache<NodeAlgorithmSuite>,
@@ -60,8 +56,7 @@ export async function sharedFetch(
 ): Promise<NodeBranchKeyMaterial> {
   const byId = sharedFetches.get(cmc) || new Map<string, SharedFetch[]>()
   sharedFetches.set(cmc, byId)
-  // Drop this entry's fetches that are too old to join.
-  // A fetch that never settles is only ever removed here.
+  // A fetch that never settles is only removed here, once a newer one starts for the same entry.
   const fetches = (byId.get(cacheEntryId) || []).filter(isRecent)
   const current = fetches[fetches.length - 1]
 
@@ -71,8 +66,8 @@ export async function sharedFetch(
     )
     if ('material' in outcome) return outcome.material
     if (!retry) throw outcome.error
-    // The shared fetch failed. The failed fetch is already closed,
-    // so the first waiting caller to resume starts one new fetch and the rest join it.
+    // The failed fetch closed before its waiting callers resumed,
+    // so the first one to resume starts the retry and the rest join it.
     return sharedFetch(cmc, cacheEntryId, fetch, put, false)
   }
 
@@ -100,17 +95,17 @@ export async function sharedFetch(
     failure = { error }
     throw error
   } finally {
-    // Close before releasing the waiting callers, so their retry starts a new fetch.
-    // Callers that already got the material ignore this.
+    // Close before settling, so a waiting caller's retry starts a new fetch
+    // instead of rejoining this one.
+    // Callers that already got the material ignore this second settle.
     close()
     for (const settle of mine.members) settle(failure)
   }
 }
 
-/* A copy with its own buffer.
- * The cache zeroes a material's buffer when it evicts it,
- * and callers derive keys from the branch key after getBranchKeyMaterials returns,
- * so handing out the cached buffer lets an eviction zero a key mid-use (#1691).
+/* The cache zeroes a material's buffer when it evicts it.
+ * Callers derive keys from the branch key after getBranchKeyMaterials returns,
+ * so they need their own buffer, or an eviction can zero the key mid-use (#1691).
  */
 export function deepCopyBranchKeyMaterial(
   material: NodeBranchKeyMaterial

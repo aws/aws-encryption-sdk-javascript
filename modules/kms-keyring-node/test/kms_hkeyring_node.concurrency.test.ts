@@ -155,7 +155,7 @@ describe('KmsHierarchicalKeyRingNode: concurrent cold-cache operations (#1691)',
 
 const CONCURRENT_OPERATIONS = 3000
 
-// Shortened timings, so the tests run in milliseconds.
+// A short grace interval, so the hang tests run in milliseconds.
 const FAST = { graceInterval: 40 }
 const DEFAULT = { ...SHARED_FETCHES }
 
@@ -237,8 +237,7 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   afterEach(() => Object.assign(SHARED_FETCHES, DEFAULT))
 
   it(`${CONCURRENT_OPERATIONS} concurrent onEncrypt misses share one keystore call`, async () => {
-    // Starting 3000 callers takes an unpredictable time on a slow runner.
-    // A grace interval far longer than the test keeps that from starting a second fetch.
+    // On a slow runner, starting 3000 callers can outlast a short grace interval and start a second fetch.
     Object.assign(SHARED_FETCHES, { graceInterval: 60 * 1000 })
     const keyStore = slowKeyStore()
     await encryptConcurrently(keyringFor(keyStore), CONCURRENT_OPERATIONS)
@@ -246,8 +245,7 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
   })
 
   it(`${CONCURRENT_OPERATIONS} concurrent onDecrypt misses share one keystore call`, async () => {
-    // Starting 3000 callers takes an unpredictable time on a slow runner.
-    // A grace interval far longer than the test keeps that from starting a second fetch.
+    // On a slow runner, starting 3000 callers can outlast a short grace interval and start a second fetch.
     Object.assign(SHARED_FETCHES, { graceInterval: 60 * 1000 })
     const keyStore = slowKeyStore()
     const [encrypted] = await encryptConcurrently(keyringFor(keyStore), 1)
