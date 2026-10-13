@@ -10,7 +10,7 @@ import {
   getEncryptionMaterials,
   decryptMaterials,
 } from '../src/caching_cryptographic_materials_decorators'
-import { SHARED_REQUESTS, batchesByCache } from '../src/shared_requests'
+import { SHARED_REQUESTS, inFlightRequestsFor } from '../src/shared_requests'
 import { getLocalCryptographicMaterialsCache } from '../src/get_local_cryptographic_materials_cache'
 import { buildCryptographicMaterialsCacheKeyHelpers } from '../src/build_cryptographic_materials_cache_key_helpers'
 import { createHash, randomBytes } from 'crypto'
@@ -49,8 +49,8 @@ const cacheKeyHelpers = buildCryptographicMaterialsCacheKeyHelpers(
       .digest()
 )
 
-// A short grace interval, so the hang tests run in milliseconds.
-const FAST = { graceInterval: 20 }
+// A short inFlightTTL, so the hang tests run in milliseconds.
+const FAST = { inFlightTTL: 20 }
 const DEFAULT = { ...SHARED_REQUESTS }
 
 // A backing materials manager that takes 5 ms per request and returns a new data key each time.
@@ -292,12 +292,12 @@ describe('caching materials manager: concurrent cache misses', () => {
     expect(backing.calls.decrypt).to.equal(2)
   })
 
-  it('starts another request for new callers once one hangs past graceInterval', async () => {
+  it('starts another request for new callers once one hangs past inFlightTTL', async () => {
     const backing = slowBackingMaterialsManager({ outcomes: ['hang', 'ok'] })
     const cmm = cachingCMM(backing)
 
     startEncrypts(cmm, times(1))
-    await new Promise((resolve) => setTimeout(resolve, FAST.graceInterval + 5))
+    await new Promise((resolve) => setTimeout(resolve, FAST.inFlightTTL + 5))
     const materials = await encryptConcurrently(cmm, times(5))
 
     expect(materials).to.have.lengthOf(5)
@@ -351,7 +351,7 @@ describe('caching materials manager: concurrent cache misses', () => {
       )
     )
 
-    expect(batchesByCache.get(cache)?.size).to.equal(0)
+    expect(inFlightRequestsFor(cache)?.size).to.equal(0)
   })
 
   it('forgets a request that never settles once a newer one starts', async () => {
@@ -360,10 +360,10 @@ describe('caching materials manager: concurrent cache misses', () => {
     const cmm = cachingCMM(backing, { cache })
 
     startEncrypts(cmm, times(1))
-    await new Promise((resolve) => setTimeout(resolve, FAST.graceInterval + 5))
+    await new Promise((resolve) => setTimeout(resolve, FAST.inFlightTTL + 5))
     await encryptConcurrently(cmm, times(3))
 
-    expect(batchesByCache.get(cache)?.size).to.equal(0)
+    expect(inFlightRequestsFor(cache)?.size).to.equal(0)
   })
 
   describe('requests run in parallel when the response cannot serve another caller', () => {
