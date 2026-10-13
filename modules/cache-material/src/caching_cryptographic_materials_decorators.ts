@@ -21,6 +21,7 @@ import {
   Entry,
 } from './cryptographic_materials_cache'
 import { CryptographicMaterialsCacheKeyHelpersInterface } from './build_cryptographic_materials_cache_key_helpers'
+import { SHARED_REQUESTS, batchesByCache } from './shared_requests'
 
 export function decorateProperties<S extends SupportedAlgorithmSuites>(
   obj: CachingMaterialsManager<S>,
@@ -102,50 +103,139 @@ export function getEncryptionMaterials<S extends SupportedAlgorithmSuites>({
       suite,
       encryptionContext,
     })
-    const entry = this._cache.getEncryptionMaterial(cacheKey, plaintextLength)
-    /* Check for early return (Postcondition): If I have a valid EncryptionMaterial, return it. */
-    if (entry && !this._cacheEntryHasExceededLimits(entry)) {
-      return cloneResponse(entry.response)
-    } else {
-      this._cache.del(cacheKey)
-    }
+    const fetch = async () =>
+      this._backingMaterialsManager
+        /* The cache reuses this data key for other messages,
+         * so don't pass this message's plaintextLength to the backing materials manager.
+         */
+        .getEncryptionMaterials({ suite, encryptionContext, commitmentPolicy })
 
-    const material = await this._backingMaterialsManager
-      /* Strip any information about the plaintext from the backing request,
-       * because the resulting response may be used to encrypt multiple plaintexts.
-       */
-      .getEncryptionMaterials({ suite, encryptionContext, commitmentPolicy })
+    // If the request this caller waited on fails, it tries once more, and a second failure throws.
+    // `retry` is false on that second try.
+    const getShared = async (
+      retry: boolean
+    ): Promise<EncryptionMaterial<S>> => {
+      /* Check for early return (Postcondition): If I have a valid EncryptionMaterial, return it. */
+      const entry = this._cache.getEncryptionMaterial(cacheKey, plaintextLength)
+      if (entry && !this._cacheEntryHasExceededLimits(entry)) {
+        return cloneResponse(entry.response)
+      } else {
+        this._cache.del(cacheKey)
+      }
 
-    /* Check for early return (Postcondition): If I can not cache the EncryptionMaterial, just return it. */
-    if (!material.suite.cacheSafe) return material
-
-    /* It is possible for an entry to exceed limits immediately.
-     * The simplest case is to need to encrypt more than then maxBytesEncrypted.
-     * In this case, I return the response to encrypt the data,
-     * but do not put a know invalid item into the cache.
-     */
-    const testEntry = {
-      response: material,
-      now: Date.now(),
-      messagesEncrypted: 1,
-      bytesEncrypted: plaintextLength,
-    }
-    if (!this._cacheEntryHasExceededLimits(testEntry)) {
-      this._cache.putEncryptionMaterial(
+      // Another caller may already be requesting a data key for this cache entry.
+      // Wait for that one if it can also encrypt this message without going over the limits.
+      const joinable = findBatch<EncryptionMaterial<S>>(
+        this._cache,
         cacheKey,
-        material,
-        plaintextLength,
-        this._maxAge
+        (b) => canJoin(this, b, plaintextLength)
       )
-      return cloneResponse(material)
-    } else {
-      /* Postcondition: If the material has exceeded limits it MUST NOT be cloned.
-       * If it is cloned, and the clone is returned,
-       * then there exist a copy of the unencrypted data key.
-       * It is true that this data would be caught by GC, it is better to just not rely on that.
-       */
-      return material
+      if (joinable) {
+        const outcome = await joinBatch(joinable, plaintextLength)
+        if ('material' in outcome) return outcome.material
+        if ('error' in outcome) {
+          if (!retry) throw outcome.error
+          // The caller that made the failed request already removed it,
+          // so the first waiting caller to get here starts a new request and the others wait on that one.
+          return getShared(false)
+        }
+        // The other caller's data key isn't cache safe, so this message can't use it.
+        // Make a separate request.
+        return cacheEncryptionMaterial(
+          this,
+          cacheKey,
+          await fetch(),
+          plaintextLength
+        )
+      }
+
+      const batch = startBatch<EncryptionMaterial<S>>(
+        this._cache,
+        cacheKey,
+        this,
+        plaintextLength
+      )
+      let release: Outcome<EncryptionMaterial<S>> = { unshareable: true }
+      try {
+        const material = await fetch()
+
+        // Not cache safe: return it without caching.
+        // The waiting callers can't use it, so each makes its own request.
+        if (!material.suite.cacheSafe) return material
+
+        const used = {
+          response: material,
+          now: Date.now(),
+          messagesEncrypted: batch.messages,
+          bytesEncrypted: batch.bytes,
+        }
+        // This is true only if this message alone is larger than maxBytesEncrypted,
+        // because canJoin turns away any caller that would go over the limits.
+        // So no one is waiting; return the data key without caching it.
+        if (this._cacheEntryHasExceededLimits(used)) return material
+
+        this._cache.putEncryptionMaterial(
+          cacheKey,
+          material,
+          plaintextLength,
+          this._maxAge
+        )
+        // getEncryptionMaterial also adds to the entry's message and byte counts.
+        // Call it once per waiting caller so the cached entry counts their messages too.
+        for (const member of batch.members) {
+          this._cache.getEncryptionMaterial(cacheKey, member.plaintextLength)
+        }
+        for (const member of batch.members) {
+          member.settle({ material: cloneResponse(material) })
+        }
+        return cloneResponse(material)
+      } catch (error) {
+        release = { error }
+        throw error
+      } finally {
+        // Tell the callers still waiting how this request ended:
+        // - on an error, they retry once
+        // - if they can't use this data key, they each make their own request
+        // After a success they already have the data key, so this does nothing.
+        closeBatch(this._cache, cacheKey, batch)
+        settleMembers(batch, release)
+      }
     }
+    return getShared(true)
+  }
+}
+
+function cacheEncryptionMaterial<S extends SupportedAlgorithmSuites>(
+  cmm: CachingMaterialsManager<S>,
+  cacheKey: string,
+  material: EncryptionMaterial<S>,
+  plaintextLength: number
+): EncryptionMaterial<S> {
+  /* Check for early return (Postcondition): If I can not cache the EncryptionMaterial, just return it. */
+  if (!material.suite.cacheSafe) return material
+
+  const testEntry = {
+    response: material,
+    now: Date.now(),
+    messagesEncrypted: 1,
+    bytesEncrypted: plaintextLength,
+  }
+  /* One message can be larger than maxBytesEncrypted by itself.
+   * Return the data key for it, but don't cache it.
+   */
+  if (!cmm._cacheEntryHasExceededLimits(testEntry)) {
+    cmm._cache.putEncryptionMaterial(
+      cacheKey,
+      material,
+      plaintextLength,
+      cmm._maxAge
+    )
+    return cloneResponse(material)
+  } else {
+    /* Postcondition: If the material has exceeded limits it MUST NOT be cloned.
+     * A clone would leave a second copy of the unencrypted data key for GC to clean up.
+     */
+    return material
   }
 }
 
@@ -169,21 +259,175 @@ export function decryptMaterials<S extends SupportedAlgorithmSuites>({
       this._partition,
       request
     )
-    const entry = this._cache.getDecryptionMaterial(cacheKey)
-    /* Check for early return (Postcondition): If I have a valid DecryptionMaterial, return it. */
-    if (entry && !this._cacheEntryHasExceededLimits(entry)) {
-      return cloneResponse(entry.response)
-    } else {
-      this._cache.del(cacheKey)
+    const fetchAndCache = async () => {
+      const material = await this._backingMaterialsManager.decryptMaterials(
+        request
+      )
+      this._cache.putDecryptionMaterial(cacheKey, material, this._maxAge)
+      return material
     }
 
-    const material = await this._backingMaterialsManager.decryptMaterials(
-      request
-    )
+    // If the request this caller waited on fails, it tries once more, and a second failure throws.
+    // `retry` is false on that second try.
+    const getShared = async (
+      retry: boolean
+    ): Promise<DecryptionMaterial<S>> => {
+      /* Check for early return (Postcondition): If I have a valid DecryptionMaterial, return it. */
+      const entry = this._cache.getDecryptionMaterial(cacheKey)
+      if (entry && !this._cacheEntryHasExceededLimits(entry)) {
+        return cloneResponse(entry.response)
+      } else {
+        this._cache.del(cacheKey)
+      }
 
-    this._cache.putDecryptionMaterial(cacheKey, material, this._maxAge)
-    return cloneResponse(material)
+      const joinable = findBatch<DecryptionMaterial<S>>(
+        this._cache,
+        cacheKey,
+        isRecent
+      )
+      if (joinable) {
+        const outcome = await joinBatch(joinable, 0)
+        if ('material' in outcome) return outcome.material
+        if ('error' in outcome && !retry) throw outcome.error
+        // The caller that made the failed request already removed it,
+        // so the first waiting caller to get here starts a new request and the others wait on that one.
+        return getShared(false)
+      }
+
+      const batch = startBatch<DecryptionMaterial<S>>(
+        this._cache,
+        cacheKey,
+        this,
+        0
+      )
+      let release: Outcome<DecryptionMaterial<S>> = { unshareable: true }
+      try {
+        const material = await fetchAndCache()
+        for (const member of batch.members) {
+          member.settle({ material: cloneResponse(material) })
+        }
+        return cloneResponse(material)
+      } catch (error) {
+        release = { error }
+        throw error
+      } finally {
+        // If the request failed, tell the callers still waiting so they retry once.
+        // After a success they already have the material, so this does nothing.
+        closeBatch(this._cache, cacheKey, batch)
+        settleMembers(batch, release)
+      }
+    }
+    return getShared(true)
   }
+}
+
+// One request to the backing materials manager, and the callers waiting on it.
+interface Batch<M> {
+  startedAt: number
+  // Messages and bytes the data key will encrypt,
+  // counting the caller that made the request and every caller waiting on it.
+  // canJoin checks these against the limits before the data key exists.
+  messages: number
+  bytes: number
+  requester: CachingMaterialsManager<any>
+  members: { plaintextLength: number; settle: (outcome: Outcome<M>) => void }[]
+}
+
+// What a waiting caller gets back:
+// - the material
+// - the request's error
+// - `unshareable`, when the data key can't be used for other messages
+type Outcome<M> = { material: M } | { error: unknown } | { unshareable: true }
+
+function findBatch<M>(
+  cache: CryptographicMaterialsCache<any>,
+  cacheKey: string,
+  predicate: (batch: Batch<M>) => boolean
+): Batch<M> | undefined {
+  const batches = batchesByCache.get(cache)?.get(cacheKey)
+  return batches?.find(predicate)
+}
+
+function isRecent(batch: Batch<any>) {
+  return Date.now() < batch.startedAt + SHARED_REQUESTS.graceInterval
+}
+
+/* The request may come from another caching materials manager that shares this cache.
+ * Join only if this caller's message stays within both managers' limits.
+ */
+function canJoin<S extends SupportedAlgorithmSuites>(
+  cmm: CachingMaterialsManager<S>,
+  batch: Batch<any>,
+  plaintextLength: number
+) {
+  if (!isRecent(batch)) return false
+  const next = {
+    response: undefined as any,
+    now: Date.now(),
+    messagesEncrypted: batch.messages + 1,
+    bytesEncrypted: batch.bytes + plaintextLength,
+  }
+  return (
+    !cmm._cacheEntryHasExceededLimits(next) &&
+    !batch.requester._cacheEntryHasExceededLimits(next)
+  )
+}
+
+/* Call this right after findBatch finds nothing, with no await in between.
+ * Otherwise callers arriving at the same time each start their own request.
+ */
+function startBatch<M>(
+  cache: CryptographicMaterialsCache<any>,
+  cacheKey: string,
+  requester: CachingMaterialsManager<any>,
+  plaintextLength: number
+): Batch<M> {
+  const byKey = batchesByCache.get(cache) || new Map<string, Batch<any>[]>()
+  batchesByCache.set(cache, byKey)
+  // A request that hangs never removes itself.
+  // This drops it when the next request for this key starts.
+  const batches = (byKey.get(cacheKey) || []).filter(isRecent)
+  byKey.set(cacheKey, batches)
+  const batch: Batch<M> = {
+    startedAt: Date.now(),
+    messages: 1,
+    bytes: plaintextLength,
+    requester,
+    members: [],
+  }
+  batches.push(batch)
+  return batch
+}
+
+function closeBatch<M>(
+  cache: CryptographicMaterialsCache<any>,
+  cacheKey: string,
+  batch: Batch<M>
+) {
+  const byKey = batchesByCache.get(cache)
+  const batches = byKey?.get(cacheKey)
+  if (!byKey || !batches) return
+  const index = batches.indexOf(batch)
+  if (index !== -1) batches.splice(index, 1)
+  if (!batches.length) byKey.delete(cacheKey)
+}
+
+/* Counts this caller's message against the request now, before the data key exists,
+ * so canJoin sees it when the next caller arrives.
+ */
+async function joinBatch<M>(
+  batch: Batch<M>,
+  plaintextLength: number
+): Promise<Outcome<M>> {
+  batch.messages += 1
+  batch.bytes += plaintextLength
+  return new Promise<Outcome<M>>((settle) =>
+    batch.members.push({ plaintextLength, settle })
+  )
+}
+
+function settleMembers<M>(batch: Batch<M>, outcome: Outcome<M>) {
+  for (const member of batch.members) member.settle(outcome)
 }
 
 export function cacheEntryHasExceededLimits<
