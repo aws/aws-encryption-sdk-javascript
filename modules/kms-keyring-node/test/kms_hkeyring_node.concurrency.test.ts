@@ -31,10 +31,10 @@ import {
 
 import { getBranchKeyMaterials } from '../src/kms_hkeyring_node_helpers'
 import {
-  SHARED_REQUESTS,
-  getLocalCryptographicMaterialsCache,
-  inFlightRequestsFor,
-} from '@aws-crypto/cache-material'
+  SHARED_FETCHES,
+  sharedFetchesFor,
+} from '../src/shared_branch_key_fetches'
+import { getLocalCryptographicMaterialsCache } from '@aws-crypto/cache-material'
 import { NodeAlgorithmSuite } from '@aws-crypto/material-management'
 import { v4 } from 'uuid'
 
@@ -155,9 +155,9 @@ describe('KmsHierarchicalKeyRingNode: concurrent cold-cache operations (#1691)',
 
 const CONCURRENT_OPERATIONS = 3000
 
-// A short inFlightTTL, so the hang tests run in milliseconds.
-const FAST = { inFlightTTL: 40 }
-const DEFAULT = { ...SHARED_REQUESTS }
+// A short grace interval, so the hang tests run in milliseconds.
+const FAST = { graceInterval: 40 }
+const DEFAULT = { ...SHARED_FETCHES }
 
 const wait = async (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms))
@@ -233,22 +233,22 @@ async function encryptSettled(hkr: KmsHierarchicalKeyRingNode, count: number) {
 }
 
 describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
-  beforeEach(() => Object.assign(SHARED_REQUESTS, FAST))
-  afterEach(() => Object.assign(SHARED_REQUESTS, DEFAULT))
+  beforeEach(() => Object.assign(SHARED_FETCHES, FAST))
+  afterEach(() => Object.assign(SHARED_FETCHES, DEFAULT))
 
   it(`${CONCURRENT_OPERATIONS} concurrent onEncrypt misses share one keystore call`, async () => {
-    // On a slow runner, starting 3000 callers can take longer than a short inFlightTTL,
+    // On a slow runner, starting 3000 callers can take longer than a short grace interval,
     // which starts a second fetch.
-    Object.assign(SHARED_REQUESTS, { inFlightTTL: 60 * 1000 })
+    Object.assign(SHARED_FETCHES, { graceInterval: 60 * 1000 })
     const keyStore = slowKeyStore()
     await encryptConcurrently(keyringFor(keyStore), CONCURRENT_OPERATIONS)
     expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
   })
 
   it(`${CONCURRENT_OPERATIONS} concurrent onDecrypt misses share one keystore call`, async () => {
-    // On a slow runner, starting 3000 callers can take longer than a short inFlightTTL,
+    // On a slow runner, starting 3000 callers can take longer than a short grace interval,
     // which starts a second fetch.
-    Object.assign(SHARED_REQUESTS, { inFlightTTL: 60 * 1000 })
+    Object.assign(SHARED_FETCHES, { graceInterval: 60 * 1000 })
     const keyStore = slowKeyStore()
     const [encrypted] = await encryptConcurrently(keyringFor(keyStore), 1)
     const expectedPdk = unwrapDataKey(encrypted.getUnencryptedDataKey())
@@ -317,15 +317,15 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
     )
 
     for (const result of results) expect(result.status).to.equal('rejected')
-    expect(inFlightRequestsFor(cache)?.size).to.equal(0)
+    expect(sharedFetchesFor(cache)?.size).to.equal(0)
   })
 
-  it('starts another fetch for new callers once one hangs past inFlightTTL', async () => {
+  it('starts another fetch for new callers once one hangs past graceInterval', async () => {
     const keyStore = slowKeyStore(['hang', 'ok'])
     const hkr = keyringFor(keyStore)
 
     startEncrypts(hkr, 1)
-    await wait(FAST.inFlightTTL + 5)
+    await wait(FAST.graceInterval + 5)
     await encryptConcurrently(hkr, 5)
 
     expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
@@ -353,7 +353,7 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
       )
 
     const stale = get()
-    await wait(FAST.inFlightTTL + 5)
+    await wait(FAST.graceInterval + 5)
     const newer = [get(), get(), get()]
     await wait(1)
     expect(deferreds).to.have.lengthOf(2)
@@ -378,7 +378,7 @@ describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
     const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
     await encryptConcurrently(keyringFor(slowKeyStore(), { cache }), 5)
     await encryptSettled(keyringFor(slowKeyStore(['fail']), { cache }), 5)
-    expect(inFlightRequestsFor(cache)?.size).to.equal(0)
+    expect(sharedFetchesFor(cache)?.size).to.equal(0)
   })
 })
 
