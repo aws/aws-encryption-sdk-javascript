@@ -11,7 +11,8 @@
     "aws-kms-mrk",
     "aws-kms-mrk-multi",
     "aws-kms-mrk-discovery",
-    "caching"
+    "caching",
+    "default-cmm-reproduced-encryption-context"
   ],
   "unsupportedFeatures": [
     "MPL",
