@@ -45,6 +45,16 @@ module.exports = function (config) {
             test: /yauzl/,
             use: 'null-loader',
           },
+          {
+            // webpack >= 5.112 defers the re-exports of packages marked
+            // `sideEffects: false` and, in development mode, drops modules that
+            // our `export *` barrels need (e.g. @aws-crypto/cache-material),
+            // so the bundle builds but throws at runtime. Treating every module
+            // as side-effectful keeps the full module graph. karma-webpack
+            // ignores `optimization`, so this has to be a module rule.
+            test: /\.js$/,
+            sideEffects: true,
+          },
         ]
       },
       mode: 'development',
