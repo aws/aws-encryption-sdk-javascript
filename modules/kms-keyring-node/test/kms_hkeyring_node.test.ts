@@ -199,7 +199,7 @@ export async function testOnDecryptError(
   edks: EncryptedDataKey[],
   decryptionMaterial: NodeDecryptionMaterial,
   errorMessage?: string,
-  errorMessages?: string[]
+  errorMessages?: (string | RegExp)[]
 ) {
   const expectedNumberOfTraces = decryptionMaterial.keyringTrace.length
   const alreadyHasPdk = decryptionMaterial.hasUnencryptedDataKey
@@ -218,8 +218,12 @@ export async function testOnDecryptError(
       //# then it MUST yield an error that includes all the collected errors
       //# and MUST NOT modify the [decryption materials](structures.md#decryption-materials).
       const errMsg = (error as Error).message
-      for (const expectedError of errorMessages as string[]) {
-        expect(errMsg.includes(expectedError)).to.be.true
+      for (const expectedError of errorMessages as (string | RegExp)[]) {
+        expect(
+          typeof expectedError === 'string'
+            ? errMsg.includes(expectedError)
+            : expectedError.test(errMsg)
+        ).to.be.true
       }
     }
   }
