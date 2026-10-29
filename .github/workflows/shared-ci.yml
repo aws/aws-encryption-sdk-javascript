@@ -20,14 +20,14 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: codebuild-CryptoToolsCI-linux-aws-encryption-sdk-javascript-${{ github.run_id }}-${{ github.run_attempt }}
     permissions:
       id-token: write
       contents: read
     strategy:
       fail-fast: false
       matrix:
-        node-version: ['22.x', '24.x', 'latest']
+        node-version: ['22.x', '24.x', '*']
         test-type: ['node', 'browser']
         # Determine test categories based on whether testing published packages or source code:
         # - Testing published packages: only run vector tests (don't have build artifacts to test coverage or compliance)
@@ -57,7 +57,7 @@ jobs:
           role-session-name: JavaScriptTests
 
       - name: Install dependencies
-        run: npm ci --unsafe-perm
+        run: npm ci
 
       - name: Build (for source code testing)
         if: ${{ !inputs.test-published-packages }}

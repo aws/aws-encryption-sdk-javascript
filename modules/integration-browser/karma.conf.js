@@ -58,6 +58,11 @@ module.exports = function (config) {
         new webpack.ProvidePlugin({
           Buffer: ['buffer', 'Buffer'],
         }),
+        {
+          apply(compiler) {
+            compiler.options.optimization.sideEffects = false
+          },
+        },
       ],
       devtool: 'inline-source-map',
       resolve: {
