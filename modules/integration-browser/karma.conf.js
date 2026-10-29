@@ -46,12 +46,15 @@ module.exports = function (config) {
             use: 'null-loader',
           },
           {
-            // webpack >= 5.112 defers the re-exports of packages marked
-            // `sideEffects: false` and, in development mode, drops modules that
-            // our `export *` barrels need (e.g. @aws-crypto/cache-material),
-            // so the bundle builds but throws at runtime. Treating every module
-            // as side-effectful keeps the full module graph. karma-webpack
-            // ignores `optimization`, so this has to be a module rule.
+            // Our packages set "sideEffects": false in package.json. Since
+            // webpack 5.112, development builds use that flag to skip modules
+            // that are only re-exported (`export * from ...`), and they skip
+            // some that are needed, e.g. @aws-crypto/cache-material. The
+            // bundle still compiles, but the tests fail with "Cannot find
+            // module". `sideEffects: true` tells webpack to ignore the flag
+            // and include every module. This can't go in
+            // `optimization.sideEffects` because karma-webpack drops any
+            // `optimization` settings.
             test: /\.js$/,
             sideEffects: true,
           },
