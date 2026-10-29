@@ -1,0 +1,8 @@
+{
+  "commonsRepository": {
+    "name": "aws-crypto-tools-commons",
+    "url": "git@github.com:aws/aws-crypto-tools-commons.git",
+    "branch": "lucmcdon/esdk-test-server-all-languages"
+  },
+  "product": "esdk"
+}
