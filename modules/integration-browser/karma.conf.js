@@ -48,6 +48,9 @@ module.exports = function (config) {
         ]
       },
       mode: 'development',
+      optimization: {
+        sideEffects: false,
+      },
       stats: {
         colors: true,
         modules: true,
