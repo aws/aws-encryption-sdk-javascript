@@ -77,6 +77,19 @@ jobs:
           npm run verdaccio-${{ matrix.test-type }}-decrypt
           npm run verdaccio-${{ matrix.test-type }}-encrypt
 
+      - name: Debug browser vector install
+        if: failure() && matrix.test-type == 'browser'
+        run: |
+          for d in ~/.npm/_npx/*/node_modules; do
+            echo "== $d"
+            ls "$d/@aws-crypto" || true
+            jq '{version, dependencies}' "$d/@aws-crypto/caching-materials-manager-browser/package.json" || true
+            jq '{version, dependencies}' "$d/@aws-crypto/integration-browser/package.json" || true
+            jq .version "$d/webpack/package.json" || true
+            find "$d" -path '*node_modules/webpack/package.json' -exec sh -c 'echo "$1 $(jq -r .version "$1")"' _ {} \; || true
+            ls "$d/@aws-crypto/cache-material" "$d/@aws-crypto/cache-material/build/module/src" || true
+          done
+
       - name: Run compliance tests
         # Don't run linting or check Duvet requirements for published packages
         if: ${{ matrix.test-category == 'compliance'}}
