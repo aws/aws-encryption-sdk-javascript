@@ -11,7 +11,6 @@ on:
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
-  NPM_CONFIG_UNSAFE_PERM: true
 
 jobs:
   test:
@@ -37,10 +36,25 @@ jobs:
           fetch-depth: 0
           submodules: true
 
+      - name: Resolve Node.js version
+        id: node-version
+        env:
+          REQUESTED_NODE_VERSION: ${{ matrix.node-version }}
+        run: |
+          if [ "$REQUESTED_NODE_VERSION" = "latest" ]; then
+            # setup-node's `latest` takes the newest entry in nodejs.org/dist/index.json,
+            # which can be a prerelease (e.g. v27.0.0-alpha). Use the newest stable release.
+            version=$(curl -fsSL https://nodejs.org/dist/index.json | jq -r '[.[] | select(.version | test("-") | not)][0].version')
+          else
+            version="$REQUESTED_NODE_VERSION"
+          fi
+          echo "Using Node.js $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ steps.node-version.outputs.version }}
           cache: 'npm'
 
       - name: Configure AWS Credentials for Tests
@@ -51,7 +65,7 @@ jobs:
           role-session-name: JavaScriptTests
 
       - name: Install dependencies
-        run: npm ci --unsafe-perm
+        run: npm ci
 
       - name: Build (for source code testing)
         if: ${{ !inputs.test-published-packages }}
