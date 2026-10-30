@@ -11,7 +11,6 @@ on:
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
-  NPM_CONFIG_UNSAFE_PERM: true
 
 jobs:
   test:
@@ -51,7 +50,7 @@ jobs:
           role-session-name: JavaScriptTests
 
       - name: Install dependencies
-        run: npm ci --unsafe-perm
+        run: npm ci
 
       - name: Build (for source code testing)
         if: ${{ !inputs.test-published-packages }}
