@@ -254,7 +254,7 @@ describe('KmsHierarchicalKeyRingNode: decrypt EDK order', () => {
       `Error #1 \n Error: The encrypted data key ciphertext must be ${ciphertextLength} bytes long`,
       'Error #2 \n Error: Input must represent a uuidv4',
       `Error #3 \n Error: A branch key record with branch-key-id=${branchKeyId} and type=branch:version:${nonExistentBranchKeyVersion} was not found in DynamoDB`,
-      'Error #4 \n Error: Unsupported state or unable to authenticate data',
+      /Error #4 \n Error: (Unsupported state or unable to authenticate data|error:1C800064:Provider routines::bad decrypt)/,
     ]
 
     await testOnDecryptError(
