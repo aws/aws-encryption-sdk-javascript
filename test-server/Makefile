@@ -90,6 +90,9 @@ test-server: check-java ## Run the complete cross-language TestServer via the co
 	if [ ! -d "$(CLONE_ORCH_DIR)" ]; then \
 		echo "ERROR: branch $$branch of $$url has no orchestrator at esdk/test-server/orchestrator." >&2; exit 1; \
 	fi; \
+	if [ -n "$${LANGUAGE_BRANCHES//[[:space:]]/}" ]; then \
+		(cd "$(CLONE_DIR)" && "$${RESOLVE_SCRIPT:-.github/scripts/resolve-test-server-refs.sh}" apply); \
+	fi; \
 	echo "==> Delegating: context=language:javascript languageRepoRoot=$(REPO_ROOT)"; \
 	cd "$(CLONE_ORCH_DIR)" && ./gradlew --console=plain run \
 		--args="context=language:javascript languageRepoRoot=$(REPO_ROOT) commonsOrigin.url=$$url commonsOrigin.branch=$$branch commonsOrigin.reason=$$reason"

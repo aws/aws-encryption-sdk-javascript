@@ -164,6 +164,42 @@ jobs:
           test -n "$PAT" || { echo "::error::COMMONS_REPO_PAT is empty/unset in this repo"; exit 1; }
           git config --global url."https://x-access-token:${PAT}@github.com/".insteadOf "git@github.com:"
 
+      - name: Resolve Test-Server-Override lines in the pull request description
+        id: override
+        env:
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_REF: ${{ github.head_ref }}
+          EVENT_BODY: ${{ github.event.pull_request.body }}
+          GH_TOKEN: ${{ github.token }}
+          REPO_PAT: ${{ secrets.COMMONS_REPO_PAT }}
+        run: |
+          set -euo pipefail
+          script="$RUNNER_TEMP/resolve-test-server-refs.sh"
+          GH_TOKEN=$REPO_PAT gh api -H "Accept: application/vnd.github.raw" \
+            "repos/aws/aws-crypto-tools-commons/contents/.github/scripts/resolve-test-server-refs.sh?ref=main" > "$script"
+          chmod +x "$script"
+          "$script" resolve
+
+      - name: Pick the commons branch named by an override
+        id: commons
+        env:
+          COMMONS_REF: ${{ steps.override.outputs.commons_ref }}
+          PAT: ${{ secrets.COMMONS_REPO_PAT }}
+        run: |
+          set -euo pipefail
+          branch=""
+          if [[ $COMMONS_REF =~ ^[0-9a-f]{40}$ ]]; then
+            branch=$(git ls-remote --heads "https://x-access-token:${PAT}@github.com/aws/aws-crypto-tools-commons.git" |
+              awk -v s="$COMMONS_REF" '$1 == s { sub("refs/heads/", "", $2); print $2; exit }')
+            if [ -z "$branch" ]; then
+              echo "::error::no commons branch is at $COMMONS_REF" >&2
+              exit 1
+            fi
+          fi
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
       - name: Configure AWS credentials via OIDC (required KMS scenarios)
         id: aws-credentials
         continue-on-error: true
@@ -181,6 +217,10 @@ jobs:
 
       - name: Run the orchestrated TestServer
         working-directory: test-server
+        env:
+          COMMONS_BRANCH: ${{ steps.commons.outputs.branch }}
+          LANGUAGE_BRANCHES: ${{ steps.override.outputs.language_branches }}
+          RESOLVE_SCRIPT: ${{ runner.temp }}/resolve-test-server-refs.sh
         run: make test-server
 
       - name: Save build caches
