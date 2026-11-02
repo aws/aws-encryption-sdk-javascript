@@ -87,14 +87,16 @@ test-server: check-java ## Run the complete cross-language TestServer via the co
 	if ! git clone --depth 1 --single-branch --branch "$$branch" "$$url" "$(CLONE_DIR)"; then \
 		echo "ERROR: failed to clone $$url at branch $$branch; no Tests will run." >&2; exit 1; \
 	fi; \
-	if [ ! -d "$(CLONE_ORCH_DIR)" ]; then \
-		echo "ERROR: branch $$branch of $$url has no orchestrator at esdk/test-server/orchestrator." >&2; exit 1; \
+	orch="$(CLONE_DIR)/test-server-common/orchestrator"; root_flag="-Dtestserver.root=$(CLONE_DIR)/esdk/test-server"; \
+	if [ ! -d "$$orch" ]; then orch="$(CLONE_ORCH_DIR)"; root_flag=""; fi; \
+	if [ ! -d "$$orch" ]; then \
+		echo "ERROR: branch $$branch of $$url has no orchestrator at test-server-common/orchestrator or esdk/test-server/orchestrator." >&2; exit 1; \
 	fi; \
 	if [ -n "$${LANGUAGE_BRANCHES//[[:space:]]/}" ]; then \
 		(cd "$(CLONE_DIR)" && "$${RESOLVE_SCRIPT:-.github/scripts/resolve-test-server-refs.sh}" apply); \
 	fi; \
 	echo "==> Delegating: context=language:javascript languageRepoRoot=$(REPO_ROOT)"; \
-	cd "$(CLONE_ORCH_DIR)" && ./gradlew --console=plain run \
+	cd "$$orch" && ./gradlew --console=plain run $$root_flag \
 		--args="context=language:javascript languageRepoRoot=$(REPO_ROOT) commonsOrigin.url=$$url commonsOrigin.branch=$$branch commonsOrigin.reason=$$reason"
 
 clean: ## Remove build output, server scratch files, and the commons clone
