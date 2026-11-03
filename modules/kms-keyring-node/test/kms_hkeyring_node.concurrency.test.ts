@@ -29,6 +29,15 @@ import {
   KeyStoreInfoOutput,
 } from '@aws-crypto/branch-keystore-node'
 
+import { getBranchKeyMaterials } from '../src/kms_hkeyring_node_helpers'
+import {
+  SHARED_FETCHES,
+  sharedFetchesFor,
+} from '../src/shared_branch_key_fetches'
+import { getLocalCryptographicMaterialsCache } from '@aws-crypto/cache-material'
+import { NodeAlgorithmSuite } from '@aws-crypto/material-management'
+import { v4 } from 'uuid'
+
 const CONCURRENCY = 25
 
 let activeMaterialA: NodeBranchKeyMaterial
@@ -140,6 +149,274 @@ describe('KmsHierarchicalKeyRingNode: concurrent cold-cache operations (#1691)',
 
     for (let i = 0; i < recovered.length; i++) {
       expect(recovered[i]).to.deep.equal(cases[i % 2].pdk)
+    }
+  })
+})
+
+const CONCURRENT_OPERATIONS = 3000
+
+// A short grace interval, so the hang tests run in milliseconds.
+const FAST = { graceInterval: 40 }
+const DEFAULT = { ...SHARED_FETCHES }
+
+const wait = async (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms))
+
+// A keystore stub where each request takes 5 ms.
+// `outcomes` decides each call in order: 'ok', 'fail', or 'hang'; later calls use the last one.
+function slowKeyStore(
+  outcomes: ('ok' | 'fail' | 'hang')[] = ['ok']
+): Sinon.SinonStubbedInstance<BranchKeyStoreNode> {
+  const material = new NodeBranchKeyMaterial(
+    Buffer.alloc(32, 1),
+    BRANCH_KEY_ID_A,
+    v4(),
+    {}
+  )
+  const keyStore = stubKeyStore() as any
+  let calls = 0
+  const fetch = async () => {
+    const outcome = outcomes[Math.min(calls++, outcomes.length - 1)]
+    if (outcome === 'hang') return new Promise<never>(() => undefined)
+    await wait(5)
+    if (outcome === 'fail') throw new Error('keystore unavailable')
+    return deepCopyBranchKeyMaterial(material)
+  }
+  keyStore.getActiveBranchKey.callsFake(fetch)
+  keyStore.getBranchKeyVersion.callsFake(fetch)
+  return keyStore
+}
+
+function keyringFor(
+  keyStore: BranchKeyStoreNode,
+  {
+    cache,
+    partitionId,
+  }: {
+    cache?: KmsHierarchicalKeyRingNode['_cmc']
+    partitionId?: string
+  } = {}
+): KmsHierarchicalKeyRingNode {
+  return new KmsHierarchicalKeyRingNode({
+    branchKeyIdSupplier: BRANCH_KEY_ID_SUPPLIER,
+    keyStore,
+    cacheLimitTtl: TTL,
+    cache,
+    partitionId,
+  })
+}
+
+// A minimal keyring for calling getBranchKeyMaterials directly.
+function hKeyringFor(keyStore: any) {
+  return {
+    keyStore,
+    cacheLimitTtl: TTL * 1000,
+    cacheEntryHasExceededLimits: () => false,
+  } as any
+}
+
+function startEncrypts(hkr: KmsHierarchicalKeyRingNode, count: number) {
+  return Array.from({ length: count }, async () =>
+    hkr.onEncrypt(new NodeEncryptionMaterial(TEST_ESDK_ALG_SUITE, EC_A))
+  )
+}
+
+async function encryptConcurrently(
+  hkr: KmsHierarchicalKeyRingNode,
+  count: number
+) {
+  return Promise.all(startEncrypts(hkr, count))
+}
+
+async function encryptSettled(hkr: KmsHierarchicalKeyRingNode, count: number) {
+  return Promise.allSettled(startEncrypts(hkr, count))
+}
+
+describe('KmsHierarchicalKeyRingNode: shared keystore fetches (#1663)', () => {
+  beforeEach(() => Object.assign(SHARED_FETCHES, FAST))
+  afterEach(() => Object.assign(SHARED_FETCHES, DEFAULT))
+
+  it(`${CONCURRENT_OPERATIONS} concurrent onEncrypt misses share one keystore call`, async () => {
+    // On a slow runner, starting 3000 callers can take longer than a short grace interval,
+    // which starts a second fetch.
+    Object.assign(SHARED_FETCHES, { graceInterval: 60 * 1000 })
+    const keyStore = slowKeyStore()
+    await encryptConcurrently(keyringFor(keyStore), CONCURRENT_OPERATIONS)
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
+  })
+
+  it(`${CONCURRENT_OPERATIONS} concurrent onDecrypt misses share one keystore call`, async () => {
+    // On a slow runner, starting 3000 callers can take longer than a short grace interval,
+    // which starts a second fetch.
+    Object.assign(SHARED_FETCHES, { graceInterval: 60 * 1000 })
+    const keyStore = slowKeyStore()
+    const [encrypted] = await encryptConcurrently(keyringFor(keyStore), 1)
+    const expectedPdk = unwrapDataKey(encrypted.getUnencryptedDataKey())
+
+    const hkr = keyringFor(keyStore)
+    const recovered = await Promise.all(
+      Array.from({ length: CONCURRENT_OPERATIONS }, async () => {
+        const material = new NodeDecryptionMaterial(TEST_ESDK_ALG_SUITE, EC_A)
+        await hkr.onDecrypt(material, encrypted.encryptedDataKeys)
+        return unwrapDataKey(material.getUnencryptedDataKey())
+      })
+    )
+
+    expect(keyStore.getBranchKeyVersion.callCount).to.equal(1)
+    for (const pdk of recovered) expect(pdk).to.deep.equal(expectedPdk)
+  })
+
+  it('keyrings that share a cache and partition share keystore calls', async () => {
+    const keyStore = slowKeyStore()
+    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
+    const partitionId = v4()
+    await Promise.all([
+      encryptConcurrently(keyringFor(keyStore, { cache, partitionId }), 10),
+      encryptConcurrently(keyringFor(keyStore, { cache, partitionId }), 10),
+    ])
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(1)
+  })
+
+  it('waiting callers share one retry when the shared fetch fails', async () => {
+    const keyStore = slowKeyStore(['fail', 'ok'])
+    const results = await encryptSettled(keyringFor(keyStore), 10)
+
+    // Only the caller whose fetch failed sees the error.
+    expect(results.filter((r) => r.status === 'rejected')).to.have.lengthOf(1)
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
+  })
+
+  it('waiting callers get the error when the shared retry also fails', async () => {
+    const keyStore = slowKeyStore(['fail'])
+    const results = await encryptSettled(keyringFor(keyStore), 10)
+
+    for (const result of results) expect(result.status).to.equal('rejected')
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
+  })
+
+  it('releases every waiting caller when the keystore response is malformed', async () => {
+    // Copying this malformed response throws before the waiting callers get it.
+    const keyStore = {
+      getBranchKeyVersion: async () => {
+        await wait(5)
+        return {} as NodeBranchKeyMaterial
+      },
+    }
+    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
+
+    const results = await Promise.allSettled(
+      Array.from({ length: 3 }, async () =>
+        getBranchKeyMaterials(
+          hKeyringFor(keyStore),
+          cache,
+          BRANCH_KEY_ID_A,
+          'entry',
+          'version'
+        )
+      )
+    )
+
+    for (const result of results) expect(result.status).to.equal('rejected')
+    expect(sharedFetchesFor(cache)?.size).to.equal(0)
+  })
+
+  it('starts another fetch for new callers once one hangs past graceInterval', async () => {
+    const keyStore = slowKeyStore(['hang', 'ok'])
+    const hkr = keyringFor(keyStore)
+
+    startEncrypts(hkr, 1)
+    await wait(FAST.graceInterval + 5)
+    await encryptConcurrently(hkr, 5)
+
+    expect(keyStore.getActiveBranchKey.callCount).to.equal(2)
+  })
+
+  it('a stale fetch that fails late does not affect callers waiting on a newer one', async () => {
+    const deferreds: {
+      resolve: (m: NodeBranchKeyMaterial) => void
+      reject: (e: Error) => void
+    }[] = []
+    const keyStore = {
+      getBranchKeyVersion: async () =>
+        new Promise<NodeBranchKeyMaterial>((resolve, reject) =>
+          deferreds.push({ resolve, reject })
+        ),
+    }
+    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
+    const get = async () =>
+      getBranchKeyMaterials(
+        hKeyringFor(keyStore),
+        cache,
+        BRANCH_KEY_ID_A,
+        'entry',
+        'version'
+      )
+
+    const stale = get()
+    await wait(FAST.graceInterval + 5)
+    const newer = [get(), get(), get()]
+    await wait(1)
+    expect(deferreds).to.have.lengthOf(2)
+
+    deferreds[0].reject(new Error('stale'))
+    const [staleResult] = await Promise.allSettled([stale])
+    expect((staleResult as PromiseRejectedResult).reason.message).to.equal(
+      'stale'
+    )
+    // A caller arriving now still joins the newer fetch.
+    newer.push(get())
+    deferreds[1].resolve(
+      new NodeBranchKeyMaterial(Buffer.alloc(32, 7), BRANCH_KEY_ID_A, v4(), {})
+    )
+    for (const result of await Promise.all(newer)) {
+      expect(result.branchKey()).to.deep.equal(Buffer.alloc(32, 7))
+    }
+    expect(deferreds).to.have.lengthOf(2)
+  })
+
+  it('forgets a cache entry once its fetches settle', async () => {
+    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(100)
+    await encryptConcurrently(keyringFor(slowKeyStore(), { cache }), 5)
+    await encryptSettled(keyringFor(slowKeyStore(['fail']), { cache }), 5)
+    expect(sharedFetchesFor(cache)?.size).to.equal(0)
+  })
+})
+
+describe('getBranchKeyMaterials: eviction while a request settles', () => {
+  const material = (fill: number) =>
+    new NodeBranchKeyMaterial(Buffer.alloc(32, fill), BRANCH_KEY_ID_A, v4(), {})
+
+  it('returns an intact branch key when another put evicts the entry before callers resume', async () => {
+    const cache = getLocalCryptographicMaterialsCache<NodeAlgorithmSuite>(1)
+    // Another branch key is cached one microtask after this one,
+    // which evicts and zeroes this entry in the one-entry cache.
+    const racingCache = {
+      ...cache,
+      putBranchKeyMaterial(
+        key: string,
+        m: NodeBranchKeyMaterial,
+        ttl?: number
+      ) {
+        cache.putBranchKeyMaterial(key, m, ttl)
+        queueMicrotask(() => cache.putBranchKeyMaterial('other', material(2)))
+      },
+    }
+    const keyStore = { getBranchKeyVersion: async () => material(1) }
+
+    const results = await Promise.all(
+      Array.from({ length: 3 }, async () =>
+        getBranchKeyMaterials(
+          hKeyringFor(keyStore),
+          racingCache,
+          BRANCH_KEY_ID_A,
+          'entry',
+          'version'
+        )
+      )
+    )
+
+    for (const result of results) {
+      expect(result.branchKey()).to.deep.equal(Buffer.alloc(32, 1))
     }
   })
 })
