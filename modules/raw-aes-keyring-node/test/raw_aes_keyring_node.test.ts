@@ -118,6 +118,89 @@ describe('RawAesKeyringNode::constructor', () => {
   })
 })
 
+describe('RawAesKeyringNode::constructor does not consume the caller key (#970)', () => {
+  const wrappingSuite =
+    RawAesWrappingSuiteIdentifier.AES128_GCM_IV12_TAG16_NO_PADDING
+  const keyNamespace = 'keyNamespace'
+  const keyName = 'keyName'
+  const suite = new NodeAlgorithmSuite(
+    AlgorithmSuiteIdentifier.ALG_AES256_GCM_IV12_TAG16_HKDF_SHA256
+  )
+
+  it('leaves the unencryptedMasterKey passed in by the caller intact', () => {
+    const unencryptedMasterKey = new Uint8Array(128 / 8).fill(7)
+    new RawAesKeyringNode({
+      keyName,
+      keyNamespace,
+      unencryptedMasterKey,
+      wrappingSuite,
+    })
+    expect(Array.from(unencryptedMasterKey)).to.deep.equal(
+      new Array(128 / 8).fill(7)
+    )
+  })
+
+  it('keeps working after the caller zeros its own unencryptedMasterKey', async () => {
+    const unencryptedMasterKey = new Uint8Array(128 / 8).fill(7)
+    const keyring = new RawAesKeyringNode({
+      keyName,
+      keyNamespace,
+      unencryptedMasterKey,
+      wrappingSuite,
+    })
+    unencryptedMasterKey.fill(0)
+
+    const encryptionMaterial = await keyring.onEncrypt(
+      new NodeEncryptionMaterial(suite, {})
+    )
+    const [edk] = encryptionMaterial.encryptedDataKeys
+    const decryptionMaterial = await keyring.onDecrypt(
+      new NodeDecryptionMaterial(suite, {}),
+      [edk]
+    )
+    expect(
+      unwrapDataKey(decryptionMaterial.getUnencryptedDataKey())
+    ).to.deep.equal(unwrapDataKey(encryptionMaterial.getUnencryptedDataKey()))
+  })
+
+  it('two keyrings can be built from the same unencryptedMasterKey', async () => {
+    const unencryptedMasterKey = new Uint8Array(128 / 8).fill(7)
+    const first = new RawAesKeyringNode({
+      keyName,
+      keyNamespace,
+      unencryptedMasterKey,
+      wrappingSuite,
+    })
+    const second = new RawAesKeyringNode({
+      keyName,
+      keyNamespace,
+      unencryptedMasterKey,
+      wrappingSuite,
+    })
+    const encryptionMaterial = await first.onEncrypt(
+      new NodeEncryptionMaterial(suite, {})
+    )
+    const decryptionMaterial = await second.onDecrypt(
+      new NodeDecryptionMaterial(suite, {}),
+      encryptionMaterial.encryptedDataKeys
+    )
+    expect(decryptionMaterial.hasValidKey()).to.equal(true)
+  })
+
+  it('Precondition: unencryptedMasterKey must be an isolated buffer.', () => {
+    const shared = new Uint8Array(new ArrayBuffer(64), 16, 128 / 8)
+    expect(
+      () =>
+        new RawAesKeyringNode({
+          keyName,
+          keyNamespace,
+          unencryptedMasterKey: shared,
+          wrappingSuite,
+        })
+    ).to.throw('Unencrypted Master Key must be an isolated buffer.')
+  })
+})
+
 describe('RawAesKeyringNode::_filter', () => {
   const wrappingSuite =
     RawAesWrappingSuiteIdentifier.AES128_GCM_IV12_TAG16_NO_PADDING

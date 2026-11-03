@@ -61,13 +61,17 @@ export class RawAesKeyringNode extends KeyringNode {
     } = input
     /* Precondition: AesKeyringNode needs identifying information for encrypt and decrypt. */
     needs(keyName && keyNamespace, 'Identifying information must be defined.')
+    /* The material takes ownership of the key it is given and zeros it once it is
+     * moved into a KeyObject, so the material is given a copy.
+     * The caller keeps ownership of unencryptedMasterKey and is responsible for zeroing it.
+     */
     /* Precondition: RawAesKeyringNode requires wrappingSuite to be a valid RawAesWrappingSuite. */
     const wrappingMaterial = new NodeRawAesMaterial(wrappingSuite)
       /* Precondition: unencryptedMasterKey must correspond to the NodeAlgorithmSuite specification.
        * Note: the KeyringTrace and flag are _only_ set because I am reusing an existing implementation.
        * See: raw_aes_material.ts in @aws-crypto/raw-keyring for details
        */
-      .setUnencryptedDataKey(unencryptedMasterKey, {
+      .setUnencryptedDataKey(copyOfMasterKey(unencryptedMasterKey), {
         keyNamespace,
         keyName,
         flags: KeyringTraceFlag.WRAPPING_KEY_GENERATED_DATA_KEY,
@@ -146,6 +150,21 @@ export class RawAesKeyringNode extends KeyringNode {
   _onDecrypt = _onDecrypt<NodeAlgorithmSuite, RawAesKeyringNode>()
 }
 immutableClass(RawAesKeyringNode)
+
+/**
+ * Returns an isolated copy of the caller supplied master key.
+ * The isolation precondition is checked against the caller's buffer
+ * because the copy always starts at offset 0 of its own ArrayBuffer.
+ */
+function copyOfMasterKey(unencryptedMasterKey: Uint8Array): Uint8Array {
+  /* Precondition: The caller's master key must be an isolated buffer. */
+  needs(
+    unencryptedMasterKey instanceof Uint8Array &&
+      unencryptedMasterKey.byteOffset === 0,
+    'Unencrypted Master Key must be an isolated buffer.'
+  )
+  return new Uint8Array(unencryptedMasterKey)
+}
 
 const encryptFlags =
   KeyringTraceFlag.WRAPPING_KEY_ENCRYPTED_DATA_KEY |
