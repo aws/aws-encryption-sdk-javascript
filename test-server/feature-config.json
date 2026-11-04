@@ -18,6 +18,7 @@
     "raw-ecdh",
     "aws-kms-rsa",
     "aws-kms-ecdh",
-    "required-encryption-context"
+    "required-encryption-context",
+    "default-cmm-reproduced-encryption-context"
   ]
 }
