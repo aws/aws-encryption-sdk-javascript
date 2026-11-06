@@ -14,7 +14,6 @@
     "caching"
   ],
   "unsupportedFeatures": [
-    "MPL",
     "raw-ecdh",
     "aws-kms-rsa",
     "aws-kms-ecdh",
