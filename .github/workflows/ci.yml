@@ -4,7 +4,10 @@ permissions:
   contents: read
   id-token: write
 
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    branches: [master]
 
 jobs:
   shared-ci:

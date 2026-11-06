@@ -16,3 +16,7 @@ createServer().listen(port, '127.0.0.1', () => {
     `esdk-test-server (javascript) listening at http://127.0.0.1:${port}`
   )
 })
+
+// Exit normally on SIGTERM, which is how the orchestrator stops the server;
+// Node then runs its exit hooks, such as writing NODE_V8_COVERAGE data.
+process.on('SIGTERM', () => process.exit(0))
