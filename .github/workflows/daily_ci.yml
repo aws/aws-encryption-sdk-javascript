@@ -18,9 +18,9 @@ jobs:
     strategy:
       matrix:
         branch: [master, v4.x]
-    uses: ./.github/workflows/ci.yml
+    uses: ./.github/workflows/shared-ci.yml
     with:
-      branch: ${{ matrix.branch }}
+      ref: ${{ matrix.branch }}
   notify:
     needs:
       [

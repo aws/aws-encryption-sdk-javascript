@@ -252,7 +252,22 @@ export async function getBranchKeyMaterials(
     branchKeyMaterials = cacheEntry.response
   }
 
-  return branchKeyMaterials
+  /* Hand back a copy the cache can never touch. The CMC zeroes a material's
+   * buffer in place on eviction; callers read the branch key AFTER this await,
+   * so a concurrent eviction (overwrite, TTL, or tail) could otherwise zero the
+   * buffer mid-derivation. */
+  return deepCopyBranchKeyMaterial(branchKeyMaterials)
+}
+
+function deepCopyBranchKeyMaterial(
+  material: NodeBranchKeyMaterial
+): NodeBranchKeyMaterial {
+  return new NodeBranchKeyMaterial(
+    Buffer.from(material.branchKey()),
+    material.branchKeyIdentifier,
+    material.branchKeyVersion.toString('utf-8'),
+    { ...material.encryptionContext }
+  )
 }
 
 //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt

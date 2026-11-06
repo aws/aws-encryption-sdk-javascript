@@ -126,6 +126,10 @@ function buildRawAes(config: RawAesKeyringConfig): KeyringNode {
      * into the request body. */
     unencryptedMasterKey: new Uint8Array(config.wrappingKey),
     wrappingSuite,
+    /* Sort the encryption context by UTF-8 bytes in the wrapping AAD, as the
+     * other ESDK implementations do. The keyring defaults to the older
+     * locale order. */
+    utf8Sorting: true,
   })
 }
 
