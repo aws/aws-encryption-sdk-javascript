@@ -81,6 +81,26 @@ jobs:
         if: ${{ matrix.test-category == 'coverage' }}
         run: npm run coverage-${{ matrix.test-type }}
 
+      - name: Write the line coverage report (${{ matrix.test-type }})
+        # One leg per test type uploads; the daily run tests other refs and uploads none.
+        if: ${{ matrix.test-category == 'coverage' && matrix.node-version == '22.x' && inputs.ref == '' }}
+        env:
+          TEST_TYPE: ${{ matrix.test-type }}
+        run: |
+          set -euo pipefail
+          if [ "$TEST_TYPE" = browser ]; then data=.karma_output; else data=.nyc_output; fi
+          npx nyc report -t "$data" --reporter=lcovonly --report-dir "$RUNNER_TEMP/lcov"
+          mkdir -p local-coverage
+          sed "s|^SF:$GITHUB_WORKSPACE/|SF:|" "$RUNNER_TEMP/lcov/lcov.info" > "local-coverage/$TEST_TYPE.lcov"
+
+      - name: Upload the line coverage report (${{ matrix.test-type }})
+        if: ${{ matrix.test-category == 'coverage' && matrix.node-version == '22.x' && inputs.ref == '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-coverage-${{ matrix.test-type }}
+          path: local-coverage/*.lcov
+          if-no-files-found: error
+
       - name: Publish locally for vector tests
         if: ${{ matrix.test-category == 'vectors' && !inputs.test-published-packages }}
         run: npm run verdaccio-publish
