@@ -281,9 +281,7 @@ describe('KmsHierarchicalKeyRingNode: helpers', () => {
             decryptionMaterial,
             utf8Sorting.utf8Sorting
           )
-        ).to.throw(
-          /Unsupported state or unable to authenticate data|bad decrypt/
-        )
+        ).to.throw('Unsupported state or unable to authenticate data')
       }
     })
   })

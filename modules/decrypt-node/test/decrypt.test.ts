@@ -277,10 +277,7 @@ describe('decrypt', () => {
       decrypt(hkeyring, ciphertext, {
         encoding: 'base64',
       })
-    ).to.rejectedWith(
-      Error,
-      /Unsupported state or unable to authenticate data|bad decrypt/
-    )
+    ).to.rejectedWith(Error, 'Unsupported state or unable to authenticate data')
   })
 
   it('will decrypt ciphertext with high utf8 codepoints with a keyring configured to do utf8 sorting', async () => {
