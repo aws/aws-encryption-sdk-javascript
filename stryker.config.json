@@ -1,0 +1,31 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "mocha",
+  "coverageAnalysis": "perTest",
+  "mochaOptions": {
+    "spec": [
+      "modules/branch-keystore-node/test/**/*test.ts",
+      "modules/cache-material/test/**/*test.ts",
+      "modules/caching-materials-manager-node/test/**/*test.ts",
+      "modules/decrypt-node/test/**/*test.ts",
+      "modules/encrypt-node/test/**/*test.ts",
+      "modules/hkdf-node/test/**/*test.ts",
+      "modules/kdf-ctr-mode-node/test/**/*test.ts",
+      "modules/kms-keyring/test/**/*test.ts",
+      "modules/kms-keyring-node/test/**/*test.ts",
+      "modules/material-management/test/**/*test.ts",
+      "modules/material-management-node/test/**/*test.ts",
+      "modules/raw-aes-keyring-node/test/**/*test.ts",
+      "modules/raw-keyring/test/**/*test.ts",
+      "modules/raw-rsa-keyring-node/test/**/*test.ts",
+      "modules/serialize/test/**/*test.ts"
+    ],
+    "require": ["./util/mutation/require-src.js"],
+    "config": "util/mutation/mocharc.json"
+  },
+  "ignorePatterns": ["**/build", "**/.nyc_output", "**/.karma_output", "aws-encryption-sdk-test-vectors", "aws-encryption-sdk-specification", "stream_mem_stress_test", "test-server", "verdaccio"],
+  "reporters": ["json", "clear-text", "progress-append-only"],
+  "jsonReporter": { "fileName": "reports/mutation/mutation.json" },
+  "tempDirName": ".stryker-tmp",
+  "cleanTempDir": "always"
+}

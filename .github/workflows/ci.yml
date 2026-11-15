@@ -12,10 +12,18 @@ on:
 jobs:
   shared-ci:
     uses: ./.github/workflows/shared-ci.yml
+  mutation:
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: read
+    uses: ./.github/workflows/mutation.yml
+    secrets: inherit
   pr-ci-all-required:
     if: always()
     needs:
       - shared-ci
+      - mutation
     runs-on: ubuntu-22.04
     steps:
       - name: Verify all required jobs passed

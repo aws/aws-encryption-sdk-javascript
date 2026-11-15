@@ -1,0 +1,192 @@
+# Mutation testing with StrykerJS.
+#
+# A mutant is a small change to the library, such as `<` turned into `<=`.
+# Stryker records which tests run each line, then runs only those tests against each mutant.
+# A mutant is killed when one of those tests fails.
+# stryker.config.json lists the tests, and util/mutation/require-src.js points them at the mutated sources.
+#
+# A pull request mutates only the library lines it changes.
+# The job fails if one of those mutants survives or sits on a line that no test runs.
+# Any other event mutates the whole library and only reports.
+# Each library uploads mutation-results-<library>-javascript (results.json) for the
+# Mutation testing page of the aws-crypto-tools-commons dashboard.
+
+name: Mutation testing
+
+on:
+  # ci.yml calls this with `secrets: inherit` for COMMONS_REPO_PAT, a read-only token for aws-crypto-tools-commons.
+  workflow_call:
+    inputs:
+      commons-ref:
+        description: The aws-crypto-tools-commons ref whose mutation tools run. Empty means main.
+        type: string
+        default: ""
+  workflow_dispatch:
+    inputs:
+      commons-ref:
+        description: The aws-crypto-tools-commons ref whose mutation tools run. Empty means main.
+        type: string
+
+jobs:
+  mutation:
+    name: ${{ matrix.library }} mutation testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    permissions:
+      contents: read
+      id-token: write
+      # The resolve script reads this pull request's Test-Server-Override lines.
+      pull-requests: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - library: esdk
+            modules: serialize encrypt-node decrypt-node client-node
+          - library: mpl
+            modules: >-
+              material-management material-management-node cache-material caching-materials-manager-node
+              raw-keyring raw-aes-keyring-node raw-rsa-keyring-node kms-keyring kms-keyring-node
+              branch-keystore-node hkdf-node kdf-ctr-mode-node
+    env:
+      MODULES: ${{ matrix.modules }}
+      TOOLS: ${{ github.workspace }}/commons/test-server-common/tools/mutation
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check out the resolve script
+        uses: actions/checkout@v4
+        with:
+          repository: aws/aws-crypto-tools-commons
+          ref: ${{ inputs.commons-ref }}
+          token: ${{ secrets.COMMONS_REPO_PAT }}
+          sparse-checkout: .github/scripts
+          path: resolve
+
+      - name: Resolve the commons ref, Test-Server-Override lines included
+        id: refs
+        env:
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_REF: ${{ github.head_ref }}
+          EVENT_BODY: ${{ github.event.pull_request.body }}
+          INPUT_COMMONS_REF: ${{ inputs.commons-ref }}
+          GH_TOKEN: ${{ github.token }}
+          REPO_PAT: ${{ secrets.COMMONS_REPO_PAT }}
+        run: resolve/.github/scripts/resolve-test-server-refs.sh resolve
+
+      - uses: actions/checkout@v4
+        with:
+          repository: aws/aws-crypto-tools-commons
+          ref: ${{ steps.refs.outputs.commons_ref }}
+          token: ${{ secrets.COMMONS_REPO_PAT }}
+          sparse-checkout: test-server-common/tools/mutation
+          path: commons
+
+      - name: Mutate the whole library
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p "$RUNNER_TEMP/mutation"
+          for module in $MODULES; do echo "modules/$module/src/**/*.ts"; done > "$RUNNER_TEMP/mutation/mutate.txt"
+          # genversion writes version.ts at install time; it holds only the package version.
+          echo '!modules/*/src/version.ts' >> "$RUNNER_TEMP/mutation/mutate.txt"
+          echo "SCOPE=full" >> "$GITHUB_ENV"
+
+      - name: Mutate only the library lines this pull request changes
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/mutation"
+          git fetch --no-tags origin "$BASE"
+          globs=()
+          for module in $MODULES; do globs+=(--glob "modules/$module/src/*.ts"); done
+          python3 "$TOOLS/results.py" changed-lines --repo . --base "$BASE" --out "$RUNNER_TEMP/mutation/lines.json" "${globs[@]}"
+          python3 "$TOOLS/stryker.py" mutate-patterns "$RUNNER_TEMP/mutation/lines.json" "${globs[@]}" > "$RUNNER_TEMP/mutation/mutate.txt"
+          echo "SCOPE=changed" >> "$GITHUB_ENV"
+
+      - name: Check for lines to mutate
+        run: |
+          if [ -s "$RUNNER_TEMP/mutation/mutate.txt" ]; then
+            echo "MUTATE=true" >> "$GITHUB_ENV"
+          else
+            echo "This pull request changes no ${{ matrix.library }} source line." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "MUTATE=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Record that there is nothing to mutate
+        if: env.MUTATE == 'false'
+        run: |
+          mkdir -p reports/mutation
+          echo '{"schemaVersion": "2", "thresholds": {"high": 80, "low": 60}, "files": {}}' > reports/mutation/mutation.json
+          echo "MUTATION_SECONDS=0" >> "$GITHUB_ENV"
+
+      - name: Setup Node.js
+        if: env.MUTATE == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: Install dependencies and Stryker
+        if: env.MUTATE == 'true'
+        run: |
+          npm ci
+          npm install --no-save @stryker-mutator/core@10.1.1 @stryker-mutator/mocha-runner@10.1.1
+
+      - name: Configure AWS credentials for the KMS and DynamoDB tests
+        if: env.MUTATE == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::370957321024:role/GitHub-CI-MPL-Dafny-Role-us-west-2
+          role-session-name: JavaScriptMutationTesting
+
+      - name: Restore earlier mutation results
+        if: env.MUTATE == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: reports/stryker-incremental.json
+          key: mutation-javascript-${{ matrix.library }}-${{ github.run_id }}
+          restore-keys: mutation-javascript-${{ matrix.library }}-
+
+      # --incremental reuses the result of every mutant whose code and covering tests did not change.
+      - name: Run the mutants
+        if: env.MUTATE == 'true'
+        run: |
+          start=$SECONDS
+          npx stryker run --incremental --mutate "$(paste -sd, "$RUNNER_TEMP/mutation/mutate.txt")"
+          echo "MUTATION_SECONDS=$((SECONDS - start))" >> "$GITHUB_ENV"
+
+      - name: Save the mutation results for the next run
+        if: always() && env.MUTATE == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: reports/stryker-incremental.json
+          key: mutation-javascript-${{ matrix.library }}-${{ github.run_id }}
+
+      - name: Write results.json
+        run: |
+          mkdir -p results
+          python3 "$TOOLS/stryker.py" convert reports/mutation/mutation.json --root . --out results/results.json \
+            --repository "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --language javascript \
+            --library "${{ matrix.library }}" --scope "$SCOPE" --seconds "$MUTATION_SECONDS"
+
+      - name: Report the survivors
+        if: github.event_name != 'pull_request'
+        run: python3 "$TOOLS/results.py" check results/results.json
+
+      - name: Fail on a survivor or a changed line that no test runs
+        if: github.event_name == 'pull_request'
+        run: python3 "$TOOLS/results.py" check results/results.json --fail
+
+      - name: Upload the mutation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-results-${{ matrix.library }}-javascript
+          path: results/results.json
+          if-no-files-found: error
