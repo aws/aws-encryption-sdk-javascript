@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   not-grep:
-    runs-on: ubuntu-latest
+    runs-on: codebuild-CryptoToolsCI-linux-aws-encryption-sdk-javascript-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v2
       - name: not-grep
