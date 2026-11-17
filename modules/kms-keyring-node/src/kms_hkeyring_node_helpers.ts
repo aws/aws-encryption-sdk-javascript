@@ -34,6 +34,10 @@ import {
 } from './constants'
 import { BranchKeyIdSupplier } from '@aws-crypto/kms-keyring'
 import { serializeFactory, uuidv4Factory } from '@aws-crypto/serialize'
+import {
+  deepCopyBranchKeyMaterial,
+  sharedFetch,
+} from './shared_branch_key_fetches'
 
 export const stringToUtf8Bytes = (input: string): Buffer =>
   Buffer.from(input, 'utf-8')
@@ -194,38 +198,43 @@ export async function getBranchKeyMaterials(
 ): Promise<NodeBranchKeyMaterial> {
   const { keyStore, cacheLimitTtl } = hKeyring
 
+  // The cached entry, or undefined if it's missing or past this keyring's TTL.
+  const lookUp = () => {
+    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
+    //# The hierarchical keyring MUST attempt to find [branch key materials](../structures.md#branch-key-materials)
+    //# from the underlying [cryptographic materials cache](../local-cryptographic-materials-cache.md).
+    const cacheEntry = cmc.getBranchKeyMaterial(cacheEntryId)
+    if (!cacheEntry || hKeyring.cacheEntryHasExceededLimits(cacheEntry)) {
+      //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
+      //# If this is NOT true, then we MUST treat the cache entry as expired.
+
+      //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#ondecrypt
+      //# If this is NOT true, then we MUST treat the cache entry as expired.
+      return undefined
+    }
+    return cacheEntry
+  }
+
   //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
-  //# The hierarchical keyring MUST attempt to find [branch key materials](../structures.md#branch-key-materials)
-  //# from the underlying [cryptographic materials cache](../local-cryptographic-materials-cache.md).
-  const cacheEntry = cmc.getBranchKeyMaterial(cacheEntryId)
-  let branchKeyMaterials: NodeBranchKeyMaterial
-  // if the cache entry is false, branch key materials were not found
-  if (!cacheEntry || hKeyring.cacheEntryHasExceededLimits(cacheEntry)) {
-    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
-    //# If this is NOT true, then we MUST treat the cache entry as expired.
+  //# If a cache entry is not found or the cache entry is expired, the hierarchical keyring MUST attempt to obtain the branch key materials
+  //# by querying the backing branch keystore specified in the [retrieve OnEncrypt branch key materials](#query-branch-keystore-onencrypt) section.
+  //# If the keyring is not able to retrieve [branch key materials](../structures.md#branch-key-materials)
+  //# through the underlying cryptographic materials cache or
+  //# it no longer has access to them through the backing keystore, OnEncrypt MUST fail.
 
-    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#ondecrypt
-    //# If this is NOT true, then we MUST treat the cache entry as expired.
+  //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
+  //# Otherwise, OnEncrypt MUST fail.
 
-    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
-    //# If a cache entry is not found or the cache entry is expired, the hierarchical keyring MUST attempt to obtain the branch key materials
-    //# by querying the backing branch keystore specified in the [retrieve OnEncrypt branch key materials](#query-branch-keystore-onencrypt) section.
-    //# If the keyring is not able to retrieve [branch key materials](../structures.md#branch-key-materials)
-    //# through the underlying cryptographic materials cache or
-    //# it no longer has access to them through the backing keystore, OnEncrypt MUST fail.
+  //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#getitem-branch-keystore-ondecrypt
+  //# Otherwise, OnDecrypt MUST fail.
 
-    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
-    //# Otherwise, OnEncrypt MUST fail.
+  //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
+  //# OnEncrypt MUST call the Keystore's [GetActiveBranchKey](../branch-key-store.md#getactivebranchkey) operation with the following inputs:
 
-    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#getitem-branch-keystore-ondecrypt
-    //# Otherwise, OnDecrypt MUST fail.
-
-    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
-    //# OnEncrypt MUST call the Keystore's [GetActiveBranchKey](../branch-key-store.md#getactivebranchkey) operation with the following inputs:
-
-    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#getitem-branch-keystore-ondecrypt
-    //# OnDecrypt MUST call the Keystore's [GetBranchKeyVersion](../branch-key-store.md#getbranchkeyversion) operation with the following inputs:
-    branchKeyMaterials = branchKeyVersion
+  //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#getitem-branch-keystore-ondecrypt
+  //# OnDecrypt MUST call the Keystore's [GetBranchKeyVersion](../branch-key-store.md#getbranchkeyversion) operation with the following inputs:
+  const fetch = async () =>
+    branchKeyVersion
       ? await keyStore.getBranchKeyVersion(branchKeyId, branchKeyVersion)
       : // The complice needs a line
         //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
@@ -233,41 +242,28 @@ export async function getBranchKeyMaterials(
         //# - the `branchKeyId` used in this operation
         await keyStore.getActiveBranchKey(branchKeyId)
 
-    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
-    //# If the Keystore's GetActiveBranchKey operation succeeds
-    //# the keyring MUST put the returned branch key materials in the cache using the
-    //# formula defined in [Appendix A](#appendix-a-cache-entry-identifier-formulas).
+  //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#query-branch-keystore-onencrypt
+  //# If the Keystore's GetActiveBranchKey operation succeeds
+  //# the keyring MUST put the returned branch key materials in the cache using the
+  //# formula defined in [Appendix A](#appendix-a-cache-entry-identifier-formulas).
 
-    //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#getitem-branch-keystore-ondecrypt
-    //# If the Keystore's GetBranchKeyVersion operation succeeds
-    //# the keyring MUST put the returned branch key materials in the cache using the
-    //# formula defined in [Appendix A](#appendix-a-cache-entry-identifier-formulas).
-    cmc.putBranchKeyMaterial(cacheEntryId, branchKeyMaterials, cacheLimitTtl)
-  } else {
+  //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#getitem-branch-keystore-ondecrypt
+  //# If the Keystore's GetBranchKeyVersion operation succeeds
+  //# the keyring MUST put the returned branch key materials in the cache using the
+  //# formula defined in [Appendix A](#appendix-a-cache-entry-identifier-formulas).
+  const put = (material: NodeBranchKeyMaterial) =>
+    cmc.putBranchKeyMaterial(cacheEntryId, material, cacheLimitTtl)
+
+  const cacheEntry = lookUp()
+  if (cacheEntry) {
     //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#ondecrypt
     //# If a cache entry is found and the entry's TTL has not expired, the hierarchical keyring MUST use those branch key materials for key unwrapping.
 
     //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
     //# If a cache entry is found and the entry's TTL has not expired, the hierarchical keyring MUST use those branch key materials for key wrapping.
-    branchKeyMaterials = cacheEntry.response
+    return deepCopyBranchKeyMaterial(cacheEntry.response)
   }
-
-  /* Hand back a copy the cache can never touch. The CMC zeroes a material's
-   * buffer in place on eviction; callers read the branch key AFTER this await,
-   * so a concurrent eviction (overwrite, TTL, or tail) could otherwise zero the
-   * buffer mid-derivation. */
-  return deepCopyBranchKeyMaterial(branchKeyMaterials)
-}
-
-function deepCopyBranchKeyMaterial(
-  material: NodeBranchKeyMaterial
-): NodeBranchKeyMaterial {
-  return new NodeBranchKeyMaterial(
-    Buffer.from(material.branchKey()),
-    material.branchKeyIdentifier,
-    material.branchKeyVersion.toString('utf-8'),
-    { ...material.encryptionContext }
-  )
+  return sharedFetch(cmc, cacheEntryId, fetch, put)
 }
 
 //= aws-encryption-sdk-specification/framework/aws-kms/aws-kms-hierarchical-keyring.md#onencrypt
