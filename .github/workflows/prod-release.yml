@@ -48,7 +48,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --unsafe-perm
+        run: npm ci
 
       - name: Configure AWS Credentials for Release
         uses: aws-actions/configure-aws-credentials@v5

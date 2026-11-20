@@ -45,6 +45,19 @@ module.exports = function (config) {
             test: /yauzl/,
             use: 'null-loader',
           },
+          {
+            // Our packages set "sideEffects": false in package.json. Since
+            // webpack 5.112, development builds use that flag to skip modules
+            // that are only re-exported (`export * from ...`), and they skip
+            // some that are needed, e.g. @aws-crypto/cache-material. The
+            // bundle still compiles, but the tests fail with "Cannot find
+            // module". `sideEffects: true` tells webpack to ignore the flag
+            // and include every module. This can't go in
+            // `optimization.sideEffects` because karma-webpack drops any
+            // `optimization` settings.
+            test: /\.js$/,
+            sideEffects: true,
+          },
         ]
       },
       mode: 'development',
