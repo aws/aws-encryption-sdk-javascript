@@ -1,0 +1,200 @@
+# Separate from the library CI (ci.yml) so the test-server directory is not
+# swept into the coverage-gated library jobs.
+name: ESDK TestServer (Node.js)
+
+on:
+  pull_request:
+    paths:
+      - "test-server/**"
+      - ".github/workflows/test-server.yml"
+  push:
+    paths:
+      - "test-server/**"
+      - ".github/workflows/test-server.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  javascript-language-server:
+    name: build + test (live modules)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --unsafe-perm
+
+      - name: Build modules
+        run: npm run build-node
+
+      - name: Build server
+        working-directory: test-server
+        run: npx tsc -p tsconfig.json
+
+      - name: Test server
+        working-directory: test-server
+        run: npm test
+
+  # The complete cross-language TestServer run: `make test-server` clones commons and
+  # the orchestrator materializes + builds + launches every configured Language_Server
+  # (this working tree is the live server), runs the full pairwise matrix, and tears
+  # down. Provisions the full toolchain matrix + the commons build caches. Needs the
+  # COMMONS_REPO_PAT secret (read on commons + java + rust).
+  test-server:
+    name: Cross-language TestServer run
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      AWS_REGION: us-west-2
+      GRADLE_OPTS: -Dorg.gradle.daemon=false
+      # Cold builds (Java gradle/maven, Rust aws-lc-sys, .NET dafny transpile) exceed
+      # the orchestrator's 180s default server-readiness window; widen it so the first
+      # (cold-cache) run fits. Warm runs are fast via the build caches above.
+      ESDK_TESTSERVER_READY_TIMEOUT_SECONDS: "1800"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 17 (Temurin) — exposes JAVA_HOME_17_X64 for the MPL stub jar
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up JDK 21 (Temurin) — the commons orchestrator (smithy-java) needs 21+
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Python 3.11 (the materialized Python Language_Server needs >=3.11)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js 22 (the materialized JavaScript Language_Server build needs 17+)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up Go (Go Language_Server + the Rust servers' aws-lc-sys native builds)
+        uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+
+      - name: Set up the Rust toolchain (Rust Language_Server builds)
+        run: |
+          set -euo pipefail
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          cargo --version
+
+      - name: Set up .NET (the materialized .NET Language_Server build)
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            6.0.x
+            8.0.x
+
+      - name: Install Dafny 4.9.0 (the .NET library transpile in the materialized clone)
+        run: |
+          set -euo pipefail
+          dotnet tool install --global dafny --version 4.9.0
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+          "$HOME/.dotnet/tools/dafny" --version
+
+      - name: Build aws-c-common (the materialized C Language_Server cmake requires it)
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/awslabs/aws-c-common "$RUNNER_TEMP/aws-c-common"
+          cmake -S "$RUNNER_TEMP/aws-c-common" -B "$RUNNER_TEMP/aws-c-common-build" \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/.aws-c-common-install" \
+            -DBUILD_TESTING=OFF
+          cmake --build "$RUNNER_TEMP/aws-c-common-build" --target install -- -j
+          echo "CMAKE_PREFIX_PATH=${{ github.workspace }}/.aws-c-common-install" >> "$GITHUB_ENV"
+
+      - name: Restore build caches (Gradle/Maven/Cargo/NuGet/Go/npm)
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.m2/repository
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.nuget/packages
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/.npm
+          key: ${{ runner.os }}-esdk-ts-build-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-esdk-ts-build-
+
+      - name: Install stub for the unpublished MPL test-vectors artifact
+        # The materialized Java Language_Server build runs `mvn install`, which
+        # resolves a test-scope MPL artifact (TestAwsCryptographicMaterialProviders)
+        # that is not on Maven Central; a stub jar satisfies resolution (tests skip).
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          echo placeholder > "$tmp/README.txt"
+          "$JAVA_HOME_17_X64/bin/jar" cf "$tmp/stub.jar" -C "$tmp" README.txt
+          mvn -q -e org.apache.maven.plugins:maven-install-plugin:3.1.1:install-file \
+            -Dfile="$tmp/stub.jar" \
+            -DgroupId=software.amazon.cryptography \
+            -DartifactId=TestAwsCryptographicMaterialProviders \
+            -Dversion=1.7.0 \
+            -Dpackaging=jar
+
+      - name: Authenticate the private clones (commons, java, rust)
+        env:
+          PAT: ${{ secrets.COMMONS_REPO_PAT }}
+        run: |
+          test -n "$PAT" || { echo "::error::COMMONS_REPO_PAT is empty/unset in this repo"; exit 1; }
+          git config --global url."https://x-access-token:${PAT}@github.com/".insteadOf "git@github.com:"
+
+      - name: Configure AWS credentials via OIDC (required KMS scenarios)
+        id: aws-credentials
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.ESDK_TEST_SERVER_KMS_ROLE_ARN || 'arn:aws:iam::370957321024:role/esdk-test-server-ci-kms-role' }}
+          aws-region: us-west-2
+
+      - name: Verify AWS credentials are active (gates the orchestrated run)
+        run: |
+          if ! aws sts get-caller-identity; then
+            echo "::error::No usable AWS credentials for the required KMS scenarios." >&2
+            exit 1
+          fi
+
+      - name: Run the orchestrated TestServer
+        working-directory: test-server
+        run: make test-server
+
+      - name: Save build caches
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.m2/repository
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.nuget/packages
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/.npm
+          key: ${{ runner.os }}-esdk-ts-build-${{ github.run_id }}
