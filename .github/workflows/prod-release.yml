@@ -24,7 +24,7 @@ jobs:
 
   # Once all tests have passed, run semantic versioning
   version:
-    runs-on: ubuntu-latest
+    runs-on: codebuild-CryptoToolsCI-linux-aws-encryption-sdk-javascript-${{ github.run_id }}-${{ github.run_attempt }}
     needs: [pre-release-ci]
     environment: release
     steps:
@@ -48,7 +48,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --unsafe-perm
+        run: npm ci
 
       - name: Configure AWS Credentials for Release
         uses: aws-actions/configure-aws-credentials@v5
