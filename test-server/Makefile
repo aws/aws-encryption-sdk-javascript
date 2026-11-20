@@ -18,7 +18,8 @@ REPO_ROOT    := $(abspath $(MAKEFILE_DIR)/..)
 COMMONS_CONFIGURATION := $(MAKEFILE_DIR)/server-config.json
 COMMONS_BRANCH ?=
 CLONE_DIR      ?= $(MAKEFILE_DIR)/.commons-clone
-CLONE_ORCH_DIR := $(CLONE_DIR)/esdk/test-server/orchestrator
+CLONE_ORCH_DIR := $(CLONE_DIR)/test-server-common/orchestrator
+CLONE_ROOT_DIR := $(CLONE_DIR)/esdk/test-server
 
 .PHONY: help build-server run-server start-server wait-for-server stop-server \
         test test-server check-java clean
@@ -87,8 +88,8 @@ test-server: check-java ## Run the complete cross-language TestServer via the co
 	if ! git clone --depth 1 --single-branch --branch "$$branch" "$$url" "$(CLONE_DIR)"; then \
 		echo "ERROR: failed to clone $$url at branch $$branch; no Tests will run." >&2; exit 1; \
 	fi; \
-	orch="$(CLONE_DIR)/test-server-common/orchestrator"; root_flag="-Dtestserver.root=$(CLONE_DIR)/esdk/test-server"; \
-	if [ ! -d "$$orch" ]; then orch="$(CLONE_ORCH_DIR)"; root_flag=""; fi; \
+	orch="$(CLONE_ORCH_DIR)"; root_flag="-Dtestserver.root=$(CLONE_ROOT_DIR)"; \
+	if [ ! -d "$$orch" ]; then orch="$(CLONE_DIR)/esdk/test-server/orchestrator"; root_flag=""; fi; \
 	if [ ! -d "$$orch" ]; then \
 		echo "ERROR: branch $$branch of $$url has no orchestrator at test-server-common/orchestrator or esdk/test-server/orchestrator." >&2; exit 1; \
 	fi; \
